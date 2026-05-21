@@ -7,13 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { useAppStore } from '@/stores/app-store'
 import { COLOR_SCHEME_OPTIONS } from '@/lib/terminal-themes'
+import { CURSOR_STYLE_OPTIONS } from '@/lib/terminal-cursor'
 import { ColorSchemePreview } from '@/components/settings/ColorSchemePreview'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
-import type { TerminalColorScheme } from '../../../electron/shared/api-types'
-import { Cpu, Palette, Type } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { TerminalColorScheme, TerminalCursorStyle } from '../../../electron/shared/api-types'
+import { Cpu, Palette, TextCursor, Type } from 'lucide-react'
 
 export function TerminalSettings() {
   const settings = useAppStore((s) => s.settings)
@@ -26,7 +29,7 @@ export function TerminalSettings() {
     <Card>
       <CardHeader>
         <CardTitle>终端设置</CardTitle>
-        <CardDescription>配色、字体与渲染方式</CardDescription>
+        <CardDescription>配色、字体、光标与渲染方式</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <SettingField icon={Palette} label="配色方案">
@@ -77,6 +80,53 @@ export function TerminalSettings() {
             patchSettings({ terminal: { ...settings.terminal, fontSize } })
           }
         />
+
+        <SettingField icon={TextCursor} label="光标样式">
+          <div
+            className="inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border bg-muted/50 p-1"
+            role="tablist"
+            aria-label="光标样式"
+          >
+            {CURSOR_STYLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                role="tab"
+                aria-selected={settings.terminal.cursorStyle === opt.value}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  settings.terminal.cursorStyle === opt.value
+                    ? 'bg-background text-foreground shadow-sm dark:bg-primary/18 dark:ring-1 dark:ring-primary/35'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+                onClick={() =>
+                  patchSettings({
+                    terminal: {
+                      ...settings.terminal,
+                      cursorStyle: opt.value as TerminalCursorStyle,
+                    },
+                  })
+                }
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </SettingField>
+
+        <SettingField
+          icon={TextCursor}
+          label="光标闪烁"
+          description="关闭后光标保持静止显示"
+          row
+        >
+          <Switch
+            checked={settings.terminal.cursorBlink}
+            onCheckedChange={(cursorBlink) =>
+              patchSettings({ terminal: { ...settings.terminal, cursorBlink } })
+            }
+          />
+        </SettingField>
 
         <SettingField
           icon={Cpu}

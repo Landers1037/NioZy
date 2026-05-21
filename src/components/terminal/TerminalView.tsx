@@ -7,6 +7,7 @@ import { resolveTerminalTheme } from '@/lib/terminal-themes'
 import type { AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
+import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import { cn } from '@/lib/utils'
 
 interface TerminalViewProps {
@@ -65,7 +66,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
       fontFamily: s?.terminal.fontFamily ?? 'Consolas',
       fontSize: s?.terminal.fontSize ?? 13,
       theme,
-      cursorBlink: true,
+      ...getTerminalCursorOptions(s?.terminal),
     })
 
     const fit = new FitAddon()
@@ -132,9 +133,12 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
 
   useEffect(() => {
     if (!termRef.current || !settings) return
+    const cursor = getTerminalCursorOptions(settings.terminal)
     termRef.current.options.theme = resolveTerminalTheme(settings.terminal.colorScheme)
     termRef.current.options.fontFamily = settings.terminal.fontFamily
     termRef.current.options.fontSize = settings.terminal.fontSize
+    termRef.current.options.cursorBlink = cursor.cursorBlink
+    termRef.current.options.cursorStyle = cursor.cursorStyle
     if (visibleRef.current) scheduleFit()
   }, [settings?.terminal, scheduleFit])
 

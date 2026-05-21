@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS: AppSettings = {
     fontFamily: 'Consolas',
     fontSize: 13,
     renderer: 'webgl',
+    cursorStyle: 'block',
+    cursorBlink: true,
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },

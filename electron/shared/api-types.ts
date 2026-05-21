@@ -1,6 +1,9 @@
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
+import type { TerminalCursorStyle } from './terminal-cursor'
+export type { TerminalCursorStyle } from './terminal-cursor'
+export { normalizeTerminalCursorStyle } from './terminal-cursor'
 import type { TerminalColorScheme } from './terminal-color-schemes'
 import type { AppShortcuts } from './shortcuts'
 export type { AppShortcuts } from './shortcuts'
@@ -59,6 +62,8 @@ export interface AppSettings {
     fontFamily: string
     fontSize: number
     renderer: TerminalRenderer
+    cursorStyle: TerminalCursorStyle
+    cursorBlink: boolean
   }
   connections: CustomConnection[]
   builtinConnections: import('./builtin-shells').BuiltinConnections
