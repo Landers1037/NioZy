@@ -1,6 +1,18 @@
 export type ThemeMode = 'light' | 'dark'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalColorScheme } from './terminal-color-schemes'
+import type { AppShortcuts } from './shortcuts'
+export type { AppShortcuts } from './shortcuts'
+export { DEFAULT_SHORTCUTS, APP_SHORTCUT_LABELS } from './shortcuts'
+
+export type VaultVariableType = 'plain' | 'secret'
+
+export interface VaultVariablePublic {
+  id: string
+  key: string
+  type: VaultVariableType
+  value?: string
+}
 
 export type { TerminalColorScheme } from './terminal-color-schemes'
 export {
@@ -8,6 +20,18 @@ export {
   normalizeTerminalColorScheme,
 } from './terminal-color-schemes'
 export type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
+export type {
+  BuiltinShellType,
+  BuiltinShellConfig,
+  BuiltinConnections,
+} from './builtin-shells'
+export {
+  BUILTIN_SHELL_TYPES,
+  BUILTIN_SHELL_EXECUTABLE,
+  BUILTIN_SHELL_LABELS,
+  DEFAULT_BUILTIN_CONNECTIONS,
+  normalizeBuiltinConnections,
+} from './builtin-shells'
 
 export interface CustomConnection {
   id: string
@@ -34,6 +58,7 @@ export interface AppSettings {
     renderer: TerminalRenderer
   }
   connections: CustomConnection[]
+  builtinConnections: import('./builtin-shells').BuiltinConnections
   system: {
     proxy: string
     launchOnStartup: boolean
@@ -45,6 +70,7 @@ export interface AppSettings {
     /** 为 false 时主进程停止轮询 CPU/内存并通过 IPC 推送 */
     statusBarLiveStats: boolean
   }
+  shortcuts: AppShortcuts
 }
 
 export interface SystemStatsData {
@@ -90,5 +116,20 @@ export interface ElectronAPI {
     kill: (id: string) => void
     onData: (cb: (id: string, data: string) => void) => () => void
     onExit: (cb: (id: string, code: number) => void) => () => void
+  }
+  vault: {
+    list: () => Promise<VaultVariablePublic[]>
+    getKeys: () => Promise<string[]>
+    save: (input: {
+      id?: string
+      key: string
+      type: VaultVariableType
+      value?: string
+    }) => Promise<VaultVariablePublic>
+    remove: (id: string) => Promise<void>
+    resolve: (text: string) => Promise<string>
+  }
+  shell: {
+    openExternal: (url: string) => Promise<void>
   }
 }

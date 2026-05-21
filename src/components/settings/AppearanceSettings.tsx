@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -10,6 +9,8 @@ import {
 } from '@/components/ui/select'
 import { useAppStore } from '@/stores/app-store'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
+import { SettingField } from './SettingField'
+import { Moon, Palette, Type } from 'lucide-react'
 
 const ACCENT_PRESETS = ['#0A84FF', '#0066FF', '#00D2FF', '#6366F1', '#10B981']
 
@@ -25,8 +26,7 @@ export function AppearanceSettings() {
         <CardDescription>主题、强调色与全局字号</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <Label>主题模式</Label>
+        <SettingField icon={Moon} label="主题模式">
           <Select
             value={settings.theme}
             onValueChange={(v) => patchSettings({ theme: v as 'light' | 'dark' })}
@@ -39,10 +39,9 @@ export function AppearanceSettings() {
               <SelectItem value="dark">暗黑</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </SettingField>
 
-        <div className="flex flex-col gap-2">
-          <Label>强调色</Label>
+        <SettingField icon={Palette} label="强调色">
           <div className="flex flex-wrap gap-2">
             {ACCENT_PRESETS.map((color) => (
               <button
@@ -63,9 +62,10 @@ export function AppearanceSettings() {
             value={settings.accentColor}
             onChange={(e) => patchSettings({ accentColor: e.target.value })}
           />
-        </div>
+        </SettingField>
 
         <FontSizeInput
+          icon={Type}
           label="全局字号"
           min={11}
           max={18}

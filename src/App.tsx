@@ -8,6 +8,7 @@ import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { createTerminal } from '@/lib/terminal-actions'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
+import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 
 export default function App() {
   const tabs = useAppStore((s) => s.tabs)
@@ -20,6 +21,8 @@ export default function App() {
   )
 
   const booted = useRef(false)
+
+  useAppShortcuts()
 
   useEffect(() => {
     let cancelled = false

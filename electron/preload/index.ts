@@ -44,6 +44,16 @@ const api: ElectronAPI = {
       return () => ipcRenderer.removeListener('terminal:exit', handler)
     },
   },
+  vault: {
+    list: () => ipcRenderer.invoke('vault:list'),
+    getKeys: () => ipcRenderer.invoke('vault:getKeys'),
+    save: (input) => ipcRenderer.invoke('vault:save', input),
+    remove: (id) => ipcRenderer.invoke('vault:remove', id),
+    resolve: (text) => ipcRenderer.invoke('vault:resolve', text),
+  },
+  shell: {
+    openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+  },
 }
 
 try {

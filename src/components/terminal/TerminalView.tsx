@@ -6,6 +6,7 @@ import { useAppStore } from '@/stores/app-store'
 import { resolveTerminalTheme } from '@/lib/terminal-themes'
 import type { AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
+import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { cn } from '@/lib/utils'
 
 interface TerminalViewProps {
@@ -73,6 +74,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
 
     termRef.current = term
     fitRef.current = fit
+    registerTerminal(tab.terminalId!, term)
 
     const api = getElectronAPI()
     const onData = (data: string) => {
@@ -117,6 +119,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
       unsubData()
       unsubExit()
       ro.disconnect()
+      unregisterTerminal(tab.terminalId!)
       term.dispose()
       termRef.current = null
       fitRef.current = null

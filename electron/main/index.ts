@@ -1,10 +1,12 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore } from '../settings-store'
 import { SystemStats } from '../system-stats'
+import { VaultStore } from '../vault-store'
+import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -17,6 +19,7 @@ const isDev =
 
 const terminalService = new TerminalService()
 const settingsStore = new SettingsStore()
+const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
 
 function isStatusBarLiveStatsEnabled(): boolean {
@@ -29,6 +32,16 @@ function syncSystemStatsPolling(): void {
   systemStats.start((stats) => {
     mainWindow?.webContents.send('system:stats', stats)
   })
+}
+
+/** 将设置中的透明度百分比 (70–100) 映射为 Electron 窗口不透明度 (0.7–1) */
+function transparencyToOpacity(transparency: number): number {
+  return Math.min(1, Math.max(0.7, transparency / 100))
+}
+
+function syncWindowOpacity(): void {
+  if (!mainWindow) return
+  mainWindow.setOpacity(transparencyToOpacity(settingsStore.get().advanced.transparency))
 }
 
 function resolvePreloadPath(): string {
@@ -60,7 +73,7 @@ function createWindow(): void {
     frame: false,
     titleBarStyle: 'hidden',
     backgroundColor: settings.theme === 'dark' ? '#0F1419' : '#F4F5F7',
-    transparent: settings.advanced.transparency < 100,
+    opacity: transparencyToOpacity(settings.advanced.transparency),
     webPreferences: {
       preload: preloadPath,
       sandbox: false,
@@ -74,6 +87,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
+    syncWindowOpacity()
     mainWindow?.show()
     if (isDev) {
       mainWindow?.webContents.openDevTools({ mode: 'detach' })
@@ -131,6 +145,7 @@ function createTray(): void {
 
 app.whenReady().then(() => {
   settingsStore.load()
+  vaultStore.load()
 
   if (isDev) {
     console.log('[NioZy] app path:', app.getAppPath())
@@ -140,6 +155,7 @@ app.whenReady().then(() => {
   createWindow()
   createTray()
   syncSystemStatsPolling()
+  syncGlobalShortcuts(settingsStore, () => mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -155,8 +171,13 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  unregisterGlobalShortcuts()
   terminalService.disposeAll()
   systemStats.stop()
+})
+
+app.on('will-quit', () => {
+  unregisterGlobalShortcuts()
 })
 
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
@@ -167,9 +188,12 @@ ipcMain.on('window:maximize', () => {
 ipcMain.on('window:close', () => mainWindow?.close())
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
 
+ipcMain.handle('shell:openExternal', (_, url: string) => shell.openExternal(url))
+
 ipcMain.handle('settings:get', () => settingsStore.get())
 ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>[0]) => {
   const liveBefore = isStatusBarLiveStatsEnabled()
+  const shortcutBefore = settingsStore.get().shortcuts.global.showApp
   const updated = settingsStore.update(partial)
   if (partial.advanced?.statusBarLiveStats !== undefined && liveBefore !== isStatusBarLiveStatsEnabled()) {
     syncSystemStatsPolling()
@@ -177,12 +201,42 @@ ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>
   if (partial.system?.launchOnStartup !== undefined) {
     app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
   }
+  if (
+    partial.shortcuts !== undefined &&
+    shortcutBefore !== updated.shortcuts.global.showApp
+  ) {
+    syncGlobalShortcuts(settingsStore, () => mainWindow)
+  }
+  if (partial.advanced?.transparency !== undefined) {
+    syncWindowOpacity()
+  }
   return updated
 })
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 
-ipcMain.handle('terminal:create', (_, options) => terminalService.create(options))
+ipcMain.handle('terminal:create', (_, options) => {
+  const resolved = {
+    ...options,
+    env: options.env ? vaultStore.resolveEnv(options.env) : undefined,
+  }
+  return terminalService.create(resolved)
+})
+
+ipcMain.handle('vault:list', () => vaultStore.load())
+ipcMain.handle('vault:getKeys', () => vaultStore.getKeys())
+ipcMain.handle('vault:save', (_, input) => {
+  vaultStore.load()
+  return vaultStore.save(input)
+})
+ipcMain.handle('vault:remove', (_, id: string) => {
+  vaultStore.load()
+  vaultStore.remove(id)
+})
+ipcMain.handle('vault:resolve', (_, text: string) => {
+  vaultStore.load()
+  return vaultStore.resolveText(text)
+})
 ipcMain.on('terminal:write', (_, id: string, data: string) => terminalService.write(id, data))
 ipcMain.handle(
   'terminal:resize',
