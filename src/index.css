@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+/* 与 settings.theme 的 .dark 类一致，避免 dark: 仅跟随系统偏好 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import '@xterm/xterm/css/xterm.css';
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url('./fonts/NotoSansSC-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme inline {
+  --font-sans:
+    'Noto Sans SC', 'Segoe UI', system-ui, -apple-system, 'Microsoft YaHei', sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #f4f5f7;
+  --foreground: #1e2329;
+  --card: #ffffff;
+  --card-foreground: #1e2329;
+  --muted: #eef2f7;
+  --muted-foreground: #7a828e;
+  --border: #e3e6eb;
+  --primary: #0a84ff;
+  --primary-foreground: #ffffff;
+  --accent: #eef2f7;
+  --accent-foreground: #1e2329;
+  --destructive: #ef4444;
+  --ring: #0a84ff;
+  --scrollbar-thumb: #c4c8cc;
+  --scrollbar-thumb-hover: #a8adb4;
+  --scrollbar-track: transparent;
+  --app-font-size: 13px;
+}
+
+.dark {
+  --background: #0f1419;
+  --foreground: #e8ecf0;
+  --card: #1a1f26;
+  --card-foreground: #e8ecf0;
+  --muted: #252b33;
+  --muted-foreground: #8b949e;
+  --border: #2d3540;
+  --primary: #00d2ff;
+  --primary-foreground: #0f1419;
+  --accent: #252b33;
+  --accent-foreground: #e8ecf0;
+  --destructive: #f87171;
+  --ring: #00d2ff;
+  --scrollbar-thumb: #3d4550;
+  --scrollbar-thumb-hover: #525c6b;
+  --scrollbar-track: #1a1f26;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--app-font-size);
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
