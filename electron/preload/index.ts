@@ -54,6 +54,10 @@ const api: ElectronAPI = {
   shell: {
     openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
   },
+  files: {
+    saveText: (content, defaultFileName) =>
+      ipcRenderer.invoke('files:saveText', content, defaultFileName),
+  },
 }
 
 try {

@@ -161,6 +161,18 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         window.open(url, '_blank', 'noopener,noreferrer')
       },
     },
+    files: {
+      saveText: async (content, defaultFileName) => {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = defaultFileName
+        a.click()
+        URL.revokeObjectURL(url)
+        return true
+      },
+    },
     terminal: {
       create: async (options) => {
         const id = `browser-mock-${++mockTermCounter}`

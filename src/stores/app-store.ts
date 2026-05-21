@@ -8,6 +8,8 @@ export interface AppTab {
   id: string
   type: TabType
   title: string
+  /** 侧边栏与状态栏展示的自定义标题；为空则使用 title */
+  customTitle?: string
   terminalId?: string
   shell?: string
 }
@@ -31,6 +33,8 @@ interface AppState {
   addTerminalTab: (tab: AppTab) => void
   addSettingsTab: () => void
   removeTab: (id: string) => void
+  removeTabs: (ids: string[]) => void
+  setTabCustomTitle: (id: string, customTitle: string | undefined) => void
   setSettings: (s: AppSettings) => void
   patchSettings: (partial: Partial<AppSettings>) => Promise<void>
   setSystemStats: (stats: AppState['systemStats']) => void
@@ -70,16 +74,34 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeTabId: tab.id,
     }))
   },
-  removeTab: (id) =>
+  removeTab: (id) => {
+    get().removeTabs([id])
+  },
+  removeTabs: (ids) => {
+    if (ids.length === 0) return
+    const idSet = new Set(ids)
     set((s) => {
-      const tabs = s.tabs.filter((t) => t.id !== id)
+      const tabs = s.tabs.filter((t) => !idSet.has(t.id))
       let activeTabId = s.activeTabId
-      if (s.activeTabId === id) {
+      if (s.activeTabId && idSet.has(s.activeTabId)) {
         const firstTerminal = tabs.find((t) => t.type === 'terminal')
         activeTabId = firstTerminal?.id ?? tabs[0]?.id ?? null
       }
       return { tabs, activeTabId }
-    }),
+    })
+  },
+  setTabCustomTitle: (id, customTitle) =>
+    set((s) => ({
+      tabs: s.tabs.map((t) => {
+        if (t.id !== id) return t
+        const trimmed = customTitle?.trim()
+        if (!trimmed) {
+          const { customTitle: _removed, ...rest } = t
+          return rest
+        }
+        return { ...t, customTitle: trimmed }
+      }),
+    })),
   setSettings: (settings) => set({ settings }),
   patchSettings: async (partial) => {
     const updated = await getElectronAPI().settings.save(partial)

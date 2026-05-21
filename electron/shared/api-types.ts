@@ -132,4 +132,8 @@ export interface ElectronAPI {
   shell: {
     openExternal: (url: string) => Promise<void>
   }
+  files: {
+    /** 弹出保存对话框并写入文本；用户取消时返回 false */
+    saveText: (content: string, defaultFileName: string) => Promise<boolean>
+  }
 }
