@@ -8,6 +8,7 @@ import { InputWithVaultPicker } from './InputWithVaultPicker'
 import { Download, ExternalLink, Info, Minimize2, Power, Globe } from 'lucide-react'
 import { GITHUB_RELEASES_URL } from '@/constants/urls'
 import { getElectronAPI } from '@/lib/electron-client'
+import logoUrl from '@/logo.png'
 
 export function SystemSettings() {
   const settings = useAppStore((s) => s.settings)
@@ -74,15 +75,22 @@ export function SystemSettings() {
           </div>
         </SettingField>
 
-        <div className="rounded-lg border border-border bg-muted/50 p-4">
-          <p className="flex items-center gap-2 font-medium">
-            <Info className="size-4 text-muted-foreground" />
-            关于 NioZy
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">版本 0.1.0 (MVP)</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            多终端管理器 — 基于 Electron、React、xterm.js 与 Windows ConPTY。
-          </p>
+        <div className="rounded-lg border border-border bg-muted/50 p-6">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src={logoUrl}
+              alt="NioZy"
+              className="mb-4 size-20 rounded-xl object-contain"
+            />
+            <p className="flex items-center gap-2 font-medium">
+              <Info className="size-4 text-muted-foreground" />
+              关于 NioZy
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">版本 0.1.0 (MVP)</p>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              多终端管理器 — 基于 Electron、React、xterm.js 与 Windows ConPTY。
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
