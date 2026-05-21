@@ -11,6 +11,8 @@ export interface AppShortcuts {
     clearTerminal: string
     newTerminal: string
     openSettings: string
+    prevTerminalTab: string
+    nextTerminalTab: string
   }
 }
 
@@ -26,6 +28,8 @@ export const DEFAULT_SHORTCUTS: AppShortcuts = {
     clearTerminal: 'CommandOrControl+K',
     newTerminal: 'CommandOrControl+Shift+T',
     openSettings: 'CommandOrControl+,',
+    prevTerminalTab: 'CommandOrControl+Left',
+    nextTerminalTab: 'CommandOrControl+Right',
   },
 }
 
@@ -37,4 +41,6 @@ export const APP_SHORTCUT_LABELS: Record<keyof AppShortcuts['app'], string> = {
   clearTerminal: '清空终端内容',
   newTerminal: '打开新的终端',
   openSettings: '打开设置页面',
+  prevTerminalTab: '切换到上一个终端 Tab',
+  nextTerminalTab: '切换到下一个终端 Tab',
 }

@@ -51,8 +51,8 @@ export function Sidebar() {
             className={cn(
               'group flex cursor-pointer items-center gap-2 rounded-[10px] px-2 py-1.5 transition-colors',
               activeTabId === tab.id
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:bg-card/60',
+                ? 'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35 dark:font-medium'
+                : 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
             )}
             onClick={() => setActiveTab(tab.id)}
           >
