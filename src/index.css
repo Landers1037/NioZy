@@ -122,6 +122,15 @@ body {
   -webkit-app-region: no-drag;
 }
 
+.niozy-terminal-host .xterm {
+  height: 100%;
+  width: 100%;
+}
+
+.niozy-terminal-host .xterm-viewport {
+  background-color: transparent !important;
+}
+
 .xterm-viewport::-webkit-scrollbar {
   width: 8px;
 }

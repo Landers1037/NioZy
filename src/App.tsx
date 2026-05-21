@@ -7,7 +7,7 @@ import { TerminalView } from '@/components/terminal/TerminalView'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { createTerminal } from '@/lib/terminal-actions'
-import { getElectronAPI, isElectron } from '@/lib/electron-client'
+import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 
 export default function App() {
   const tabs = useAppStore((s) => s.tabs)
@@ -41,7 +41,7 @@ export default function App() {
 
       if (!booted.current) {
         booted.current = true
-        createTerminal('powershell').catch(console.error)
+        void createTerminal('powershell')
       }
       return true
     }
@@ -86,30 +86,39 @@ export default function App() {
   }, [statusBarLiveStats, setSystemStats])
 
   if (!isElectron()) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 bg-background p-8 text-center">
-        <p className="text-lg font-semibold text-foreground">未检测到 Electron 环境</p>
-        <p className="max-w-md text-sm text-muted-foreground">
-          请使用 <code className="rounded bg-muted px-1.5 py-0.5">npm run start</code>{' '}
-          启动桌面应用。不要在浏览器中直接打开 Vite 开发地址。
-        </p>
-      </div>
-    )
+    return null
   }
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
+  const browserDevPreview = isBrowserDevPreview()
+  const terminalActive = activeTab?.type === 'terminal'
 
   return (
     <div className="flex h-full flex-col bg-background">
+      {browserDevPreview && (
+        <div
+          className="shrink-0 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1 text-center text-xs text-amber-900 dark:text-amber-200"
+          role="status"
+        >
+          浏览器开发预览（模拟 Electron API）— 可用开发者工具检查样式；真实终端请用{' '}
+          <code className="rounded bg-amber-500/15 px-1">npm run start</code>
+        </div>
+      )}
       <TitleBar />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
         <main className="flex min-w-0 flex-1 flex-col bg-background p-2">
-          <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <div
+            className={
+              terminalActive
+                ? 'relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-transparent shadow-sm'
+                : 'relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm'
+            }
+          >
             {tabs
               .filter((t) => t.type === 'terminal')
               .map((tab) => (
-                <div key={tab.id} className="absolute inset-0 p-1">
+                <div key={tab.id} className="absolute inset-0">
                   <TerminalView tab={tab} visible={activeTabId === tab.id} />
                 </div>
               ))}
@@ -127,7 +136,7 @@ export default function App() {
         </main>
       </div>
       <StatusBar />
-      <Toaster position="bottom-right" richColors />
+      <Toaster position="bottom-right" richColors closeButton />
     </div>
   )
 }
