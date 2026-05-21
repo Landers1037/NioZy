@@ -11,6 +11,7 @@ export function useAppShortcuts(): void {
   const activeTabId = useAppStore((s) => s.activeTabId)
   const tabs = useAppStore((s) => s.tabs)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
+  const setActiveTab = useAppStore((s) => s.setActiveTab)
 
   useEffect(() => {
     if (!shortcuts) return
@@ -39,6 +40,25 @@ export function useAppShortcuts(): void {
       if (matchAccelerator(app.newTerminal, e)) {
         e.preventDefault()
         void createTerminal('powershell')
+        return
+      }
+
+      const terminalTabs = tabs.filter((t) => t.type === 'terminal')
+      const terminalIndex = terminalTabs.findIndex((t) => t.id === activeTabId)
+
+      if (matchAccelerator(app.prevTerminalTab, e)) {
+        if (terminalIndex > 0) {
+          e.preventDefault()
+          setActiveTab(terminalTabs[terminalIndex - 1]!.id)
+        }
+        return
+      }
+
+      if (matchAccelerator(app.nextTerminalTab, e)) {
+        if (terminalIndex >= 0 && terminalIndex < terminalTabs.length - 1) {
+          e.preventDefault()
+          setActiveTab(terminalTabs[terminalIndex + 1]!.id)
+        }
         return
       }
 
@@ -84,5 +104,5 @@ export function useAppShortcuts(): void {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [shortcuts, activeTabId, tabs, addSettingsTab])
+  }, [shortcuts, activeTabId, tabs, addSettingsTab, setActiveTab])
 }
