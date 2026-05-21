@@ -3,7 +3,6 @@ import {
   ChevronRight,
   Plus,
   Settings,
-  Terminal,
   X,
   Link2,
 } from 'lucide-react'
@@ -18,7 +17,7 @@ import {
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { createTerminal, createConnection } from '@/lib/terminal-actions'
-import { getElectronAPI } from '@/lib/electron-client'
+import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 
 export function Sidebar() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed)
@@ -45,44 +44,46 @@ export function Sidebar() {
       </div>
 
       <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 no-drag">
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={cn(
-              'group flex cursor-pointer items-center rounded-[10px] py-1.5 transition-colors',
-              collapsed ? 'justify-center px-0' : 'gap-2 px-2',
-              activeTabId === tab.id
-                ? 'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35 dark:font-medium'
-                : 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
-            )}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.type === 'settings' ? (
+        {tabs.map((tab) =>
+          tab.type === 'terminal' ? (
+            <TerminalTabItem
+              key={tab.id}
+              tab={tab}
+              collapsed={collapsed}
+              isActive={activeTabId === tab.id}
+            />
+          ) : (
+            <div
+              key={tab.id}
+              className={cn(
+                'group flex cursor-pointer items-center rounded-[10px] py-1.5 transition-colors',
+                collapsed ? 'justify-center px-0' : 'gap-2 px-2',
+                activeTabId === tab.id
+                  ? 'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35 dark:font-medium'
+                  : 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
+              )}
+              onClick={() => setActiveTab(tab.id)}
+            >
               <Settings className="size-4 shrink-0" />
-            ) : (
-              <Terminal className="size-4 shrink-0" />
-            )}
-            {!collapsed && (
-              <>
-                <span className="min-w-0 flex-1 truncate text-sm">{tab.title}</span>
-                <button
-                  type="button"
-                  className="cursor-pointer rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-                  aria-label={`关闭 ${tab.title}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (tab.type === 'terminal' && tab.terminalId) {
-                      getElectronAPI().terminal.kill(tab.terminalId)
-                    }
-                    removeTab(tab.id)
-                  }}
-                >
-                  <X className="size-3.5" />
-                </button>
-              </>
-            )}
-          </div>
-        ))}
+              {!collapsed && (
+                <>
+                  <span className="min-w-0 flex-1 truncate text-sm">{tab.title}</span>
+                  <button
+                    type="button"
+                    className="cursor-pointer rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+                    aria-label={`关闭 ${tab.title}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeTab(tab.id)
+                    }}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
+          ),
+        )}
       </div>
 
       <div

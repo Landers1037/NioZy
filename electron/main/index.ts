@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage, dialog } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore } from '../settings-store'
@@ -189,6 +190,23 @@ ipcMain.on('window:close', () => mainWindow?.close())
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
 
 ipcMain.handle('shell:openExternal', (_, url: string) => shell.openExternal(url))
+
+ipcMain.handle(
+  'files:saveText',
+  async (_, content: string, defaultFileName: string): Promise<boolean> => {
+    const saveOptions = {
+      title: '导出终端',
+      defaultPath: defaultFileName,
+      filters: [{ name: '文本文件', extensions: ['txt'] }],
+    }
+    const { canceled, filePath } = mainWindow
+      ? await dialog.showSaveDialog(mainWindow, saveOptions)
+      : await dialog.showSaveDialog(saveOptions)
+    if (canceled || !filePath) return false
+    await writeFile(filePath, content, 'utf8')
+    return true
+  },
+)
 
 ipcMain.handle('settings:get', () => settingsStore.get())
 ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>[0]) => {

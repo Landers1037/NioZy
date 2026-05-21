@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useAppStore } from '@/stores/app-store'
+import { getTabDisplayTitle } from '@/lib/tab-display'
 import { cn } from '@/lib/utils'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 
@@ -90,10 +91,15 @@ export function StatusBar() {
           </StatusTag>
         )}
       </div>
-      <StatusTag variant="tab" theme={theme} className="shrink-0 truncate">
-        <span className={isDark ? tabLabelDark : tabLabelLight}>当前</span>
-        <span className={cn('mx-1', isDark ? tabDividerDark : tabDividerLight)}>·</span>
-        <span className="truncate">{activeTab?.title ?? '无'}</span>
+      <StatusTag variant="tab" theme={theme} className="max-w-[120px] shrink-0">
+        <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>当前</span>
+        <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
+        <span
+          className="min-w-0 truncate"
+          title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
+        >
+          {activeTab ? getTabDisplayTitle(activeTab) : '无'}
+        </span>
       </StatusTag>
     </footer>
   )
