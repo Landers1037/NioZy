@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAppStore, type AppTab } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
-import { getTabDisplayTitle } from '@/lib/tab-display'
+import { getTabDisplayTitle, getTabHighlightClasses } from '@/lib/tab-display'
 import {
   closeOtherTerminalTabs,
   closeTerminalTabs,
@@ -39,11 +39,19 @@ import { getElectronAPI } from '@/lib/electron-client'
 
 interface TerminalTabItemProps {
   tab: AppTab
-  collapsed: boolean
+  /** 侧栏收起时仅显示图标 */
+  collapsed?: boolean
+  /** 极简模式横向 Tab：仅图标、紧凑尺寸 */
+  iconOnly?: boolean
   isActive: boolean
 }
 
-export function TerminalTabItem({ tab, collapsed, isActive }: TerminalTabItemProps) {
+export function TerminalTabItem({
+  tab,
+  collapsed = false,
+  iconOnly = false,
+  isActive,
+}: TerminalTabItemProps) {
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const removeTab = useAppStore((s) => s.removeTab)
   const setTabCustomTitle = useAppStore((s) => s.setTabCustomTitle)
@@ -77,20 +85,22 @@ export function TerminalTabItem({ tab, collapsed, isActive }: TerminalTabItemPro
     setEditOpen(false)
   }
 
+  const compact = collapsed || iconOnly
+
   const row = (
     <div
       title={displayTitle}
       className={cn(
-        'group flex cursor-pointer items-center rounded-[10px] py-1.5 transition-colors',
-        collapsed ? 'justify-center px-0' : 'gap-2 px-2',
-        isActive
-          ? 'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35 dark:font-medium'
-          : 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
+        'group flex cursor-pointer items-center transition-colors',
+        iconOnly
+          ? 'size-6 shrink-0 justify-center rounded-md'
+          : cn('rounded-[10px] py-1.5', compact ? 'justify-center px-0' : 'gap-2 px-2'),
+        getTabHighlightClasses(isActive, iconOnly),
       )}
       onClick={() => setActiveTab(tab.id)}
     >
-      <Terminal className="size-4 shrink-0" />
-      {!collapsed && (
+      <Terminal className={cn('shrink-0', iconOnly ? 'size-3' : 'size-4')} />
+      {!compact && (
         <>
           <span className="min-w-0 flex-1 truncate text-sm" title={displayTitle}>
             {displayTitle}

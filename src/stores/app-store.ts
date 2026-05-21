@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
 import { getElectronAPI } from '@/lib/electron-client'
+import { applyLayoutFromSettings } from '@/lib/layout-mode'
 
 export type TabType = 'terminal' | 'settings'
 
@@ -102,11 +103,16 @@ export const useAppStore = create<AppState>((set, get) => ({
         return { ...t, customTitle: trimmed }
       }),
     })),
-  setSettings: (settings) => set({ settings }),
+  setSettings: (settings) => {
+    set({ settings })
+    applyThemeToDocument(settings)
+    applyLayoutFromSettings(settings, get().setSidebarCollapsed)
+  },
   patchSettings: async (partial) => {
     const updated = await getElectronAPI().settings.save(partial)
     set({ settings: updated })
     applyThemeToDocument(updated)
+    applyLayoutFromSettings(updated, get().setSidebarCollapsed)
   },
   setSystemStats: (systemStats) => set({ systemStats }),
   setWindowMaximized: (windowMaximized) => set({ windowMaximized }),

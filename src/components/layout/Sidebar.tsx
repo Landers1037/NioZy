@@ -1,11 +1,4 @@
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Settings,
-  X,
-  Link2,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -18,14 +11,13 @@ import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { createTerminal, createConnection } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
+import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 
 export function Sidebar() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed)
   const setCollapsed = useAppStore((s) => s.setSidebarCollapsed)
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
-  const setActiveTab = useAppStore((s) => s.setActiveTab)
-  const removeTab = useAppStore((s) => s.removeTab)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const settings = useAppStore((s) => s.settings)
 
@@ -53,35 +45,12 @@ export function Sidebar() {
               isActive={activeTabId === tab.id}
             />
           ) : (
-            <div
+            <SettingsTabItem
               key={tab.id}
-              className={cn(
-                'group flex cursor-pointer items-center rounded-[10px] py-1.5 transition-colors',
-                collapsed ? 'justify-center px-0' : 'gap-2 px-2',
-                activeTabId === tab.id
-                  ? 'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35 dark:font-medium'
-                  : 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
-              )}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <Settings className="size-4 shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="min-w-0 flex-1 truncate text-sm">{tab.title}</span>
-                  <button
-                    type="button"
-                    className="cursor-pointer rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-                    aria-label={`关闭 ${tab.title}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeTab(tab.id)
-                    }}
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </>
-              )}
-            </div>
+              tab={tab}
+              collapsed={collapsed}
+              isActive={activeTabId === tab.id}
+            />
           ),
         )}
       </div>

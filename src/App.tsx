@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react'
 import { Toaster } from 'sonner'
 import { TitleBar } from '@/components/layout/TitleBar'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { isMinimalLayout } from '@/lib/layout-mode'
 import { TerminalView } from '@/components/terminal/TerminalView'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
@@ -16,9 +18,9 @@ export default function App() {
   const setSettings = useAppStore((s) => s.setSettings)
   const setSystemStats = useAppStore((s) => s.setSystemStats)
   const setWindowMaximized = useAppStore((s) => s.setWindowMaximized)
-  const statusBarLiveStats = useAppStore(
-    (s) => s.settings?.advanced.statusBarLiveStats !== false,
-  )
+  const settings = useAppStore((s) => s.settings)
+  const statusBarLiveStats = settings?.advanced.statusBarLiveStats !== false
+  const minimalLayout = isMinimalLayout(settings)
 
   const booted = useRef(false)
 
@@ -108,8 +110,9 @@ export default function App() {
         </div>
       )}
       <TitleBar />
+      {minimalLayout && <MinimalTabBar />}
       <div className="flex min-h-0 flex-1">
-        <Sidebar />
+        {!minimalLayout && <Sidebar />}
         <main className="flex min-w-0 flex-1 flex-col bg-background p-2">
           <div
             className={
