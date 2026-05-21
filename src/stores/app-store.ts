@@ -97,7 +97,6 @@ export function applyThemeToDocument(settings: AppSettings): void {
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)
   root.style.fontSize = `${settings.fontSize}px`
-  document.body.style.opacity = String(settings.advanced.transparency / 100)
 }
 
 export type { CustomConnection }

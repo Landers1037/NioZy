@@ -2,9 +2,15 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import type { CustomConnection } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
+import { getBuiltinTerminalOptions } from '@/lib/builtin-connection-options'
+import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
 import type { TerminalCreateOptions } from '../../electron/shared/api-types'
 
-type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
+type ShellType = BuiltinShellType | 'custom' | 'ssh'
+
+function builtinShellOptions(shell: BuiltinShellType): Pick<TerminalCreateOptions, 'shell' | 'args' | 'env'> {
+  return getBuiltinTerminalOptions(shell, useAppStore.getState().settings)
+}
 
 function toastTerminalError(error: unknown, context?: string): void {
   const message =
@@ -28,9 +34,9 @@ async function openTerminalTab(options: TerminalCreateOptions): Promise<void> {
   })
 }
 
-export async function createTerminal(shell: ShellType = 'powershell'): Promise<void> {
+export async function createTerminal(shell: BuiltinShellType = 'powershell'): Promise<void> {
   try {
-    await openTerminalTab({ shell })
+    await openTerminalTab(builtinShellOptions(shell))
   } catch (error) {
     toastTerminalError(error)
   }
@@ -63,7 +69,11 @@ export async function createConnection(
       return
     }
 
-    await openTerminalTab({ shell })
+    if (shell === 'custom' || shell === 'ssh') {
+      await openTerminalTab({ shell })
+      return
+    }
+    await openTerminalTab(builtinShellOptions(shell))
   } catch (error) {
     toastTerminalError(error, custom?.name)
   }

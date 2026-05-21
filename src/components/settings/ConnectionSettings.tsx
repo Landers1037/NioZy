@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,10 +12,42 @@ import {
 import { useAppStore } from '@/stores/app-store'
 import type { CustomConnection } from '@/stores/app-store'
 import { randomUUID } from '@/lib/id'
+import { parseEnvLines, formatEnvLines } from '@/lib/connection-env'
+import {
+  BUILTIN_SHELL_TYPES,
+  BUILTIN_SHELL_EXECUTABLE,
+  BUILTIN_SHELL_LABELS,
+  type BuiltinShellType,
+} from '../../../electron/shared/builtin-shells'
+import { SettingField } from './SettingField'
+import { TextareaWithVaultPicker } from './TextareaWithVaultPicker'
+import {
+  Cable,
+  FileCode,
+  Key,
+  List,
+  Network,
+  Pencil,
+  Plug,
+  Server,
+  Tag,
+  Terminal,
+  User,
+} from 'lucide-react'
+
+function builtinConfigSummary(args: string[], env: Record<string, string>): string {
+  const parts: string[] = []
+  if (args.length > 0) parts.push(`${args.length} 个参数`)
+  const envCount = Object.keys(env).length
+  if (envCount > 0) parts.push(`${envCount} 个环境变量`)
+  return parts.length > 0 ? parts.join('，') : '默认启动'
+}
 
 export function ConnectionSettings() {
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
+  const [editingBuiltin, setEditingBuiltin] = useState<BuiltinShellType | null>(null)
+  const [builtinDraft, setBuiltinDraft] = useState({ argsStr: '', envStr: '' })
   const [draft, setDraft] = useState({
     type: 'command' as 'command' | 'ssh',
     name: '',
@@ -31,6 +62,29 @@ export function ConnectionSettings() {
   })
 
   if (!settings) return null
+
+  const startEditBuiltin = (shell: BuiltinShellType) => {
+    const config = settings.builtinConnections[shell]
+    setEditingBuiltin(shell)
+    setBuiltinDraft({
+      argsStr: config.args.join(' '),
+      envStr: formatEnvLines(config.env),
+    })
+  }
+
+  const saveBuiltin = () => {
+    if (!editingBuiltin) return
+    patchSettings({
+      builtinConnections: {
+        ...settings.builtinConnections,
+        [editingBuiltin]: {
+          args: builtinDraft.argsStr.split(' ').filter(Boolean),
+          env: parseEnvLines(builtinDraft.envStr),
+        },
+      },
+    })
+    setEditingBuiltin(null)
+  }
 
   const saveConnection = () => {
     if (!draft.name.trim()) return
@@ -54,18 +108,13 @@ export function ConnectionSettings() {
       }
     } else {
       if (!draft.command.trim()) return
-      const env: Record<string, string> = {}
-      draft.envStr.split('\n').forEach((line) => {
-        const [k, ...rest] = line.split('=')
-        if (k?.trim()) env[k.trim()] = rest.join('=').trim()
-      })
       conn = {
         id: randomUUID(),
         name: draft.name.trim(),
         type: 'command',
         command: draft.command.trim(),
         args: draft.argsStr.split(' ').filter(Boolean),
-        env,
+        env: parseEnvLines(draft.envStr),
       }
     }
 
@@ -94,22 +143,85 @@ export function ConnectionSettings() {
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>内置连接</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Terminal className="size-5" />
+            内置连接
+          </CardTitle>
           <CardDescription>cmd.exe、powershell.exe、pwsh.exe</CardDescription>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          通过侧栏「新建连接」菜单快速打开内置终端。
+        <CardContent className="flex flex-col gap-2">
+          {BUILTIN_SHELL_TYPES.map((shell) => {
+            const config = settings.builtinConnections[shell]
+            const isEditing = editingBuiltin === shell
+            return (
+              <div
+                key={shell}
+                className="rounded-lg border border-border px-3 py-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium">{BUILTIN_SHELL_LABELS[shell]}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {BUILTIN_SHELL_EXECUTABLE[shell]} ·{' '}
+                      {builtinConfigSummary(config.args, config.env)}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      isEditing ? setEditingBuiltin(null) : startEditBuiltin(shell)
+                    }
+                  >
+                    <Pencil className="size-3.5" />
+                    {isEditing ? '收起' : '编辑'}
+                  </Button>
+                </div>
+                {isEditing && (
+                  <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4">
+                    <SettingField icon={List} label="启动参数（空格分隔）">
+                      <Input
+                        value={builtinDraft.argsStr}
+                        onChange={(e) =>
+                          setBuiltinDraft({ ...builtinDraft, argsStr: e.target.value })
+                        }
+                        placeholder="-NoLogo -ExecutionPolicy Bypass"
+                      />
+                    </SettingField>
+                    <SettingField
+                      icon={FileCode}
+                      label="环境变量（KEY=VALUE，每行一个）"
+                    >
+                      <TextareaWithVaultPicker
+                        value={builtinDraft.envStr}
+                        onChange={(envStr) => setBuiltinDraft({ ...builtinDraft, envStr })}
+                        placeholder="NODE_ENV=development"
+                      />
+                    </SettingField>
+                    <div className="flex gap-2">
+                      <Button onClick={saveBuiltin}>保存</Button>
+                      <Button variant="ghost" onClick={() => setEditingBuiltin(null)}>
+                        取消
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>添加自定义连接</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Plug className="size-5" />
+            添加自定义连接
+          </CardTitle>
           <CardDescription>自定义命令或 SSH 连接</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label>类型</Label>
+          <SettingField icon={Cable} label="类型">
             <Select
               value={draft.type}
               onValueChange={(v) => setDraft({ ...draft, type: v as 'command' | 'ssh' })}
@@ -122,45 +234,40 @@ export function ConnectionSettings() {
                 <SelectItem value="ssh">SSH</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </SettingField>
 
-          <div className="flex flex-col gap-2">
-            <Label>名称</Label>
+          <SettingField icon={Tag} label="名称">
             <Input
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             />
-          </div>
+          </SettingField>
 
           {draft.type === 'ssh' ? (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label>用户名</Label>
+                <SettingField icon={User} label="用户名">
                   <Input
                     value={draft.sshUser}
                     onChange={(e) => setDraft({ ...draft, sshUser: e.target.value })}
                   />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label>主机</Label>
+                </SettingField>
+                <SettingField icon={Server} label="主机">
                   <Input
                     value={draft.sshHost}
                     onChange={(e) => setDraft({ ...draft, sshHost: e.target.value })}
                   />
-                </div>
+                </SettingField>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label>端口</Label>
+              <SettingField icon={Network} label="端口">
                 <Input
                   type="number"
                   className="max-w-[120px]"
                   value={draft.sshPort}
                   onChange={(e) => setDraft({ ...draft, sshPort: Number(e.target.value) })}
                 />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>认证方式</Label>
+              </SettingField>
+              <SettingField icon={Key} label="认证方式">
                 <Select
                   value={draft.sshAuth}
                   onValueChange={(v) =>
@@ -175,44 +282,42 @@ export function ConnectionSettings() {
                     <SelectItem value="publickey">公钥登录</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </SettingField>
               {draft.sshAuth === 'publickey' && (
-                <div className="flex flex-col gap-2">
-                  <Label>私钥路径</Label>
+                <SettingField icon={FileCode} label="私钥路径">
                   <Input
                     value={draft.sshKeyPath}
                     onChange={(e) => setDraft({ ...draft, sshKeyPath: e.target.value })}
                     placeholder="C:\Users\you\.ssh\id_rsa"
                   />
-                </div>
+                </SettingField>
               )}
             </>
           ) : (
             <>
-              <div className="flex flex-col gap-2">
-                <Label>命令</Label>
+              <SettingField icon={Terminal} label="命令">
                 <Input
                   value={draft.command}
                   onChange={(e) => setDraft({ ...draft, command: e.target.value })}
                   placeholder="例如 C:\tools\mycli.exe"
                 />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>参数（空格分隔）</Label>
+              </SettingField>
+              <SettingField icon={List} label="参数（空格分隔）">
                 <Input
                   value={draft.argsStr}
                   onChange={(e) => setDraft({ ...draft, argsStr: e.target.value })}
                 />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>环境变量（KEY=VALUE，每行一个）</Label>
-                <textarea
-                  className="min-h-[80px] rounded-lg border border-border bg-muted p-2 text-sm"
+              </SettingField>
+              <SettingField
+                icon={FileCode}
+                label="环境变量（KEY=VALUE，每行一个）"
+              >
+                <TextareaWithVaultPicker
                   value={draft.envStr}
-                  onChange={(e) => setDraft({ ...draft, envStr: e.target.value })}
+                  onChange={(envStr) => setDraft({ ...draft, envStr })}
                   placeholder="NODE_ENV=development"
                 />
-              </div>
+              </SettingField>
             </>
           )}
 

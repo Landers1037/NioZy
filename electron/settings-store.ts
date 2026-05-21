@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import type { CustomConnection } from './shared/api-types'
+import type { BuiltinConnections, CustomConnection } from './shared/api-types'
 import { ConnectionsStore, parseConnectionsFromUnknown } from './connections-store'
 import { ensureConfigDir, getConfigDir, getSettingsFilePath, getTermFilePath } from './config-paths'
 
@@ -9,6 +9,11 @@ export type ThemeMode = 'light' | 'dark'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
+import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
+import {
+  DEFAULT_BUILTIN_CONNECTIONS,
+  normalizeBuiltinConnections,
+} from './shared/builtin-shells'
 
 export type { TerminalColorScheme } from './shared/terminal-color-schemes'
 
@@ -25,6 +30,7 @@ export interface AppSettings {
     renderer: TerminalRenderer
   }
   connections: CustomConnection[]
+  builtinConnections: BuiltinConnections
   system: {
     proxy: string
     launchOnStartup: boolean
@@ -35,6 +41,7 @@ export interface AppSettings {
     transparency: number
     statusBarLiveStats: boolean
   }
+  shortcuts: AppShortcuts
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -51,6 +58,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     renderer: 'webgl',
   },
   connections: [],
+  builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
   system: {
     proxy: '',
     launchOnStartup: false,
@@ -61,6 +69,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     transparency: 100,
     statusBarLiveStats: true,
   },
+  shortcuts: { ...DEFAULT_SHORTCUTS },
 }
 
 export class SettingsStore {
@@ -86,6 +95,15 @@ export class SettingsStore {
           stored.terminal?.colorScheme ?? DEFAULT_SETTINGS.terminal.colorScheme,
         ),
       },
+      shortcuts: {
+        ...DEFAULT_SETTINGS.shortcuts,
+        ...stored.shortcuts,
+        global: { ...DEFAULT_SETTINGS.shortcuts.global, ...stored.shortcuts?.global },
+        app: { ...DEFAULT_SETTINGS.shortcuts.app, ...stored.shortcuts?.app },
+      },
+      builtinConnections: normalizeBuiltinConnections(
+        (stored as Partial<AppSettings>).builtinConnections,
+      ),
     }
     this.migrateEmbeddedConnections()
     return this.settings

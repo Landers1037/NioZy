@@ -1,4 +1,11 @@
-import type { AppSettings, ElectronAPI, SystemStatsData } from '../../electron/shared/api-types'
+import type {
+  AppSettings,
+  ElectronAPI,
+  SystemStatsData,
+  VaultVariablePublic,
+} from '../../electron/shared/api-types'
+import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
+import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
@@ -11,6 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     renderer: 'webgl',
   },
   connections: [],
+  builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
   system: {
     proxy: '',
     launchOnStartup: false,
@@ -21,7 +29,10 @@ const DEFAULT_SETTINGS: AppSettings = {
     transparency: 100,
     statusBarLiveStats: true,
   },
+  shortcuts: { ...DEFAULT_SHORTCUTS },
 }
+
+let mockVault: VaultVariablePublic[] = []
 
 type DataListener = (id: string, data: string) => void
 type StatsListener = (stats: SystemStatsData) => void
@@ -53,8 +64,27 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
     terminal: { ...mockSettings.terminal, ...partial.terminal },
     system: { ...mockSettings.system, ...partial.system },
     advanced: { ...mockSettings.advanced, ...partial.advanced },
+    shortcuts: partial.shortcuts
+      ? {
+          ...mockSettings.shortcuts,
+          ...partial.shortcuts,
+          global: { ...mockSettings.shortcuts.global, ...partial.shortcuts.global },
+          app: { ...mockSettings.shortcuts.app, ...partial.shortcuts.app },
+        }
+      : mockSettings.shortcuts,
     connections: partial.connections ?? mockSettings.connections,
+    builtinConnections: partial.builtinConnections ?? mockSettings.builtinConnections,
   }
+}
+
+const VAULT_REF = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g
+
+function resolveVaultText(text: string): string {
+  return text.replace(VAULT_REF, (_, key: string) => {
+    const v = mockVault.find((x) => x.key === key)
+    if (!v) return `\${${key}}`
+    return v.type === 'plain' ? (v.value ?? '') : '[secret]'
+  })
 }
 
 function welcomeMessage(shell: string): string {
@@ -99,10 +129,48 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         }
       },
     },
+    vault: {
+      list: async () => structuredClone(mockVault),
+      getKeys: async () => mockVault.map((v) => v.key),
+      save: async (input) => {
+        const entry: VaultVariablePublic =
+          input.type === 'plain'
+            ? {
+                id: input.id ?? `mock-${mockVault.length}`,
+                key: input.key,
+                type: 'plain',
+                value: input.value ?? '',
+              }
+            : {
+                id: input.id ?? `mock-${mockVault.length}`,
+                key: input.key,
+                type: 'secret',
+              }
+        const idx = input.id ? mockVault.findIndex((v) => v.id === input.id) : -1
+        if (idx >= 0) mockVault[idx] = entry
+        else mockVault.push(entry)
+        return structuredClone(entry)
+      },
+      remove: async (id) => {
+        mockVault = mockVault.filter((v) => v.id !== id)
+      },
+      resolve: async (text) => resolveVaultText(text),
+    },
+    shell: {
+      openExternal: async (url) => {
+        window.open(url, '_blank', 'noopener,noreferrer')
+      },
+    },
     terminal: {
       create: async (options) => {
         const id = `browser-mock-${++mockTermCounter}`
         const name = options.name ?? `${options.shell} (预览)`
+        const envResolved = options.env
+          ? Object.fromEntries(
+              Object.entries(options.env).map(([k, v]) => [k, resolveVaultText(v)]),
+            )
+          : undefined
+        void envResolved
         window.setTimeout(() => emitData(id, welcomeMessage(options.shell)), 0)
         return { id, name, shell: options.shell }
       },

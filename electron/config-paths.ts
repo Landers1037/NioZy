@@ -16,6 +16,14 @@ export function getTermFilePath(): string {
   return join(getConfigDir(), 'term.json')
 }
 
+export function getVaultFilePath(): string {
+  return join(getConfigDir(), 'vault.json')
+}
+
+export function getVaultKeyFilePath(): string {
+  return join(getConfigDir(), 'niozy.key')
+}
+
 export function ensureConfigDir(): void {
   const dir = getConfigDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })

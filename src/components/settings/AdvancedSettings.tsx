@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { useAppStore } from '@/stores/app-store'
+import { SettingField } from './SettingField'
+import { Activity, Cpu, Droplets } from 'lucide-react'
 
 export function AdvancedSettings() {
   const settings = useAppStore((s) => s.settings)
@@ -16,37 +17,37 @@ export function AdvancedSettings() {
         <CardDescription>硬件加速、窗口透明度与状态栏监控</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <div className="flex items-center justify-between max-w-md">
-          <div>
-            <Label>硬件加速</Label>
-            <p className="text-xs text-muted-foreground">默认开启，需重启应用后完全生效</p>
-          </div>
+        <SettingField
+          icon={Cpu}
+          label="硬件加速"
+          description="默认开启，需重启应用后完全生效"
+          row
+        >
           <Switch
             checked={settings.advanced.hardwareAcceleration}
             onCheckedChange={(v) =>
               patchSettings({ advanced: { ...settings.advanced, hardwareAcceleration: v } })
             }
           />
-        </div>
+        </SettingField>
 
-        <div className="flex items-center justify-between max-w-md">
-          <div>
-            <Label>状态栏实时系统信息</Label>
-            <p className="text-xs text-muted-foreground">
-              关闭后停止轮询 CPU/内存，可减轻界面刷新开销
-            </p>
-          </div>
+        <SettingField
+          icon={Activity}
+          label="状态栏实时系统信息"
+          description="关闭后停止轮询 CPU/内存，可减轻界面刷新开销"
+          row
+        >
           <Switch
             checked={settings.advanced.statusBarLiveStats !== false}
             onCheckedChange={(v) =>
               patchSettings({ advanced: { ...settings.advanced, statusBarLiveStats: v } })
             }
           />
-        </div>
+        </SettingField>
 
-        <div className="flex flex-col gap-2 max-w-md">
-          <Label>窗口透明度: {settings.advanced.transparency}%</Label>
+        <SettingField icon={Droplets} label={`窗口透明度: ${settings.advanced.transparency}%`}>
           <Slider
+            className="max-w-md"
             min={70}
             max={100}
             step={1}
@@ -55,7 +56,7 @@ export function AdvancedSettings() {
               patchSettings({ advanced: { ...settings.advanced, transparency: v } })
             }
           />
-        </div>
+        </SettingField>
       </CardContent>
     </Card>
   )

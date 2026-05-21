@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -12,7 +11,9 @@ import { useAppStore } from '@/stores/app-store'
 import { COLOR_SCHEME_OPTIONS } from '@/lib/terminal-themes'
 import { ColorSchemePreview } from '@/components/settings/ColorSchemePreview'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
+import { SettingField } from './SettingField'
 import type { TerminalColorScheme } from '../../../electron/shared/api-types'
+import { Cpu, Palette, Type } from 'lucide-react'
 
 export function TerminalSettings() {
   const settings = useAppStore((s) => s.settings)
@@ -28,8 +29,7 @@ export function TerminalSettings() {
         <CardDescription>配色、字体与渲染方式</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3">
-          <Label>配色方案</Label>
+        <SettingField icon={Palette} label="配色方案">
           <Select
             value={scheme}
             onValueChange={(v) =>
@@ -53,10 +53,9 @@ export function TerminalSettings() {
             </SelectContent>
           </Select>
           <ColorSchemePreview schemeId={scheme} />
-        </div>
+        </SettingField>
 
-        <div className="flex flex-col gap-2">
-          <Label>终端字体</Label>
+        <SettingField icon={Type} label="终端字体">
           <Input
             className="max-w-xs"
             value={settings.terminal.fontFamily}
@@ -66,9 +65,10 @@ export function TerminalSettings() {
               })
             }
           />
-        </div>
+        </SettingField>
 
         <FontSizeInput
+          icon={Type}
           label="终端字号"
           min={10}
           max={24}
@@ -78,8 +78,11 @@ export function TerminalSettings() {
           }
         />
 
-        <div className="flex flex-col gap-2">
-          <Label>渲染方式</Label>
+        <SettingField
+          icon={Cpu}
+          label="渲染方式"
+          description="WebGPU 渲染器在 xterm.js 中仍处于实验阶段，当前版本将回退到 DOM/WebGL。"
+        >
           <Select
             value={settings.terminal.renderer}
             onValueChange={(v) =>
@@ -100,10 +103,7 @@ export function TerminalSettings() {
               <SelectItem value="webgpu">WebGPU（实验，可能不可用）</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">
-            WebGPU 渲染器在 xterm.js 中仍处于实验阶段，当前版本将回退到 DOM/WebGL。
-          </p>
-        </div>
+        </SettingField>
       </CardContent>
     </Card>
   )

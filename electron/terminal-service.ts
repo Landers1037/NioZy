@@ -51,6 +51,7 @@ export class TerminalService extends EventEmitter {
       args = options.args ?? []
     } else {
       file = SHELL_MAP[options.shell as keyof typeof SHELL_MAP] ?? 'powershell.exe'
+      args = options.args ?? []
     }
 
     const name =
