@@ -49,7 +49,8 @@ export function Sidebar() {
           <div
             key={tab.id}
             className={cn(
-              'group flex cursor-pointer items-center gap-2 rounded-[10px] px-2 py-1.5 transition-colors',
+              'group flex cursor-pointer items-center rounded-[10px] py-1.5 transition-colors',
+              collapsed ? 'justify-center px-0' : 'gap-2 px-2',
               activeTabId === tab.id
                 ? 'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35 dark:font-medium'
                 : 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
@@ -84,8 +85,13 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-1 border-t border-border p-2 no-drag">
-        <div className={cn('flex gap-1', collapsed && 'flex-col')}>
+      <div
+        className={cn(
+          'flex flex-col gap-1 border-t border-border p-2 no-drag',
+          collapsed && 'items-center',
+        )}
+      >
+        <div className={cn('flex gap-1', collapsed ? 'flex-col items-center' : '')}>
           <Button
             variant="secondary"
             size={collapsed ? 'icon' : 'default'}
@@ -126,7 +132,7 @@ export function Sidebar() {
         <Button
           variant="ghost"
           size={collapsed ? 'icon' : 'default'}
-          className={cn('justify-start', collapsed && 'justify-center')}
+          className={cn(!collapsed && 'w-full justify-start')}
           onClick={() => addSettingsTab()}
         >
           <Settings className="size-4" />
