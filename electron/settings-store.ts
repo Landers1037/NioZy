@@ -10,6 +10,10 @@ export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
+import {
+  normalizeTerminalCursorStyle,
+  type TerminalCursorStyle,
+} from './shared/terminal-cursor'
 import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
 import {
   DEFAULT_BUILTIN_CONNECTIONS,
@@ -30,6 +34,8 @@ export interface AppSettings {
     fontFamily: string
     fontSize: number
     renderer: TerminalRenderer
+    cursorStyle: TerminalCursorStyle
+    cursorBlink: boolean
   }
   connections: CustomConnection[]
   builtinConnections: BuiltinConnections
@@ -64,6 +70,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     fontFamily: 'Consolas',
     fontSize: 13,
     renderer: 'webgl',
+    cursorStyle: 'block',
+    cursorBlink: true,
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
@@ -103,6 +111,11 @@ export class SettingsStore {
         colorScheme: normalizeTerminalColorScheme(
           stored.terminal?.colorScheme ?? DEFAULT_SETTINGS.terminal.colorScheme,
         ),
+        cursorStyle: normalizeTerminalCursorStyle(stored.terminal?.cursorStyle),
+        cursorBlink:
+          typeof stored.terminal?.cursorBlink === 'boolean'
+            ? stored.terminal.cursorBlink
+            : DEFAULT_SETTINGS.terminal.cursorBlink,
       },
       shortcuts: {
         ...DEFAULT_SETTINGS.shortcuts,
