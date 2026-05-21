@@ -57,14 +57,19 @@ export class TerminalService extends EventEmitter {
       options.name ??
       (options.shell === 'custom' ? file : options.shell.charAt(0).toUpperCase() + options.shell.slice(1))
 
-    const ptyProcess = pty.spawn(file, args, {
-      name: 'xterm-color',
-      cols,
-      rows,
-      cwd: options.cwd ?? process.env.USERPROFILE ?? process.cwd(),
-      env: env as NodeJS.ProcessEnv,
-      useConpty: true,
-    })
+    let ptyProcess: pty.IPty
+    try {
+      ptyProcess = pty.spawn(file, args, {
+        name: 'xterm-color',
+        cols,
+        rows,
+        cwd: options.cwd ?? process.env.USERPROFILE ?? process.cwd(),
+        env: env as NodeJS.ProcessEnv,
+        useConpty: true,
+      })
+    } catch (err) {
+      throw new Error(formatSpawnError(err, file, options.shell, name))
+    }
 
     ptyProcess.onData((data) => {
       this.emit('data', id, data)
@@ -105,4 +110,28 @@ export class TerminalService extends EventEmitter {
     }
     this.sessions.clear()
   }
+}
+
+function formatSpawnError(
+  err: unknown,
+  file: string,
+  shell: ShellType,
+  displayName: string,
+): string {
+  const detail = err instanceof Error ? err.message : String(err)
+  const missing =
+    /ENOENT|not found|cannot find|找不到|不存在/i.test(detail) ||
+    /spawn .* ENOENT/i.test(detail)
+
+  if (missing) {
+    if (shell === 'pwsh') {
+      return '未找到 pwsh.exe。请先安装 PowerShell Core，或选择 PowerShell / CMD。'
+    }
+    if (shell === 'ssh') {
+      return '未找到 ssh 命令。请安装 OpenSSH 客户端或 Git for Windows。'
+    }
+    return `未找到可执行文件「${file}」，无法启动 ${displayName}。`
+  }
+
+  return `无法启动 ${displayName}：${detail}`
 }

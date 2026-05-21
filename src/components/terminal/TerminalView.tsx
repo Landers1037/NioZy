@@ -135,14 +135,19 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     if (visibleRef.current) scheduleFit()
   }, [settings?.terminal, scheduleFit])
 
+  const terminalBackground =
+    resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'
+
   return (
     <div
-      ref={containerRef}
       className={cn(
-        'absolute inset-0 overflow-hidden rounded-lg bg-[#101419] p-1',
+        'absolute inset-0 overflow-hidden p-[10px]',
         visible ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none',
       )}
+      style={{ backgroundColor: terminalBackground }}
       aria-hidden={!visible}
-    />
+    >
+      <div ref={containerRef} className="niozy-terminal-host h-full w-full overflow-hidden" />
+    </div>
   )
 }
