@@ -6,6 +6,7 @@ import { ConnectionsStore, parseConnectionsFromUnknown } from './connections-sto
 import { ensureConfigDir, getConfigDir, getSettingsFilePath, getTermFilePath } from './config-paths'
 
 export type ThemeMode = 'light' | 'dark'
+export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
@@ -21,6 +22,7 @@ export type { CustomConnection }
 
 export interface AppSettings {
   theme: ThemeMode
+  layoutMode: LayoutMode
   accentColor: string
   fontSize: number
   terminal: {
@@ -47,8 +49,14 @@ export interface AppSettings {
 /** 写入 settings.json 的字段（不含连接列表） */
 export type StoredAppSettings = Omit<AppSettings, 'connections'>
 
+function normalizeLayoutMode(value: unknown): LayoutMode {
+  if (value === 'focus' || value === 'minimal') return value
+  return 'default'
+}
+
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
+  layoutMode: 'default',
   accentColor: '#0A84FF',
   fontSize: 13,
   terminal: {
@@ -87,6 +95,7 @@ export class SettingsStore {
     this.settings = {
       ...DEFAULT_SETTINGS,
       ...stored,
+      layoutMode: normalizeLayoutMode(stored.layoutMode),
       connections,
       terminal: {
         ...DEFAULT_SETTINGS.terminal,

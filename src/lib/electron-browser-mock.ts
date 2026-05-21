@@ -9,6 +9,7 @@ import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shell
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
+  layoutMode: 'default',
   accentColor: '#0A84FF',
   fontSize: 13,
   terminal: {

@@ -1,4 +1,5 @@
 export type ThemeMode = 'light' | 'dark'
+export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalColorScheme } from './terminal-color-schemes'
 import type { AppShortcuts } from './shortcuts'
@@ -49,6 +50,8 @@ export interface CustomConnection {
 
 export interface AppSettings {
   theme: ThemeMode
+  /** default：侧栏展开；focus：侧栏收起；minimal：无侧栏、顶栏下横向图标 Tab */
+  layoutMode: LayoutMode
   accentColor: string
   fontSize: number
   terminal: {
