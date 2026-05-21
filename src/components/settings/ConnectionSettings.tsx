@@ -21,11 +21,13 @@ import {
 } from '../../../electron/shared/builtin-shells'
 import { SettingField } from './SettingField'
 import { TextareaWithVaultPicker } from './TextareaWithVaultPicker'
+import { InputWithVaultPicker } from './InputWithVaultPicker'
 import {
   Cable,
   FileCode,
   Key,
   List,
+  Lock,
   Network,
   Pencil,
   Plug,
@@ -58,6 +60,7 @@ export function ConnectionSettings() {
     sshHost: '',
     sshPort: 22,
     sshAuth: 'password' as 'password' | 'publickey',
+    sshPassword: '',
     sshKeyPath: '',
   })
 
@@ -104,7 +107,14 @@ export function ConnectionSettings() {
         sshUser: draft.sshUser.trim(),
         sshHost: draft.sshHost.trim(),
         sshPort: draft.sshPort,
-        sshKeyPath: draft.sshKeyPath || undefined,
+        sshPassword:
+          draft.sshAuth === 'password' && draft.sshPassword.trim()
+            ? draft.sshPassword.trim()
+            : undefined,
+        sshKeyPath:
+          draft.sshAuth === 'publickey' && draft.sshKeyPath.trim()
+            ? draft.sshKeyPath.trim()
+            : undefined,
       }
     } else {
       if (!draft.command.trim()) return
@@ -129,6 +139,7 @@ export function ConnectionSettings() {
       sshHost: '',
       sshPort: 22,
       sshAuth: 'password',
+      sshPassword: '',
       sshKeyPath: '',
     })
   }
@@ -245,28 +256,6 @@ export function ConnectionSettings() {
 
           {draft.type === 'ssh' ? (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <SettingField icon={User} label="用户名">
-                  <Input
-                    value={draft.sshUser}
-                    onChange={(e) => setDraft({ ...draft, sshUser: e.target.value })}
-                  />
-                </SettingField>
-                <SettingField icon={Server} label="主机">
-                  <Input
-                    value={draft.sshHost}
-                    onChange={(e) => setDraft({ ...draft, sshHost: e.target.value })}
-                  />
-                </SettingField>
-              </div>
-              <SettingField icon={Network} label="端口">
-                <Input
-                  type="number"
-                  className="max-w-[120px]"
-                  value={draft.sshPort}
-                  onChange={(e) => setDraft({ ...draft, sshPort: Number(e.target.value) })}
-                />
-              </SettingField>
               <SettingField icon={Key} label="认证方式">
                 <Select
                   value={draft.sshAuth}
@@ -283,15 +272,54 @@ export function ConnectionSettings() {
                   </SelectContent>
                 </Select>
               </SettingField>
-              {draft.sshAuth === 'publickey' && (
-                <SettingField icon={FileCode} label="私钥路径">
+
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label="主机">
                   <Input
-                    value={draft.sshKeyPath}
-                    onChange={(e) => setDraft({ ...draft, sshKeyPath: e.target.value })}
-                    placeholder="C:\Users\you\.ssh\id_rsa"
+                    value={draft.sshHost}
+                    onChange={(e) => setDraft({ ...draft, sshHost: e.target.value })}
+                    placeholder="192.168.1.1"
                   />
                 </SettingField>
-              )}
+                <SettingField icon={Network} label="端口">
+                  <Input
+                    type="number"
+                    value={draft.sshPort}
+                    onChange={(e) => setDraft({ ...draft, sshPort: Number(e.target.value) })}
+                  />
+                </SettingField>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={User} label="用户名">
+                  <Input
+                    value={draft.sshUser}
+                    onChange={(e) => setDraft({ ...draft, sshUser: e.target.value })}
+                  />
+                </SettingField>
+                {draft.sshAuth === 'password' ? (
+                  <SettingField icon={Lock} label="密码">
+                    <InputWithVaultPicker
+                      type="password"
+                      wrapperClassName="w-full max-w-none"
+                      className="min-w-0 flex-1"
+                      value={draft.sshPassword}
+                      onChange={(sshPassword) => setDraft({ ...draft, sshPassword })}
+                      placeholder="密码或 ${存储库变量}"
+                    />
+                  </SettingField>
+                ) : (
+                  <SettingField icon={FileCode} label="私钥路径">
+                    <InputWithVaultPicker
+                      wrapperClassName="w-full max-w-none"
+                      className="min-w-0 flex-1"
+                      value={draft.sshKeyPath}
+                      onChange={(sshKeyPath) => setDraft({ ...draft, sshKeyPath })}
+                      placeholder="私钥路径或 ${存储库变量}"
+                    />
+                  </SettingField>
+                )}
+              </div>
             </>
           ) : (
             <>

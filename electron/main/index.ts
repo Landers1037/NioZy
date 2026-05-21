@@ -8,6 +8,7 @@ import { SettingsStore } from '../settings-store'
 import { SystemStats } from '../system-stats'
 import { VaultStore } from '../vault-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
+import type { TerminalCreateOptions } from '../shared/api-types'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -233,9 +234,11 @@ ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 
-ipcMain.handle('terminal:create', (_, options) => {
+ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
   const resolved = {
     ...options,
+    command: options.command ? vaultStore.resolveText(options.command) : undefined,
+    args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
     env: options.env ? vaultStore.resolveEnv(options.env) : undefined,
   }
   return terminalService.create(resolved)

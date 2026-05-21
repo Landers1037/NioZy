@@ -48,6 +48,8 @@ export interface CustomConnection {
   sshUser?: string
   sshHost?: string
   sshPort?: number
+  /** 密码登录；支持 ${vaultKey} 引用存储库 */
+  sshPassword?: string
   sshKeyPath?: string
 }
 
