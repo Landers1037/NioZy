@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { NewConnectionMenuContent } from '@/components/layout/NewConnectionMenuContent'
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
-import { createTerminal, createConnection } from '@/lib/terminal-actions'
+import { createTerminal } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
@@ -127,26 +126,7 @@ export function Sidebar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => createConnection('powershell')}>
-                  {t('settings.connections.shell.powershell')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => createConnection('cmd')}>
-                  {t('settings.connections.shell.cmd')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => createConnection('pwsh')}>
-                  {t('settings.connections.shell.pwsh')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {settings?.connections.map((c) => (
-                  <DropdownMenuItem key={c.id} onClick={() => createConnection('custom', c)}>
-                    {c.name}
-                  </DropdownMenuItem>
-                ))}
-                {settings?.connections.length === 0 && (
-                  <DropdownMenuItem disabled>
-                    {t('settings.connections.noCustomConnections')}
-                  </DropdownMenuItem>
-                )}
+                <NewConnectionMenuContent />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

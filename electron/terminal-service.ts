@@ -73,12 +73,14 @@ export class TerminalService extends EventEmitter {
     }
 
     ptyProcess.onData((data) => {
+      if (!this.sessions.has(id)) return
       this.emit('data', id, data)
     })
 
     ptyProcess.onExit(({ exitCode }) => {
-      this.emit('exit', id, exitCode)
+      if (!this.sessions.has(id)) return
       this.sessions.delete(id)
+      this.emit('exit', id, exitCode)
     })
 
     this.sessions.set(id, { id, pty: ptyProcess, shell: options.shell, name })
@@ -95,21 +97,25 @@ export class TerminalService extends EventEmitter {
 
   kill(id: string): void {
     const session = this.sessions.get(id)
-    if (session) {
+    if (!session) return
+    this.sessions.delete(id)
+    try {
       session.pty.kill()
-      this.sessions.delete(id)
+    } catch {
+      /* ignore */
     }
   }
 
   disposeAll(): void {
-    for (const [, session] of this.sessions) {
+    const sessions = [...this.sessions.values()]
+    this.sessions.clear()
+    for (const session of sessions) {
       try {
         session.pty.kill()
       } catch {
         /* ignore */
       }
     }
-    this.sessions.clear()
   }
 }
 

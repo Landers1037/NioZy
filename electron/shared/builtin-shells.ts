@@ -10,7 +10,7 @@ export const BUILTIN_SHELL_EXECUTABLE: Record<BuiltinShellType, string> = {
 export const BUILTIN_SHELL_LABELS: Record<BuiltinShellType, string> = {
   powershell: 'PowerShell',
   cmd: 'CMD',
-  pwsh: 'PowerShell Core (pwsh)',
+  pwsh: 'pwsh',
 }
 
 export interface BuiltinShellConfig {
