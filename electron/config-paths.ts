@@ -24,6 +24,10 @@ export function getVaultKeyFilePath(): string {
   return join(getConfigDir(), 'niozy.key')
 }
 
+export function getFontsCacheFilePath(): string {
+  return join(getConfigDir(), 'fonts-cache.json')
+}
+
 export function ensureConfigDir(): void {
   const dir = getConfigDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })

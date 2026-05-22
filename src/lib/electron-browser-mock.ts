@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
   theme: 'light',
   layoutMode: 'default',
+  sidebarWidth: 260,
   accentColor: '#0A84FF',
   fontSize: 13,
   terminal: {

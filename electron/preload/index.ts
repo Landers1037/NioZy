@@ -20,6 +20,9 @@ const api: ElectronAPI = {
     get: () => ipcRenderer.invoke('settings:get'),
     save: (partial) => ipcRenderer.invoke('settings:save', partial),
   },
+  fonts: {
+    list: () => ipcRenderer.invoke('fonts:list'),
+  },
   system: {
     getStats: () => ipcRenderer.invoke('system:getStats'),
     onStats: (cb) => {
