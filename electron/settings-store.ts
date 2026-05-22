@@ -21,6 +21,12 @@ import {
 } from './shared/builtin-shells'
 import { DEFAULT_LOCALE, normalizeLocale } from './shared/locale'
 import { DEFAULT_SIDEBAR_WIDTH, normalizeSidebarWidth } from './shared/sidebar-width'
+import {
+  normalizeDrawBoldTextInBrightColors,
+  normalizeRightClickCopyPaste,
+  normalizeTerminalScrollback,
+  DEFAULT_TERMINAL_SCROLLBACK,
+} from './shared/terminal-xterm'
 
 export type { TerminalColorScheme } from './shared/terminal-color-schemes'
 
@@ -40,6 +46,9 @@ export interface AppSettings {
     renderer: TerminalRenderer
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean
+    scrollback: number
+    drawBoldTextInBrightColors: boolean
+    rightClickCopyPaste: boolean
   }
   connections: CustomConnection[]
   builtinConnections: BuiltinConnections
@@ -78,6 +87,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
     renderer: 'webgl',
     cursorStyle: 'block',
     cursorBlink: true,
+    scrollback: DEFAULT_TERMINAL_SCROLLBACK,
+    drawBoldTextInBrightColors: true,
+    rightClickCopyPaste: true,
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
@@ -124,6 +136,11 @@ export class SettingsStore {
           typeof stored.terminal?.cursorBlink === 'boolean'
             ? stored.terminal.cursorBlink
             : DEFAULT_SETTINGS.terminal.cursorBlink,
+        scrollback: normalizeTerminalScrollback(stored.terminal?.scrollback),
+        drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
+          stored.terminal?.drawBoldTextInBrightColors,
+        ),
+        rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
       },
       shortcuts: {
         ...DEFAULT_SETTINGS.shortcuts,

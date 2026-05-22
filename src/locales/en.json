@@ -64,7 +64,14 @@
       "rendererDesc": "WebGPU in xterm.js is experimental; this build may fall back to DOM/WebGL.",
       "rendererDom": "Canvas / DOM (stable)",
       "rendererWebgl": "WebGL (recommended)",
-      "rendererWebgpu": "WebGPU (experimental, may be unavailable)"
+      "rendererWebgpu": "WebGPU (experimental, may be unavailable)",
+      "scrollback": "Scrollback",
+      "scrollbackDesc": "Number of lines kept for scroll-up history (xterm scrollback)",
+      "lines": "lines",
+      "drawBoldBright": "Bold text in bright colors",
+      "drawBoldBrightDesc": "Maps to xterm drawBoldTextInBrightColors",
+      "rightClickCopyPaste": "Right-click copy / paste",
+      "rightClickCopyPasteDesc": "Copy when text is selected; paste when nothing is selected"
     },
     "system": {
       "title": "System",

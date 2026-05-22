@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Settings, X } from 'lucide-react'
+import { FolderOpen, Settings, X } from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -70,9 +70,13 @@ export function SettingsTabItem({
             if (!isActive) setActiveTab(tab.id)
           }}
         >
+          <FolderOpen className="size-4 text-muted-foreground" />
           {t('common.open')}
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => removeTab(tab.id)}>{t('common.close')}</ContextMenuItem>
+        <ContextMenuItem onSelect={() => removeTab(tab.id)}>
+          <X className="size-4 text-muted-foreground" />
+          {t('common.close')}
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )
