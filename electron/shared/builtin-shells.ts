@@ -26,6 +26,16 @@ export const DEFAULT_BUILTIN_CONNECTIONS: BuiltinConnections = {
   pwsh: { args: [], env: {} },
 }
 
+export function normalizeDefaultTerminal(value: unknown): BuiltinShellType {
+  if (
+    typeof value === 'string' &&
+    (BUILTIN_SHELL_TYPES as readonly string[]).includes(value)
+  ) {
+    return value as BuiltinShellType
+  }
+  return 'powershell'
+}
+
 export function normalizeBuiltinConnections(
   raw?: Partial<BuiltinConnections> | null,
 ): BuiltinConnections {

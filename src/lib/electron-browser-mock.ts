@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
+  defaultTerminal: 'powershell',
   system: {
     proxy: '',
     launchOnStartup: false,
@@ -129,6 +130,11 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     system: {
       platform: 'win32',
+      reloadEnvironment: async () => ({
+        ok: true,
+        variableCount: 0,
+        pathSegmentCount: 0,
+      }),
       getStats: async () => mockSystemStats(),
       onStats: (cb) => {
         statsListeners.add(cb)

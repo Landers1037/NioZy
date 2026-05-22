@@ -4,6 +4,7 @@ import type { TFunction } from 'i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ import {
   Pencil,
   Plug,
   Server,
+  Star,
   Tag,
   Terminal,
   User,
@@ -63,7 +65,11 @@ export function ConnectionSettings() {
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   const [editingBuiltin, setEditingBuiltin] = useState<BuiltinShellType | null>(null)
-  const [builtinDraft, setBuiltinDraft] = useState({ argsStr: '', envStr: '' })
+  const [builtinDraft, setBuiltinDraft] = useState({
+    argsStr: '',
+    envStr: '',
+    setAsDefault: false,
+  })
   const [editingConnectionId, setEditingConnectionId] = useState<string | null>(null)
   const [draft, setDraft] = useState<ConnectionDraft>(EMPTY_CONNECTION_DRAFT)
 
@@ -75,11 +81,13 @@ export function ConnectionSettings() {
     setBuiltinDraft({
       argsStr: config.args.join(' '),
       envStr: formatEnvLines(config.env),
+      setAsDefault: settings.defaultTerminal === shell,
     })
   }
 
   const saveBuiltin = () => {
     if (!editingBuiltin) return
+    const wasDefault = settings.defaultTerminal === editingBuiltin
     patchSettings({
       builtinConnections: {
         ...settings.builtinConnections,
@@ -88,6 +96,11 @@ export function ConnectionSettings() {
           env: parseEnvLines(builtinDraft.envStr),
         },
       },
+      defaultTerminal: builtinDraft.setAsDefault
+        ? editingBuiltin
+        : wasDefault
+          ? 'powershell'
+          : settings.defaultTerminal,
     })
     setEditingBuiltin(null)
   }
@@ -136,6 +149,7 @@ export function ConnectionSettings() {
           {BUILTIN_SHELL_TYPES.map((shell) => {
             const config = settings.builtinConnections[shell]
             const isEditing = editingBuiltin === shell
+            const isDefault = settings.defaultTerminal === shell
             return (
               <div
                 key={shell}
@@ -143,7 +157,15 @@ export function ConnectionSettings() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-medium">{t(`settings.connections.shell.${shell}`)}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{t(`settings.connections.shell.${shell}`)}</p>
+                      {isDefault && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-xs font-normal text-secondary-foreground">
+                          <Star className="size-3 fill-current" />
+                          {t('settings.connections.defaultTerminalBadge')}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {BUILTIN_SHELL_EXECUTABLE[shell]} ·{' '}
                       {builtinConfigSummary(t, config.args, config.env)}
@@ -179,6 +201,19 @@ export function ConnectionSettings() {
                         value={builtinDraft.envStr}
                         onChange={(envStr) => setBuiltinDraft({ ...builtinDraft, envStr })}
                         placeholder="NODE_ENV=development"
+                      />
+                    </SettingField>
+                    <SettingField
+                      icon={Star}
+                      label={t('settings.connections.setDefaultTerminal')}
+                      description={t('settings.connections.setDefaultTerminalDesc')}
+                      row
+                    >
+                      <Switch
+                        checked={builtinDraft.setAsDefault}
+                        onCheckedChange={(setAsDefault) =>
+                          setBuiltinDraft({ ...builtinDraft, setAsDefault })
+                        }
                       />
                     </SettingField>
                     <div className="flex gap-2">

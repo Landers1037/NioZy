@@ -1,8 +1,13 @@
 import {
   DEFAULT_BUILTIN_CONNECTIONS,
+  normalizeDefaultTerminal,
   type BuiltinShellType,
 } from '../../electron/shared/builtin-shells'
 import type { AppSettings, TerminalCreateOptions } from '../../electron/shared/api-types'
+
+export function getDefaultBuiltinShell(settings: AppSettings | null): BuiltinShellType {
+  return normalizeDefaultTerminal(settings?.defaultTerminal)
+}
 
 export function getBuiltinTerminalOptions(
   shell: BuiltinShellType,

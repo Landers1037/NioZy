@@ -45,6 +45,11 @@ function pathEntries(env?: NodeJS.ProcessEnv): string[] {
   return raw.split(process.platform === 'win32' ? ';' : ':').filter(Boolean)
 }
 
+/** 当前主进程 PATH 中的目录数量（用于重载环境变量后的反馈） */
+export function pathSegmentCount(env?: NodeJS.ProcessEnv): number {
+  return pathEntries(env).length
+}
+
 function fileExists(filePath: string): boolean {
   try {
     return existsSync(filePath)

@@ -81,6 +81,8 @@
       "launchOnStartupDesc": "登录 Windows 时自动启动 NioZy",
       "minimizeToTray": "关闭时最小化到托盘",
       "minimizeToTrayDesc": "点击关闭按钮时隐藏到系统托盘",
+      "reloadEnvironment": "重载环境变量",
+      "reloadEnvironmentDesc": "从系统读取最新的 PATH 等变量到 NioZy，无需重启应用；仅对新开的终端生效，已打开的终端需手动重开或在其 shell 中刷新 PATH",
       "updates": "更新",
       "checkUpdates": "检查更新",
       "checkUpdatesSoon": "检查更新功能即将推出",
@@ -174,6 +176,9 @@
       "collapse": "收起",
       "launchArgs": "启动参数（空格分隔）",
       "envVars": "环境变量（KEY=VALUE，每行一个）",
+      "defaultTerminalBadge": "默认终端",
+      "setDefaultTerminal": "设为默认终端",
+      "setDefaultTerminalDesc": "新建终端、快捷键与启动时打开的 Shell",
       "customConnections": "自定义连接",
       "addConnection": "添加连接",
       "type": "类型",
@@ -248,7 +253,9 @@
     "exportSuccess": "终端内容已导出",
     "hardwareAccelerationRestart": "硬件加速已保存，请完全退出并重启应用后生效",
     "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效",
-    "shellContextMenuFailed": "无法更新资源管理器右键菜单，请确认具有当前用户注册表写入权限"
+    "shellContextMenuFailed": "无法更新资源管理器右键菜单，请确认具有当前用户注册表写入权限",
+    "envReloadSuccess": "已重载 {{vars}} 项环境变量，PATH 共 {{paths}} 个目录",
+    "envReloadFailed": "重载环境变量失败"
   },
   "terminal": {
     "processExited": "[进程已退出]"

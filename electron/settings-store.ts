@@ -18,6 +18,7 @@ import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
 import {
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
+  normalizeDefaultTerminal,
 } from './shared/builtin-shells'
 import { DEFAULT_LOCALE, normalizeLocale } from './shared/locale'
 import { DEFAULT_SIDEBAR_WIDTH, normalizeSidebarWidth } from './shared/sidebar-width'
@@ -58,6 +59,7 @@ export interface AppSettings {
   }
   connections: CustomConnection[]
   builtinConnections: BuiltinConnections
+  defaultTerminal: import('./shared/builtin-shells').BuiltinShellType
   system: {
     proxy: string
     launchOnStartup: boolean
@@ -125,6 +127,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
+  defaultTerminal: 'powershell',
   system: {
     proxy: '',
     launchOnStartup: false,
@@ -202,6 +205,9 @@ export class SettingsStore {
       },
       builtinConnections: normalizeBuiltinConnections(
         (stored as Partial<AppSettings>).builtinConnections,
+      ),
+      defaultTerminal: normalizeDefaultTerminal(
+        (stored as Partial<AppSettings>).defaultTerminal,
       ),
     }
     this.migrateEmbeddedConnections()

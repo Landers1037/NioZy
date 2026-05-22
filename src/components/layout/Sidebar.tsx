@@ -101,7 +101,7 @@ export function Sidebar() {
               className={cn(
                 !collapsed && 'min-w-0 flex-1 basis-0 overflow-hidden px-2',
               )}
-              onClick={() => createTerminal('powershell')}
+              onClick={() => createTerminal()}
               title={t('sidebar.newPowerShell')}
             >
               <Plus className="size-4 shrink-0" />

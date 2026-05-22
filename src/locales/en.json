@@ -81,6 +81,8 @@
       "launchOnStartupDesc": "Start NioZy when you sign in to Windows",
       "minimizeToTray": "Minimize to tray on close",
       "minimizeToTrayDesc": "Hide to the system tray when clicking the close button",
+      "reloadEnvironment": "Reload environment",
+      "reloadEnvironmentDesc": "Pulls the latest PATH and other variables from the OS without restarting NioZy. Applies only to new terminals; reopen tabs or refresh PATH inside existing shells.",
       "updates": "Updates",
       "checkUpdates": "Check for updates",
       "checkUpdatesSoon": "Update check coming soon",
@@ -174,6 +176,9 @@
       "collapse": "Collapse",
       "launchArgs": "Launch args (space-separated)",
       "envVars": "Environment (KEY=VALUE, one per line)",
+      "defaultTerminalBadge": "Default terminal",
+      "setDefaultTerminal": "Set as default terminal",
+      "setDefaultTerminalDesc": "Used when creating terminals, shortcuts, and on startup",
       "customConnections": "Custom connections",
       "addConnection": "Add connection",
       "type": "Type",
@@ -248,7 +253,9 @@
     "exportSuccess": "Terminal exported",
     "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
     "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
-    "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry."
+    "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry.",
+    "envReloadSuccess": "Reloaded {{vars}} variables; PATH has {{paths}} entries",
+    "envReloadFailed": "Failed to reload environment variables"
   },
   "terminal": {
     "processExited": "[Process exited]"
