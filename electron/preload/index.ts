@@ -91,6 +91,17 @@ const api: ElectronAPI = {
     saveText: (content, defaultFileName) =>
       ipcRenderer.invoke('files:saveText', content, defaultFileName),
   },
+  ssh: {
+    checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
+    getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),
+    listLocal: (dirPath) => ipcRenderer.invoke('ssh:listLocal', dirPath),
+    listRemote: (profile, remotePath) =>
+      ipcRenderer.invoke('ssh:listRemote', profile, remotePath),
+    upload: (profile, localPath, remotePath) =>
+      ipcRenderer.invoke('ssh:upload', profile, localPath, remotePath),
+    download: (profile, remotePath, localPath) =>
+      ipcRenderer.invoke('ssh:download', profile, remotePath, localPath),
+  },
 }
 
 try {

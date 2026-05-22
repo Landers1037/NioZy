@@ -24,7 +24,8 @@ import {
   isWindowsShellContextMenuSupported,
   setWindowsShellContextMenu,
 } from '../windows-shell-context-menu'
-import type { TerminalCreateOptions } from '../shared/api-types'
+import type { SshConnectionProfile, TerminalCreateOptions } from '../shared/api-types'
+import * as sshService from '../ssh-service'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
@@ -346,6 +347,42 @@ ipcMain.handle('update:download', (_, payload: { version: string; downloadUrl: s
 )
 
 ipcMain.handle('fonts:list', () => listSystemFonts())
+
+function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
+  const conn = settingsStore.get().connections.find((c) => c.id === connectionId)
+  if (!conn || conn.type !== 'ssh' || !conn.sshHost?.trim() || !conn.sshUser?.trim()) {
+    return null
+  }
+  vaultStore.load()
+  return {
+    host: vaultStore.resolveText(conn.sshHost.trim()),
+    user: vaultStore.resolveText(conn.sshUser.trim()),
+    port: conn.sshPort ?? 22,
+    keyPath:
+      conn.sshAuth === 'publickey' && conn.sshKeyPath?.trim()
+        ? vaultStore.resolveText(conn.sshKeyPath.trim())
+        : undefined,
+  }
+}
+
+ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
+ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))
+ipcMain.handle('ssh:listLocal', (_, dirPath: string) => sshService.listLocalDirectory(dirPath))
+ipcMain.handle(
+  'ssh:listRemote',
+  (_, profile: SshConnectionProfile, remotePath: string) =>
+    sshService.listRemoteDirectory(profile, remotePath),
+)
+ipcMain.handle(
+  'ssh:upload',
+  (_, profile: SshConnectionProfile, localPath: string, remotePath: string) =>
+    sshService.scpUpload(profile, localPath, remotePath),
+)
+ipcMain.handle(
+  'ssh:download',
+  (_, profile: SshConnectionProfile, remotePath: string, localPath: string) =>
+    sshService.scpDownload(profile, remotePath, localPath),
+)
 
 ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
   const resolved = {

@@ -49,6 +49,7 @@
     "sections": {
       "appearance": "Appearance",
       "terminal": "Terminal",
+      "ssh": "SSH",
       "connections": "Connections",
       "vault": "Vault",
       "shortcuts": "Shortcuts",
@@ -89,6 +90,19 @@
       "drawBoldBrightDesc": "Maps to xterm drawBoldTextInBrightColors",
       "rightClickCopyPaste": "Right-click copy / paste",
       "rightClickCopyPasteDesc": "Copy when text is selected; paste when nothing is selected"
+    },
+    "ssh": {
+      "title": "SSH",
+      "description": "Disconnect alerts, SCP file transfer, and scp.exe detection",
+      "alertOnDisconnect": "Alert when SSH disconnects",
+      "alertOnDisconnectDesc": "When enabled, background (non-active) SSH terminal tabs show a notification when the session ends",
+      "scpTransferEnabled": "Enable SCP transfer",
+      "scpTransferEnabledDesc": "Adds Open transfer in the SSH tab context menu to upload/download files via scp",
+      "checkScp": "Check scp command",
+      "checkScpDesc": "Verify scp.exe is available on PATH (OpenSSH client)",
+      "checkScpButton": "Check scp.exe",
+      "scpFound": "Found scp: {{path}}",
+      "scpNotFound": "scp.exe not found on PATH. Install Windows OpenSSH Client or Git for Windows."
     },
     "system": {
       "title": "System",
@@ -254,7 +268,27 @@
     "closeTerminalTitle": "Close terminal",
     "closeTerminalDesc": "Close \"{{title}}\"? The process will end and unsaved output will be lost.",
     "editTitle": "Edit title",
-    "editTitleDesc": "Custom label in sidebar and status bar. Empty or default restores \"{{defaultTitle}}\"."
+    "editTitleDesc": "Custom label in sidebar and status bar. Empty or default restores \"{{defaultTitle}}\".",
+    "openScpTransfer": "Open transfer"
+  },
+  "scp": {
+    "title": "SCP transfer — {{title}}",
+    "desc": "{{user}}@{{host}} · local on the left, remote on the right",
+    "descGeneric": "Local files on the left, remote server on the right",
+    "local": "Local",
+    "remote": "Remote",
+    "goUp": "Parent folder",
+    "refresh": "Refresh",
+    "upload": "Upload to remote",
+    "download": "Download to local",
+    "listFailed": "Could not list directory",
+    "profileFailed": "Could not resolve SSH connection",
+    "passwordAuthHint": "SCP with password login may require interaction; public key login is recommended",
+    "selectLocalFile": "Select a local file first",
+    "selectRemoteFile": "Select a remote file first",
+    "uploadSuccess": "Upload complete",
+    "downloadSuccess": "Download complete",
+    "transferFailed": "Transfer failed"
   },
   "cursor": {
     "block": "Block",
@@ -281,7 +315,9 @@
     "envReloadSuccess": "Reloaded {{vars}} variables; PATH has {{paths}} entries",
     "envReloadFailed": "Failed to reload environment variables",
     "updateCheckFailed": "Could not check for updates. Check your network and try again.",
-    "updateDownloadFailed": "Failed to download or launch the installer"
+    "updateDownloadFailed": "Failed to download or launch the installer",
+    "sshDisconnected": "SSH disconnected: {{title}}",
+    "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first"
   },
   "terminal": {
     "processExited": "[Process exited]"

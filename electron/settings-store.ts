@@ -17,6 +17,7 @@ import {
   type TerminalCursorStyle,
 } from './shared/terminal-cursor'
 import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
+import { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './shared/ssh-settings'
 import {
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
@@ -82,6 +83,7 @@ export interface AppSettings {
     lastWindowState?: SavedWindowState
   }
   shortcuts: AppShortcuts
+  ssh: import('./shared/ssh-settings').SshSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -146,6 +148,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     preserveWindowBounds: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
+  ssh: { ...DEFAULT_SSH_SETTINGS },
 }
 
 export class SettingsStore {
@@ -208,6 +211,7 @@ export class SettingsStore {
         global: { ...DEFAULT_SETTINGS.shortcuts.global, ...stored.shortcuts?.global },
         app: { ...DEFAULT_SETTINGS.shortcuts.app, ...stored.shortcuts?.app },
       },
+      ssh: normalizeSshSettings(stored.ssh),
       builtinConnections: normalizeBuiltinConnections(
         (stored as Partial<AppSettings>).builtinConnections,
       ),

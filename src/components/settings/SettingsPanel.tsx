@@ -5,6 +5,7 @@ import { useUiClasses } from '@/lib/ui-style'
 import {
   Palette,
   Terminal,
+  Server,
   Plug,
   Settings2,
   SlidersHorizontal,
@@ -14,6 +15,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
 import { TerminalSettings } from './TerminalSettings'
+import { SshSettings } from './SshSettings'
 import { ConnectionSettings } from './ConnectionSettings'
 import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
@@ -23,6 +25,7 @@ import { ShortcutSettings } from './ShortcutSettings'
 const SECTION_DEFS = [
   { id: 'appearance', icon: Palette },
   { id: 'terminal', icon: Terminal },
+  { id: 'ssh', icon: Server },
   { id: 'connections', icon: Plug },
   { id: 'vault', icon: Database },
   { id: 'shortcuts', icon: Keyboard },
@@ -72,6 +75,7 @@ export function SettingsPanel() {
       <div className="min-w-0 flex-1 overflow-y-auto no-drag">
         {section === 'appearance' && <AppearanceSettings />}
         {section === 'terminal' && <TerminalSettings />}
+        {section === 'ssh' && <SshSettings />}
         {section === 'connections' && <ConnectionSettings />}
         {section === 'vault' && <VaultSettings />}
         {section === 'shortcuts' && <ShortcutSettings />}

@@ -15,6 +15,8 @@ export interface AppTab {
   customTitle?: string
   terminalId?: string
   shell?: string
+  /** 由自定义 SSH 连接打开时关联的连接 id，用于 SCP 与断开告警 */
+  sshConnectionId?: string
 }
 
 interface AppState {
@@ -33,6 +35,9 @@ interface AppState {
   windowMaximized: boolean
   /** 各终端 PTY 的当前工作目录（由主进程解析 OSC 序列更新） */
   terminalCwds: Record<string, string>
+  /** 当前打开 SCP 传输面板的终端 Tab id */
+  scpTransferTabId: string | null
+  setScpTransferTabId: (tabId: string | null) => void
   setSidebarCollapsed: (v: boolean) => void
   setActiveTab: (id: string) => void
   addTerminalTab: (tab: AppTab) => void
@@ -63,6 +68,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   windowMaximized: false,
   terminalCwds: {},
+  scpTransferTabId: null,
+  setScpTransferTabId: (tabId) => set({ scpTransferTabId: tabId }),
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
   setActiveTab: (id) => set({ activeTabId: id }),
   addTerminalTab: (tab) =>

@@ -49,6 +49,7 @@
     "sections": {
       "appearance": "外观设置",
       "terminal": "终端设置",
+      "ssh": "SSH",
       "connections": "连接设置",
       "vault": "存储库",
       "shortcuts": "快捷键",
@@ -89,6 +90,19 @@
       "drawBoldBrightDesc": "对应 xterm drawBoldTextInBrightColors",
       "rightClickCopyPaste": "右键复制/粘贴",
       "rightClickCopyPasteDesc": "有选区时复制到剪贴板，无选区时从剪贴板粘贴"
+    },
+    "ssh": {
+      "title": "SSH 设置",
+      "description": "SSH 断开告警、SCP 文件传输与 scp 命令检测",
+      "alertOnDisconnect": "SSH 断开时告警",
+      "alertOnDisconnectDesc": "开启后，后台（非当前）SSH 终端 Tab 的连接断开时将在右下角通知",
+      "scpTransferEnabled": "开启 SCP 传输",
+      "scpTransferEnabledDesc": "开启后可在 SSH 连接终端 Tab 右键菜单中打开传输面板，通过 scp 上传/下载文件",
+      "checkScp": "检查 scp 命令",
+      "checkScpDesc": "检测系统 PATH 中是否存在 scp.exe（OpenSSH 客户端）",
+      "checkScpButton": "检查 scp.exe",
+      "scpFound": "已找到 scp：{{path}}",
+      "scpNotFound": "未在 PATH 中找到 scp.exe，请安装 Windows OpenSSH 客户端或 Git for Windows"
     },
     "system": {
       "title": "系统设置",
@@ -254,7 +268,27 @@
     "closeTerminalTitle": "关闭终端",
     "closeTerminalDesc": "确定要关闭「{{title}}」吗？终端进程将结束，未导出的内容将丢失。",
     "editTitle": "编辑标题",
-    "editTitleDesc": "自定义侧边栏与状态栏中的展示名称。留空或恢复为默认名称时将使用「{{defaultTitle}}」。"
+    "editTitleDesc": "自定义侧边栏与状态栏中的展示名称。留空或恢复为默认名称时将使用「{{defaultTitle}}」。",
+    "openScpTransfer": "打开传输"
+  },
+  "scp": {
+    "title": "SCP 传输 — {{title}}",
+    "desc": "{{user}}@{{host}} · 左侧为本机，右侧为远程",
+    "descGeneric": "左侧为本机文件，右侧为远程服务器文件",
+    "local": "本机",
+    "remote": "远程",
+    "goUp": "上级目录",
+    "refresh": "刷新",
+    "upload": "上传到远程",
+    "download": "下载到本机",
+    "listFailed": "无法列出目录",
+    "profileFailed": "无法解析 SSH 连接配置",
+    "passwordAuthHint": "密码登录的 SCP 可能需交互输入；建议使用公钥登录",
+    "selectLocalFile": "请在本机侧选择一个文件",
+    "selectRemoteFile": "请在远程侧选择一个文件",
+    "uploadSuccess": "上传成功",
+    "downloadSuccess": "下载成功",
+    "transferFailed": "传输失败"
   },
   "cursor": {
     "block": "方块",
@@ -281,7 +315,9 @@
     "envReloadSuccess": "已重载 {{vars}} 项环境变量，PATH 共 {{paths}} 个目录",
     "envReloadFailed": "重载环境变量失败",
     "updateCheckFailed": "检查更新失败，请检查网络或稍后重试",
-    "updateDownloadFailed": "下载或启动安装程序失败"
+    "updateDownloadFailed": "下载或启动安装程序失败",
+    "sshDisconnected": "SSH 连接已断开：{{title}}",
+    "scpTransferDisabled": "请先在设置 → SSH 中开启 SCP 传输"
   },
   "terminal": {
     "processExited": "[进程已退出]"

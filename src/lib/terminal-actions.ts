@@ -27,9 +27,12 @@ function toastTerminalError(error: unknown, context?: string): void {
   toast.error(context ? `${context}${sep}${message}` : message)
 }
 
-async function openTerminalTab(options: TerminalCreateOptions): Promise<void> {
+async function openTerminalTab(
+  options: TerminalCreateOptions & { sshConnectionId?: string },
+): Promise<void> {
   const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
-  const result = await getElectronAPI().terminal.create(options)
+  const { sshConnectionId, ...createOptions } = options
+  const result = await getElectronAPI().terminal.create(createOptions)
   setTerminalCwd(result.id, result.cwd)
   addTerminalTab({
     id: `tab-${result.id}`,
@@ -37,6 +40,7 @@ async function openTerminalTab(options: TerminalCreateOptions): Promise<void> {
     title: result.name,
     terminalId: result.id,
     shell: result.shell,
+    sshConnectionId,
   })
 }
 
@@ -87,6 +91,7 @@ export async function createConnection(
         command: custom.type === 'ssh' ? 'ssh' : custom.command,
         args,
         env: custom.env,
+        sshConnectionId: custom.type === 'ssh' ? custom.id : undefined,
       })
       return
     }
