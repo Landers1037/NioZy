@@ -18,7 +18,13 @@
     "tagline": "Multi-terminal manager",
     "emptyHint": "Click \"New terminal\" to get started",
     "browserDevPreview": "Browser dev preview (mock Electron API). Use DevTools for styling; run",
-    "settingsTabTitle": "Settings"
+    "settingsTabTitle": "Settings",
+    "filesystemTabTitle": "File system"
+  },
+  "filesystem": {
+    "title": "Local file system",
+    "newTerminalHere": "New terminal here",
+    "listFailed": "Could not read directory"
   },
   "locale": {
     "zh": "中文",
@@ -274,6 +280,7 @@
     "newConnection": "New connection",
     "connection": "Connect",
     "settings": "Settings",
+    "filesystem": "File system",
     "newPowerShell": "New PowerShell"
   },
   "tab": {

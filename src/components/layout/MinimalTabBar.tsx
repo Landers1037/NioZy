@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Plus, Settings, Link2 } from 'lucide-react'
+import { Plus, Settings, Link2, FolderCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import { NewConnectionMenuContent } from '@/components/layout/NewConnectionMenuC
 import { useAppStore } from '@/stores/app-store'
 import { createTerminal } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
-import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
+import { SpecialTabItem } from '@/components/layout/SpecialTabItem'
 import { useUiClasses } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 
@@ -19,6 +19,7 @@ export function MinimalTabBar() {
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
+  const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const ui = useUiClasses()
 
   return (
@@ -38,7 +39,7 @@ export function MinimalTabBar() {
               isActive={activeTabId === tab.id}
             />
           ) : (
-            <SettingsTabItem
+            <SpecialTabItem
               key={tab.id}
               tab={tab}
               iconOnly
@@ -72,6 +73,15 @@ export function MinimalTabBar() {
             <NewConnectionMenuContent />
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-6"
+          title={t('sidebar.filesystem')}
+          onClick={() => addFilesystemTab()}
+        >
+          <FolderCode className="size-3" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"

@@ -28,4 +28,8 @@ export function getSettingsTabTitle(): string {
   return i18n.t('app.settingsTabTitle')
 }
 
+export function getFilesystemTabTitle(): string {
+  return i18n.t('app.filesystemTabTitle')
+}
+
 export default i18n

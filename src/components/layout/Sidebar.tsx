@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { createTerminal } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
-import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
+import { SpecialTabItem } from '@/components/layout/SpecialTabItem'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
 import { DEFAULT_SIDEBAR_WIDTH } from '../../../electron/shared/sidebar-width'
 import { useUiClasses } from '@/lib/ui-style'
@@ -24,6 +24,7 @@ export function Sidebar() {
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
+  const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
 
@@ -77,7 +78,7 @@ export function Sidebar() {
                 isActive={activeTabId === tab.id}
               />
             ) : (
-              <SettingsTabItem
+              <SpecialTabItem
                 key={tab.id}
                 tab={tab}
                 collapsed={collapsed}
@@ -134,17 +135,35 @@ export function Sidebar() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button
-            variant="ghost"
-            size={collapsed ? 'icon' : 'default'}
-            className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
-            onClick={() => addSettingsTab()}
-          >
-            <Settings className="size-4 shrink-0" />
-            {!collapsed && (
-              <span className="min-w-0 truncate">{t('sidebar.settings')}</span>
+          <div
+            className={cn(
+              'flex min-w-0 gap-1',
+              collapsed ? 'flex-col items-center' : 'w-full flex-col',
             )}
-          </Button>
+          >
+            <Button
+              variant="ghost"
+              size={collapsed ? 'icon' : 'default'}
+              className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+              onClick={() => addFilesystemTab()}
+            >
+              <FolderCode className="size-4 shrink-0" />
+              {!collapsed && (
+                <span className="min-w-0 truncate">{t('sidebar.filesystem')}</span>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size={collapsed ? 'icon' : 'default'}
+              className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+              onClick={() => addSettingsTab()}
+            >
+              <Settings className="size-4 shrink-0" />
+              {!collapsed && (
+                <span className="min-w-0 truncate">{t('sidebar.settings')}</span>
+              )}
+            </Button>
+          </div>
         </div>
       </aside>
 

@@ -1,6 +1,6 @@
 import { spawn } from 'child_process'
 import { readdir, stat } from 'fs/promises'
-import { homedir } from 'os'
+import { homedir, platform } from 'os'
 import { join, normalize } from 'path'
 import { resolveExecutable } from './resolve-executable'
 import type {
@@ -47,6 +47,37 @@ function runProcess(
 export function checkScpInPath(): ScpCheckResult {
   const path = resolveExecutable('scp')
   return path ? { found: true, path } : { found: false }
+}
+
+/** 文件系统树根节点：Windows 为盘符，其它平台为 / */
+export async function listFilesystemRoots(): Promise<ScpListResult> {
+  try {
+    if (platform() === 'win32') {
+      const entries: ScpFileEntry[] = []
+      for (let code = 65; code <= 90; code++) {
+        const letter = String.fromCharCode(code)
+        const path = `${letter}:\\`
+        try {
+          const st = await stat(path)
+          if (st.isDirectory()) {
+            entries.push({ name: `${letter}:`, path, isDirectory: true })
+          }
+        } catch {
+          /* 盘符不可用 */
+        }
+      }
+      return { ok: true, entries }
+    }
+    return {
+      ok: true,
+      entries: [{ name: '/', path: '/', isDirectory: true }],
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
 }
 
 export async function listLocalDirectory(dirPath: string): Promise<ScpListResult> {

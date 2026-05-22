@@ -8,6 +8,7 @@ import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { SplitTerminalPanel } from '@/components/terminal/SplitTerminalPanel'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
+import { FilesystemPanel } from '@/components/filesystem/FilesystemPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, openTerminalInDirectory } from '@/lib/terminal-actions'
@@ -163,6 +164,11 @@ export default function App() {
             {activeTab?.type === 'settings' && (
               <div className="absolute inset-0">
                 <SettingsPanel />
+              </div>
+            )}
+            {activeTab?.type === 'filesystem' && (
+              <div className="absolute inset-0">
+                <FilesystemPanel />
               </div>
             )}
             {tabs.length === 0 && (
