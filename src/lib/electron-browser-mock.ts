@@ -34,6 +34,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
   advanced: {
     hardwareAcceleration: true,
+    disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
   },

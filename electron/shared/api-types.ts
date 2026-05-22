@@ -97,6 +97,8 @@ export interface AppSettings {
   }
   advanced: {
     hardwareAcceleration: boolean
+    /** 为 true 时关闭 renderer sandbox */
+    disableSandbox: boolean
     transparency: number
     /** 为 false 时主进程停止轮询 CPU/内存并通过 IPC 推送 */
     statusBarLiveStats: boolean

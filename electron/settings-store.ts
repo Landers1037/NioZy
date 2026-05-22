@@ -59,6 +59,8 @@ export interface AppSettings {
   }
   advanced: {
     hardwareAcceleration: boolean
+    /** 为 true 时 webPreferences.sandbox 为 false */
+    disableSandbox: boolean
     transparency: number
     statusBarLiveStats: boolean
   }
@@ -71,6 +73,24 @@ export type StoredAppSettings = Omit<AppSettings, 'connections'>
 function normalizeLayoutMode(value: unknown): LayoutMode {
   if (value === 'focus' || value === 'minimal') return value
   return 'default'
+}
+
+/** 启动最早阶段读取（须在 app.whenReady 之前用于 disableHardwareAcceleration） */
+export function isHardwareAccelerationEnabled(): boolean {
+  ensureConfigDir()
+  const path = getSettingsFilePath()
+  if (!existsSync(path)) return DEFAULT_SETTINGS.advanced.hardwareAcceleration
+  try {
+    const raw = JSON.parse(readFileSync(path, 'utf-8')) as {
+      advanced?: { hardwareAcceleration?: unknown }
+    }
+    const value = raw.advanced?.hardwareAcceleration
+    return typeof value === 'boolean'
+      ? value
+      : DEFAULT_SETTINGS.advanced.hardwareAcceleration
+  } catch {
+    return DEFAULT_SETTINGS.advanced.hardwareAcceleration
+  }
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -100,6 +120,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   advanced: {
     hardwareAcceleration: true,
+    disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
   },
@@ -141,6 +162,14 @@ export class SettingsStore {
           stored.terminal?.drawBoldTextInBrightColors,
         ),
         rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
+      },
+      advanced: {
+        ...DEFAULT_SETTINGS.advanced,
+        ...stored.advanced,
+        disableSandbox:
+          typeof stored.advanced?.disableSandbox === 'boolean'
+            ? stored.advanced.disableSandbox
+            : DEFAULT_SETTINGS.advanced.disableSandbox,
       },
       shortcuts: {
         ...DEFAULT_SETTINGS.shortcuts,

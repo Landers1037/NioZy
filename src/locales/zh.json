@@ -93,9 +93,11 @@
     },
     "advanced": {
       "title": "高级设置",
-      "description": "硬件加速、窗口透明度与状态栏监控",
+      "description": "硬件加速、沙箱、窗口透明度与状态栏监控",
       "hardwareAcceleration": "硬件加速",
       "hardwareAccelerationDesc": "默认开启，需重启应用后完全生效",
+      "disableSandbox": "关闭沙箱隔离",
+      "disableSandboxDesc": "开启后关闭 renderer sandbox，可能提升兼容性；需重启应用后生效",
       "statusBarLiveStats": "状态栏实时系统信息",
       "statusBarLiveStatsDesc": "关闭后停止轮询 CPU/内存，可减轻界面刷新开销",
       "transparency": "窗口透明度: {{value}}%"
@@ -239,7 +241,9 @@
     "selectTerminalFirst": "请先选中终端内容",
     "exportNoTerminal": "无法导出：未找到终端",
     "exportNotReady": "无法导出：终端尚未就绪",
-    "exportSuccess": "终端内容已导出"
+    "exportSuccess": "终端内容已导出",
+    "hardwareAccelerationRestart": "硬件加速已保存，请完全退出并重启应用后生效",
+    "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效"
   },
   "terminal": {
     "processExited": "[进程已退出]"
