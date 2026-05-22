@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled } from '../settings-store'
 import { SystemStats } from '../system-stats'
+import { getAppMetricsSnapshot } from '../app-metrics'
 import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
@@ -339,6 +340,7 @@ ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 ipcMain.handle('app:getVersion', () => app.getVersion())
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
+ipcMain.handle('system:getAppMetrics', () => getAppMetricsSnapshot())
 ipcMain.handle('system:reloadEnvironment', () => reloadSystemEnvironment())
 
 ipcMain.handle('update:check', () => checkForAppUpdate())

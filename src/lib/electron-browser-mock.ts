@@ -1,4 +1,5 @@
 import type {
+  AppMetricsData,
   AppSettings,
   ElectronAPI,
   SystemStatsData,
@@ -68,6 +69,43 @@ function mockSystemStats(): SystemStatsData {
     memoryPercent: 48,
     memoryUsedMb: 8192,
     memoryTotalMb: 16384,
+  }
+}
+
+function mockAppMetrics(): AppMetricsData {
+  return {
+    totalWorkingSetMb: 256,
+    totalPeakWorkingSetMb: 312,
+    mainHeapUsedMb: 42,
+    mainHeapTotalMb: 64,
+    mainRssMb: 88,
+    processes: [
+      {
+        pid: 10001,
+        type: 'Browser',
+        workingSetMb: 120,
+        peakWorkingSetMb: 140,
+        cpuPercent: 2.5,
+        sandboxed: false,
+      },
+      {
+        pid: 10002,
+        type: 'Tab',
+        workingSetMb: 96,
+        peakWorkingSetMb: 110,
+        cpuPercent: 1.2,
+        sandboxed: true,
+      },
+      {
+        pid: 10003,
+        type: 'GPU',
+        workingSetMb: 40,
+        peakWorkingSetMb: 62,
+        cpuPercent: 0.4,
+        sandboxed: true,
+      },
+    ],
+    fetchedAt: new Date().toISOString(),
   }
 }
 
@@ -141,6 +179,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         pathSegmentCount: 0,
       }),
       getStats: async () => mockSystemStats(),
+      getAppMetrics: async () => mockAppMetrics(),
       onStats: (cb) => {
         statsListeners.add(cb)
         cb(mockSystemStats())
