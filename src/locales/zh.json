@@ -188,7 +188,7 @@
       "shell": {
         "powershell": "PowerShell",
         "cmd": "CMD",
-        "pwsh": "PowerShell Core (pwsh)"
+        "pwsh": "pwsh"
       }
     },
     "fontPicker": {

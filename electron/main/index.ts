@@ -9,6 +9,7 @@ import { SystemStats } from '../system-stats'
 import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
+import { sendToRenderer } from './window-ipc'
 import type { TerminalCreateOptions } from '../shared/api-types'
 
 let mainWindow: BrowserWindow | null = null
@@ -33,7 +34,7 @@ function syncSystemStatsPolling(): void {
   systemStats.stop()
   if (!isStatusBarLiveStatsEnabled()) return
   systemStats.start((stats) => {
-    mainWindow?.webContents.send('system:stats', stats)
+    sendToRenderer(mainWindow, 'system:stats', stats)
   })
 }
 
@@ -104,11 +105,15 @@ function createWindow(): void {
   })
 
   mainWindow.on('maximize', () => {
-    mainWindow?.webContents.send('window:maximized', true)
+    sendToRenderer(mainWindow, 'window:maximized', true)
   })
 
   mainWindow.on('unmaximize', () => {
-    mainWindow?.webContents.send('window:maximized', false)
+    sendToRenderer(mainWindow, 'window:maximized', false)
+  })
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
   mainWindow.on('close', (e) => {
@@ -174,8 +179,8 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
-  unregisterGlobalShortcuts()
   terminalService.disposeAll()
+  unregisterGlobalShortcuts()
   systemStats.stop()
 })
 
@@ -269,8 +274,8 @@ ipcMain.handle(
 ipcMain.handle('terminal:kill', (_, id: string) => terminalService.kill(id))
 
 terminalService.on('data', (id, data) => {
-  mainWindow?.webContents.send('terminal:data', id, data)
+  sendToRenderer(mainWindow, 'terminal:data', id, data)
 })
 terminalService.on('exit', (id, code) => {
-  mainWindow?.webContents.send('terminal:exit', id, code)
+  sendToRenderer(mainWindow, 'terminal:exit', id, code)
 })
