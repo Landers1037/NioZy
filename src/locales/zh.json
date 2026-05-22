@@ -193,6 +193,7 @@
     }
   },
   "sidebar": {
+    "resize": "拖动调整侧栏宽度",
     "terminals": "终端",
     "newTerminal": "新建终端",
     "newConnection": "新建连接",

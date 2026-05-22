@@ -193,6 +193,7 @@
     }
   },
   "sidebar": {
+    "resize": "Drag to resize sidebar",
     "terminals": "Terminals",
     "newTerminal": "New terminal",
     "newConnection": "New connection",

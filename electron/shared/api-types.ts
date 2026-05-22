@@ -1,3 +1,14 @@
+import type { AppLocale } from './locale'
+export type { AppLocale } from './locale'
+export { APP_LOCALES, DEFAULT_LOCALE, normalizeLocale } from './locale'
+export {
+  SIDEBAR_COLLAPSED_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
+  MIN_SIDEBAR_WIDTH,
+  MAX_SIDEBAR_WIDTH,
+  normalizeSidebarWidth,
+  clampSidebarWidth,
+} from './sidebar-width'
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
@@ -54,9 +65,13 @@ export interface CustomConnection {
 }
 
 export interface AppSettings {
+  /** 界面语言 */
+  locale: AppLocale
   theme: ThemeMode
   /** default：侧栏展开；focus：侧栏收起；minimal：无侧栏、顶栏下横向图标 Tab */
   layoutMode: LayoutMode
+  /** 侧栏展开宽度（px） */
+  sidebarWidth: number
   accentColor: string
   fontSize: number
   terminal: {
@@ -114,6 +129,9 @@ export interface ElectronAPI {
   settings: {
     get: () => Promise<AppSettings>
     save: (partial: Partial<AppSettings>) => Promise<AppSettings>
+  }
+  fonts: {
+    list: () => Promise<string[]>
   }
   system: {
     getStats: () => Promise<SystemStatsData>

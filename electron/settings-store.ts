@@ -19,14 +19,18 @@ import {
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
 } from './shared/builtin-shells'
+import { DEFAULT_LOCALE, normalizeLocale } from './shared/locale'
+import { DEFAULT_SIDEBAR_WIDTH, normalizeSidebarWidth } from './shared/sidebar-width'
 
 export type { TerminalColorScheme } from './shared/terminal-color-schemes'
 
 export type { CustomConnection }
 
 export interface AppSettings {
+  locale: import('./shared/locale').AppLocale
   theme: ThemeMode
   layoutMode: LayoutMode
+  sidebarWidth: number
   accentColor: string
   fontSize: number
   terminal: {
@@ -61,8 +65,10 @@ function normalizeLayoutMode(value: unknown): LayoutMode {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  locale: DEFAULT_LOCALE,
   theme: 'light',
   layoutMode: 'default',
+  sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   accentColor: '#0A84FF',
   fontSize: 13,
   terminal: {
@@ -103,7 +109,9 @@ export class SettingsStore {
     this.settings = {
       ...DEFAULT_SETTINGS,
       ...stored,
+      locale: normalizeLocale(stored.locale),
       layoutMode: normalizeLayoutMode(stored.layoutMode),
+      sidebarWidth: normalizeSidebarWidth(stored.sidebarWidth),
       connections,
       terminal: {
         ...DEFAULT_SETTINGS.terminal,

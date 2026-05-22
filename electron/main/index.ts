@@ -7,6 +7,7 @@ import { TerminalService } from '../terminal-service'
 import { SettingsStore } from '../settings-store'
 import { SystemStats } from '../system-stats'
 import { VaultStore } from '../vault-store'
+import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 import type { TerminalCreateOptions } from '../shared/api-types'
 
@@ -233,6 +234,8 @@ ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>
 })
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
+
+ipcMain.handle('fonts:list', () => listSystemFonts())
 
 ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
   const resolved = {
