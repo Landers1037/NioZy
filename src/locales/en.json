@@ -132,7 +132,9 @@
     },
     "shortcuts": {
       "title": "Shortcuts",
-      "description": "Electron accelerator format, e.g. CommandOrControl+T, Ctrl+Shift+C",
+      "description": "Electron accelerator format, e.g. CommandOrControl+T, Ctrl+Shift+C. Clear a field and press keys to record.",
+      "pressToRecord": "Press shortcut keys…",
+      "globalSingleKeyNotAllowed": "Global shortcuts cannot be a single key. Combine with Ctrl, Alt, Shift, or similar.",
       "globalShowApp": "Show/hide NioZy (global)",
       "globalShowAppDesc": "If focused, send to background; otherwise show (keeps current page). Current: {{current}}",
       "inApp": "In-app shortcuts",

@@ -65,6 +65,15 @@ function parseAccelerator(accelerator: string): {
   return { ...mods, key }
 }
 
+/** 全局快捷键须含修饰键，不能仅为单个按键（如 T、Home、F1）。空字符串视为有效（未设置）。 */
+export function isValidGlobalAccelerator(accelerator: string): boolean {
+  const trimmed = accelerator.trim()
+  if (!trimmed) return true
+  const spec = parseAccelerator(trimmed)
+  if (!spec.key) return false
+  return spec.ctrl || spec.alt || spec.shift || spec.meta
+}
+
 export function matchAccelerator(accelerator: string, event: KeyboardEvent): boolean {
   if (!accelerator.trim()) return false
   const spec = parseAccelerator(accelerator)
@@ -89,4 +98,49 @@ export function formatAcceleratorForDisplay(accelerator: string): string {
     .replace(/CommandOrControl/gi, 'Ctrl')
     .replace(/Command/gi, 'Cmd')
     .replace(/\+/g, ' + ')
+}
+
+const MODIFIER_KEYS = new Set(['Control', 'Shift', 'Alt', 'Meta', 'AltGraph', 'OS'])
+
+/** 将浏览器 KeyboardEvent 转为 Electron 加速器字符串；仅修饰键时返回 null。 */
+export function keyboardEventToAccelerator(event: KeyboardEvent): string | null {
+  if (MODIFIER_KEYS.has(event.key)) return null
+
+  const parts: string[] = []
+  if (event.ctrlKey || event.metaKey) parts.push('CommandOrControl')
+  if (event.altKey) parts.push('Alt')
+  if (event.shiftKey) parts.push('Shift')
+
+  const key = eventKeyToAcceleratorToken(event.key)
+  if (!key) return null
+  parts.push(key)
+
+  return parts.join('+')
+}
+
+function eventKeyToAcceleratorToken(key: string): string | null {
+  if (key === ' ') return 'Space'
+  if (key === ',') return ','
+  if (key === '+') return 'Plus'
+  if (key.length === 1) return key.toUpperCase()
+
+  const named: Record<string, string> = {
+    ArrowUp: 'Up',
+    ArrowDown: 'Down',
+    ArrowLeft: 'Left',
+    ArrowRight: 'Right',
+    Enter: 'Return',
+    Escape: 'Esc',
+    Backspace: 'Backspace',
+    Delete: 'Delete',
+    Tab: 'Tab',
+    Home: 'Home',
+    End: 'End',
+    PageUp: 'PageUp',
+    PageDown: 'PageDown',
+  }
+  if (named[key]) return named[key]
+  if (/^F\d{1,2}$/i.test(key)) return key.toUpperCase()
+
+  return key
 }
