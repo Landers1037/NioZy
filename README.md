@@ -2,6 +2,9 @@
 
 Windows 多终端管理器 — Electron + React + TailwindCSS + shadcn/ui + xterm.js + ConPTY。
 
+![](./ScreenShot_1.jpg)
+![](./ScreenShot_2.jpg)
+
 ## 功能
 
 - 自定义无边框标题栏（最小化 / 最大化 / 关闭）
