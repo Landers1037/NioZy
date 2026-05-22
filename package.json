@@ -1,10 +1,11 @@
 {
   "name": "niozy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Multi-terminal manager for Windows",
   "main": "out/main/index.mjs",
   "type": "module",
   "scripts": {
+    "prestart": "npm run generate:icon",
     "start": "electron-vite dev",
     "dev": "electron-vite dev",
     "generate:icon": "node scripts/generate-icon.mjs",
