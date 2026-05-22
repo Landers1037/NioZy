@@ -144,11 +144,17 @@ export interface ElectronAPI {
     onStats: (cb: (stats: SystemStatsData) => void) => () => void
   }
   terminal: {
-    create: (options: TerminalCreateOptions) => Promise<{ id: string; name: string; shell: string }>
+    create: (options: TerminalCreateOptions) => Promise<{
+      id: string
+      name: string
+      shell: string
+      cwd: string
+    }>
     write: (id: string, data: string) => void
     resize: (id: string, cols: number, rows: number) => void
     kill: (id: string) => void
     onData: (cb: (id: string, data: string) => void) => () => void
+    onCwd: (cb: (id: string, cwd: string) => void) => () => void
     onExit: (cb: (id: string, code: number) => void) => () => void
   }
   vault: {

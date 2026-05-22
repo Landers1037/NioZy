@@ -2,6 +2,8 @@ import { EventEmitter } from 'events'
 import * as pty from 'node-pty'
 import { randomUUID } from 'crypto'
 import { resolveExecutable } from './resolve-executable'
+import { extractCwdFromTerminalData } from './terminal-cwd-parser'
+import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integration'
 
 export type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
 
@@ -21,6 +23,7 @@ interface PtySession {
   pty: pty.IPty
   shell: ShellType
   name: string
+  cwd: string
 }
 
 const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
@@ -32,14 +35,24 @@ const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
 export class TerminalService extends EventEmitter {
   private sessions = new Map<string, PtySession>()
 
-  create(options: TerminalCreateOptions): { id: string; name: string; shell: ShellType } {
+  create(options: TerminalCreateOptions): {
+    id: string
+    name: string
+    shell: ShellType
+    cwd: string
+  } {
     const id = randomUUID()
     const cols = options.cols ?? 120
     const rows = options.rows ?? 30
 
     let file: string
-    let args: string[] = []
-    const env = { ...process.env, ...options.env } as Record<string, string>
+    let args: string[] = options.args ?? []
+    const initialCwd = options.cwd ?? process.env.USERPROFILE ?? process.cwd()
+    const env = {
+      ...process.env,
+      ...getShellIntegrationEnv(options.shell),
+      ...options.env,
+    } as Record<string, string>
 
     if (options.shell === 'custom' && options.command) {
       file = options.command
@@ -52,7 +65,7 @@ export class TerminalService extends EventEmitter {
       args = options.args ?? []
     } else {
       file = SHELL_MAP[options.shell as keyof typeof SHELL_MAP] ?? 'powershell.exe'
-      args = options.args ?? []
+      args = mergeShellIntegrationArgs(options.shell, args)
     }
 
     const name =
@@ -67,7 +80,7 @@ export class TerminalService extends EventEmitter {
         name: 'xterm-color',
         cols,
         rows,
-        cwd: options.cwd ?? process.env.USERPROFILE ?? process.cwd(),
+        cwd: initialCwd,
         env: env as NodeJS.ProcessEnv,
         useConpty: true,
       })
@@ -76,7 +89,13 @@ export class TerminalService extends EventEmitter {
     }
 
     ptyProcess.onData((data) => {
-      if (!this.sessions.has(id)) return
+      const session = this.sessions.get(id)
+      if (!session) return
+      const cwd = extractCwdFromTerminalData(data)
+      if (cwd && cwd !== session.cwd) {
+        session.cwd = cwd
+        this.emit('cwd', id, cwd)
+      }
       this.emit('data', id, data)
     })
 
@@ -86,8 +105,15 @@ export class TerminalService extends EventEmitter {
       this.emit('exit', id, exitCode)
     })
 
-    this.sessions.set(id, { id, pty: ptyProcess, shell: options.shell, name })
-    return { id, name, shell: options.shell }
+    this.sessions.set(id, {
+      id,
+      pty: ptyProcess,
+      shell: options.shell,
+      name,
+      cwd: initialCwd,
+    })
+    this.emit('cwd', id, initialCwd)
+    return { id, name, shell: options.shell, cwd: initialCwd }
   }
 
   write(id: string, data: string): void {
@@ -96,6 +122,10 @@ export class TerminalService extends EventEmitter {
 
   resize(id: string, cols: number, rows: number): void {
     this.sessions.get(id)?.pty.resize(cols, rows)
+  }
+
+  getCwd(id: string): string | undefined {
+    return this.sessions.get(id)?.cwd
   }
 
   kill(id: string): void {

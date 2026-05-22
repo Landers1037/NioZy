@@ -20,6 +20,8 @@ export default function App() {
   const setSettings = useAppStore((s) => s.setSettings)
   const setSystemStats = useAppStore((s) => s.setSystemStats)
   const setWindowMaximized = useAppStore((s) => s.setWindowMaximized)
+  const setTerminalCwd = useAppStore((s) => s.setTerminalCwd)
+  const clearTerminalCwd = useAppStore((s) => s.clearTerminalCwd)
   const settings = useAppStore((s) => s.settings)
   const statusBarLiveStats = settings?.advanced.statusBarLiveStats !== false
   const minimalLayout = isMinimalLayout(settings)
@@ -91,6 +93,17 @@ export default function App() {
       unsubStats?.()
     }
   }, [statusBarLiveStats, setSystemStats])
+
+  useEffect(() => {
+    if (!isElectron()) return
+    const api = getElectronAPI()
+    const unsubCwd = api.terminal.onCwd(setTerminalCwd)
+    const unsubExit = api.terminal.onExit((id) => clearTerminalCwd(id))
+    return () => {
+      unsubCwd()
+      unsubExit()
+    }
+  }, [setTerminalCwd, clearTerminalCwd])
 
   if (!isElectron()) {
     return null

@@ -30,6 +30,8 @@ interface AppState {
     memoryTotalMb: number
   }
   windowMaximized: boolean
+  /** 各终端 PTY 的当前工作目录（由主进程解析 OSC 序列更新） */
+  terminalCwds: Record<string, string>
   setSidebarCollapsed: (v: boolean) => void
   setActiveTab: (id: string) => void
   addTerminalTab: (tab: AppTab) => void
@@ -37,6 +39,8 @@ interface AppState {
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
   setTabCustomTitle: (id: string, customTitle: string | undefined) => void
+  setTerminalCwd: (terminalId: string, cwd: string) => void
+  clearTerminalCwd: (terminalId: string) => void
   setSettings: (s: AppSettings) => void
   patchSettings: (partial: Partial<AppSettings>) => Promise<void>
   setSystemStats: (stats: AppState['systemStats']) => void
@@ -57,6 +61,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     memoryTotalMb: 0,
   },
   windowMaximized: false,
+  terminalCwds: {},
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
   setActiveTab: (id) => set({ activeTabId: id }),
   addTerminalTab: (tab) =>
@@ -83,15 +88,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (ids.length === 0) return
     const idSet = new Set(ids)
     set((s) => {
+      const removed = s.tabs.filter((t) => idSet.has(t.id))
       const tabs = s.tabs.filter((t) => !idSet.has(t.id))
       let activeTabId = s.activeTabId
       if (s.activeTabId && idSet.has(s.activeTabId)) {
         const firstTerminal = tabs.find((t) => t.type === 'terminal')
         activeTabId = firstTerminal?.id ?? tabs[0]?.id ?? null
       }
-      return { tabs, activeTabId }
+      const terminalCwds = { ...s.terminalCwds }
+      for (const tab of removed) {
+        if (tab.terminalId) delete terminalCwds[tab.terminalId]
+      }
+      return { tabs, activeTabId, terminalCwds }
     })
   },
+  setTerminalCwd: (terminalId, cwd) =>
+    set((s) => ({
+      terminalCwds: { ...s.terminalCwds, [terminalId]: cwd },
+    })),
+  clearTerminalCwd: (terminalId) =>
+    set((s) => {
+      const terminalCwds = { ...s.terminalCwds }
+      delete terminalCwds[terminalId]
+      return { terminalCwds }
+    }),
   setTabCustomTitle: (id, customTitle) =>
     set((s) => ({
       tabs: s.tabs.map((t) => {
