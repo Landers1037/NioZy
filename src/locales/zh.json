@@ -324,7 +324,7 @@
   },
   "appMetrics": {
     "title": "程序资源占用",
-    "description": "通过 Electron 汇总本应用各进程的工作集与 CPU 使用情况（与任务管理器口径接近）。",
+    "description": "本应用各进程的工作集与 CPU 使用情况",
     "fetchedAt": "更新于 {{time}}",
     "fetchedAtUnknown": "尚未获取",
     "refresh": "刷新",

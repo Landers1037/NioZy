@@ -324,7 +324,7 @@
   },
   "appMetrics": {
     "title": "App resource usage",
-    "description": "Electron aggregates working set and CPU per process (similar to Task Manager).",
+    "description": "Per-process working set and CPU usage for this app",
     "fetchedAt": "Updated at {{time}}",
     "fetchedAtUnknown": "Not fetched yet",
     "refresh": "Refresh",
