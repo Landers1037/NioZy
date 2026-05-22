@@ -15,6 +15,7 @@ import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
 import { DEFAULT_SIDEBAR_WIDTH } from '../../../electron/shared/sidebar-width'
+import { useUiClasses } from '@/lib/ui-style'
 
 export function Sidebar() {
   const { t } = useTranslation()
@@ -35,6 +36,8 @@ export function Sidebar() {
     [patchSettings],
   )
 
+  const ui = useUiClasses()
+
   const { displayWidth, isResizing, startResize } = useSidebarResize({
     width: storedWidth,
     collapsed,
@@ -48,13 +51,14 @@ export function Sidebar() {
     >
       <aside
         className={cn(
-          'flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-border bg-muted/50',
+          'flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-border',
+          ui.sidebarBg,
           !isResizing && 'transition-[width] duration-200',
         )}
       >
         <div className="flex items-center justify-between border-b border-border p-2 no-drag">
           {!collapsed && (
-            <span className="px-1 text-xs font-medium text-muted-foreground">
+            <span className="px-1 text-xs font-semibold text-muted-foreground">
               {t('sidebar.terminals')}
             </span>
           )}
@@ -152,8 +156,8 @@ export function Sidebar() {
           title={t('sidebar.resize')}
           className={cn(
             'absolute -right-1 top-0 z-20 h-full w-2 cursor-col-resize touch-none no-drag',
-            'hover:bg-primary/20',
-            isResizing && 'bg-primary/30',
+            ui.sidebarResizeHover,
+            isResizing && ui.sidebarResizeActive,
           )}
           onPointerDown={startResize}
         />

@@ -9,9 +9,11 @@ import { isMinimalLayout } from '@/lib/layout-mode'
 import { TerminalView } from '@/components/terminal/TerminalView'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
+import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, openTerminalInDirectory } from '@/lib/terminal-actions'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
+import { cn } from '@/lib/utils'
 
 export default function App() {
   const { t } = useTranslation()
@@ -23,6 +25,7 @@ export default function App() {
   const setTerminalCwd = useAppStore((s) => s.setTerminalCwd)
   const clearTerminalCwd = useAppStore((s) => s.clearTerminalCwd)
   const settings = useAppStore((s) => s.settings)
+  const ui = useUiClasses()
   const statusBarLiveStats = settings?.advanced.statusBarLiveStats !== false
   const minimalLayout = isMinimalLayout(settings)
 
@@ -138,11 +141,10 @@ export default function App() {
         {!minimalLayout && <Sidebar />}
         <main className="flex min-w-0 flex-1 flex-col bg-background p-2">
           <div
-            className={
-              terminalActive
-                ? 'relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-transparent shadow-sm'
-                : 'relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-sm'
-            }
+            className={cn(
+              'relative min-h-0 flex-1 overflow-hidden',
+              terminalActive ? ui.mainPanelTerminal : ui.mainPanel,
+            )}
           >
             {tabs
               .filter((t) => t.type === 'terminal')

@@ -68,7 +68,7 @@ export function ShortcutSettings() {
         </SettingField>
 
         <div className="flex flex-col gap-4">
-          <p className="flex items-center gap-2 text-sm font-medium">
+          <p className="flex items-center gap-2 text-sm font-bold">
             <Terminal className="size-4 text-muted-foreground" />
             {t('settings.shortcuts.inApp')}
           </p>

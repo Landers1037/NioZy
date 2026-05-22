@@ -11,6 +11,8 @@ export {
 } from './sidebar-width'
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
+export type { UiStyle } from './ui-style'
+export { UI_STYLE_VALUES, normalizeUiStyle, getWindowBackgroundColor } from './ui-style'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalCursorStyle } from './terminal-cursor'
 export type { TerminalCursorStyle } from './terminal-cursor'
@@ -69,6 +71,8 @@ export interface AppSettings {
   /** 界面语言 */
   locale: AppLocale
   theme: ThemeMode
+  /** minimal：暖中性灰极简；niozy：原版 NioZy 界面 */
+  uiStyle: import('./ui-style').UiStyle
   /** default：侧栏展开；focus：侧栏收起；minimal：无侧栏、顶栏下横向图标 Tab */
   layoutMode: LayoutMode
   /** 侧栏展开宽度（px） */
@@ -121,6 +125,26 @@ export interface ReloadEnvironmentResult {
   error?: string
 }
 
+export interface UpdateCheckResult {
+  ok: boolean
+  hasUpdate: boolean
+  currentVersion: string
+  latestVersion?: string
+  downloadUrl?: string
+  error?: string
+}
+
+export interface UpdateDownloadPayload {
+  version: string
+  downloadUrl: string
+}
+
+export interface UpdateDownloadResult {
+  ok: boolean
+  installerPath?: string
+  error?: string
+}
+
 export interface SystemStatsData {
   date: string
   time: string
@@ -163,6 +187,7 @@ export interface ElectronAPI {
     reloadEnvironment: () => Promise<ReloadEnvironmentResult>
   }
   app: {
+    getVersion: () => Promise<string>
     getPendingOpenDirectory: () => Promise<string | null>
     onOpenDirectory: (cb: (directory: string) => void) => () => void
   }
@@ -194,6 +219,10 @@ export interface ElectronAPI {
   }
   shell: {
     openExternal: (url: string) => Promise<void>
+  }
+  update: {
+    check: () => Promise<UpdateCheckResult>
+    download: (payload: UpdateDownloadPayload) => Promise<UpdateDownloadResult>
   }
   files: {
     /** 弹出保存对话框并写入文本；用户取消时返回 false */

@@ -154,6 +154,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 export function applyThemeToDocument(settings: AppSettings): void {
   const root = document.documentElement
   root.classList.toggle('dark', settings.theme === 'dark')
+  root.dataset.uiStyle = settings.uiStyle === 'niozy' ? 'niozy' : 'minimal'
   root.style.setProperty('--primary', settings.accentColor)
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)

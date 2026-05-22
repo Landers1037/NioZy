@@ -20,7 +20,7 @@ function PaletteSwatches({ colors }: { colors: string[] }) {
         {normal.map((c, i) => (
           <span
             key={`n-${i}`}
-            className="size-3.5 shrink-0 rounded-full border border-white/10 shadow-sm"
+            className="size-3.5 shrink-0 rounded-full border border-border"
             style={{ backgroundColor: c }}
             title={c}
           />
@@ -30,7 +30,7 @@ function PaletteSwatches({ colors }: { colors: string[] }) {
         {bright.map((c, i) => (
           <span
             key={`b-${i}`}
-            className="size-3.5 shrink-0 rounded-full border border-white/10 shadow-sm"
+            className="size-3.5 shrink-0 rounded-full border border-border"
             style={{ backgroundColor: c }}
             title={c}
           />

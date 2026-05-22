@@ -4,6 +4,7 @@ import { ChevronDown, Loader2, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { loadSystemFonts } from '@/lib/system-fonts'
 import { cn } from '@/lib/utils'
+import { useUiClasses } from '@/lib/ui-style'
 
 interface FontFamilyPickerProps {
   value: string
@@ -13,6 +14,7 @@ interface FontFamilyPickerProps {
 
 export function FontFamilyPicker({ value, onChange, className }: FontFamilyPickerProps) {
   const { t } = useTranslation()
+  const ui = useUiClasses()
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -67,7 +69,7 @@ export function FontFamilyPicker({ value, onChange, className }: FontFamilyPicke
         aria-haspopup="listbox"
         disabled={loading && fonts.length === 0}
         className={cn(
-          'flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors',
+          'flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition-colors',
           'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           'disabled:cursor-not-allowed disabled:opacity-50',
         )}
@@ -90,7 +92,7 @@ export function FontFamilyPicker({ value, onChange, className }: FontFamilyPicke
       {open && (
         <div
           role="listbox"
-          className="absolute z-50 mt-1 flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-md"
+          className="ui-overlay-panel absolute z-50 mt-1 flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground"
         >
           <div className="flex items-center gap-2 border-b border-border px-2 py-1.5">
             <Search className="size-4 shrink-0 text-muted-foreground" />
@@ -117,7 +119,7 @@ export function FontFamilyPicker({ value, onChange, className }: FontFamilyPicke
                   type="button"
                   className={cn(
                     'flex w-full items-center px-3 py-1.5 text-left text-sm transition-colors hover:bg-accent',
-                    font === value && 'bg-accent font-medium',
+                    font === value && ui.fontPickerSelected,
                   )}
                   style={{ fontFamily: font }}
                   onClick={() => {

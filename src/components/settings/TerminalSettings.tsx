@@ -16,6 +16,7 @@ import { ColorSchemePreview } from '@/components/settings/ColorSchemePreview'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
 import { cn } from '@/lib/utils'
+import { useUiClasses } from '@/lib/ui-style'
 import type { TerminalColorScheme, TerminalCursorStyle } from '../../../electron/shared/api-types'
 import { Input } from '@/components/ui/input'
 import {
@@ -30,6 +31,7 @@ export function TerminalSettings() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
+  const ui = useUiClasses()
   if (!settings) return null
 
   const scheme = settings.terminal.colorScheme
@@ -90,7 +92,10 @@ export function TerminalSettings() {
 
         <SettingField icon={TextCursor} label={t('settings.terminal.cursorStyle')}>
           <div
-            className="inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border bg-muted/50 p-1"
+            className={cn(
+              'inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border p-1',
+              ui.segmentGroupBg,
+            )}
             role="tablist"
             aria-label={t('settings.terminal.cursorStyleAria')}
           >
@@ -101,10 +106,10 @@ export function TerminalSettings() {
                 role="tab"
                 aria-selected={settings.terminal.cursorStyle === opt.value}
                 className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  'rounded-md px-3 py-1.5 text-sm transition-colors',
                   settings.terminal.cursorStyle === opt.value
-                    ? 'bg-background text-foreground shadow-sm dark:bg-primary/18 dark:ring-1 dark:ring-primary/35'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? ui.segmentActive
+                    : ui.segmentInactive,
                 )}
                 onClick={() =>
                   patchSettings({

@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAppStore } from '@/stores/app-store'
+import { useUiClasses } from '@/lib/ui-style'
+import { cn } from '@/lib/utils'
 import type { CustomConnection } from '@/stores/app-store'
 import { randomUUID } from '@/lib/id'
 import { parseEnvLines, formatEnvLines } from '@/lib/connection-env'
@@ -72,6 +74,7 @@ export function ConnectionSettings() {
   })
   const [editingConnectionId, setEditingConnectionId] = useState<string | null>(null)
   const [draft, setDraft] = useState<ConnectionDraft>(EMPTY_CONNECTION_DRAFT)
+  const ui = useUiClasses()
 
   if (!settings) return null
 
@@ -158,7 +161,7 @@ export function ConnectionSettings() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{t(`settings.connections.shell.${shell}`)}</p>
+                      <p className="font-semibold">{t(`settings.connections.shell.${shell}`)}</p>
                       {isDefault && (
                         <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-xs font-normal text-secondary-foreground">
                           <Star className="size-3 fill-current" />
@@ -391,15 +394,15 @@ export function ConnectionSettings() {
           {settings.connections.map((c) => (
             <div
               key={c.id}
-              className={
+              className={cn(
                 editingConnectionId === c.id
-                  ? 'rounded-lg border border-primary/40 bg-primary/5 px-3 py-2'
-                  : 'rounded-lg border border-border px-3 py-2'
-              }
+                  ? ui.connectionEditing
+                  : 'rounded-lg border border-border px-3 py-2',
+              )}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="font-medium">{c.name}</p>
+                  <p className="font-semibold">{c.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
                     {c.type === 'ssh' ? `ssh ${c.sshUser}@${c.sshHost}` : c.command}
                   </p>

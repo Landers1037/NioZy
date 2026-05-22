@@ -7,6 +7,8 @@ import { ensureConfigDir, getConfigDir, getSettingsFilePath, getTermFilePath } f
 
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
+export type { UiStyle } from './shared/ui-style'
+import { normalizeUiStyle } from './shared/ui-style'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
@@ -42,6 +44,7 @@ export type { CustomConnection }
 export interface AppSettings {
   locale: import('./shared/locale').AppLocale
   theme: ThemeMode
+  uiStyle: import('./shared/ui-style').UiStyle
   layoutMode: LayoutMode
   sidebarWidth: number
   accentColor: string
@@ -110,9 +113,10 @@ export function isHardwareAccelerationEnabled(): boolean {
 export const DEFAULT_SETTINGS: AppSettings = {
   locale: DEFAULT_LOCALE,
   theme: 'light',
+  uiStyle: 'minimal',
   layoutMode: 'default',
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-  accentColor: '#0A84FF',
+  accentColor: '#5C6B7A',
   fontSize: 13,
   terminal: {
     colorScheme: 'atom',
@@ -160,6 +164,7 @@ export class SettingsStore {
       ...DEFAULT_SETTINGS,
       ...stored,
       locale: normalizeLocale(stored.locale),
+      uiStyle: normalizeUiStyle(stored.uiStyle),
       layoutMode: normalizeLayoutMode(stored.layoutMode),
       sidebarWidth: normalizeSidebarWidth(stored.sidebarWidth),
       connections,

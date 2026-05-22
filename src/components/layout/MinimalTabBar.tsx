@@ -11,15 +11,23 @@ import { useAppStore } from '@/stores/app-store'
 import { createTerminal } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
+import { useUiClasses } from '@/lib/ui-style'
+import { cn } from '@/lib/utils'
 
 export function MinimalTabBar() {
   const { t } = useTranslation()
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
+  const ui = useUiClasses()
 
   return (
-    <div className="flex shrink-0 items-center gap-0.5 border-b border-border bg-muted/50 px-2 py-1.5 no-drag">
+    <div
+      className={cn(
+        'flex shrink-0 items-center gap-0.5 border-b border-border px-2 py-1.5 no-drag',
+        ui.tabBarBg,
+      )}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto py-px">
         {tabs.map((tab) =>
           tab.type === 'terminal' ? (
