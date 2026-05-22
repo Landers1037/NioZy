@@ -52,8 +52,8 @@ export default function App() {
         booted.current = true
         void (async () => {
           const pending = await api.app.getPendingOpenDirectory()
-          if (pending) await openTerminalInDirectory(pending, 'powershell')
-          else await createTerminal('powershell')
+          if (pending) await openTerminalInDirectory(pending)
+          else await createTerminal()
         })()
       }
       return true
@@ -104,7 +104,7 @@ export default function App() {
     const unsubCwd = api.terminal.onCwd(setTerminalCwd)
     const unsubExit = api.terminal.onExit((id) => clearTerminalCwd(id))
     const unsubOpenDir = api.app.onOpenDirectory((directory) => {
-      void openTerminalInDirectory(directory, 'powershell')
+      void openTerminalInDirectory(directory)
     })
     return () => {
       unsubCwd()

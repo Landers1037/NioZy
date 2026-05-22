@@ -46,6 +46,7 @@ export {
   BUILTIN_SHELL_LABELS,
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
+  normalizeDefaultTerminal,
 } from './builtin-shells'
 
 export interface CustomConnection {
@@ -90,6 +91,8 @@ export interface AppSettings {
   }
   connections: CustomConnection[]
   builtinConnections: import('./builtin-shells').BuiltinConnections
+  /** 新建终端时使用的内置 Shell；未设置时回退为 PowerShell */
+  defaultTerminal: import('./builtin-shells').BuiltinShellType
   system: {
     proxy: string
     launchOnStartup: boolean
@@ -109,6 +112,13 @@ export interface AppSettings {
     lastWindowState?: import('./window-state').SavedWindowState
   }
   shortcuts: AppShortcuts
+}
+
+export interface ReloadEnvironmentResult {
+  ok: boolean
+  variableCount: number
+  pathSegmentCount: number
+  error?: string
 }
 
 export interface SystemStatsData {
@@ -150,6 +160,7 @@ export interface ElectronAPI {
     platform: NodeJS.Platform
     getStats: () => Promise<SystemStatsData>
     onStats: (cb: (stats: SystemStatsData) => void) => () => void
+    reloadEnvironment: () => Promise<ReloadEnvironmentResult>
   }
   app: {
     getPendingOpenDirectory: () => Promise<string | null>

@@ -26,6 +26,7 @@ import {
 } from '../windows-shell-context-menu'
 import type { TerminalCreateOptions } from '../shared/api-types'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
+import { reloadSystemEnvironment } from '../reload-system-env'
 
 augmentWindowsPath()
 
@@ -329,6 +330,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
 ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
+ipcMain.handle('system:reloadEnvironment', () => reloadSystemEnvironment())
 
 ipcMain.handle('fonts:list', () => listSystemFonts())
 

@@ -45,7 +45,7 @@ export function MinimalTabBar() {
           size="icon"
           className="size-6"
           title={t('sidebar.newPowerShell')}
-          onClick={() => createTerminal('powershell')}
+          onClick={() => createTerminal()}
         >
           <Plus className="size-3" />
         </Button>

@@ -38,7 +38,7 @@ export function useAppShortcuts(): void {
 
       if (matchAccelerator(app.newTerminal, e)) {
         e.preventDefault()
-        void createTerminal('powershell')
+        void createTerminal()
         return
       }
 

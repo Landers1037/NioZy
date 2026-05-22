@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module'
-import type { ElectronAPI, SystemStatsData } from '../shared/api-types'
+import type { ElectronAPI, ReloadEnvironmentResult, SystemStatsData } from '../shared/api-types'
 
 const require = createRequire(import.meta.url)
 const { contextBridge, ipcRenderer } = require('electron') as typeof import('electron')
@@ -31,6 +31,8 @@ const api: ElectronAPI = {
       ipcRenderer.on('system:stats', handler)
       return () => ipcRenderer.removeListener('system:stats', handler)
     },
+    reloadEnvironment: () =>
+      ipcRenderer.invoke('system:reloadEnvironment') as Promise<ReloadEnvironmentResult>,
   },
   app: {
     getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),

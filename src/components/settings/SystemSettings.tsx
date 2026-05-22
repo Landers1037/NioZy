@@ -6,7 +6,8 @@ import { useAppStore } from '@/stores/app-store'
 import { toast } from 'sonner'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
-import { Download, ExternalLink, Info, Minimize2, Power, Globe } from 'lucide-react'
+import { useState } from 'react'
+import { Download, ExternalLink, Info, Minimize2, Power, Globe, RefreshCw } from 'lucide-react'
 import { GITHUB_RELEASES_URL } from '@/constants/urls'
 import { getElectronAPI } from '@/lib/electron-client'
 import logoUrl from '@/logo.png'
@@ -15,7 +16,29 @@ export function SystemSettings() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
+  const [reloadingEnv, setReloadingEnv] = useState(false)
   if (!settings) return null
+
+  const handleReloadEnvironment = async () => {
+    setReloadingEnv(true)
+    try {
+      const result = await getElectronAPI().system.reloadEnvironment()
+      if (result.ok) {
+        toast.success(
+          t('toast.envReloadSuccess', {
+            vars: result.variableCount,
+            paths: result.pathSegmentCount,
+          }),
+        )
+      } else {
+        toast.error(result.error ?? t('toast.envReloadFailed'))
+      }
+    } catch {
+      toast.error(t('toast.envReloadFailed'))
+    } finally {
+      setReloadingEnv(false)
+    }
+  }
 
   return (
     <Card>
@@ -60,6 +83,21 @@ export function SystemSettings() {
               patchSettings({ system: { ...settings.system, minimizeToTrayOnClose: v } })
             }
           />
+        </SettingField>
+
+        <SettingField
+          icon={RefreshCw}
+          label={t('settings.system.reloadEnvironment')}
+          description={t('settings.system.reloadEnvironmentDesc')}
+        >
+          <Button
+            variant="secondary"
+            disabled={reloadingEnv}
+            onClick={() => void handleReloadEnvironment()}
+          >
+            <RefreshCw className={reloadingEnv ? 'size-4 animate-spin' : 'size-4'} />
+            {t('settings.system.reloadEnvironment')}
+          </Button>
         </SettingField>
 
         <SettingField icon={Download} label={t('settings.system.updates')}>
