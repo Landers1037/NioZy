@@ -230,6 +230,8 @@
     "liveStatsOff": "System monitoring off",
     "cpu": "CPU {{percent}}%",
     "memory": "RAM {{percent}}% · {{used}}/{{total}} MB",
+    "cwd": "CWD",
+    "cwdUnknown": "—",
     "current": "Active"
   },
   "toast": {

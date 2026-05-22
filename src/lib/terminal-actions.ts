@@ -25,8 +25,9 @@ function toastTerminalError(error: unknown, context?: string): void {
 }
 
 async function openTerminalTab(options: TerminalCreateOptions): Promise<void> {
-  const { addTerminalTab } = useAppStore.getState()
+  const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
   const result = await getElectronAPI().terminal.create(options)
+  setTerminalCwd(result.id, result.cwd)
   addTerminalTab({
     id: `tab-${result.id}`,
     type: 'terminal',

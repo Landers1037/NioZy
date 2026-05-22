@@ -230,6 +230,8 @@
     "liveStatsOff": "系统监控已关闭",
     "cpu": "CPU {{percent}}%",
     "memory": "内存 {{percent}}% · {{used}}/{{total}} MB",
+    "cwd": "目录",
+    "cwdUnknown": "—",
     "current": "当前"
   },
   "toast": {

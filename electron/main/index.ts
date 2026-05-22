@@ -282,3 +282,6 @@ terminalService.on('data', (id, data) => {
 terminalService.on('exit', (id, code) => {
   sendToRenderer(mainWindow, 'terminal:exit', id, code)
 })
+terminalService.on('cwd', (id, cwd) => {
+  sendToRenderer(mainWindow, 'terminal:cwd', id, cwd)
+})

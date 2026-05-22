@@ -43,11 +43,13 @@ const DEFAULT_SETTINGS: AppSettings = {
 let mockVault: VaultVariablePublic[] = []
 
 type DataListener = (id: string, data: string) => void
+type CwdListener = (id: string, cwd: string) => void
 type StatsListener = (stats: SystemStatsData) => void
 
 let mockSettings: AppSettings = structuredClone(DEFAULT_SETTINGS)
 let mockTermCounter = 0
 const dataListeners = new Set<DataListener>()
+const cwdListeners = new Set<CwdListener>()
 const statsListeners = new Set<StatsListener>()
 
 function mockSystemStats(): SystemStatsData {
@@ -204,8 +206,12 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
             )
           : undefined
         void envResolved
+        const mockCwd = options.cwd ?? 'C:\\Users\\Developer'
         window.setTimeout(() => emitData(id, welcomeMessage(options.shell)), 0)
-        return { id, name, shell: options.shell }
+        window.setTimeout(() => {
+          for (const listener of cwdListeners) listener(id, mockCwd)
+        }, 0)
+        return { id, name, shell: options.shell, cwd: mockCwd }
       },
       write: (id, data) => {
         emitData(id, data)
@@ -215,6 +221,10 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       onData: (cb) => {
         dataListeners.add(cb)
         return () => dataListeners.delete(cb)
+      },
+      onCwd: (cb) => {
+        cwdListeners.add(cb)
+        return () => cwdListeners.delete(cb)
       },
       onExit: () => () => undefined,
     },

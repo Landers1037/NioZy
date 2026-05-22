@@ -5,7 +5,7 @@ import { getTabDisplayTitle } from '@/lib/tab-display'
 import { cn } from '@/lib/utils'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 
-type StatusTagVariant = 'date' | 'time' | 'cpu' | 'memory' | 'off' | 'tab'
+type StatusTagVariant = 'date' | 'time' | 'cpu' | 'memory' | 'off' | 'cwd' | 'tab'
 
 const tagVariantsLight: Record<StatusTagVariant, string> = {
   date: 'bg-green-600/14 text-green-950',
@@ -13,6 +13,7 @@ const tagVariantsLight: Record<StatusTagVariant, string> = {
   cpu: 'bg-sky-600/12 text-sky-950',
   memory: 'bg-violet-600/12 text-violet-950',
   off: 'bg-muted text-muted-foreground',
+  cwd: 'bg-amber-600/12 text-amber-950',
   tab: 'bg-emerald-600/12 text-emerald-950',
 }
 
@@ -22,6 +23,7 @@ const tagVariantsDark: Record<StatusTagVariant, string> = {
   cpu: 'bg-sky-400/18 text-sky-50',
   memory: 'bg-violet-400/18 text-violet-50',
   off: 'bg-muted/80 text-muted-foreground',
+  cwd: 'bg-amber-400/18 text-amber-50',
   tab: 'bg-emerald-400/18 text-emerald-50',
 }
 
@@ -29,6 +31,10 @@ const tabLabelLight = 'text-emerald-900/55'
 const tabLabelDark = 'text-emerald-50/60'
 const tabDividerLight = 'text-emerald-900/35'
 const tabDividerDark = 'text-emerald-50/35'
+const cwdLabelLight = 'text-amber-900/55'
+const cwdLabelDark = 'text-amber-50/60'
+const cwdDividerLight = 'text-amber-900/35'
+const cwdDividerDark = 'text-amber-50/35'
 
 function getTagVariants(theme: ThemeMode): Record<StatusTagVariant, string> {
   return theme === 'dark' ? tagVariantsDark : tagVariantsLight
@@ -66,11 +72,16 @@ export function StatusBar() {
   const liveStats = settings?.advanced.statusBarLiveStats !== false
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
+  const terminalCwds = useAppStore((s) => s.terminalCwds)
   const activeTab = tabs.find((t) => t.id === activeTabId)
+  const activeCwd =
+    activeTab?.type === 'terminal' && activeTab.terminalId
+      ? terminalCwds[activeTab.terminalId]
+      : undefined
   const isDark = theme === 'dark'
 
   return (
-    <footer className="flex h-8 shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-3">
+    <footer className="flex h-8 shrink-0 cursor-pointer select-none items-center justify-between gap-3 border-t border-border bg-card px-3">
       <div className="flex min-w-0 items-center gap-1.5">
         {liveStats ? (
           <>
@@ -97,18 +108,33 @@ export function StatusBar() {
           </StatusTag>
         )}
       </div>
-      <StatusTag variant="tab" theme={theme} className="max-w-[160px] shrink-0">
-        <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
-          {t('statusBar.current')}
-        </span>
-        <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
-        <span
-          className="min-w-0 truncate"
-          title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
-        >
-          {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
-        </span>
-      </StatusTag>
+      <div className="flex min-w-0 shrink items-center gap-1.5">
+        {activeTab?.type === 'terminal' && (
+          <StatusTag variant="cwd" theme={theme} className="max-w-[min(50vw,320px)]">
+            <span className={cn('shrink-0', isDark ? cwdLabelDark : cwdLabelLight)}>
+              {t('statusBar.cwd')}
+            </span>
+            <span className={cn('mx-1 shrink-0', isDark ? cwdDividerDark : cwdDividerLight)}>
+              ·
+            </span>
+            <span className="min-w-0 truncate" title={activeCwd}>
+              {activeCwd ?? t('statusBar.cwdUnknown')}
+            </span>
+          </StatusTag>
+        )}
+        <StatusTag variant="tab" theme={theme} className="max-w-[160px] shrink-0">
+          <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
+            {t('statusBar.current')}
+          </span>
+          <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
+          <span
+            className="min-w-0 truncate"
+            title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
+          >
+            {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
+          </span>
+        </StatusTag>
+      </div>
     </footer>
   )
 }

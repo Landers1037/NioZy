@@ -10,7 +10,7 @@ export function TitleBar() {
   const maximized = useAppStore((s) => s.windowMaximized)
 
   return (
-    <header className="flex h-10 shrink-0 items-center border-b border-border bg-card">
+    <header className="flex h-10 shrink-0 select-none items-center border-b border-border bg-card">
       <div className="flex items-center gap-2 px-3 no-drag">
         <img src={logoUrl} alt="NioZy" className="size-6 object-contain" />
         <span className="font-semibold tracking-tight">NioZy</span>

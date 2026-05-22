@@ -48,7 +48,7 @@ export function Sidebar() {
     >
       <aside
         className={cn(
-          'flex h-full w-full min-w-0 flex-col overflow-hidden border-r border-border bg-muted/50',
+          'flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-border bg-muted/50',
           !isResizing && 'transition-[width] duration-200',
         )}
       >

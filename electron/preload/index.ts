@@ -41,6 +41,11 @@ const api: ElectronAPI = {
       ipcRenderer.on('terminal:data', handler)
       return () => ipcRenderer.removeListener('terminal:data', handler)
     },
+    onCwd: (cb) => {
+      const handler = (_: unknown, id: string, cwd: string) => cb(id, cwd)
+      ipcRenderer.on('terminal:cwd', handler)
+      return () => ipcRenderer.removeListener('terminal:cwd', handler)
+    },
     onExit: (cb) => {
       const handler = (_: unknown, id: string, code: number) => cb(id, code)
       ipcRenderer.on('terminal:exit', handler)
