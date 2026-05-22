@@ -9,7 +9,7 @@ import { isMinimalLayout } from '@/lib/layout-mode'
 import { TerminalView } from '@/components/terminal/TerminalView'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
-import { createTerminal } from '@/lib/terminal-actions'
+import { createTerminal, openTerminalInDirectory } from '@/lib/terminal-actions'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 
@@ -50,7 +50,11 @@ export default function App() {
 
       if (!booted.current) {
         booted.current = true
-        void createTerminal('powershell')
+        void (async () => {
+          const pending = await api.app.getPendingOpenDirectory()
+          if (pending) await openTerminalInDirectory(pending, 'powershell')
+          else await createTerminal('powershell')
+        })()
       }
       return true
     }
@@ -99,9 +103,13 @@ export default function App() {
     const api = getElectronAPI()
     const unsubCwd = api.terminal.onCwd(setTerminalCwd)
     const unsubExit = api.terminal.onExit((id) => clearTerminalCwd(id))
+    const unsubOpenDir = api.app.onOpenDirectory((directory) => {
+      void openTerminalInDirectory(directory, 'powershell')
+    })
     return () => {
       unsubCwd()
       unsubExit()
+      unsubOpenDir()
     }
   }, [setTerminalCwd, clearTerminalCwd])
 

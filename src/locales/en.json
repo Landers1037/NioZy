@@ -100,6 +100,8 @@
       "disableSandboxDesc": "When on, renderer sandbox is off; restart the app to apply",
       "statusBarLiveStats": "Live system info in status bar",
       "statusBarLiveStatsDesc": "When off, stops polling CPU/memory to reduce UI updates",
+      "shellContextMenu": "Open with NioZy in Explorer",
+      "shellContextMenuDesc": "Adds “Open with NioZy” to folder and folder-background context menus, opening a new PowerShell tab in that directory",
       "transparency": "Window opacity: {{value}}%"
     },
     "shortcuts": {
@@ -243,7 +245,8 @@
     "exportNotReady": "Export failed: terminal not ready",
     "exportSuccess": "Terminal exported",
     "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
-    "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply."
+    "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
+    "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry."
   },
   "terminal": {
     "processExited": "[Process exited]"

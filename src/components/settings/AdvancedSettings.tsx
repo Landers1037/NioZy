@@ -5,12 +5,14 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Activity, Cpu, Droplets, ShieldOff } from 'lucide-react'
+import { Activity, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
+import { getElectronAPI } from '@/lib/electron-client'
 
 export function AdvancedSettings() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
+  const isWindows = getElectronAPI().system.platform === 'win32'
   if (!settings) return null
 
   return (
@@ -53,6 +55,25 @@ export function AdvancedSettings() {
             }}
           />
         </SettingField>
+
+        {isWindows && (
+          <SettingField
+            icon={FolderOpen}
+            label={t('settings.advanced.shellContextMenu')}
+            description={t('settings.advanced.shellContextMenuDesc')}
+            row
+          >
+            <Switch
+              checked={settings.advanced.shellContextMenu === true}
+              onCheckedChange={(v) => {
+                if (v === settings.advanced.shellContextMenu) return
+                void patchSettings({
+                  advanced: { ...settings.advanced, shellContextMenu: v },
+                }).catch(() => toast.error(t('toast.shellContextMenuFailed')))
+              }}
+            />
+          </SettingField>
+        )}
 
         <SettingField
           icon={Activity}

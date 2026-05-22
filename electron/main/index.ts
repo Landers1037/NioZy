@@ -13,9 +13,27 @@ import { sendToRenderer } from './window-ipc'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
 import { applyChromiumPerformanceFlags, getOptimizedWebPreferences } from '../chromium-tuning'
+import {
+  flushPendingOpenDirectory,
+  parseDirectoryFromArgv,
+  queueOpenDirectory,
+  setInitialOpenDirectoryFromArgv,
+  takePendingOpenDirectory,
+} from '../open-directory'
+import {
+  isWindowsShellContextMenuSupported,
+  setWindowsShellContextMenu,
+} from '../windows-shell-context-menu'
 import type { TerminalCreateOptions } from '../shared/api-types'
 
 augmentWindowsPath()
+
+setInitialOpenDirectoryFromArgv(process.argv)
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+if (!gotSingleInstanceLock) {
+  app.quit()
+}
 
 if (!isHardwareAccelerationEnabled()) {
   app.disableHardwareAcceleration()
@@ -57,6 +75,23 @@ function transparencyToOpacity(transparency: number): number {
 function syncWindowOpacity(): void {
   if (!mainWindow) return
   mainWindow.setOpacity(transparencyToOpacity(settingsStore.get().advanced.transparency))
+}
+
+function showMainWindow(): void {
+  if (!mainWindow) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+}
+
+async function syncShellContextMenuRegistry(enabled: boolean): Promise<void> {
+  if (!isWindowsShellContextMenuSupported()) return
+  await setWindowsShellContextMenu(enabled)
+}
+
+function handleOpenDirectoryRequest(directory: string): void {
+  showMainWindow()
+  queueOpenDirectory(mainWindow, directory)
 }
 
 function resolvePreloadPath(): string {
@@ -107,6 +142,7 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.on('did-finish-load', () => {
+    flushPendingOpenDirectory(mainWindow)
     if (isDev && mainWindow && !mainWindow.webContents.isDevToolsOpened()) {
       mainWindow.webContents.openDevTools({ mode: 'detach' })
     }
@@ -158,13 +194,29 @@ function createTray(): void {
   tray.on('double-click', () => mainWindow?.show())
 }
 
-app.whenReady().then(() => {
+if (gotSingleInstanceLock) {
+  app.on('second-instance', (_event, argv) => {
+    const directory = parseDirectoryFromArgv(argv)
+    if (directory) handleOpenDirectoryRequest(directory)
+    else showMainWindow()
+  })
+}
+
+app.whenReady().then(async () => {
   settingsStore.load()
   vaultStore.load()
 
   if (isDev) {
     console.log('[NioZy] app path:', app.getAppPath())
     console.log('[NioZy] main dir:', __dirname)
+  }
+
+  if (settingsStore.get().advanced.shellContextMenu) {
+    try {
+      await syncShellContextMenuRegistry(true)
+    } catch (err) {
+      console.error('[NioZy] Failed to sync shell context menu registry:', err)
+    }
   }
 
   createWindow()
@@ -223,9 +275,13 @@ ipcMain.handle(
 )
 
 ipcMain.handle('settings:get', () => settingsStore.get())
-ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>[0]) => {
+ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['update']>[0]) => {
   const liveBefore = isStatusBarLiveStatsEnabled()
   const shortcutBefore = settingsStore.get().shortcuts.global.showApp
+  if (partial.advanced?.shellContextMenu !== undefined) {
+    await syncShellContextMenuRegistry(partial.advanced.shellContextMenu)
+  }
+
   const updated = settingsStore.update(partial)
   if (partial.advanced?.statusBarLiveStats !== undefined && liveBefore !== isStatusBarLiveStatsEnabled()) {
     syncSystemStatsPolling()
@@ -244,6 +300,8 @@ ipcMain.handle('settings:save', (_, partial: Parameters<SettingsStore['update']>
   }
   return updated
 })
+
+ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 
