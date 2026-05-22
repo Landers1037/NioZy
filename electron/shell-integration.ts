@@ -1,17 +1,45 @@
+import { app } from 'electron'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { fileURLToPath } from 'node:url'
 import type { ShellType } from './terminal-service'
 
-const MAIN_DIR = fileURLToPath(new URL('.', import.meta.url))
+const MAIN_DIR =
+  typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : fileURLToPath(new URL('.', import.meta.url))
+
+const SCRIPT_NAME = 'shell-integration.ps1'
+
+/** 安装包 resources 目录下的脚本（asar 外，PowerShell 可直接 dot-source） */
+function getPackagedScriptPath(): string | null {
+  const external = join(process.resourcesPath, SCRIPT_NAME)
+  if (existsSync(external)) return external
+
+  const unpacked = join(
+    process.resourcesPath,
+    'app.asar.unpacked',
+    'out',
+    'main',
+    'scripts',
+    SCRIPT_NAME,
+  )
+  if (existsSync(unpacked)) return unpacked
+
+  return null
+}
 
 export function getShellIntegrationScriptPath(): string | null {
-  const candidates = [
-    join(MAIN_DIR, 'scripts/shell-integration.ps1'),
-    join(MAIN_DIR, '../electron/scripts/shell-integration.ps1'),
-    fileURLToPath(new URL('./scripts/shell-integration.ps1', import.meta.url)),
+  if (app.isPackaged) {
+    return getPackagedScriptPath()
+  }
+
+  const devCandidates = [
+    join(MAIN_DIR, 'scripts', SCRIPT_NAME),
+    join(process.cwd(), 'out', 'main', 'scripts', SCRIPT_NAME),
+    join(process.cwd(), 'electron', 'scripts', SCRIPT_NAME),
   ]
-  for (const file of candidates) {
+  for (const file of devCandidates) {
     if (existsSync(file)) return file
   }
   return null
