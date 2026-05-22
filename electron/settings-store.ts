@@ -50,6 +50,7 @@ export interface AppSettings {
   sidebarWidth: number
   accentColor: string
   fontSize: number
+  showAppTitle: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
@@ -120,6 +121,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   accentColor: '#5C6B7A',
   fontSize: 13,
+  showAppTitle: true,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
@@ -170,6 +172,10 @@ export class SettingsStore {
       uiStyle: normalizeUiStyle(stored.uiStyle),
       layoutMode: normalizeLayoutMode(stored.layoutMode),
       sidebarWidth: normalizeSidebarWidth(stored.sidebarWidth),
+      showAppTitle:
+        typeof stored.showAppTitle === 'boolean'
+          ? stored.showAppTitle
+          : DEFAULT_SETTINGS.showAppTitle,
       connections,
       terminal: {
         ...DEFAULT_SETTINGS.terminal,
