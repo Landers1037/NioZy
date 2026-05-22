@@ -24,15 +24,24 @@ function copyMainAssets(): Plugin {
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+const FONT_ASSET_PATTERN = /\.(ttf|otf|woff2?)$/i
+
+function fontAssetFileNames(name: string | undefined): string | undefined {
+  if (name && FONT_ASSET_PATTERN.test(name)) return 'fonts/[name][extname]'
+  return undefined
+}
+
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      minify: 'esbuild',
       lib: {
         entry: resolve('electron/main/index.ts'),
         formats: ['es'],
       },
       rollupOptions: {
+        treeshake: true,
         plugins: [copyMainAssets()],
         output: {
           entryFileNames: '[name].mjs',
@@ -43,11 +52,13 @@ export default defineConfig({
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      minify: 'esbuild',
       lib: {
         entry: resolve('electron/preload/index.ts'),
         formats: ['es'],
       },
       rollupOptions: {
+        treeshake: true,
         output: {
           entryFileNames: '[name].mjs',
         },
@@ -60,8 +71,27 @@ export default defineConfig({
       strictPort: false,
     },
     build: {
+      minify: 'esbuild',
+      cssMinify: true,
       rollupOptions: {
+        treeshake: {
+          moduleSideEffects: 'no-external',
+          preset: 'recommended',
+        },
         input: resolve('index.html'),
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return
+            if (id.includes('@radix-ui')) return 'radix'
+            if (id.includes('@xterm')) return 'xterm'
+            if (id.includes('lucide-react')) return 'icons'
+            if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
+            return 'vendor'
+          },
+          assetFileNames(assetInfo) {
+            return fontAssetFileNames(assetInfo.name) ?? 'assets/[name]-[hash][extname]'
+          },
+        },
       },
     },
     resolve: {
