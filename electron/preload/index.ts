@@ -2,6 +2,7 @@ import { createRequire } from 'node:module'
 import type {
   ElectronAPI,
   ReloadEnvironmentResult,
+  AppMetricsData,
   SystemStatsData,
   UpdateCheckResult,
   UpdateDownloadPayload,
@@ -38,6 +39,8 @@ const api: ElectronAPI = {
       ipcRenderer.on('system:stats', handler)
       return () => ipcRenderer.removeListener('system:stats', handler)
     },
+    getAppMetrics: () =>
+      ipcRenderer.invoke('system:getAppMetrics') as Promise<AppMetricsData>,
     reloadEnvironment: () =>
       ipcRenderer.invoke('system:reloadEnvironment') as Promise<ReloadEnvironmentResult>,
   },

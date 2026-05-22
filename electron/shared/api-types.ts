@@ -171,6 +171,25 @@ export interface SystemStatsData {
   memoryTotalMb: number
 }
 
+export interface AppMetricsProcess {
+  pid: number
+  type: string
+  workingSetMb: number
+  peakWorkingSetMb: number
+  cpuPercent: number
+  sandboxed: boolean
+}
+
+export interface AppMetricsData {
+  totalWorkingSetMb: number
+  totalPeakWorkingSetMb: number
+  mainHeapUsedMb: number
+  mainHeapTotalMb: number
+  mainRssMb: number
+  processes: AppMetricsProcess[]
+  fetchedAt: string
+}
+
 export interface TerminalCreateOptions {
   shell: ShellType
   name?: string
@@ -201,6 +220,7 @@ export interface ElectronAPI {
     platform: NodeJS.Platform
     getStats: () => Promise<SystemStatsData>
     onStats: (cb: (stats: SystemStatsData) => void) => () => void
+    getAppMetrics: () => Promise<AppMetricsData>
     reloadEnvironment: () => Promise<ReloadEnvironmentResult>
   }
   app: {
