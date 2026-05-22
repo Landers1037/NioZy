@@ -176,6 +176,7 @@ export function SystemSettings() {
           <Button
             variant="secondary"
             disabled={reloadingEnv}
+            className="w-fit"
             onClick={() => void handleReloadEnvironment()}
           >
             <RefreshCw className={reloadingEnv ? 'size-4 animate-spin' : 'size-4'} />
