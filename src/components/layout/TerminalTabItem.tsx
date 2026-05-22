@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Terminal, X } from 'lucide-react'
 import {
   ContextMenu,
@@ -52,6 +53,7 @@ export function TerminalTabItem({
   iconOnly = false,
   isActive,
 }: TerminalTabItemProps) {
+  const { t } = useTranslation()
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const removeTab = useAppStore((s) => s.removeTab)
   const setTabCustomTitle = useAppStore((s) => s.setTabCustomTitle)
@@ -108,7 +110,7 @@ export function TerminalTabItem({
           <button
             type="button"
             className="cursor-pointer rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-            aria-label={`关闭 ${displayTitle}`}
+            aria-label={t('tab.closeAria', { title: displayTitle })}
             onClick={handleQuickClose}
           >
             <X className="size-3.5" />
@@ -128,31 +130,35 @@ export function TerminalTabItem({
               if (!isActive) setActiveTab(tab.id)
             }}
           >
-            打开
+            {t('common.open')}
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => setCloseOpen(true)}>关闭</ContextMenuItem>
-          <ContextMenuItem onSelect={() => closeOtherTerminalTabs(tab.id)}>关闭其他</ContextMenuItem>
+          <ContextMenuItem onSelect={() => setCloseOpen(true)}>{t('common.close')}</ContextMenuItem>
+          <ContextMenuItem onSelect={() => closeOtherTerminalTabs(tab.id)}>
+            {t('tab.closeOther')}
+          </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={openEditDialog}>编辑标题</ContextMenuItem>
-          <ContextMenuItem onSelect={() => void exportTerminalTab(tab.id)}>导出终端</ContextMenuItem>
+          <ContextMenuItem onSelect={openEditDialog}>{t('tab.editTitle')}</ContextMenuItem>
+          <ContextMenuItem onSelect={() => void exportTerminalTab(tab.id)}>
+            {t('tab.exportTerminal')}
+          </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
       <AlertDialog open={closeOpen} onOpenChange={setCloseOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>关闭终端</AlertDialogTitle>
+            <AlertDialogTitle>{t('tab.closeTerminalTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要关闭「{displayTitle}」吗？终端进程将结束，未导出的内容将丢失。
+              {t('tab.closeTerminalDesc', { title: displayTitle })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:opacity-90"
               onClick={() => closeTerminalTabs([tab.id])}
             >
-              关闭
+              {t('common.close')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -161,9 +167,9 @@ export function TerminalTabItem({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>编辑标题</DialogTitle>
+            <DialogTitle>{t('tab.editTitle')}</DialogTitle>
             <DialogDescription>
-              自定义侧边栏与状态栏中的展示名称。留空或恢复为默认名称时将使用「{tab.title}」。
+              {t('tab.editTitleDesc', { defaultTitle: tab.title })}
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -177,9 +183,9 @@ export function TerminalTabItem({
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>
-              取消
+              {t('common.cancel')}
             </Button>
-            <Button onClick={saveEditTitle}>保存</Button>
+            <Button onClick={saveEditTitle}>{t('common.save')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

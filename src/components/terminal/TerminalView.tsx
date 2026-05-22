@@ -8,6 +8,7 @@ import type { AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
+import i18n from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 interface TerminalViewProps {
@@ -93,7 +94,10 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     })
 
     const unsubExit = api.terminal.onExit((id) => {
-      if (id === tab.terminalId) term.write('\r\n\x1b[33m[进程已退出]\x1b[0m\r\n')
+      if (id === tab.terminalId) {
+        const msg = i18n.t('terminal.processExited')
+        term.write(`\r\n\x1b[33m${msg}\x1b[0m\r\n`)
+      }
     })
 
     scheduleFit()

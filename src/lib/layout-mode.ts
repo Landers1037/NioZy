@@ -1,22 +1,15 @@
+import type { TFunction } from 'i18next'
 import type { AppSettings, LayoutMode } from '../../electron/shared/api-types'
 
-export const LAYOUT_MODE_OPTIONS: { value: LayoutMode; label: string; description: string }[] = [
-  {
-    value: 'default',
-    label: '默认',
-    description: '左侧边栏默认展开',
-  },
-  {
-    value: 'focus',
-    label: '聚集',
-    description: '左侧边栏默认收起，便于聚焦终端',
-  },
-  {
-    value: 'minimal',
-    label: '极简',
-    description: '隐藏侧栏，顶栏下横向展示终端图标 Tab',
-  },
-]
+export const LAYOUT_MODE_VALUES: LayoutMode[] = ['default', 'focus', 'minimal']
+
+export function getLayoutModeOptions(t: TFunction) {
+  return LAYOUT_MODE_VALUES.map((value) => ({
+    value,
+    label: t(`layout.${value}.label`),
+    description: t(`layout.${value}.description`),
+  }))
+}
 
 export function normalizeLayoutMode(value: unknown): LayoutMode {
   if (value === 'focus' || value === 'minimal') return value

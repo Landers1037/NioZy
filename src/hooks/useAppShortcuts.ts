@@ -5,6 +5,7 @@ import { matchAccelerator } from '@/lib/shortcut-utils'
 import { getTerminal } from '@/lib/terminal-registry'
 import { createTerminal } from '@/lib/terminal-actions'
 import { toast } from 'sonner'
+import i18n from '@/lib/i18n'
 
 export function useAppShortcuts(): void {
   const shortcuts = useAppStore((s) => s.settings?.shortcuts)
@@ -71,7 +72,7 @@ export function useAppShortcuts(): void {
         e.preventDefault()
         const text = term.getSelection()
         if (text) void navigator.clipboard.writeText(text)
-        else toast.message('请先选中终端内容')
+        else toast.message(i18n.t('toast.selectTerminalFirst'))
         return
       }
 

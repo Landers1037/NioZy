@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +26,7 @@ export function VaultVariablePicker({
   selectionStart,
   onSelectionChange,
 }: VaultVariablePickerProps) {
+  const { t } = useTranslation()
   const [keys, setKeys] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -33,9 +35,9 @@ export function VaultVariablePicker({
     try {
       const list = await getElectronAPI().vault.getKeys()
       setKeys(list)
-      if (list.length === 0) toast.message('存储库暂无变量，请先在设置中添加')
+      if (list.length === 0) toast.message(t('settings.vault.vaultEmpty'))
     } catch {
-      toast.error('无法加载存储库')
+      toast.error(t('settings.vault.vaultLoadFailed'))
     } finally {
       setLoading(false)
     }
@@ -57,7 +59,7 @@ export function VaultVariablePicker({
           variant="outline"
           size="icon"
           className="shrink-0"
-          title="插入存储库变量"
+          title={t('settings.vault.insertVaultVar')}
           disabled={loading}
         >
           <Database className="size-4" />
@@ -65,7 +67,7 @@ export function VaultVariablePicker({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-64 overflow-y-auto">
         {keys.length === 0 && (
-          <DropdownMenuItem disabled>暂无变量</DropdownMenuItem>
+          <DropdownMenuItem disabled>{t('settings.vault.noVariables')}</DropdownMenuItem>
         )}
         {keys.map((key) => (
           <DropdownMenuItem key={key} onClick={() => pick(key)}>

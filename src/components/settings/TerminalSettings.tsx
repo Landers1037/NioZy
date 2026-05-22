@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { FontFamilyPicker } from '@/components/settings/FontFamilyPicker'
 import {
   Select,
   SelectContent,
@@ -8,9 +8,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { COLOR_SCHEME_OPTIONS } from '@/lib/terminal-themes'
-import { CURSOR_STYLE_OPTIONS } from '@/lib/terminal-cursor'
+import { getCursorStyleOptions } from '@/lib/terminal-cursor'
 import { ColorSchemePreview } from '@/components/settings/ColorSchemePreview'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
@@ -19,20 +20,22 @@ import type { TerminalColorScheme, TerminalCursorStyle } from '../../../electron
 import { Cpu, Palette, TextCursor, Type } from 'lucide-react'
 
 export function TerminalSettings() {
+  const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   if (!settings) return null
 
   const scheme = settings.terminal.colorScheme
+  const cursorOptions = getCursorStyleOptions(t)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>终端设置</CardTitle>
-        <CardDescription>配色、字体、光标与渲染方式</CardDescription>
+        <CardTitle>{t('settings.terminal.title')}</CardTitle>
+        <CardDescription>{t('settings.terminal.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <SettingField icon={Palette} label="配色方案">
+        <SettingField icon={Palette} label={t('settings.terminal.colorScheme')}>
           <Select
             value={scheme}
             onValueChange={(v) =>
@@ -58,21 +61,18 @@ export function TerminalSettings() {
           <ColorSchemePreview schemeId={scheme} />
         </SettingField>
 
-        <SettingField icon={Type} label="终端字体">
-          <Input
-            className="max-w-xs"
+        <SettingField icon={Type} label={t('settings.terminal.fontFamily')}>
+          <FontFamilyPicker
             value={settings.terminal.fontFamily}
-            onChange={(e) =>
-              patchSettings({
-                terminal: { ...settings.terminal, fontFamily: e.target.value },
-              })
+            onChange={(fontFamily) =>
+              patchSettings({ terminal: { ...settings.terminal, fontFamily } })
             }
           />
         </SettingField>
 
         <FontSizeInput
           icon={Type}
-          label="终端字号"
+          label={t('settings.terminal.fontSize')}
           min={10}
           max={24}
           value={settings.terminal.fontSize}
@@ -81,13 +81,13 @@ export function TerminalSettings() {
           }
         />
 
-        <SettingField icon={TextCursor} label="光标样式">
+        <SettingField icon={TextCursor} label={t('settings.terminal.cursorStyle')}>
           <div
             className="inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border bg-muted/50 p-1"
             role="tablist"
-            aria-label="光标样式"
+            aria-label={t('settings.terminal.cursorStyleAria')}
           >
-            {CURSOR_STYLE_OPTIONS.map((opt) => (
+            {cursorOptions.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
@@ -116,8 +116,8 @@ export function TerminalSettings() {
 
         <SettingField
           icon={TextCursor}
-          label="光标闪烁"
-          description="关闭后光标保持静止显示"
+          label={t('settings.terminal.cursorBlink')}
+          description={t('settings.terminal.cursorBlinkDesc')}
           row
         >
           <Switch
@@ -130,8 +130,8 @@ export function TerminalSettings() {
 
         <SettingField
           icon={Cpu}
-          label="渲染方式"
-          description="WebGPU 渲染器在 xterm.js 中仍处于实验阶段，当前版本将回退到 DOM/WebGL。"
+          label={t('settings.terminal.renderer')}
+          description={t('settings.terminal.rendererDesc')}
         >
           <Select
             value={settings.terminal.renderer}
@@ -148,9 +148,9 @@ export function TerminalSettings() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="dom">Canvas / DOM（稳定）</SelectItem>
-              <SelectItem value="webgl">WebGL（推荐）</SelectItem>
-              <SelectItem value="webgpu">WebGPU（实验，可能不可用）</SelectItem>
+              <SelectItem value="dom">{t('settings.terminal.rendererDom')}</SelectItem>
+              <SelectItem value="webgl">{t('settings.terminal.rendererWebgl')}</SelectItem>
+              <SelectItem value="webgpu">{t('settings.terminal.rendererWebgpu')}</SelectItem>
             </SelectContent>
           </Select>
         </SettingField>

@@ -7,36 +7,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
-import { Moon, Palette, Type, LayoutPanelLeft } from 'lucide-react'
-import { LAYOUT_MODE_OPTIONS } from '@/lib/layout-mode'
+import { Languages, Moon, Palette, Type, LayoutPanelLeft } from 'lucide-react'
+import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { cn } from '@/lib/utils'
-import type { LayoutMode } from '../../../electron/shared/api-types'
+import type { AppLocale, LayoutMode } from '../../../electron/shared/api-types'
+import { APP_LOCALES } from '../../../electron/shared/locale'
 
 const ACCENT_PRESETS = ['#0A84FF', '#0066FF', '#00D2FF', '#6366F1', '#10B981']
 
 export function AppearanceSettings() {
+  const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   if (!settings) return null
 
+  const layoutOptions = getLayoutModeOptions(t)
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>外观设置</CardTitle>
-        <CardDescription>主题、布局、强调色与全局字号</CardDescription>
+        <CardTitle>{t('settings.appearance.title')}</CardTitle>
+        <CardDescription>{t('settings.appearance.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <SettingField icon={LayoutPanelLeft} label="布局模式">
+        <SettingField icon={LayoutPanelLeft} label={t('settings.appearance.layoutMode')}>
           <div className="flex flex-col gap-3">
             <div
               className="inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border bg-muted/50 p-1"
               role="tablist"
-              aria-label="布局模式"
+              aria-label={t('settings.appearance.layoutModeAria')}
             >
-              {LAYOUT_MODE_OPTIONS.map((opt) => (
+              {layoutOptions.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
@@ -55,15 +60,30 @@ export function AppearanceSettings() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              {
-                LAYOUT_MODE_OPTIONS.find((o) => o.value === settings.layoutMode)
-                  ?.description
-              }
+              {layoutOptions.find((o) => o.value === settings.layoutMode)?.description}
             </p>
           </div>
         </SettingField>
 
-        <SettingField icon={Moon} label="主题模式">
+        <SettingField icon={Languages} label={t('settings.appearance.language')}>
+          <Select
+            value={settings.locale}
+            onValueChange={(v) => patchSettings({ locale: v as AppLocale })}
+          >
+            <SelectTrigger className="max-w-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {APP_LOCALES.map((loc) => (
+                <SelectItem key={loc} value={loc}>
+                  {t(`locale.${loc}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SettingField>
+
+        <SettingField icon={Moon} label={t('settings.appearance.themeMode')}>
           <Select
             value={settings.theme}
             onValueChange={(v) => patchSettings({ theme: v as 'light' | 'dark' })}
@@ -72,13 +92,13 @@ export function AppearanceSettings() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="light">明亮</SelectItem>
-              <SelectItem value="dark">暗黑</SelectItem>
+              <SelectItem value="light">{t('theme.light')}</SelectItem>
+              <SelectItem value="dark">{t('theme.dark')}</SelectItem>
             </SelectContent>
           </Select>
         </SettingField>
 
-        <SettingField icon={Palette} label="强调色">
+        <SettingField icon={Palette} label={t('settings.appearance.accentColor')}>
           <div className="flex flex-wrap gap-2">
             {ACCENT_PRESETS.map((color) => (
               <button
@@ -103,7 +123,7 @@ export function AppearanceSettings() {
 
         <FontSizeInput
           icon={Type}
-          label="全局字号"
+          label={t('settings.appearance.globalFontSize')}
           min={11}
           max={18}
           value={settings.fontSize}

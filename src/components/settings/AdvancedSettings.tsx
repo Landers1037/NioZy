@@ -1,11 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
+import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
 import { Activity, Cpu, Droplets } from 'lucide-react'
 
 export function AdvancedSettings() {
+  const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   if (!settings) return null
@@ -13,14 +15,14 @@ export function AdvancedSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>高级设置</CardTitle>
-        <CardDescription>硬件加速、窗口透明度与状态栏监控</CardDescription>
+        <CardTitle>{t('settings.advanced.title')}</CardTitle>
+        <CardDescription>{t('settings.advanced.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <SettingField
           icon={Cpu}
-          label="硬件加速"
-          description="默认开启，需重启应用后完全生效"
+          label={t('settings.advanced.hardwareAcceleration')}
+          description={t('settings.advanced.hardwareAccelerationDesc')}
           row
         >
           <Switch
@@ -33,8 +35,8 @@ export function AdvancedSettings() {
 
         <SettingField
           icon={Activity}
-          label="状态栏实时系统信息"
-          description="关闭后停止轮询 CPU/内存，可减轻界面刷新开销"
+          label={t('settings.advanced.statusBarLiveStats')}
+          description={t('settings.advanced.statusBarLiveStatsDesc')}
           row
         >
           <Switch
@@ -45,7 +47,12 @@ export function AdvancedSettings() {
           />
         </SettingField>
 
-        <SettingField icon={Droplets} label={`窗口透明度: ${settings.advanced.transparency}%`}>
+        <SettingField
+          icon={Droplets}
+          label={t('settings.advanced.transparency', {
+            value: settings.advanced.transparency,
+          })}
+        >
           <Slider
             className="max-w-md"
             min={70}

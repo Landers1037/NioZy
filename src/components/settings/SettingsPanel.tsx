@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
   Palette,
@@ -18,25 +19,35 @@ import { AdvancedSettings } from './AdvancedSettings'
 import { VaultSettings } from './VaultSettings'
 import { ShortcutSettings } from './ShortcutSettings'
 
-const SECTIONS = [
-  { id: 'appearance', label: '外观设置', icon: Palette },
-  { id: 'terminal', label: '终端设置', icon: Terminal },
-  { id: 'connections', label: '连接设置', icon: Plug },
-  { id: 'vault', label: '存储库', icon: Database },
-  { id: 'shortcuts', label: '快捷键', icon: Keyboard },
-  { id: 'system', label: '系统设置', icon: Settings2 },
-  { id: 'advanced', label: '高级设置', icon: SlidersHorizontal },
-] as const satisfies ReadonlyArray<{ id: string; label: string; icon: LucideIcon }>
+const SECTION_DEFS = [
+  { id: 'appearance', icon: Palette },
+  { id: 'terminal', icon: Terminal },
+  { id: 'connections', icon: Plug },
+  { id: 'vault', icon: Database },
+  { id: 'shortcuts', icon: Keyboard },
+  { id: 'system', icon: Settings2 },
+  { id: 'advanced', icon: SlidersHorizontal },
+] as const satisfies ReadonlyArray<{ id: string; icon: LucideIcon }>
 
-type SectionId = (typeof SECTIONS)[number]['id']
+type SectionId = (typeof SECTION_DEFS)[number]['id']
 
 export function SettingsPanel() {
+  const { t } = useTranslation()
   const [section, setSection] = useState<SectionId>('appearance')
+
+  const sections = useMemo(
+    () =>
+      SECTION_DEFS.map((s) => ({
+        ...s,
+        label: t(`settings.sections.${s.id}`),
+      })),
+    [t],
+  )
 
   return (
     <div className="flex h-full gap-4 overflow-hidden p-4">
       <nav className="flex w-44 shrink-0 flex-col gap-1 no-drag">
-        {SECTIONS.map((s) => {
+        {sections.map((s) => {
           const Icon = s.icon
           return (
             <button

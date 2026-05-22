@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Settings, X } from 'lucide-react'
 import {
   ContextMenu,
@@ -22,6 +23,7 @@ export function SettingsTabItem({
   iconOnly = false,
   isActive,
 }: SettingsTabItemProps) {
+  const { t } = useTranslation()
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const removeTab = useAppStore((s) => s.removeTab)
 
@@ -46,7 +48,7 @@ export function SettingsTabItem({
           <button
             type="button"
             className="cursor-pointer rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-            aria-label={`关闭 ${tab.title}`}
+            aria-label={t('tab.closeAria', { title: tab.title })}
             onClick={(e) => {
               e.stopPropagation()
               removeTab(tab.id)
@@ -68,9 +70,9 @@ export function SettingsTabItem({
             if (!isActive) setActiveTab(tab.id)
           }}
         >
-          打开
+          {t('common.open')}
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => removeTab(tab.id)}>关闭</ContextMenuItem>
+        <ContextMenuItem onSelect={() => removeTab(tab.id)}>{t('common.close')}</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )

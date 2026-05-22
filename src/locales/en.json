@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "open": "Open",
+    "edit": "Edit",
+    "none": "None",
+    "loading": "Loading…",
+    "listSeparator": ", ",
+    "cancelEdit": "Cancel edit",
+    "noItems": "None yet"
+  },
+  "app": {
+    "tagline": "Multi-terminal manager",
+    "emptyHint": "Click \"New terminal\" to get started",
+    "browserDevPreview": "Browser dev preview (mock Electron API). Use DevTools for styling; run",
+    "settingsTabTitle": "Settings"
+  },
+  "locale": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "layout": {
+    "default": { "label": "Default", "description": "Sidebar expanded by default" },
+    "focus": { "label": "Focus", "description": "Sidebar collapsed by default for terminal focus" },
+    "minimal": { "label": "Minimal", "description": "No sidebar; terminal icon tabs under the title bar" }
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Appearance",
+      "terminal": "Terminal",
+      "connections": "Connections",
+      "vault": "Vault",
+      "shortcuts": "Shortcuts",
+      "system": "System",
+      "advanced": "Advanced"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Theme, layout, language, accent color, and global font size",
+      "layoutMode": "Layout",
+      "layoutModeAria": "Layout mode",
+      "themeMode": "Theme",
+      "language": "Language",
+      "accentColor": "Accent color",
+      "globalFontSize": "Global font size"
+    },
+    "terminal": {
+      "title": "Terminal",
+      "description": "Color scheme, font, cursor, and renderer",
+      "colorScheme": "Color scheme",
+      "fontFamily": "Terminal font",
+      "fontSize": "Terminal font size",
+      "cursorStyle": "Cursor style",
+      "cursorStyleAria": "Cursor style",
+      "cursorBlink": "Cursor blink",
+      "cursorBlinkDesc": "When off, the cursor stays still",
+      "renderer": "Renderer",
+      "rendererDesc": "WebGPU in xterm.js is experimental; this build may fall back to DOM/WebGL.",
+      "rendererDom": "Canvas / DOM (stable)",
+      "rendererWebgl": "WebGL (recommended)",
+      "rendererWebgpu": "WebGPU (experimental, may be unavailable)"
+    },
+    "system": {
+      "title": "System",
+      "description": "Proxy, startup, and tray behavior",
+      "proxy": "Global proxy",
+      "launchOnStartup": "Launch at login",
+      "launchOnStartupDesc": "Start NioZy when you sign in to Windows",
+      "minimizeToTray": "Minimize to tray on close",
+      "minimizeToTrayDesc": "Hide to the system tray when clicking the close button",
+      "updates": "Updates",
+      "checkUpdates": "Check for updates",
+      "checkUpdatesSoon": "Update check coming soon",
+      "openReleases": "Open GitHub Releases",
+      "manualUpdate": "Download manually",
+      "about": "About NioZy",
+      "version": "Version {{version}} (MVP)",
+      "aboutDesc": "Multi-terminal manager — Electron, React, xterm.js, and Windows ConPTY.",
+      "cardDescription": "Proxy, startup, tray, and about"
+    },
+    "advanced": {
+      "title": "Advanced",
+      "description": "Performance and window effects",
+      "hardwareAcceleration": "Hardware acceleration",
+      "hardwareAccelerationDesc": "On by default; restart the app for full effect",
+      "statusBarLiveStats": "Live system info in status bar",
+      "statusBarLiveStatsDesc": "When off, stops polling CPU/memory to reduce UI updates",
+      "transparency": "Window opacity: {{value}}%"
+    },
+    "shortcuts": {
+      "title": "Shortcuts",
+      "description": "Electron accelerator format, e.g. CommandOrControl+T, Ctrl+Shift+C",
+      "globalShowApp": "Show/hide NioZy (global)",
+      "globalShowAppDesc": "If focused, send to background; otherwise show (keeps current page). Current: {{current}}",
+      "inApp": "In-app shortcuts",
+      "copyToClipboard": "Copy to clipboard",
+      "pasteFromClipboard": "Paste from clipboard",
+      "lineStart": "Go to line start",
+      "lineEnd": "Go to line end",
+      "clearTerminal": "Clear terminal",
+      "newTerminal": "New terminal",
+      "openSettings": "Open settings",
+      "prevTerminalTab": "Previous terminal tab",
+      "nextTerminalTab": "Next terminal tab"
+    },
+    "vault": {
+      "title": "Vault",
+      "description": "Store secrets encrypted; reference in connections with",
+      "descriptionVar": "syntax",
+      "encryptionKey": "Encryption key",
+      "encryptionKeyDesc": "Default NioZy MD5 ({{hint}}). Place a 32-char key at %USERPROFILE%/.config/NioZy/niozy.key.",
+      "editVariable": "Edit variable",
+      "addVariable": "Add variable",
+      "variableName": "Name",
+      "type": "Type",
+      "typePlain": "Plain",
+      "typeSecret": "Secret",
+      "value": "Value",
+      "keepSecretPlaceholder": "Leave empty to keep existing secret",
+      "valuePlaceholder": "Value",
+      "savedVariables": "Saved variables",
+      "noVariables": "No variables yet",
+      "plainValue": "Plain · {{value}}",
+      "secretValue": "Secret · ********",
+      "variableUpdated": "Variable updated",
+      "variableAdded": "Variable added",
+      "saveFailed": "Save failed",
+      "variableDeleted": "Deleted",
+      "insertVaultVar": "Insert vault variable",
+      "vaultEmpty": "Vault is empty; add variables in Settings first",
+      "vaultLoadFailed": "Could not load vault"
+    },
+    "connections": {
+      "title": "Connections",
+      "description": "Built-in shells and custom command / SSH connections",
+      "builtinTitle": "Built-in connections",
+      "builtinDesc": "cmd.exe, powershell.exe, pwsh.exe",
+      "builtinShells": "Built-in shells",
+      "addCustomTitle": "Add custom connection",
+      "addCustomDesc": "Custom command or SSH",
+      "typeCommandCustom": "Custom command",
+      "sshPasswordLogin": "Password",
+      "sshPublicKeyLogin": "Public key",
+      "saveConnection": "Save connection",
+      "savedConnections": "Saved connections",
+      "noCustomConnections": "No custom connections yet",
+      "defaultLaunch": "Default launch",
+      "argsCount": "{{count}} arg(s)",
+      "envCount": "{{count}} env var(s)",
+      "editBuiltin": "Edit",
+      "collapse": "Collapse",
+      "launchArgs": "Launch args (space-separated)",
+      "envVars": "Environment (KEY=VALUE, one per line)",
+      "customConnections": "Custom connections",
+      "addConnection": "Add connection",
+      "type": "Type",
+      "typeCommand": "Command",
+      "typeSsh": "SSH",
+      "name": "Name",
+      "authMethod": "Authentication",
+      "authPassword": "Password",
+      "authPublicKey": "Public key",
+      "host": "Host",
+      "port": "Port",
+      "username": "Username",
+      "password": "Password",
+      "passwordPlaceholder": "Password or ${vaultVariable}",
+      "privateKeyPath": "Private key path",
+      "privateKeyPlaceholder": "Key path or ${vaultVariable}",
+      "command": "Command",
+      "commandPlaceholder": "e.g. C:\\tools\\mycli.exe",
+      "args": "Arguments (space-separated)",
+      "delete": "Delete",
+      "connect": "Connect",
+      "shell": {
+        "powershell": "PowerShell",
+        "cmd": "CMD",
+        "pwsh": "PowerShell Core (pwsh)"
+      }
+    },
+    "fontPicker": {
+      "selectFont": "Select font",
+      "loadingFonts": "Loading fonts…",
+      "searchPlaceholder": "Search fonts…",
+      "loadFailed": "Could not load system fonts",
+      "noMatch": "No matching fonts"
+    }
+  },
+  "sidebar": {
+    "terminals": "Terminals",
+    "newTerminal": "New terminal",
+    "newConnection": "New connection",
+    "connection": "Connect",
+    "settings": "Settings",
+    "newPowerShell": "New PowerShell"
+  },
+  "tab": {
+    "closeAria": "Close {{title}}",
+    "closeOther": "Close others",
+    "exportTerminal": "Export terminal",
+    "closeTerminalTitle": "Close terminal",
+    "closeTerminalDesc": "Close \"{{title}}\"? The process will end and unsaved output will be lost.",
+    "editTitle": "Edit title",
+    "editTitleDesc": "Custom label in sidebar and status bar. Empty or default restores \"{{defaultTitle}}\"."
+  },
+  "cursor": {
+    "block": "Block",
+    "underline": "Underline",
+    "bar": "Bar"
+  },
+  "statusBar": {
+    "liveStatsOff": "System monitoring off",
+    "cpu": "CPU {{percent}}%",
+    "memory": "RAM {{percent}}% · {{used}}/{{total}} MB",
+    "current": "Active"
+  },
+  "toast": {
+    "terminalStartFailed": "Failed to start terminal",
+    "selectTerminalFirst": "Select terminal content first",
+    "exportNoTerminal": "Export failed: terminal not found",
+    "exportNotReady": "Export failed: terminal not ready",
+    "exportSuccess": "Terminal exported"
+  },
+  "terminal": {
+    "processExited": "[Process exited]"
+  },
+  "electron": {
+    "preloadMissing": "Electron preload API not found. Run npm run start instead of opening the Vite URL in a browser."
+  }
+}
