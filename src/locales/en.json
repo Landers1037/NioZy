@@ -93,9 +93,11 @@
     },
     "advanced": {
       "title": "Advanced",
-      "description": "Performance and window effects",
+      "description": "Hardware acceleration, sandbox, transparency, and status bar monitoring",
       "hardwareAcceleration": "Hardware acceleration",
       "hardwareAccelerationDesc": "On by default; restart the app for full effect",
+      "disableSandbox": "Disable sandbox isolation",
+      "disableSandboxDesc": "When on, renderer sandbox is off; restart the app to apply",
       "statusBarLiveStats": "Live system info in status bar",
       "statusBarLiveStatsDesc": "When off, stops polling CPU/memory to reduce UI updates",
       "transparency": "Window opacity: {{value}}%"
@@ -239,7 +241,9 @@
     "selectTerminalFirst": "Select terminal content first",
     "exportNoTerminal": "Export failed: terminal not found",
     "exportNotReady": "Export failed: terminal not ready",
-    "exportSuccess": "Terminal exported"
+    "exportSuccess": "Terminal exported",
+    "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
+    "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply."
   },
   "terminal": {
     "processExited": "[Process exited]"

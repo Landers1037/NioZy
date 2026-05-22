@@ -2,9 +2,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Activity, Cpu, Droplets } from 'lucide-react'
+import { Activity, Cpu, Droplets, ShieldOff } from 'lucide-react'
 
 export function AdvancedSettings() {
   const { t } = useTranslation()
@@ -27,9 +28,29 @@ export function AdvancedSettings() {
         >
           <Switch
             checked={settings.advanced.hardwareAcceleration}
-            onCheckedChange={(v) =>
-              patchSettings({ advanced: { ...settings.advanced, hardwareAcceleration: v } })
-            }
+            onCheckedChange={(v) => {
+              if (v === settings.advanced.hardwareAcceleration) return
+              void patchSettings({
+                advanced: { ...settings.advanced, hardwareAcceleration: v },
+              }).then(() => toast.info(t('toast.hardwareAccelerationRestart')))
+            }}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={ShieldOff}
+          label={t('settings.advanced.disableSandbox')}
+          description={t('settings.advanced.disableSandboxDesc')}
+          row
+        >
+          <Switch
+            checked={settings.advanced.disableSandbox}
+            onCheckedChange={(v) => {
+              if (v === settings.advanced.disableSandbox) return
+              void patchSettings({
+                advanced: { ...settings.advanced, disableSandbox: v },
+              }).then(() => toast.info(t('toast.disableSandboxRestart')))
+            }}
           />
         </SettingField>
 

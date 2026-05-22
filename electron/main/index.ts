@@ -4,7 +4,7 @@ import { existsSync } from 'fs'
 import { writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
-import { SettingsStore } from '../settings-store'
+import { SettingsStore, isHardwareAccelerationEnabled } from '../settings-store'
 import { SystemStats } from '../system-stats'
 import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
@@ -12,9 +12,16 @@ import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortc
 import { sendToRenderer } from './window-ipc'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
+import { applyChromiumPerformanceFlags, getOptimizedWebPreferences } from '../chromium-tuning'
 import type { TerminalCreateOptions } from '../shared/api-types'
 
 augmentWindowsPath()
+
+if (!isHardwareAccelerationEnabled()) {
+  app.disableHardwareAcceleration()
+}
+
+applyChromiumPerformanceFlags()
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -82,12 +89,9 @@ function createWindow(): void {
     titleBarStyle: 'hidden',
     backgroundColor: settings.theme === 'dark' ? '#0F1419' : '#F4F5F7',
     opacity: transparencyToOpacity(settings.advanced.transparency),
-    webPreferences: {
-      preload: preloadPath,
-      sandbox: false,
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
+    webPreferences: getOptimizedWebPreferences(preloadPath, {
+      disableSandbox: settings.advanced.disableSandbox,
+    }),
   })
 
   mainWindow.webContents.on('preload-error', (_, path, error) => {
