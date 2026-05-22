@@ -1,0 +1,30 @@
+appId: com.niozy.app
+productName: NioZy
+copyright: Copyright © NioZy
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**/*
+  - package.json
+  - '!out/**/*.map'
+  - '!**/{.DS_Store,thumbs.db}'
+  - '!**/{test,tests,__tests__,docs,doc,example,examples}/**'
+  - '!**/*.{md,markdown,map}'
+asar: true
+asarUnpack:
+  - '**/node_modules/node-pty/**'
+  - '**/node_modules/font-list/**'
+  - '**/fonts/**'
+  - '**/*.{ttf,otf,woff,woff2}'
+# node-pty 自带预编译产物；避免本机缺少 Python distutils 时 node-gyp 失败
+npmRebuild: false
+win:
+  target:
+    - nsis
+  icon: build/icon.ico
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
