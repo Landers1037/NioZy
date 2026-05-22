@@ -27,6 +27,12 @@ import {
   normalizeTerminalScrollback,
   DEFAULT_TERMINAL_SCROLLBACK,
 } from './shared/terminal-xterm'
+import {
+  normalizeSavedWindowState,
+  type SavedWindowState,
+} from './shared/window-state'
+
+export type { SavedWindowState } from './shared/window-state'
 
 export type { TerminalColorScheme } from './shared/terminal-color-schemes'
 
@@ -65,6 +71,10 @@ export interface AppSettings {
     statusBarLiveStats: boolean
     /** Windows：在文件夹与目录背景右键注册「使用 NioZy 打开」 */
     shellContextMenu: boolean
+    /** 关闭窗口时记住大小与位置，下次启动恢复 */
+    preserveWindowBounds: boolean
+    /** preserveWindowBounds 为 true 时由主进程写入 */
+    lastWindowState?: SavedWindowState
   }
   shortcuts: AppShortcuts
 }
@@ -126,6 +136,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     transparency: 100,
     statusBarLiveStats: true,
     shellContextMenu: false,
+    preserveWindowBounds: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
 }
@@ -177,6 +188,11 @@ export class SettingsStore {
           typeof stored.advanced?.shellContextMenu === 'boolean'
             ? stored.advanced.shellContextMenu
             : DEFAULT_SETTINGS.advanced.shellContextMenu,
+        preserveWindowBounds:
+          typeof stored.advanced?.preserveWindowBounds === 'boolean'
+            ? stored.advanced.preserveWindowBounds
+            : DEFAULT_SETTINGS.advanced.preserveWindowBounds,
+        lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
       },
       shortcuts: {
         ...DEFAULT_SETTINGS.shortcuts,

@@ -102,6 +102,8 @@
       "statusBarLiveStatsDesc": "When off, stops polling CPU/memory to reduce UI updates",
       "shellContextMenu": "Open with NioZy in Explorer",
       "shellContextMenuDesc": "Adds “Open with NioZy” to folder and folder-background context menus, opening a new PowerShell tab in that directory",
+      "preserveWindowBounds": "Remember window size",
+      "preserveWindowBoundsDesc": "Saves size and position when you close the window; if maximized on close, starts maximized next time",
       "transparency": "Window opacity: {{value}}%"
     },
     "shortcuts": {

@@ -102,6 +102,8 @@
       "statusBarLiveStatsDesc": "关闭后停止轮询 CPU/内存，可减轻界面刷新开销",
       "shellContextMenu": "右键使用 NioZy 打开",
       "shellContextMenuDesc": "在资源管理器的文件夹与空白处右键菜单中注册「使用 NioZy 打开」，并在该目录下新建 PowerShell 终端 Tab",
+      "preserveWindowBounds": "保留当前设置的窗口大小",
+      "preserveWindowBoundsDesc": "关闭窗口时记住大小与位置；若关闭时为最大化，下次启动将直接最大化",
       "transparency": "窗口透明度: {{value}}%"
     },
     "shortcuts": {
