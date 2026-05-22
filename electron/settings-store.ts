@@ -63,6 +63,8 @@ export interface AppSettings {
     disableSandbox: boolean
     transparency: number
     statusBarLiveStats: boolean
+    /** Windows：在文件夹与目录背景右键注册「使用 NioZy 打开」 */
+    shellContextMenu: boolean
   }
   shortcuts: AppShortcuts
 }
@@ -123,6 +125,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
+    shellContextMenu: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
 }
@@ -170,6 +173,10 @@ export class SettingsStore {
           typeof stored.advanced?.disableSandbox === 'boolean'
             ? stored.advanced.disableSandbox
             : DEFAULT_SETTINGS.advanced.disableSandbox,
+        shellContextMenu:
+          typeof stored.advanced?.shellContextMenu === 'boolean'
+            ? stored.advanced.shellContextMenu
+            : DEFAULT_SETTINGS.advanced.shellContextMenu,
       },
       shortcuts: {
         ...DEFAULT_SETTINGS.shortcuts,

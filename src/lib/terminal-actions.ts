@@ -45,6 +45,18 @@ export async function createTerminal(shell: BuiltinShellType = 'powershell'): Pr
   }
 }
 
+/** 在指定目录下打开新的内置 Shell 终端 Tab（默认 PowerShell） */
+export async function openTerminalInDirectory(
+  cwd: string,
+  shell: BuiltinShellType = 'powershell',
+): Promise<void> {
+  try {
+    await openTerminalTab({ ...builtinShellOptions(shell), cwd })
+  } catch (error) {
+    toastTerminalError(error)
+  }
+}
+
 export async function createConnection(
   shell: ShellType,
   custom?: CustomConnection,

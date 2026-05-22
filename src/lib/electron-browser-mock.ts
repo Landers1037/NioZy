@@ -37,6 +37,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
+    shellContextMenu: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
 }
@@ -126,6 +127,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
     },
     system: {
+      platform: 'win32',
       getStats: async () => mockSystemStats(),
       onStats: (cb) => {
         statsListeners.add(cb)
@@ -166,6 +168,10 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         mockVault = mockVault.filter((v) => v.id !== id)
       },
       resolve: async (text) => resolveVaultText(text),
+    },
+    app: {
+      getPendingOpenDirectory: async () => null,
+      onOpenDirectory: () => () => undefined,
     },
     fonts: {
       list: async () => [

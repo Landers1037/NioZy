@@ -100,6 +100,8 @@
       "disableSandboxDesc": "开启后关闭 renderer sandbox，可能提升兼容性；需重启应用后生效",
       "statusBarLiveStats": "状态栏实时系统信息",
       "statusBarLiveStatsDesc": "关闭后停止轮询 CPU/内存，可减轻界面刷新开销",
+      "shellContextMenu": "右键使用 NioZy 打开",
+      "shellContextMenuDesc": "在资源管理器的文件夹与空白处右键菜单中注册「使用 NioZy 打开」，并在该目录下新建 PowerShell 终端 Tab",
       "transparency": "窗口透明度: {{value}}%"
     },
     "shortcuts": {
@@ -243,7 +245,8 @@
     "exportNotReady": "无法导出：终端尚未就绪",
     "exportSuccess": "终端内容已导出",
     "hardwareAccelerationRestart": "硬件加速已保存，请完全退出并重启应用后生效",
-    "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效"
+    "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效",
+    "shellContextMenuFailed": "无法更新资源管理器右键菜单，请确认具有当前用户注册表写入权限"
   },
   "terminal": {
     "processExited": "[进程已退出]"

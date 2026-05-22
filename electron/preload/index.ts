@@ -24,11 +24,20 @@ const api: ElectronAPI = {
     list: () => ipcRenderer.invoke('fonts:list'),
   },
   system: {
+    platform: process.platform,
     getStats: () => ipcRenderer.invoke('system:getStats'),
     onStats: (cb) => {
       const handler = (_: unknown, stats: SystemStatsData) => cb(stats)
       ipcRenderer.on('system:stats', handler)
       return () => ipcRenderer.removeListener('system:stats', handler)
+    },
+  },
+  app: {
+    getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),
+    onOpenDirectory: (cb) => {
+      const handler = (_: unknown, directory: string) => cb(directory)
+      ipcRenderer.on('app:openDirectory', handler)
+      return () => ipcRenderer.removeListener('app:openDirectory', handler)
     },
   },
   terminal: {

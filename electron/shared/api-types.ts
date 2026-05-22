@@ -102,6 +102,8 @@ export interface AppSettings {
     transparency: number
     /** 为 false 时主进程停止轮询 CPU/内存并通过 IPC 推送 */
     statusBarLiveStats: boolean
+    /** Windows：文件夹 / 目录背景右键「使用 NioZy 打开」 */
+    shellContextMenu: boolean
   }
   shortcuts: AppShortcuts
 }
@@ -142,8 +144,13 @@ export interface ElectronAPI {
     list: () => Promise<string[]>
   }
   system: {
+    platform: NodeJS.Platform
     getStats: () => Promise<SystemStatsData>
     onStats: (cb: (stats: SystemStatsData) => void) => () => void
+  }
+  app: {
+    getPendingOpenDirectory: () => Promise<string | null>
+    onOpenDirectory: (cb: (directory: string) => void) => () => void
   }
   terminal: {
     create: (options: TerminalCreateOptions) => Promise<{
