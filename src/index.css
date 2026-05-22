@@ -53,9 +53,6 @@
   --accent-foreground: #1e2329;
   --destructive: #ef4444;
   --ring: #0a84ff;
-  --scrollbar-thumb: #c4c8cc;
-  --scrollbar-thumb-hover: #a8adb4;
-  --scrollbar-track: transparent;
   --app-font-size: 13px;
 }
 
@@ -75,33 +72,18 @@
   --accent-foreground: #e8ecf0;
   --destructive: #f87171;
   --ring: #00d2ff;
-  --scrollbar-thumb: #3d4550;
-  --scrollbar-thumb-hover: #525c6b;
-  --scrollbar-track: #1a1f26;
 }
 
+/* 隐藏滚动条，保留滚轮/触控板滚动 */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 html,
@@ -135,8 +117,4 @@ body {
 
 .niozy-terminal-host .xterm-viewport {
   background-color: transparent !important;
-}
-
-.xterm-viewport::-webkit-scrollbar {
-  width: 8px;
 }
