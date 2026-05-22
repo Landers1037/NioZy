@@ -1,0 +1,236 @@
+{
+  "common": {
+    "cancel": "取消",
+    "close": "关闭",
+    "save": "保存",
+    "open": "打开",
+    "edit": "编辑",
+    "none": "无",
+    "loading": "加载中…",
+    "listSeparator": "，",
+    "cancelEdit": "取消编辑",
+    "noItems": "暂无"
+  },
+  "app": {
+    "tagline": "多终端管理器",
+    "emptyHint": "点击「新建终端」开始",
+    "browserDevPreview": "浏览器开发预览（模拟 Electron API）— 可用开发者工具检查样式；真实终端请用",
+    "settingsTabTitle": "设置"
+  },
+  "locale": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "layout": {
+    "default": { "label": "默认", "description": "左侧边栏默认展开" },
+    "focus": { "label": "聚集", "description": "左侧边栏默认收起，便于聚焦终端" },
+    "minimal": { "label": "极简", "description": "隐藏侧栏，顶栏下横向展示终端图标 Tab" }
+  },
+  "theme": {
+    "light": "明亮",
+    "dark": "暗黑"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "外观设置",
+      "terminal": "终端设置",
+      "connections": "连接设置",
+      "vault": "存储库",
+      "shortcuts": "快捷键",
+      "system": "系统设置",
+      "advanced": "高级设置"
+    },
+    "appearance": {
+      "title": "外观设置",
+      "description": "主题、布局、语言、强调色与全局字号",
+      "layoutMode": "布局模式",
+      "layoutModeAria": "布局模式",
+      "themeMode": "主题模式",
+      "language": "界面语言",
+      "accentColor": "强调色",
+      "globalFontSize": "全局字号"
+    },
+    "terminal": {
+      "title": "终端设置",
+      "description": "配色、字体、光标与渲染方式",
+      "colorScheme": "配色方案",
+      "fontFamily": "终端字体",
+      "fontSize": "终端字号",
+      "cursorStyle": "光标样式",
+      "cursorStyleAria": "光标样式",
+      "cursorBlink": "光标闪烁",
+      "cursorBlinkDesc": "关闭后光标保持静止显示",
+      "renderer": "渲染方式",
+      "rendererDesc": "WebGPU 渲染器在 xterm.js 中仍处于实验阶段，当前版本将回退到 DOM/WebGL。",
+      "rendererDom": "Canvas / DOM（稳定）",
+      "rendererWebgl": "WebGL（推荐）",
+      "rendererWebgpu": "WebGPU（实验，可能不可用）"
+    },
+    "system": {
+      "title": "系统设置",
+      "description": "代理、启动与托盘行为",
+      "proxy": "全局代理",
+      "launchOnStartup": "随系统启动",
+      "launchOnStartupDesc": "登录 Windows 时自动启动 NioZy",
+      "minimizeToTray": "关闭时最小化到托盘",
+      "minimizeToTrayDesc": "点击关闭按钮时隐藏到系统托盘",
+      "updates": "更新",
+      "checkUpdates": "检查更新",
+      "checkUpdatesSoon": "检查更新功能即将推出",
+      "openReleases": "打开 GitHub Releases",
+      "manualUpdate": "手动更新",
+      "about": "关于 NioZy",
+      "version": "版本 {{version}} (MVP)",
+      "aboutDesc": "多终端管理器 — 基于 Electron、React、xterm.js 与 Windows ConPTY。",
+      "cardDescription": "代理、启动项、托盘与关于"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "description": "硬件加速、窗口透明度与状态栏监控",
+      "hardwareAcceleration": "硬件加速",
+      "hardwareAccelerationDesc": "默认开启，需重启应用后完全生效",
+      "statusBarLiveStats": "状态栏实时系统信息",
+      "statusBarLiveStatsDesc": "关闭后停止轮询 CPU/内存，可减轻界面刷新开销",
+      "transparency": "窗口透明度: {{value}}%"
+    },
+    "shortcuts": {
+      "title": "快捷键",
+      "description": "使用 Electron 加速器格式，如 CommandOrControl+T、Ctrl+Shift+C",
+      "globalShowApp": "显示/隐藏 NioZy（全局）",
+      "globalShowAppDesc": "已在前台则退到后台，否则显示到前台（保持当前页面）。当前：{{current}}",
+      "inApp": "程序内快捷键",
+      "copyToClipboard": "复制到剪贴板",
+      "pasteFromClipboard": "从剪贴板粘贴",
+      "lineStart": "切换到行首",
+      "lineEnd": "切换到行尾",
+      "clearTerminal": "清空终端内容",
+      "newTerminal": "打开新的终端",
+      "openSettings": "打开设置页面",
+      "prevTerminalTab": "切换到上一个终端 Tab",
+      "nextTerminalTab": "切换到下一个终端 Tab"
+    },
+    "vault": {
+      "title": "存储库",
+      "description": "加密保存密码与敏感变量，在连接配置中用",
+      "descriptionVar": "引用",
+      "encryptionKey": "加密密钥",
+      "encryptionKeyDesc": "默认使用 NioZy 的 MD5（{{hint}}）。可在 %USERPROFILE%/.config/NioZy/niozy.key 放置 32 字符自定义密钥。",
+      "editVariable": "编辑变量",
+      "addVariable": "添加变量",
+      "variableName": "变量名",
+      "type": "类型",
+      "typePlain": "明文",
+      "typeSecret": "密文",
+      "value": "值",
+      "keepSecretPlaceholder": "留空则保持原密文不变",
+      "valuePlaceholder": "变量值",
+      "savedVariables": "已保存变量",
+      "noVariables": "暂无变量",
+      "plainValue": "明文 · {{value}}",
+      "secretValue": "密文 · ********",
+      "variableUpdated": "已更新变量",
+      "variableAdded": "已添加变量",
+      "saveFailed": "保存失败",
+      "variableDeleted": "已删除",
+      "insertVaultVar": "插入存储库变量",
+      "vaultEmpty": "存储库暂无变量，请先在设置中添加",
+      "vaultLoadFailed": "无法加载存储库"
+    },
+    "connections": {
+      "title": "连接设置",
+      "description": "内置 Shell 与自定义命令 / SSH 连接",
+      "builtinTitle": "内置连接",
+      "builtinDesc": "cmd.exe、powershell.exe、pwsh.exe",
+      "builtinShells": "内置 Shell",
+      "addCustomTitle": "添加自定义连接",
+      "addCustomDesc": "自定义命令或 SSH 连接",
+      "typeCommandCustom": "自定义命令",
+      "sshPasswordLogin": "密码登录",
+      "sshPublicKeyLogin": "公钥登录",
+      "saveConnection": "保存连接",
+      "savedConnections": "已保存连接",
+      "noCustomConnections": "暂无自定义连接",
+      "defaultLaunch": "默认启动",
+      "argsCount": "{{count}} 个参数",
+      "envCount": "{{count}} 个环境变量",
+      "editBuiltin": "编辑",
+      "collapse": "收起",
+      "launchArgs": "启动参数（空格分隔）",
+      "envVars": "环境变量（KEY=VALUE，每行一个）",
+      "customConnections": "自定义连接",
+      "addConnection": "添加连接",
+      "type": "类型",
+      "typeCommand": "命令",
+      "typeSsh": "SSH",
+      "name": "名称",
+      "authMethod": "认证方式",
+      "authPassword": "密码",
+      "authPublicKey": "公钥",
+      "host": "主机",
+      "port": "端口",
+      "username": "用户名",
+      "password": "密码",
+      "passwordPlaceholder": "密码或 ${存储库变量}",
+      "privateKeyPath": "私钥路径",
+      "privateKeyPlaceholder": "私钥路径或 ${存储库变量}",
+      "command": "命令",
+      "commandPlaceholder": "例如 C:\\tools\\mycli.exe",
+      "args": "参数（空格分隔）",
+      "delete": "删除",
+      "connect": "连接",
+      "shell": {
+        "powershell": "PowerShell",
+        "cmd": "CMD",
+        "pwsh": "PowerShell Core (pwsh)"
+      }
+    },
+    "fontPicker": {
+      "selectFont": "选择字体",
+      "loadingFonts": "加载字体…",
+      "searchPlaceholder": "搜索字体…",
+      "loadFailed": "无法加载系统字体",
+      "noMatch": "无匹配字体"
+    }
+  },
+  "sidebar": {
+    "terminals": "终端",
+    "newTerminal": "新建终端",
+    "newConnection": "新建连接",
+    "connection": "连接",
+    "settings": "设置",
+    "newPowerShell": "新建 PowerShell"
+  },
+  "tab": {
+    "closeAria": "关闭 {{title}}",
+    "closeOther": "关闭其他",
+    "exportTerminal": "导出终端",
+    "closeTerminalTitle": "关闭终端",
+    "closeTerminalDesc": "确定要关闭「{{title}}」吗？终端进程将结束，未导出的内容将丢失。",
+    "editTitle": "编辑标题",
+    "editTitleDesc": "自定义侧边栏与状态栏中的展示名称。留空或恢复为默认名称时将使用「{{defaultTitle}}」。"
+  },
+  "cursor": {
+    "block": "方块",
+    "underline": "下划线",
+    "bar": "竖线"
+  },
+  "statusBar": {
+    "liveStatsOff": "系统监控已关闭",
+    "cpu": "CPU {{percent}}%",
+    "memory": "内存 {{percent}}% · {{used}}/{{total}} MB",
+    "current": "当前"
+  },
+  "toast": {
+    "terminalStartFailed": "终端启动失败",
+    "selectTerminalFirst": "请先选中终端内容",
+    "exportNoTerminal": "无法导出：未找到终端",
+    "exportNotReady": "无法导出：终端尚未就绪",
+    "exportSuccess": "终端内容已导出"
+  },
+  "terminal": {
+    "processExited": "[进程已退出]"
+  },
+  "electron": {
+    "preloadMissing": "未检测到 Electron 预加载 API。请使用 npm run start 启动桌面应用，不要直接在浏览器中打开 Vite 地址。"
+  }
+}

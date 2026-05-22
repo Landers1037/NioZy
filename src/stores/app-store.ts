@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
 import { getElectronAPI } from '@/lib/electron-client'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
+import { applyAppLocale, getSettingsTabTitle } from '@/lib/i18n'
 
 export type TabType = 'terminal' | 'settings'
 
@@ -69,7 +70,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ activeTabId: existing.id })
       return
     }
-    const tab: AppTab = { id: 'settings', type: 'settings', title: '设置' }
+    const tab: AppTab = { id: 'settings', type: 'settings', title: getSettingsTabTitle() }
     set((s) => ({
       tabs: [...s.tabs, tab],
       activeTabId: tab.id,
@@ -104,13 +105,25 @@ export const useAppStore = create<AppState>((set, get) => ({
       }),
     })),
   setSettings: (settings) => {
-    set({ settings })
+    applyAppLocale(settings.locale)
+    set({
+      settings,
+      tabs: get().tabs.map((t) =>
+        t.type === 'settings' ? { ...t, title: getSettingsTabTitle() } : t,
+      ),
+    })
     applyThemeToDocument(settings)
     applyLayoutFromSettings(settings, get().setSidebarCollapsed)
   },
   patchSettings: async (partial) => {
     const updated = await getElectronAPI().settings.save(partial)
-    set({ settings: updated })
+    applyAppLocale(updated.locale)
+    set({
+      settings: updated,
+      tabs: get().tabs.map((t) =>
+        t.type === 'settings' ? { ...t, title: getSettingsTabTitle() } : t,
+      ),
+    })
     applyThemeToDocument(updated)
     applyLayoutFromSettings(updated, get().setSidebarCollapsed)
   },

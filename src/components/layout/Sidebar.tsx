@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, Plus, Settings, Link2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +15,7 @@ import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 
 export function Sidebar() {
+  const { t } = useTranslation()
   const collapsed = useAppStore((s) => s.sidebarCollapsed)
   const setCollapsed = useAppStore((s) => s.setSidebarCollapsed)
   const tabs = useAppStore((s) => s.tabs)
@@ -29,7 +31,11 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center justify-between border-b border-border p-2 no-drag">
-        {!collapsed && <span className="px-1 text-xs font-medium text-muted-foreground">终端</span>}
+        {!collapsed && (
+          <span className="px-1 text-xs font-medium text-muted-foreground">
+            {t('sidebar.terminals')}
+          </span>
+        )}
         <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
           {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </Button>
@@ -67,25 +73,31 @@ export function Sidebar() {
             size={collapsed ? 'icon' : 'default'}
             className={cn(!collapsed && 'flex-1')}
             onClick={() => createTerminal('powershell')}
-            title="新建 PowerShell"
+            title={t('sidebar.newPowerShell')}
           >
             <Plus className="size-4" />
-            {!collapsed && '新建终端'}
+            {!collapsed && t('sidebar.newTerminal')}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size={collapsed ? 'icon' : 'default'} title="新建连接">
+              <Button
+                variant="outline"
+                size={collapsed ? 'icon' : 'default'}
+                title={t('sidebar.newConnection')}
+              >
                 <Link2 className="size-4" />
-                {!collapsed && '连接'}
+                {!collapsed && t('sidebar.connection')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => createConnection('powershell')}>
-                PowerShell
+                {t('settings.connections.shell.powershell')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => createConnection('cmd')}>CMD</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => createConnection('cmd')}>
+                {t('settings.connections.shell.cmd')}
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => createConnection('pwsh')}>
-                PowerShell Core (pwsh)
+                {t('settings.connections.shell.pwsh')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {settings?.connections.map((c) => (
@@ -94,7 +106,9 @@ export function Sidebar() {
                 </DropdownMenuItem>
               ))}
               {settings?.connections.length === 0 && (
-                <DropdownMenuItem disabled>暂无自定义连接</DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  {t('settings.connections.noCustomConnections')}
+                </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -106,7 +120,7 @@ export function Sidebar() {
           onClick={() => addSettingsTab()}
         >
           <Settings className="size-4" />
-          {!collapsed && '设置'}
+          {!collapsed && t('sidebar.settings')}
         </Button>
       </div>
     </aside>

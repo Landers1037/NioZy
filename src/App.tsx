@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { TitleBar } from '@/components/layout/TitleBar'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -13,6 +14,7 @@ import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 
 export default function App() {
+  const { t } = useTranslation()
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const setSettings = useAppStore((s) => s.setSettings)
@@ -105,7 +107,7 @@ export default function App() {
           className="shrink-0 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1 text-center text-xs text-amber-900 dark:text-amber-200"
           role="status"
         >
-          浏览器开发预览（模拟 Electron API）— 可用开发者工具检查样式；真实终端请用{' '}
+          {t('app.browserDevPreview')}{' '}
           <code className="rounded bg-amber-500/15 px-1">npm run start</code>
         </div>
       )}
@@ -135,7 +137,7 @@ export default function App() {
             )}
             {tabs.length === 0 && (
               <div className="flex h-full items-center justify-center text-muted-foreground">
-                点击「新建终端」开始
+                {t('app.emptyHint')}
               </div>
             )}
           </div>

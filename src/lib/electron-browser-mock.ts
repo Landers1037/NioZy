@@ -8,6 +8,7 @@ import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 
 const DEFAULT_SETTINGS: AppSettings = {
+  locale: 'zh',
   theme: 'light',
   layoutMode: 'default',
   accentColor: '#0A84FF',
@@ -158,6 +159,19 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         mockVault = mockVault.filter((v) => v.id !== id)
       },
       resolve: async (text) => resolveVaultText(text),
+    },
+    fonts: {
+      list: async () => [
+        'Arial',
+        'Consolas',
+        'Courier New',
+        'Cascadia Code',
+        'Cascadia Mono',
+        'Microsoft YaHei',
+        'Segoe UI',
+        'SimSun',
+        'Times New Roman',
+      ],
     },
     shell: {
       openExternal: async (url) => {

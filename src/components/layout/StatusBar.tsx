@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { getTabDisplayTitle } from '@/lib/tab-display'
 import { cn } from '@/lib/utils'
@@ -58,6 +59,7 @@ function StatusTag({
 }
 
 export function StatusBar() {
+  const { t } = useTranslation()
   const stats = useAppStore((s) => s.systemStats)
   const settings = useAppStore((s) => s.settings)
   const theme: ThemeMode = settings?.theme ?? 'light'
@@ -79,26 +81,32 @@ export function StatusBar() {
               {stats.time}
             </StatusTag>
             <StatusTag variant="cpu" theme={theme}>
-              CPU {stats.cpuPercent}%
+              {t('statusBar.cpu', { percent: stats.cpuPercent })}
             </StatusTag>
             <StatusTag variant="memory" theme={theme} className="truncate">
-              内存 {stats.memoryPercent}% · {stats.memoryUsedMb}/{stats.memoryTotalMb} MB
+              {t('statusBar.memory', {
+                percent: stats.memoryPercent,
+                used: stats.memoryUsedMb,
+                total: stats.memoryTotalMb,
+              })}
             </StatusTag>
           </>
         ) : (
           <StatusTag variant="off" theme={theme}>
-            系统监控已关闭
+            {t('statusBar.liveStatsOff')}
           </StatusTag>
         )}
       </div>
       <StatusTag variant="tab" theme={theme} className="max-w-[120px] shrink-0">
-        <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>当前</span>
+        <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
+          {t('statusBar.current')}
+        </span>
         <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
         <span
           className="min-w-0 truncate"
           title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
         >
-          {activeTab ? getTabDisplayTitle(activeTab) : '无'}
+          {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
         </span>
       </StatusTag>
     </footer>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Plus, Settings, Link2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +14,7 @@ import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 
 export function MinimalTabBar() {
+  const { t } = useTranslation()
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
@@ -44,24 +46,31 @@ export function MinimalTabBar() {
           variant="secondary"
           size="icon"
           className="size-6"
-          title="新建 PowerShell"
+          title={t('sidebar.newPowerShell')}
           onClick={() => createTerminal('powershell')}
         >
           <Plus className="size-3" />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="size-6" title="新建连接">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-6"
+              title={t('sidebar.newConnection')}
+            >
               <Link2 className="size-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => createConnection('powershell')}>
-              PowerShell
+              {t('settings.connections.shell.powershell')}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => createConnection('cmd')}>CMD</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => createConnection('cmd')}>
+              {t('settings.connections.shell.cmd')}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => createConnection('pwsh')}>
-              PowerShell Core (pwsh)
+              {t('settings.connections.shell.pwsh')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {settings?.connections.map((c) => (
@@ -70,7 +79,9 @@ export function MinimalTabBar() {
               </DropdownMenuItem>
             ))}
             {settings?.connections.length === 0 && (
-              <DropdownMenuItem disabled>暂无自定义连接</DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                {t('settings.connections.noCustomConnections')}
+              </DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -78,7 +89,7 @@ export function MinimalTabBar() {
           variant="ghost"
           size="icon"
           className="size-6"
-          title="设置"
+          title={t('sidebar.settings')}
           onClick={() => addSettingsTab()}
         >
           <Settings className="size-3" />

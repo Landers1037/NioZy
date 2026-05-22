@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -16,7 +18,6 @@ import { parseEnvLines, formatEnvLines } from '@/lib/connection-env'
 import {
   BUILTIN_SHELL_TYPES,
   BUILTIN_SHELL_EXECUTABLE,
-  BUILTIN_SHELL_LABELS,
   type BuiltinShellType,
 } from '../../../electron/shared/builtin-shells'
 import { SettingField } from './SettingField'
@@ -37,15 +38,22 @@ import {
   User,
 } from 'lucide-react'
 
-function builtinConfigSummary(args: string[], env: Record<string, string>): string {
+function builtinConfigSummary(
+  t: TFunction,
+  args: string[],
+  env: Record<string, string>,
+): string {
   const parts: string[] = []
-  if (args.length > 0) parts.push(`${args.length} 个参数`)
+  if (args.length > 0) parts.push(t('settings.connections.argsCount', { count: args.length }))
   const envCount = Object.keys(env).length
-  if (envCount > 0) parts.push(`${envCount} 个环境变量`)
-  return parts.length > 0 ? parts.join('，') : '默认启动'
+  if (envCount > 0) parts.push(t('settings.connections.envCount', { count: envCount }))
+  return parts.length > 0
+    ? parts.join(t('common.listSeparator'))
+    : t('settings.connections.defaultLaunch')
 }
 
 export function ConnectionSettings() {
+  const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   const [editingBuiltin, setEditingBuiltin] = useState<BuiltinShellType | null>(null)
@@ -156,9 +164,9 @@ export function ConnectionSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Terminal className="size-5" />
-            内置连接
+            {t('settings.connections.builtinTitle')}
           </CardTitle>
-          <CardDescription>cmd.exe、powershell.exe、pwsh.exe</CardDescription>
+          <CardDescription>{t('settings.connections.builtinDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {BUILTIN_SHELL_TYPES.map((shell) => {
@@ -171,10 +179,10 @@ export function ConnectionSettings() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-medium">{BUILTIN_SHELL_LABELS[shell]}</p>
+                    <p className="font-medium">{t(`settings.connections.shell.${shell}`)}</p>
                     <p className="text-xs text-muted-foreground">
                       {BUILTIN_SHELL_EXECUTABLE[shell]} ·{' '}
-                      {builtinConfigSummary(config.args, config.env)}
+                      {builtinConfigSummary(t, config.args, config.env)}
                     </p>
                   </div>
                   <Button
@@ -185,12 +193,12 @@ export function ConnectionSettings() {
                     }
                   >
                     <Pencil className="size-3.5" />
-                    {isEditing ? '收起' : '编辑'}
+                    {isEditing ? t('settings.connections.collapse') : t('settings.connections.editBuiltin')}
                   </Button>
                 </div>
                 {isEditing && (
                   <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4">
-                    <SettingField icon={List} label="启动参数（空格分隔）">
+                    <SettingField icon={List} label={t('settings.connections.launchArgs')}>
                       <Input
                         value={builtinDraft.argsStr}
                         onChange={(e) =>
@@ -201,7 +209,7 @@ export function ConnectionSettings() {
                     </SettingField>
                     <SettingField
                       icon={FileCode}
-                      label="环境变量（KEY=VALUE，每行一个）"
+                      label={t('settings.connections.envVars')}
                     >
                       <TextareaWithVaultPicker
                         value={builtinDraft.envStr}
@@ -210,9 +218,9 @@ export function ConnectionSettings() {
                       />
                     </SettingField>
                     <div className="flex gap-2">
-                      <Button onClick={saveBuiltin}>保存</Button>
+                      <Button onClick={saveBuiltin}>{t('common.save')}</Button>
                       <Button variant="ghost" onClick={() => setEditingBuiltin(null)}>
-                        取消
+                        {t('common.cancel')}
                       </Button>
                     </div>
                   </div>
@@ -227,12 +235,12 @@ export function ConnectionSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plug className="size-5" />
-            添加自定义连接
+            {t('settings.connections.addCustomTitle')}
           </CardTitle>
-          <CardDescription>自定义命令或 SSH 连接</CardDescription>
+          <CardDescription>{t('settings.connections.addCustomDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <SettingField icon={Cable} label="类型">
+          <SettingField icon={Cable} label={t('settings.connections.type')}>
             <Select
               value={draft.type}
               onValueChange={(v) => setDraft({ ...draft, type: v as 'command' | 'ssh' })}
@@ -241,13 +249,13 @@ export function ConnectionSettings() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="command">自定义命令</SelectItem>
-                <SelectItem value="ssh">SSH</SelectItem>
+                <SelectItem value="command">{t('settings.connections.typeCommandCustom')}</SelectItem>
+                <SelectItem value="ssh">{t('settings.connections.typeSsh')}</SelectItem>
               </SelectContent>
             </Select>
           </SettingField>
 
-          <SettingField icon={Tag} label="名称">
+          <SettingField icon={Tag} label={t('settings.connections.name')}>
             <Input
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -256,7 +264,7 @@ export function ConnectionSettings() {
 
           {draft.type === 'ssh' ? (
             <>
-              <SettingField icon={Key} label="认证方式">
+              <SettingField icon={Key} label={t('settings.connections.authMethod')}>
                 <Select
                   value={draft.sshAuth}
                   onValueChange={(v) =>
@@ -267,21 +275,21 @@ export function ConnectionSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="password">密码登录</SelectItem>
-                    <SelectItem value="publickey">公钥登录</SelectItem>
+                    <SelectItem value="password">{t('settings.connections.sshPasswordLogin')}</SelectItem>
+                    <SelectItem value="publickey">{t('settings.connections.sshPublicKeyLogin')}</SelectItem>
                   </SelectContent>
                 </Select>
               </SettingField>
 
               <div className="grid grid-cols-2 gap-4">
-                <SettingField icon={Server} label="主机">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
                   <Input
                     value={draft.sshHost}
                     onChange={(e) => setDraft({ ...draft, sshHost: e.target.value })}
                     placeholder="192.168.1.1"
                   />
                 </SettingField>
-                <SettingField icon={Network} label="端口">
+                <SettingField icon={Network} label={t('settings.connections.port')}>
                   <Input
                     type="number"
                     value={draft.sshPort}
@@ -291,31 +299,31 @@ export function ConnectionSettings() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <SettingField icon={User} label="用户名">
+                <SettingField icon={User} label={t('settings.connections.username')}>
                   <Input
                     value={draft.sshUser}
                     onChange={(e) => setDraft({ ...draft, sshUser: e.target.value })}
                   />
                 </SettingField>
                 {draft.sshAuth === 'password' ? (
-                  <SettingField icon={Lock} label="密码">
+                  <SettingField icon={Lock} label={t('settings.connections.password')}>
                     <InputWithVaultPicker
                       type="password"
                       wrapperClassName="w-full max-w-none"
                       className="min-w-0 flex-1"
                       value={draft.sshPassword}
                       onChange={(sshPassword) => setDraft({ ...draft, sshPassword })}
-                      placeholder="密码或 ${存储库变量}"
+                      placeholder={t('settings.connections.passwordPlaceholder')}
                     />
                   </SettingField>
                 ) : (
-                  <SettingField icon={FileCode} label="私钥路径">
+                  <SettingField icon={FileCode} label={t('settings.connections.privateKeyPath')}>
                     <InputWithVaultPicker
                       wrapperClassName="w-full max-w-none"
                       className="min-w-0 flex-1"
                       value={draft.sshKeyPath}
                       onChange={(sshKeyPath) => setDraft({ ...draft, sshKeyPath })}
-                      placeholder="私钥路径或 ${存储库变量}"
+                      placeholder={t('settings.connections.privateKeyPlaceholder')}
                     />
                   </SettingField>
                 )}
@@ -323,14 +331,14 @@ export function ConnectionSettings() {
             </>
           ) : (
             <>
-              <SettingField icon={Terminal} label="命令">
+              <SettingField icon={Terminal} label={t('settings.connections.command')}>
                 <Input
                   value={draft.command}
                   onChange={(e) => setDraft({ ...draft, command: e.target.value })}
-                  placeholder="例如 C:\tools\mycli.exe"
+                  placeholder={t('settings.connections.commandPlaceholder')}
                 />
               </SettingField>
-              <SettingField icon={List} label="参数（空格分隔）">
+              <SettingField icon={List} label={t('settings.connections.args')}>
                 <Input
                   value={draft.argsStr}
                   onChange={(e) => setDraft({ ...draft, argsStr: e.target.value })}
@@ -338,7 +346,7 @@ export function ConnectionSettings() {
               </SettingField>
               <SettingField
                 icon={FileCode}
-                label="环境变量（KEY=VALUE，每行一个）"
+                label={t('settings.connections.envVars')}
               >
                 <TextareaWithVaultPicker
                   value={draft.envStr}
@@ -349,17 +357,19 @@ export function ConnectionSettings() {
             </>
           )}
 
-          <Button onClick={saveConnection}>保存连接</Button>
+          <Button onClick={saveConnection}>{t('settings.connections.saveConnection')}</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>已保存连接</CardTitle>
+          <CardTitle>{t('settings.connections.savedConnections')}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {settings.connections.length === 0 && (
-            <p className="text-sm text-muted-foreground">暂无自定义连接</p>
+            <p className="text-sm text-muted-foreground">
+              {t('settings.connections.noCustomConnections')}
+            </p>
           )}
           {settings.connections.map((c) => (
             <div
@@ -373,7 +383,7 @@ export function ConnectionSettings() {
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => removeConnection(c.id)}>
-                删除
+                {t('settings.connections.delete')}
               </Button>
             </div>
           ))}

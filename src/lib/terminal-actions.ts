@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import i18n from '@/lib/i18n'
 import { useAppStore } from '@/stores/app-store'
 import type { CustomConnection } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
@@ -18,8 +19,9 @@ function toastTerminalError(error: unknown, context?: string): void {
       ? error.message
       : typeof error === 'string'
         ? error
-        : '终端启动失败'
-  toast.error(context ? `${context}：${message}` : message)
+        : i18n.t('toast.terminalStartFailed')
+  const sep = i18n.language === 'zh' ? '：' : ': '
+  toast.error(context ? `${context}${sep}${message}` : message)
 }
 
 async function openTerminalTab(options: TerminalCreateOptions): Promise<void> {

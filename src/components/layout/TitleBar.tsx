@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Minus, Square, X, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app-store'
@@ -5,6 +6,7 @@ import { getElectronAPI } from '@/lib/electron-client'
 import logoUrl from '@/logo.png'
 
 export function TitleBar() {
+  const { t } = useTranslation()
   const maximized = useAppStore((s) => s.windowMaximized)
 
   return (
@@ -14,7 +16,7 @@ export function TitleBar() {
         <span className="font-semibold tracking-tight">NioZy</span>
       </div>
       <div className="drag-region flex flex-1 items-center justify-center text-xs text-muted-foreground">
-        多终端管理器
+        {t('app.tagline')}
       </div>
       <div className="flex items-center no-drag">
         <Button

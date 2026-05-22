@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import i18n from '@/lib/i18n'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminal } from '@/lib/terminal-registry'
@@ -37,15 +38,15 @@ export function formatExportFileName(): string {
 export async function exportTerminalTab(tabId: string): Promise<void> {
   const tab = useAppStore.getState().tabs.find((t) => t.id === tabId)
   if (!tab?.terminalId) {
-    toast.error('无法导出：未找到终端')
+    toast.error(i18n.t('toast.exportNoTerminal'))
     return
   }
   const term = getTerminal(tab.terminalId)
   if (!term) {
-    toast.error('无法导出：终端尚未就绪')
+    toast.error(i18n.t('toast.exportNotReady'))
     return
   }
   const content = getTerminalBufferText(term)
   const saved = await getElectronAPI().files.saveText(content, formatExportFileName())
-  if (saved) toast.success('终端内容已导出')
+  if (saved) toast.success(i18n.t('toast.exportSuccess'))
 }
