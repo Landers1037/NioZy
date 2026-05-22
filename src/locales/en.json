@@ -10,7 +10,9 @@
     "loading": "Loading…",
     "listSeparator": ", ",
     "cancelEdit": "Cancel edit",
-    "noItems": "None yet"
+    "noItems": "None yet",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "app": {
     "tagline": "Multi-terminal manager",
@@ -66,7 +68,9 @@
       "themeMode": "Theme",
       "language": "Language",
       "accentColor": "Accent color",
-      "globalFontSize": "Global font size"
+      "globalFontSize": "Global font size",
+      "showAppTitle": "Show app title",
+      "showAppTitleDesc": "When off, the title bar shows only the icon, not the NioZy name"
     },
     "terminal": {
       "title": "Terminal",

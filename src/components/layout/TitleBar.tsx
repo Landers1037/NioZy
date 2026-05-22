@@ -10,13 +10,16 @@ import logoUrl from '@/logo.png'
 export function TitleBar() {
   const { t } = useTranslation()
   const maximized = useAppStore((s) => s.windowMaximized)
+  const showAppTitle = useAppStore((s) => s.settings?.showAppTitle ?? true)
   const ui = useUiClasses()
 
   return (
     <header className={cn('flex shrink-0 select-none items-center', ui.titleBar)}>
       <div className="flex items-center gap-2 px-2 no-drag">
-        <img src={logoUrl} alt="NioZy" className="size-5 object-contain" />
-        <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
+        <img src={logoUrl} alt="NioZy" className="size-8 object-contain" />
+        {showAppTitle && (
+          <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
+        )}
       </div>
       <div className={cn('drag-region flex flex-1 items-center justify-center', ui.titleTagline)}>
         {t('app.tagline')}

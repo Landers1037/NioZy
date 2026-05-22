@@ -93,6 +93,8 @@ export interface AppSettings {
   sidebarWidth: number
   accentColor: string
   fontSize: number
+  /** 顶栏是否显示程序名 NioZy（关闭后仅显示图标） */
+  showAppTitle: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string

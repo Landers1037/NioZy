@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -11,7 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
-import { Languages, Moon, Palette, Type, LayoutPanelLeft, Sparkles } from 'lucide-react'
+import { Languages, Moon, Palette, Type, LayoutPanelLeft, Sparkles, AppWindow } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
 import { cn } from '@/lib/utils'
@@ -121,6 +122,18 @@ export function AppearanceSettings() {
               ))}
             </SelectContent>
           </Select>
+        </SettingField>
+
+        <SettingField
+          icon={AppWindow}
+          label={t('settings.appearance.showAppTitle')}
+          description={t('settings.appearance.showAppTitleDesc')}
+          row
+        >
+          <Switch
+            checked={settings.showAppTitle}
+            onCheckedChange={(showAppTitle) => patchSettings({ showAppTitle })}
+          />
         </SettingField>
 
         <SettingField icon={Moon} label={t('settings.appearance.themeMode')}>

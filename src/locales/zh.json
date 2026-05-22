@@ -10,7 +10,9 @@
     "loading": "加载中…",
     "listSeparator": "，",
     "cancelEdit": "取消编辑",
-    "noItems": "暂无"
+    "noItems": "暂无",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码"
   },
   "app": {
     "tagline": "多终端管理器",
@@ -66,7 +68,9 @@
       "themeMode": "主题模式",
       "language": "界面语言",
       "accentColor": "强调色",
-      "globalFontSize": "全局字号"
+      "globalFontSize": "全局字号",
+      "showAppTitle": "显示程序标题",
+      "showAppTitleDesc": "关闭后顶栏仅显示图标，不显示 NioZy 名称"
     },
     "terminal": {
       "title": "终端设置",

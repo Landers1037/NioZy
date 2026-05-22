@@ -68,7 +68,12 @@ export function SshSettings() {
           label={t('settings.ssh.checkScp')}
           description={t('settings.ssh.checkScpDesc')}
         >
-          <Button type="button" variant="outline" onClick={() => void checkScp()}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-fit"
+            onClick={() => void checkScp()}
+          >
             {t('settings.ssh.checkScpButton')}
           </Button>
         </SettingField>

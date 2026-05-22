@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   sidebarWidth: 260,
   accentColor: '#5C6B7A',
   fontSize: 13,
+  showAppTitle: true,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
