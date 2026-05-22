@@ -97,7 +97,7 @@ export function StatusBar() {
           </StatusTag>
         )}
       </div>
-      <StatusTag variant="tab" theme={theme} className="max-w-[120px] shrink-0">
+      <StatusTag variant="tab" theme={theme} className="max-w-[160px] shrink-0">
         <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
           {t('statusBar.current')}
         </span>

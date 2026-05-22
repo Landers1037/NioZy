@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import * as pty from 'node-pty'
 import { randomUUID } from 'crypto'
+import { resolveExecutable } from './resolve-executable'
 
 export type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
 
@@ -58,9 +59,11 @@ export class TerminalService extends EventEmitter {
       options.name ??
       (options.shell === 'custom' ? file : options.shell.charAt(0).toUpperCase() + options.shell.slice(1))
 
+    const spawnFile = resolveSpawnFile(file, env as NodeJS.ProcessEnv)
+
     let ptyProcess: pty.IPty
     try {
-      ptyProcess = pty.spawn(file, args, {
+      ptyProcess = pty.spawn(spawnFile, args, {
         name: 'xterm-color',
         cols,
         rows,
@@ -69,7 +72,7 @@ export class TerminalService extends EventEmitter {
         useConpty: true,
       })
     } catch (err) {
-      throw new Error(formatSpawnError(err, file, options.shell, name))
+      throw new Error(formatSpawnError(err, spawnFile, options.shell, name))
     }
 
     ptyProcess.onData((data) => {
@@ -117,6 +120,11 @@ export class TerminalService extends EventEmitter {
       }
     }
   }
+}
+
+function resolveSpawnFile(file: string, env: NodeJS.ProcessEnv): string {
+  const resolved = resolveExecutable(file, env)
+  return resolved ?? file
 }
 
 function formatSpawnError(

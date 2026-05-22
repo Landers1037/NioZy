@@ -10,7 +10,10 @@ import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 import { sendToRenderer } from './window-ipc'
+import { augmentWindowsPath } from '../resolve-executable'
 import type { TerminalCreateOptions } from '../shared/api-types'
+
+augmentWindowsPath()
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
