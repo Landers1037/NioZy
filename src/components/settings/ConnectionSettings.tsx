@@ -16,6 +16,12 @@ import type { CustomConnection } from '@/stores/app-store'
 import { randomUUID } from '@/lib/id'
 import { parseEnvLines, formatEnvLines } from '@/lib/connection-env'
 import {
+  connectionToDraft,
+  draftToConnection,
+  EMPTY_CONNECTION_DRAFT,
+  type ConnectionDraft,
+} from '@/lib/connection-draft'
+import {
   BUILTIN_SHELL_TYPES,
   BUILTIN_SHELL_EXECUTABLE,
   type BuiltinShellType,
@@ -58,19 +64,8 @@ export function ConnectionSettings() {
   const patchSettings = useAppStore((s) => s.patchSettings)
   const [editingBuiltin, setEditingBuiltin] = useState<BuiltinShellType | null>(null)
   const [builtinDraft, setBuiltinDraft] = useState({ argsStr: '', envStr: '' })
-  const [draft, setDraft] = useState({
-    type: 'command' as 'command' | 'ssh',
-    name: '',
-    command: '',
-    argsStr: '',
-    envStr: '',
-    sshUser: '',
-    sshHost: '',
-    sshPort: 22,
-    sshAuth: 'password' as 'password' | 'publickey',
-    sshPassword: '',
-    sshKeyPath: '',
-  })
+  const [editingConnectionId, setEditingConnectionId] = useState<string | null>(null)
+  const [draft, setDraft] = useState<ConnectionDraft>(EMPTY_CONNECTION_DRAFT)
 
   if (!settings) return null
 
@@ -97,62 +92,31 @@ export function ConnectionSettings() {
     setEditingBuiltin(null)
   }
 
+  const cancelEditConnection = () => {
+    setEditingConnectionId(null)
+    setDraft(EMPTY_CONNECTION_DRAFT)
+  }
+
+  const startEditConnection = (c: CustomConnection) => {
+    setEditingConnectionId(c.id)
+    setDraft(connectionToDraft(c))
+  }
+
   const saveConnection = () => {
-    if (!draft.name.trim()) return
+    const id = editingConnectionId ?? randomUUID()
+    const conn = draftToConnection(draft, id)
+    if (!conn) return
 
-    let conn: CustomConnection
+    const connections = editingConnectionId
+      ? settings.connections.map((c) => (c.id === editingConnectionId ? conn : c))
+      : [...settings.connections, conn]
 
-    if (draft.type === 'ssh') {
-      if (!draft.sshHost.trim() || !draft.sshUser.trim()) return
-      conn = {
-        id: randomUUID(),
-        name: draft.name.trim(),
-        type: 'ssh',
-        command: draft.sshHost.trim(),
-        args: [],
-        env: {},
-        sshAuth: draft.sshAuth,
-        sshUser: draft.sshUser.trim(),
-        sshHost: draft.sshHost.trim(),
-        sshPort: draft.sshPort,
-        sshPassword:
-          draft.sshAuth === 'password' && draft.sshPassword.trim()
-            ? draft.sshPassword.trim()
-            : undefined,
-        sshKeyPath:
-          draft.sshAuth === 'publickey' && draft.sshKeyPath.trim()
-            ? draft.sshKeyPath.trim()
-            : undefined,
-      }
-    } else {
-      if (!draft.command.trim()) return
-      conn = {
-        id: randomUUID(),
-        name: draft.name.trim(),
-        type: 'command',
-        command: draft.command.trim(),
-        args: draft.argsStr.split(' ').filter(Boolean),
-        env: parseEnvLines(draft.envStr),
-      }
-    }
-
-    patchSettings({ connections: [...settings.connections, conn] })
-    setDraft({
-      type: 'command',
-      name: '',
-      command: '',
-      argsStr: '',
-      envStr: '',
-      sshUser: '',
-      sshHost: '',
-      sshPort: 22,
-      sshAuth: 'password',
-      sshPassword: '',
-      sshKeyPath: '',
-    })
+    patchSettings({ connections })
+    cancelEditConnection()
   }
 
   const removeConnection = (id: string) => {
+    if (editingConnectionId === id) cancelEditConnection()
     patchSettings({
       connections: settings.connections.filter((c) => c.id !== id),
     })
@@ -235,14 +199,21 @@ export function ConnectionSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plug className="size-5" />
-            {t('settings.connections.addCustomTitle')}
+            {editingConnectionId
+              ? t('settings.connections.editCustomTitle')
+              : t('settings.connections.addCustomTitle')}
           </CardTitle>
-          <CardDescription>{t('settings.connections.addCustomDesc')}</CardDescription>
+          <CardDescription>
+            {editingConnectionId
+              ? t('settings.connections.editCustomDesc')
+              : t('settings.connections.addCustomDesc')}
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <SettingField icon={Cable} label={t('settings.connections.type')}>
             <Select
               value={draft.type}
+              disabled={!!editingConnectionId}
               onValueChange={(v) => setDraft({ ...draft, type: v as 'command' | 'ssh' })}
             >
               <SelectTrigger className="max-w-xs">
@@ -357,7 +328,18 @@ export function ConnectionSettings() {
             </>
           )}
 
-          <Button onClick={saveConnection}>{t('settings.connections.saveConnection')}</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={saveConnection}>
+              {editingConnectionId
+                ? t('settings.connections.updateConnection')
+                : t('settings.connections.saveConnection')}
+            </Button>
+            {editingConnectionId && (
+              <Button variant="ghost" onClick={cancelEditConnection}>
+                {t('common.cancel')}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -374,17 +356,39 @@ export function ConnectionSettings() {
           {settings.connections.map((c) => (
             <div
               key={c.id}
-              className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+              className={
+                editingConnectionId === c.id
+                  ? 'rounded-lg border border-primary/40 bg-primary/5 px-3 py-2'
+                  : 'rounded-lg border border-border px-3 py-2'
+              }
             >
-              <div>
-                <p className="font-medium">{c.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {c.type === 'ssh' ? `ssh ${c.sshUser}@${c.sshHost}` : c.command}
-                </p>
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium">{c.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {c.type === 'ssh' ? `ssh ${c.sshUser}@${c.sshHost}` : c.command}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      editingConnectionId === c.id
+                        ? cancelEditConnection()
+                        : startEditConnection(c)
+                    }
+                  >
+                    <Pencil className="size-3.5" />
+                    {editingConnectionId === c.id
+                      ? t('settings.connections.collapse')
+                      : t('settings.connections.editSaved')}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => removeConnection(c.id)}>
+                    {t('settings.connections.delete')}
+                  </Button>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => removeConnection(c.id)}>
-                {t('settings.connections.delete')}
-              </Button>
             </div>
           ))}
         </CardContent>

@@ -90,7 +90,7 @@ export function FontFamilyPicker({ value, onChange, className }: FontFamilyPicke
       {open && (
         <div
           role="listbox"
-          className="absolute z-50 mt-1 flex w-full flex-col overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md"
+          className="absolute z-50 mt-1 flex w-full flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-md"
         >
           <div className="flex items-center gap-2 border-b border-border px-2 py-1.5">
             <Search className="size-4 shrink-0 text-muted-foreground" />

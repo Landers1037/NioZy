@@ -27,6 +27,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-destructive: var(--destructive);
   --color-ring: var(--ring);
   --radius-sm: calc(var(--radius) - 4px);
@@ -40,6 +42,8 @@
   --foreground: #1e2329;
   --card: #ffffff;
   --card-foreground: #1e2329;
+  --popover: #ffffff;
+  --popover-foreground: #1e2329;
   --muted: #eef2f7;
   --muted-foreground: #7a828e;
   --border: #e3e6eb;
@@ -60,6 +64,8 @@
   --foreground: #e8ecf0;
   --card: #1a1f26;
   --card-foreground: #e8ecf0;
+  --popover: #1a1f26;
+  --popover-foreground: #e8ecf0;
   --muted: #252b33;
   --muted-foreground: #8b949e;
   --border: #2d3540;
