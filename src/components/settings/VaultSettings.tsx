@@ -102,7 +102,7 @@ export function VaultSettings() {
           />
 
           <div className="rounded-lg border border-border p-4 flex flex-col gap-4">
-            <p className="text-sm font-medium">
+            <p className="text-sm font-bold">
               {draft.id ? t('settings.vault.editVariable') : t('settings.vault.addVariable')}
             </p>
             <SettingField icon={Variable} label={t('settings.vault.variableName')}>
@@ -159,7 +159,7 @@ export function VaultSettings() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">{t('settings.vault.savedVariables')}</p>
+            <p className="text-sm font-bold">{t('settings.vault.savedVariables')}</p>
             {variables.length === 0 && (
               <p className="text-sm text-muted-foreground">{t('settings.vault.noVariables')}</p>
             )}
@@ -169,7 +169,7 @@ export function VaultSettings() {
                 className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
               >
                 <div className="min-w-0">
-                  <p className="font-medium font-mono text-sm">{v.key}</p>
+                  <p className="font-semibold font-mono text-sm">{v.key}</p>
                   <p className="text-xs text-muted-foreground">
                     {v.type === 'plain'
                       ? t('settings.vault.plainValue', { value: v.value ?? '' })

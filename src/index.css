@@ -36,7 +36,47 @@
   --radius-lg: var(--radius);
 }
 
+/* —— 极简（minimal）—— */
 :root {
+  --radius: 0.5rem;
+  --background: #f5f4f2;
+  --foreground: #2a2826;
+  --card: #fdfcfb;
+  --card-foreground: #2a2826;
+  --popover: #fdfcfb;
+  --popover-foreground: #2a2826;
+  --muted: #eeedeb;
+  --muted-foreground: color-mix(in srgb, var(--foreground) 42%, transparent);
+  --border: color-mix(in srgb, var(--foreground) 9%, transparent);
+  --primary: #5c6b7a;
+  --primary-foreground: #fdfcfb;
+  --accent: #eeedeb;
+  --accent-foreground: #2a2826;
+  --destructive: #c45c5c;
+  --ring: #5c6b7a;
+  --app-font-size: 13px;
+}
+
+.dark {
+  --background: #171615;
+  --foreground: #ebe9e6;
+  --card: #1f1e1c;
+  --card-foreground: #ebe9e6;
+  --popover: #1f1e1c;
+  --popover-foreground: #ebe9e6;
+  --muted: #262523;
+  --muted-foreground: color-mix(in srgb, var(--foreground) 46%, transparent);
+  --border: color-mix(in srgb, var(--foreground) 11%, transparent);
+  --primary: #a8b4c0;
+  --primary-foreground: #171615;
+  --accent: #262523;
+  --accent-foreground: #ebe9e6;
+  --destructive: #e07a7a;
+  --ring: #a8b4c0;
+}
+
+/* —— NioZy 原版 —— */
+html[data-ui-style='niozy'] {
   --radius: 0.75rem;
   --background: #f4f5f7;
   --foreground: #1e2329;
@@ -53,10 +93,9 @@
   --accent-foreground: #1e2329;
   --destructive: #ef4444;
   --ring: #0a84ff;
-  --app-font-size: 13px;
 }
 
-.dark {
+html.dark[data-ui-style='niozy'] {
   --background: #0f1419;
   --foreground: #e8ecf0;
   --card: #1a1f26;
@@ -72,6 +111,73 @@
   --accent-foreground: #e8ecf0;
   --destructive: #f87171;
   --ring: #00d2ff;
+}
+
+@layer base {
+  body {
+    font-weight: 400;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+  }
+
+  html[data-ui-style='niozy'] h1,
+  html[data-ui-style='niozy'] h2,
+  html[data-ui-style='niozy'] h3,
+  html[data-ui-style='niozy'] h4,
+  html[data-ui-style='niozy'] h5,
+  html[data-ui-style='niozy'] h6 {
+    font-weight: 600;
+  }
+}
+
+/* NioZy：阴影与圆角 */
+html[data-ui-style='niozy'] .ui-card {
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+html[data-ui-style='niozy'] .ui-overlay-panel {
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+html[data-ui-style='niozy'] .ui-switch-thumb {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  border-color: transparent;
+  background-color: #fff;
+}
+
+html[data-ui-style='niozy'] .ui-slider-thumb {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+html[data-ui-style='niozy'] .ui-btn {
+  font-weight: 500;
+}
+
+html[data-ui-style='niozy'] .ui-label {
+  font-weight: 500;
+}
+
+html[data-ui-style='niozy'] .ui-card-title {
+  font-weight: 600;
+}
+
+html[data-ui-style='niozy'] .ui-setting-heading {
+  font-weight: 500;
+}
+
+html[data-ui-style='niozy'] .ui-setting-subheading {
+  font-weight: 600;
 }
 
 /* 隐藏滚动条，保留滚轮/触控板滚动 */

@@ -24,7 +24,7 @@ export function SettingField({
     <div className="flex min-w-0 items-start gap-2">
       <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0">
-        <Label className="text-sm font-medium leading-none">{label}</Label>
+        <Label className="text-sm font-semibold leading-none">{label}</Label>
         {description && (
           <p className="mt-1 text-xs text-muted-foreground">{description}</p>
         )}

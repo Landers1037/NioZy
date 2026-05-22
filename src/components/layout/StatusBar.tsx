@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { getTabDisplayTitle } from '@/lib/tab-display'
+import { useUiStyle } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 
@@ -40,7 +41,7 @@ function getTagVariants(theme: ThemeMode): Record<StatusTagVariant, string> {
   return theme === 'dark' ? tagVariantsDark : tagVariantsLight
 }
 
-function StatusTag({
+function NiozyStatusTag({
   children,
   variant,
   theme,
@@ -64,8 +65,36 @@ function StatusTag({
   )
 }
 
+function MinimalStatusTag({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex max-w-full items-center rounded-md border border-border px-2 py-0.5 text-[11px] font-normal leading-tight text-foreground/70',
+        className,
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+function MinimalStatusLabel({ children }: { children: ReactNode }) {
+  return <span className="shrink-0 text-muted-foreground">{children}</span>
+}
+
+function MinimalStatusDivider() {
+  return <span className="mx-1 shrink-0 text-muted-foreground/50">·</span>
+}
+
 export function StatusBar() {
   const { t } = useTranslation()
+  const uiStyle = useUiStyle()
   const stats = useAppStore((s) => s.systemStats)
   const settings = useAppStore((s) => s.settings)
   const theme: ThemeMode = settings?.theme ?? 'light'
@@ -73,67 +102,109 @@ export function StatusBar() {
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const terminalCwds = useAppStore((s) => s.terminalCwds)
-  const activeTab = tabs.find((t) => t.id === activeTabId)
+  const activeTab = tabs.find((tab) => tab.id === activeTabId)
   const activeCwd =
     activeTab?.type === 'terminal' && activeTab.terminalId
       ? terminalCwds[activeTab.terminalId]
       : undefined
   const isDark = theme === 'dark'
+  const isNiozy = uiStyle === 'niozy'
 
   return (
     <footer className="flex h-8 shrink-0 cursor-pointer select-none items-center justify-between gap-3 border-t border-border bg-card px-3">
       <div className="flex min-w-0 items-center gap-1.5">
         {liveStats ? (
           <>
-            <StatusTag variant="date" theme={theme}>
-              {stats.date}
-            </StatusTag>
-            <StatusTag variant="time" theme={theme}>
-              {stats.time}
-            </StatusTag>
-            <StatusTag variant="cpu" theme={theme}>
-              {t('statusBar.cpu', { percent: stats.cpuPercent })}
-            </StatusTag>
-            <StatusTag variant="memory" theme={theme} className="truncate">
-              {t('statusBar.memory', {
-                percent: stats.memoryPercent,
-                used: stats.memoryUsedMb,
-                total: stats.memoryTotalMb,
-              })}
-            </StatusTag>
+            {isNiozy ? (
+              <>
+                <NiozyStatusTag variant="date" theme={theme}>
+                  {stats.date}
+                </NiozyStatusTag>
+                <NiozyStatusTag variant="time" theme={theme}>
+                  {stats.time}
+                </NiozyStatusTag>
+                <NiozyStatusTag variant="cpu" theme={theme}>
+                  {t('statusBar.cpu', { percent: stats.cpuPercent })}
+                </NiozyStatusTag>
+                <NiozyStatusTag variant="memory" theme={theme} className="truncate">
+                  {t('statusBar.memory', {
+                    percent: stats.memoryPercent,
+                    used: stats.memoryUsedMb,
+                    total: stats.memoryTotalMb,
+                  })}
+                </NiozyStatusTag>
+              </>
+            ) : (
+              <>
+                <MinimalStatusTag>{stats.date}</MinimalStatusTag>
+                <MinimalStatusTag>{stats.time}</MinimalStatusTag>
+                <MinimalStatusTag>{t('statusBar.cpu', { percent: stats.cpuPercent })}</MinimalStatusTag>
+                <MinimalStatusTag className="truncate">
+                  {t('statusBar.memory', {
+                    percent: stats.memoryPercent,
+                    used: stats.memoryUsedMb,
+                    total: stats.memoryTotalMb,
+                  })}
+                </MinimalStatusTag>
+              </>
+            )}
           </>
-        ) : (
-          <StatusTag variant="off" theme={theme}>
+        ) : isNiozy ? (
+          <NiozyStatusTag variant="off" theme={theme}>
             {t('statusBar.liveStatsOff')}
-          </StatusTag>
+          </NiozyStatusTag>
+        ) : (
+          <MinimalStatusTag>{t('statusBar.liveStatsOff')}</MinimalStatusTag>
         )}
       </div>
       <div className="flex min-w-0 shrink items-center gap-1.5">
-        {activeTab?.type === 'terminal' && (
-          <StatusTag variant="cwd" theme={theme} className="max-w-[min(50vw,320px)]">
-            <span className={cn('shrink-0', isDark ? cwdLabelDark : cwdLabelLight)}>
-              {t('statusBar.cwd')}
+        {activeTab?.type === 'terminal' &&
+          (isNiozy ? (
+            <NiozyStatusTag variant="cwd" theme={theme} className="max-w-[min(50vw,320px)]">
+              <span className={cn('shrink-0', isDark ? cwdLabelDark : cwdLabelLight)}>
+                {t('statusBar.cwd')}
+              </span>
+              <span className={cn('mx-1 shrink-0', isDark ? cwdDividerDark : cwdDividerLight)}>
+                ·
+              </span>
+              <span className="min-w-0 truncate" title={activeCwd}>
+                {activeCwd ?? t('statusBar.cwdUnknown')}
+              </span>
+            </NiozyStatusTag>
+          ) : (
+            <MinimalStatusTag className="max-w-[min(50vw,320px)]">
+              <MinimalStatusLabel>{t('statusBar.cwd')}</MinimalStatusLabel>
+              <MinimalStatusDivider />
+              <span className="min-w-0 truncate" title={activeCwd}>
+                {activeCwd ?? t('statusBar.cwdUnknown')}
+              </span>
+            </MinimalStatusTag>
+          ))}
+        {isNiozy ? (
+          <NiozyStatusTag variant="tab" theme={theme} className="max-w-[160px] shrink-0">
+            <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
+              {t('statusBar.current')}
             </span>
-            <span className={cn('mx-1 shrink-0', isDark ? cwdDividerDark : cwdDividerLight)}>
-              ·
+            <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
+            <span
+              className="min-w-0 truncate"
+              title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
+            >
+              {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
             </span>
-            <span className="min-w-0 truncate" title={activeCwd}>
-              {activeCwd ?? t('statusBar.cwdUnknown')}
+          </NiozyStatusTag>
+        ) : (
+          <MinimalStatusTag className="max-w-[160px] shrink-0">
+            <MinimalStatusLabel>{t('statusBar.current')}</MinimalStatusLabel>
+            <MinimalStatusDivider />
+            <span
+              className="min-w-0 truncate"
+              title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
+            >
+              {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
             </span>
-          </StatusTag>
+          </MinimalStatusTag>
         )}
-        <StatusTag variant="tab" theme={theme} className="max-w-[160px] shrink-0">
-          <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
-            {t('statusBar.current')}
-          </span>
-          <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
-          <span
-            className="min-w-0 truncate"
-            title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
-          >
-            {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
-          </span>
-        </StatusTag>
       </div>
     </footer>
   )

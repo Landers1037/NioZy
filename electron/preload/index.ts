@@ -1,5 +1,12 @@
 import { createRequire } from 'node:module'
-import type { ElectronAPI, ReloadEnvironmentResult, SystemStatsData } from '../shared/api-types'
+import type {
+  ElectronAPI,
+  ReloadEnvironmentResult,
+  SystemStatsData,
+  UpdateCheckResult,
+  UpdateDownloadPayload,
+  UpdateDownloadResult,
+} from '../shared/api-types'
 
 const require = createRequire(import.meta.url)
 const { contextBridge, ipcRenderer } = require('electron') as typeof import('electron')
@@ -35,6 +42,7 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('system:reloadEnvironment') as Promise<ReloadEnvironmentResult>,
   },
   app: {
+    getVersion: () => ipcRenderer.invoke('app:getVersion') as Promise<string>,
     getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),
     onOpenDirectory: (cb) => {
       const handler = (_: unknown, directory: string) => cb(directory)
@@ -72,6 +80,11 @@ const api: ElectronAPI = {
   },
   shell: {
     openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+  },
+  update: {
+    check: () => ipcRenderer.invoke('update:check') as Promise<UpdateCheckResult>,
+    download: (payload: UpdateDownloadPayload) =>
+      ipcRenderer.invoke('update:download', payload) as Promise<UpdateDownloadResult>,
   },
   files: {
     saveText: (content, defaultFileName) =>

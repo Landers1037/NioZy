@@ -9,6 +9,7 @@ import {
 import { useAppStore, type AppTab } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { getTabHighlightClasses } from '@/lib/tab-display'
+import { useUiStyle } from '@/lib/ui-style'
 
 interface SettingsTabItemProps {
   tab: AppTab
@@ -26,6 +27,7 @@ export function SettingsTabItem({
   const { t } = useTranslation()
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const removeTab = useAppStore((s) => s.removeTab)
+  const uiStyle = useUiStyle()
 
   const compact = collapsed || iconOnly
 
@@ -36,8 +38,12 @@ export function SettingsTabItem({
         'group flex cursor-pointer items-center transition-colors',
         iconOnly
           ? 'size-6 shrink-0 justify-center rounded-md'
-          : cn('rounded-[10px] py-1.5', compact ? 'justify-center px-0' : 'gap-2 px-2'),
-        getTabHighlightClasses(isActive, iconOnly),
+          : cn(
+              uiStyle === 'niozy' ? 'rounded-[10px]' : 'rounded-lg',
+              'py-1.5',
+              compact ? 'justify-center px-0' : 'gap-2 px-2',
+            ),
+        getTabHighlightClasses(isActive, iconOnly, uiStyle),
       )}
       onClick={() => setActiveTab(tab.id)}
     >

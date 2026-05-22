@@ -1,6 +1,7 @@
 {
   "common": {
     "cancel": "Cancel",
+    "ok": "OK",
     "close": "Close",
     "save": "Save",
     "open": "Open",
@@ -30,6 +31,16 @@
     "light": "Light",
     "dark": "Dark"
   },
+  "uiStyle": {
+    "minimal": {
+      "label": "Minimal",
+      "description": "Warm neutral grays, hairline borders, flat cards, restrained typography"
+    },
+    "niozy": {
+      "label": "NioZy",
+      "description": "Original blue/cyan accents, card shadows, and colorful status tags"
+    }
+  },
   "settings": {
     "sections": {
       "appearance": "Appearance",
@@ -42,7 +53,9 @@
     },
     "appearance": {
       "title": "Appearance",
-      "description": "Theme, layout, language, accent color, and global font size",
+      "description": "UI style, theme, layout, language, accent color, and global font size",
+      "uiStyle": "Interface style",
+      "uiStyleAria": "Interface style",
       "layoutMode": "Layout",
       "layoutModeAria": "Layout mode",
       "themeMode": "Theme",
@@ -85,7 +98,12 @@
       "reloadEnvironmentDesc": "Pulls the latest PATH and other variables from the OS without restarting NioZy. Applies only to new terminals; reopen tabs or refresh PATH inside existing shells.",
       "updates": "Updates",
       "checkUpdates": "Check for updates",
-      "checkUpdatesSoon": "Update check coming soon",
+      "downloadingUpdate": "Downloading update…",
+      "updateAvailableTitle": "Update available",
+      "updateAvailableDesc": "You are on {{current}}. Version {{latest}} is available. Download and install now?",
+      "downloadAndInstall": "Download and install",
+      "upToDateTitle": "You're up to date",
+      "upToDateDesc": "Version {{version}} is the latest release.",
       "openReleases": "Open GitHub Releases",
       "manualUpdate": "Download manually",
       "about": "About NioZy",
@@ -255,7 +273,9 @@
     "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
     "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry.",
     "envReloadSuccess": "Reloaded {{vars}} variables; PATH has {{paths}} entries",
-    "envReloadFailed": "Failed to reload environment variables"
+    "envReloadFailed": "Failed to reload environment variables",
+    "updateCheckFailed": "Could not check for updates. Check your network and try again.",
+    "updateDownloadFailed": "Failed to download or launch the installer"
   },
   "terminal": {
     "processExited": "[Process exited]"

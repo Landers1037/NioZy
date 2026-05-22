@@ -27,6 +27,8 @@ import {
 import type { TerminalCreateOptions } from '../shared/api-types'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
+import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
+import { getWindowBackgroundColor } from '../shared/ui-style'
 
 augmentWindowsPath()
 
@@ -143,7 +145,7 @@ function createWindow(): void {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: settings.theme === 'dark' ? '#0F1419' : '#F4F5F7',
+    backgroundColor: getWindowBackgroundColor(settings.theme, settings.uiStyle),
     opacity: transparencyToOpacity(settings.advanced.transparency),
     webPreferences: getOptimizedWebPreferences(preloadPath, {
       disableSandbox: settings.advanced.disableSandbox,
@@ -324,13 +326,24 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.advanced?.transparency !== undefined) {
     syncWindowOpacity()
   }
+  if (partial.theme !== undefined || partial.uiStyle !== undefined) {
+    mainWindow?.setBackgroundColor(
+      getWindowBackgroundColor(updated.theme, updated.uiStyle),
+    )
+  }
   return updated
 })
 
 ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
+ipcMain.handle('app:getVersion', () => app.getVersion())
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 ipcMain.handle('system:reloadEnvironment', () => reloadSystemEnvironment())
+
+ipcMain.handle('update:check', () => checkForAppUpdate())
+ipcMain.handle('update:download', (_, payload: { version: string; downloadUrl: string }) =>
+  downloadAndInstallUpdate(payload.downloadUrl, payload.version),
+)
 
 ipcMain.handle('fonts:list', () => listSystemFonts())
 

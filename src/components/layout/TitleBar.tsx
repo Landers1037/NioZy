@@ -3,17 +3,20 @@ import { Minus, Square, X, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
+import { useUiClasses } from '@/lib/ui-style'
+import { cn } from '@/lib/utils'
 import logoUrl from '@/logo.png'
 
 export function TitleBar() {
   const { t } = useTranslation()
   const maximized = useAppStore((s) => s.windowMaximized)
+  const ui = useUiClasses()
 
   return (
     <header className="flex h-10 shrink-0 select-none items-center border-b border-border bg-card">
       <div className="flex items-center gap-2 px-3 no-drag">
         <img src={logoUrl} alt="NioZy" className="size-6 object-contain" />
-        <span className="font-semibold tracking-tight">NioZy</span>
+        <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
       </div>
       <div className="drag-region flex flex-1 items-center justify-center text-xs text-muted-foreground">
         {t('app.tagline')}

@@ -48,7 +48,7 @@ export function FontSizeInput({ icon, label, value, min, max, onChange }: FontSi
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm font-semibold">{label}</span>
       {inner}
     </div>
   )

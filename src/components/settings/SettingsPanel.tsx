@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { useUiClasses } from '@/lib/ui-style'
 import {
   Palette,
   Terminal,
@@ -34,6 +35,7 @@ type SectionId = (typeof SECTION_DEFS)[number]['id']
 export function SettingsPanel() {
   const { t } = useTranslation()
   const [section, setSection] = useState<SectionId>('appearance')
+  const ui = useUiClasses()
 
   const sections = useMemo(
     () =>
@@ -57,8 +59,8 @@ export function SettingsPanel() {
               className={cn(
                 'flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors',
                 section === s.id
-                  ? 'bg-card font-medium text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-card/60',
+                  ? ui.segmentActive
+                  : cn(ui.segmentInactive, 'font-normal hover:bg-muted'),
               )}
             >
               <Icon className="size-4 shrink-0" />

@@ -10,9 +10,10 @@ import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shell
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
   theme: 'light',
+  uiStyle: 'minimal',
   layoutMode: 'default',
   sidebarWidth: 260,
-  accentColor: '#0A84FF',
+  accentColor: '#5C6B7A',
   fontSize: 13,
   terminal: {
     colorScheme: 'atom',
@@ -177,8 +178,20 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       resolve: async (text) => resolveVaultText(text),
     },
     app: {
+      getVersion: async () => '0.1.0',
       getPendingOpenDirectory: async () => null,
       onOpenDirectory: () => () => undefined,
+    },
+    update: {
+      check: async () => ({
+        ok: true,
+        hasUpdate: false,
+        currentVersion: '0.1.0',
+      }),
+      download: async () => ({
+        ok: false,
+        error: 'Browser preview cannot download updates',
+      }),
     },
     fonts: {
       list: async () => [
