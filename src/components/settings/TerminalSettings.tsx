@@ -17,7 +17,14 @@ import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
 import { cn } from '@/lib/utils'
 import type { TerminalColorScheme, TerminalCursorStyle } from '../../../electron/shared/api-types'
-import { Cpu, Palette, TextCursor, Type } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  DEFAULT_TERMINAL_SCROLLBACK,
+  MAX_TERMINAL_SCROLLBACK,
+  MIN_TERMINAL_SCROLLBACK,
+  normalizeTerminalScrollback,
+} from '../../../electron/shared/terminal-xterm'
+import { Bold, Cpu, MousePointer2, Palette, ScrollText, TextCursor, Type } from 'lucide-react'
 
 export function TerminalSettings() {
   const { t } = useTranslation()
@@ -124,6 +131,74 @@ export function TerminalSettings() {
             checked={settings.terminal.cursorBlink}
             onCheckedChange={(cursorBlink) =>
               patchSettings({ terminal: { ...settings.terminal, cursorBlink } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={ScrollText}
+          label={t('settings.terminal.scrollback')}
+          description={t('settings.terminal.scrollbackDesc')}
+        >
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={MIN_TERMINAL_SCROLLBACK}
+              max={MAX_TERMINAL_SCROLLBACK}
+              step={1000}
+              className="max-w-[120px]"
+              value={settings.terminal.scrollback}
+              onChange={(e) => {
+                const n = Number.parseInt(e.target.value, 10)
+                if (!Number.isNaN(n)) {
+                  patchSettings({
+                    terminal: {
+                      ...settings.terminal,
+                      scrollback: normalizeTerminalScrollback(n),
+                    },
+                  })
+                }
+              }}
+              onBlur={(e) => {
+                const n = Number.parseInt(e.target.value, 10)
+                patchSettings({
+                  terminal: {
+                    ...settings.terminal,
+                    scrollback: normalizeTerminalScrollback(
+                      Number.isNaN(n) ? DEFAULT_TERMINAL_SCROLLBACK : n,
+                    ),
+                  },
+                })
+              }}
+            />
+            <span className="text-sm text-muted-foreground">{t('settings.terminal.lines')}</span>
+          </div>
+        </SettingField>
+
+        <SettingField
+          icon={Bold}
+          label={t('settings.terminal.drawBoldBright')}
+          description={t('settings.terminal.drawBoldBrightDesc')}
+          row
+        >
+          <Switch
+            checked={settings.terminal.drawBoldTextInBrightColors}
+            onCheckedChange={(drawBoldTextInBrightColors) =>
+              patchSettings({ terminal: { ...settings.terminal, drawBoldTextInBrightColors } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={MousePointer2}
+          label={t('settings.terminal.rightClickCopyPaste')}
+          description={t('settings.terminal.rightClickCopyPasteDesc')}
+          row
+        >
+          <Switch
+            checked={settings.terminal.rightClickCopyPaste}
+            onCheckedChange={(rightClickCopyPaste) =>
+              patchSettings({ terminal: { ...settings.terminal, rightClickCopyPaste } })
             }
           />
         </SettingField>

@@ -64,7 +64,14 @@
       "rendererDesc": "WebGPU 渲染器在 xterm.js 中仍处于实验阶段，当前版本将回退到 DOM/WebGL。",
       "rendererDom": "Canvas / DOM（稳定）",
       "rendererWebgl": "WebGL（推荐）",
-      "rendererWebgpu": "WebGPU（实验，可能不可用）"
+      "rendererWebgpu": "WebGPU（实验，可能不可用）",
+      "scrollback": "回滚",
+      "scrollbackDesc": "保留可向上滚动的历史行数（xterm scrollback）",
+      "lines": "行",
+      "drawBoldBright": "以亮色显示粗体",
+      "drawBoldBrightDesc": "对应 xterm drawBoldTextInBrightColors",
+      "rightClickCopyPaste": "右键复制/粘贴",
+      "rightClickCopyPasteDesc": "有选区时复制到剪贴板，无选区时从剪贴板粘贴"
     },
     "system": {
       "title": "系统设置",

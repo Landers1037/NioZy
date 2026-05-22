@@ -8,6 +8,15 @@ import type { AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
+import {
+  handleTerminalKeyboardShortcut,
+  handleTerminalRightClick,
+} from '@/lib/terminal-shortcut-actions'
+import {
+  applyTerminalRuntimeOptions,
+  buildTerminalOptions,
+} from '@/lib/terminal-xterm-options'
+import { normalizeRightClickCopyPaste } from '../../../electron/shared/terminal-xterm'
 import i18n from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -63,12 +72,9 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     const s = useAppStore.getState().settings
     const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
 
-    const term = new Terminal({
-      fontFamily: s?.terminal.fontFamily ?? 'Consolas',
-      fontSize: s?.terminal.fontSize ?? 13,
-      theme,
-      ...getTerminalCursorOptions(s?.terminal),
-    })
+    const term = new Terminal(
+      buildTerminalOptions(s?.terminal, theme, getTerminalCursorOptions(s?.terminal)),
+    )
 
     const fit = new FitAddon()
     term.loadAddon(fit)
@@ -83,6 +89,39 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
       api.terminal.write(tab.terminalId!, data)
     }
     term.onData(onData)
+
+    term.attachCustomKeyEventHandler((event) => {
+      const shortcuts = useAppStore.getState().settings?.shortcuts.app
+      if (!shortcuts || !tab.terminalId) return true
+      const handled = handleTerminalKeyboardShortcut(term, tab.terminalId, shortcuts, event)
+      return !handled
+    })
+
+    const captureOpts = { capture: true } as const
+    const termElement = term.element
+
+    const isRightClickCopyPasteEnabled = () => {
+      const terminalSettings = useAppStore.getState().settings?.terminal
+      return (
+        !!tab.terminalId &&
+        !!terminalSettings &&
+        normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
+      )
+    }
+
+    const onRightMouseDown = (e: MouseEvent) => {
+      if (e.button !== 2 || !isRightClickCopyPasteEnabled()) return
+      handleTerminalRightClick(term, tab.terminalId!, e)
+    }
+
+    const onContextMenu = (e: MouseEvent) => {
+      if (!isRightClickCopyPasteEnabled()) return
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
+    termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
 
     const ro = new ResizeObserver(() => {
       if (visibleRef.current) scheduleFit()
@@ -121,6 +160,8 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     }
 
     return () => {
+      termElement?.removeEventListener('mousedown', onRightMouseDown, captureOpts)
+      termElement?.removeEventListener('contextmenu', onContextMenu, captureOpts)
       unsubData()
       unsubExit()
       ro.disconnect()
@@ -143,6 +184,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     termRef.current.options.fontSize = settings.terminal.fontSize
     termRef.current.options.cursorBlink = cursor.cursorBlink
     termRef.current.options.cursorStyle = cursor.cursorStyle
+    applyTerminalRuntimeOptions(termRef.current, settings.terminal)
     if (visibleRef.current) scheduleFit()
   }, [settings?.terminal, scheduleFit])
 

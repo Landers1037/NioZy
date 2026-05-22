@@ -81,6 +81,12 @@ export interface AppSettings {
     renderer: TerminalRenderer
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean
+    /** xterm scrollback 行数 */
+    scrollback: number
+    /** 以亮色显示粗体 */
+    drawBoldTextInBrightColors: boolean
+    /** 右键：有选区则复制，无选区则粘贴 */
+    rightClickCopyPaste: boolean
   }
   connections: CustomConnection[]
   builtinConnections: import('./builtin-shells').BuiltinConnections

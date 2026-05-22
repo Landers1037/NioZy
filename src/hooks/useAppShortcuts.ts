@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
 import { useAppStore } from '@/stores/app-store'
-import { getElectronAPI } from '@/lib/electron-client'
 import { matchAccelerator } from '@/lib/shortcut-utils'
 import { getTerminal } from '@/lib/terminal-registry'
 import { createTerminal } from '@/lib/terminal-actions'
-import { toast } from 'sonner'
-import i18n from '@/lib/i18n'
+import { handleTerminalKeyboardShortcut } from '@/lib/terminal-shortcut-actions'
 
 export function useAppShortcuts(): void {
   const shortcuts = useAppStore((s) => s.settings?.shortcuts)
@@ -68,39 +66,7 @@ export function useAppShortcuts(): void {
       const term = getTerminal(activeTab.terminalId)
       if (!term) return
 
-      if (matchAccelerator(app.copyToClipboard, e)) {
-        e.preventDefault()
-        const text = term.getSelection()
-        if (text) void navigator.clipboard.writeText(text)
-        else toast.message(i18n.t('toast.selectTerminalFirst'))
-        return
-      }
-
-      if (matchAccelerator(app.pasteFromClipboard, e)) {
-        e.preventDefault()
-        void navigator.clipboard.readText().then((text) => {
-          if (text) getElectronAPI().terminal.write(activeTab.terminalId!, text)
-        })
-        return
-      }
-
-      if (matchAccelerator(app.lineStart, e)) {
-        e.preventDefault()
-        getElectronAPI().terminal.write(activeTab.terminalId!, '\x01')
-        return
-      }
-
-      if (matchAccelerator(app.lineEnd, e)) {
-        e.preventDefault()
-        getElectronAPI().terminal.write(activeTab.terminalId!, '\x05')
-        return
-      }
-
-      if (matchAccelerator(app.clearTerminal, e)) {
-        e.preventDefault()
-        term.clear()
-        return
-      }
+      if (handleTerminalKeyboardShortcut(term, activeTab.terminalId, app, e)) return
     }
 
     window.addEventListener('keydown', onKeyDown)

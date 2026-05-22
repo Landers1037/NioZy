@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Terminal, X } from 'lucide-react'
+import {
+  Download,
+  FolderOpen,
+  ListX,
+  Pencil,
+  Terminal,
+  X,
+} from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -130,15 +137,24 @@ export function TerminalTabItem({
               if (!isActive) setActiveTab(tab.id)
             }}
           >
+            <FolderOpen className="size-4 text-muted-foreground" />
             {t('common.open')}
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => setCloseOpen(true)}>{t('common.close')}</ContextMenuItem>
+          <ContextMenuItem onSelect={() => setCloseOpen(true)}>
+            <X className="size-4 text-muted-foreground" />
+            {t('common.close')}
+          </ContextMenuItem>
           <ContextMenuItem onSelect={() => closeOtherTerminalTabs(tab.id)}>
+            <ListX className="size-4 text-muted-foreground" />
             {t('tab.closeOther')}
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={openEditDialog}>{t('tab.editTitle')}</ContextMenuItem>
+          <ContextMenuItem onSelect={openEditDialog}>
+            <Pencil className="size-4 text-muted-foreground" />
+            {t('tab.editTitle')}
+          </ContextMenuItem>
           <ContextMenuItem onSelect={() => void exportTerminalTab(tab.id)}>
+            <Download className="size-4 text-muted-foreground" />
             {t('tab.exportTerminal')}
           </ContextMenuItem>
         </ContextMenuContent>
