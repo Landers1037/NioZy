@@ -146,13 +146,11 @@ export default function App() {
               terminalActive ? ui.mainPanelTerminal : ui.mainPanel,
             )}
           >
-            {tabs
-              .filter((t) => t.type === 'terminal')
-              .map((tab) => (
-                <div key={tab.id} className="absolute inset-0">
-                  <TerminalView tab={tab} visible={activeTabId === tab.id} />
-                </div>
-              ))}
+            {activeTab?.type === 'terminal' && activeTab.terminalId && (
+              <div key={activeTab.id} className="absolute inset-0">
+                <TerminalView tab={activeTab} />
+              </div>
+            )}
             {activeTab?.type === 'settings' && (
               <div className="absolute inset-0">
                 <SettingsPanel />
