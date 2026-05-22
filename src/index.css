@@ -408,3 +408,10 @@ body {
 .niozy-terminal-host .xterm-viewport {
   background-color: transparent !important;
 }
+
+/* WebLinks 悬停时的下划线（始终高亮由 registerDecoration 着色） */
+.niozy-terminal-host .xterm .xterm-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #58a6ff;
+}

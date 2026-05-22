@@ -18,6 +18,7 @@ import {
 } from './shared/terminal-cursor'
 import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
 import { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './shared/ssh-settings'
+import { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shared/shell-settings'
 import {
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
@@ -85,6 +86,7 @@ export interface AppSettings {
   }
   shortcuts: AppShortcuts
   ssh: import('./shared/ssh-settings').SshSettings
+  shell: import('./shared/shell-settings').ShellSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -151,6 +153,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
+  shell: { ...DEFAULT_SHELL_SETTINGS },
 }
 
 export class SettingsStore {
@@ -218,6 +221,12 @@ export class SettingsStore {
         app: { ...DEFAULT_SETTINGS.shortcuts.app, ...stored.shortcuts?.app },
       },
       ssh: normalizeSshSettings(stored.ssh),
+      shell: normalizeShellSettings(
+        stored.shell ??
+          (stored.ssh && typeof stored.ssh === 'object'
+            ? (stored.ssh as { shell?: unknown }).shell
+            : undefined),
+      ),
       builtinConnections: normalizeBuiltinConnections(
         (stored as Partial<AppSettings>).builtinConnections,
       ),

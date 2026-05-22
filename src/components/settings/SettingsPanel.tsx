@@ -6,6 +6,7 @@ import {
   Palette,
   Terminal,
   Server,
+  TerminalSquare,
   Plug,
   Settings2,
   SlidersHorizontal,
@@ -16,6 +17,7 @@ import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
 import { TerminalSettings } from './TerminalSettings'
 import { SshSettings } from './SshSettings'
+import { ShellSettings } from './ShellSettings'
 import { ConnectionSettings } from './ConnectionSettings'
 import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
@@ -26,6 +28,7 @@ const SECTION_DEFS = [
   { id: 'appearance', icon: Palette },
   { id: 'terminal', icon: Terminal },
   { id: 'ssh', icon: Server },
+  { id: 'shell', icon: TerminalSquare },
   { id: 'connections', icon: Plug },
   { id: 'vault', icon: Database },
   { id: 'shortcuts', icon: Keyboard },
@@ -76,6 +79,7 @@ export function SettingsPanel() {
         {section === 'appearance' && <AppearanceSettings />}
         {section === 'terminal' && <TerminalSettings />}
         {section === 'ssh' && <SshSettings />}
+        {section === 'shell' && <ShellSettings />}
         {section === 'connections' && <ConnectionSettings />}
         {section === 'vault' && <VaultSettings />}
         {section === 'shortcuts' && <ShortcutSettings />}

@@ -52,6 +52,7 @@
       "appearance": "外观设置",
       "terminal": "终端设置",
       "ssh": "SSH",
+      "shell": "SHELL",
       "connections": "连接设置",
       "vault": "存储库",
       "shortcuts": "快捷键",
@@ -107,6 +108,16 @@
       "checkScpButton": "检查 scp.exe",
       "scpFound": "已找到 scp：{{path}}",
       "scpNotFound": "未在 PATH 中找到 scp.exe，请安装 Windows OpenSSH 客户端或 Git for Windows"
+    },
+    "shell": {
+      "title": "SHELL",
+      "description": "终端 Shell 输出与交互（emoji、链接高亮与打开）",
+      "emojiNativeRendering": "Emoji 原生渲染",
+      "emojiNativeRenderingDesc": "开启后使用 Unicode 11 宽度表，在终端中正确显示 emoji 等宽字符",
+      "highlightLinks": "高亮链接地址",
+      "highlightLinksDesc": "开启后高亮终端输出中的 http、https 链接",
+      "clickToOpenLinks": "点击打开链接",
+      "clickToOpenLinksDesc": "开启后可用鼠标单击链接，使用系统默认浏览器打开"
     },
     "system": {
       "title": "系统设置",

@@ -28,6 +28,8 @@ export type { AppShortcuts } from './shortcuts'
 export { DEFAULT_SHORTCUTS, APP_SHORTCUT_LABELS } from './shortcuts'
 export type { SshSettings } from './ssh-settings'
 export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
+export type { ShellSettings } from './shell-settings'
+export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
 export type {
   SshConnectionProfile,
   ScpFileEntry,
@@ -133,6 +135,7 @@ export interface AppSettings {
   }
   shortcuts: AppShortcuts
   ssh: import('./ssh-settings').SshSettings
+  shell: import('./shell-settings').ShellSettings
 }
 
 export interface ReloadEnvironmentResult {

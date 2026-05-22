@@ -1,0 +1,67 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { useTranslation } from 'react-i18next'
+import { useAppStore } from '@/stores/app-store'
+import { SettingField } from './SettingField'
+import { TerminalSquare, Smile, Link2, MousePointerClick } from 'lucide-react'
+
+export function ShellSettings() {
+  const { t } = useTranslation()
+  const settings = useAppStore((s) => s.settings)
+  const patchSettings = useAppStore((s) => s.patchSettings)
+  if (!settings) return null
+
+  const shell = settings.shell
+
+  const patchShell = (partial: Partial<typeof shell>) =>
+    patchSettings({ shell: { ...shell, ...partial } })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TerminalSquare className="size-5" />
+          {t('settings.shell.title')}
+        </CardTitle>
+        <CardDescription>{t('settings.shell.description')}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-6">
+        <SettingField
+          icon={Smile}
+          label={t('settings.shell.emojiNativeRendering')}
+          description={t('settings.shell.emojiNativeRenderingDesc')}
+          row
+        >
+          <Switch
+            checked={shell.emojiNativeRendering}
+            onCheckedChange={(v) => patchShell({ emojiNativeRendering: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Link2}
+          label={t('settings.shell.highlightLinks')}
+          description={t('settings.shell.highlightLinksDesc')}
+          row
+        >
+          <Switch
+            checked={shell.highlightLinks}
+            onCheckedChange={(v) => patchShell({ highlightLinks: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={MousePointerClick}
+          label={t('settings.shell.clickToOpenLinks')}
+          description={t('settings.shell.clickToOpenLinksDesc')}
+          row
+        >
+          <Switch
+            checked={shell.clickToOpenLinks}
+            onCheckedChange={(v) => patchShell({ clickToOpenLinks: v })}
+          />
+        </SettingField>
+      </CardContent>
+    </Card>
+  )
+}

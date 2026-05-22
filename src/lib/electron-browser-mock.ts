@@ -8,6 +8,7 @@ import type {
 import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
+import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
 
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
@@ -47,6 +48,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
+  shell: { ...DEFAULT_SHELL_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -129,6 +131,7 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
         }
       : mockSettings.shortcuts,
     ssh: partial.ssh ? { ...mockSettings.ssh, ...partial.ssh } : mockSettings.ssh,
+    shell: partial.shell ? { ...mockSettings.shell, ...partial.shell } : mockSettings.shell,
     connections: partial.connections ?? mockSettings.connections,
     builtinConnections: partial.builtinConnections ?? mockSettings.builtinConnections,
   }
