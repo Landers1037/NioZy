@@ -52,6 +52,7 @@
       "appearance": "Appearance",
       "terminal": "Terminal",
       "ssh": "SSH",
+      "shell": "SHELL",
       "connections": "Connections",
       "vault": "Vault",
       "shortcuts": "Shortcuts",
@@ -107,6 +108,16 @@
       "checkScpButton": "Check scp.exe",
       "scpFound": "Found scp: {{path}}",
       "scpNotFound": "scp.exe not found on PATH. Install Windows OpenSSH Client or Git for Windows."
+    },
+    "shell": {
+      "title": "SHELL",
+      "description": "Terminal shell output and interaction (emoji, link highlight, and open)",
+      "emojiNativeRendering": "Native emoji rendering",
+      "emojiNativeRenderingDesc": "Uses the Unicode 11 width table so emoji and wide characters render correctly in the terminal",
+      "highlightLinks": "Highlight links",
+      "highlightLinksDesc": "Highlight http and https URLs in terminal output",
+      "clickToOpenLinks": "Click to open links",
+      "clickToOpenLinksDesc": "Open a link in the default browser when you click it with the mouse"
     },
     "system": {
       "title": "System",

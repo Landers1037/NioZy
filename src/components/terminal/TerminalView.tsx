@@ -16,6 +16,11 @@ import {
   applyTerminalRuntimeOptions,
   buildTerminalOptions,
 } from '@/lib/terminal-xterm-options'
+import {
+  applyTerminalShellAddons,
+  createTerminalShellAddonState,
+} from '@/lib/terminal-shell-addons'
+import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
 import { normalizeRightClickCopyPaste } from '../../../electron/shared/terminal-xterm'
 import i18n from '@/lib/i18n'
 
@@ -34,6 +39,7 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
+  const shellAddonsRef = useRef(createTerminalShellAddonState())
   const settings = useAppStore((s) => s.settings)
 
   const safeFit = useCallback((): boolean => {
@@ -75,8 +81,14 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
     const useWebgl =
       !preferDomRenderer && (s?.terminal.renderer ?? 'webgl') === 'webgl'
 
+    const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
     const term = new Terminal(
-      buildTerminalOptions(s?.terminal, theme, getTerminalCursorOptions(s?.terminal)),
+      buildTerminalOptions(
+        s?.terminal,
+        theme,
+        getTerminalCursorOptions(s?.terminal),
+        shellSettings.emojiNativeRendering,
+      ),
     )
 
     const fit = new FitAddon()
@@ -86,6 +98,8 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
     termRef.current = term
     fitRef.current = fit
     registerTerminal(tab.terminalId!, term)
+
+    applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
 
     const loadWebgl = () => {
       if (disposed || !termRef.current) return
@@ -188,12 +202,22 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
       unsubExit()
       ro.disconnect()
       unregisterTerminal(tab.terminalId!)
+      shellAddonsRef.current = createTerminalShellAddonState()
       webglRef.current = null
       term.dispose()
       termRef.current = null
       fitRef.current = null
     }
   }, [tab.terminalId, scheduleFit, safeFit, preferDomRenderer])
+
+  useEffect(() => {
+    if (!termRef.current || !settings) return
+    applyTerminalShellAddons(
+      termRef.current,
+      shellAddonsRef.current,
+      settings.shell ?? DEFAULT_SHELL_SETTINGS,
+    )
+  }, [settings?.shell])
 
   useEffect(() => {
     if (!termRef.current || !settings) return

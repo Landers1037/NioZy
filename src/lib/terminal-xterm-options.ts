@@ -11,6 +11,8 @@ export function buildTerminalOptions(
   terminal: AppSettings['terminal'] | undefined,
   theme: NonNullable<ITerminalOptions['theme']>,
   cursor: Pick<ITerminalOptions, 'cursorBlink' | 'cursorStyle'>,
+  /** Unicode11 等 addon 需要访问 term.unicode 提案 API */
+  allowProposedApi = false,
 ): ITerminalOptions {
   return {
     fontFamily: terminal?.fontFamily ?? 'Consolas',
@@ -21,6 +23,7 @@ export function buildTerminalOptions(
       terminal?.drawBoldTextInBrightColors,
     ),
     rightClickSelectsWord: !normalizeRightClickCopyPaste(terminal?.rightClickCopyPaste),
+    allowProposedApi,
     ...cursor,
   }
 }
