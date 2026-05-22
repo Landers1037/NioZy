@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Activity, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
+import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
 import { getElectronAPI } from '@/lib/electron-client'
 
 export function AdvancedSettings() {
@@ -74,6 +74,20 @@ export function AdvancedSettings() {
             />
           </SettingField>
         )}
+
+        <SettingField
+          icon={AppWindow}
+          label={t('settings.advanced.preserveWindowBounds')}
+          description={t('settings.advanced.preserveWindowBoundsDesc')}
+          row
+        >
+          <Switch
+            checked={settings.advanced.preserveWindowBounds === true}
+            onCheckedChange={(v) =>
+              patchSettings({ advanced: { ...settings.advanced, preserveWindowBounds: v } })
+            }
+          />
+        </SettingField>
 
         <SettingField
           icon={Activity}

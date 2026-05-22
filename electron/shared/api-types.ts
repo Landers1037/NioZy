@@ -104,6 +104,9 @@ export interface AppSettings {
     statusBarLiveStats: boolean
     /** Windows：文件夹 / 目录背景右键「使用 NioZy 打开」 */
     shellContextMenu: boolean
+    /** 关闭窗口时记住大小与位置，下次启动恢复 */
+    preserveWindowBounds: boolean
+    lastWindowState?: import('./window-state').SavedWindowState
   }
   shortcuts: AppShortcuts
 }

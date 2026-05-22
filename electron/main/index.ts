@@ -25,6 +25,7 @@ import {
   setWindowsShellContextMenu,
 } from '../windows-shell-context-menu'
 import type { TerminalCreateOptions } from '../shared/api-types'
+import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 
 augmentWindowsPath()
 
@@ -77,6 +78,18 @@ function syncWindowOpacity(): void {
   mainWindow.setOpacity(transparencyToOpacity(settingsStore.get().advanced.transparency))
 }
 
+function persistWindowBoundsIfEnabled(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  const s = settingsStore.get()
+  if (!s.advanced.preserveWindowBounds) return
+  settingsStore.update({
+    advanced: {
+      ...s.advanced,
+      lastWindowState: captureWindowState(mainWindow),
+    },
+  })
+}
+
 function showMainWindow(): void {
   if (!mainWindow) return
   if (mainWindow.isMinimized()) mainWindow.restore()
@@ -109,14 +122,21 @@ function resolvePreloadPath(): string {
 function createWindow(): void {
   const settings = settingsStore.get()
   const preloadPath = resolvePreloadPath()
+  const savedState = settings.advanced.preserveWindowBounds
+    ? settings.advanced.lastWindowState
+    : undefined
+  const initialBounds = getInitialWindowOptions(savedState)
 
   if (isDev) {
     console.log('[NioZy] preload script:', preloadPath, existsSync(preloadPath))
   }
 
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: initialBounds.width,
+    height: initialBounds.height,
+    ...(initialBounds.x !== undefined && initialBounds.y !== undefined
+      ? { x: initialBounds.x, y: initialBounds.y }
+      : {}),
     minWidth: 800,
     minHeight: 500,
     show: false,
@@ -135,6 +155,9 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     syncWindowOpacity()
+    if (initialBounds.startMaximized) {
+      mainWindow?.maximize()
+    }
     mainWindow?.show()
     if (isDev) {
       mainWindow?.webContents.openDevTools({ mode: 'detach' })
@@ -161,6 +184,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('close', (e) => {
+    persistWindowBoundsIfEnabled()
     const s = settingsStore.get()
     if (s.system.minimizeToTrayOnClose) {
       e.preventDefault()
@@ -238,6 +262,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  persistWindowBoundsIfEnabled()
   terminalService.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()

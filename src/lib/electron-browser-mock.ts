@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     transparency: 100,
     statusBarLiveStats: true,
     shellContextMenu: false,
+    preserveWindowBounds: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
 }
