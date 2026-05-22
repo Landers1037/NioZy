@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { useTranslation } from 'react-i18next'
 import { SettingField } from './SettingField'
+import { ShortcutInput } from './ShortcutInput'
 import { useAppStore } from '@/stores/app-store'
 import type { AppShortcuts } from '../../../electron/shared/api-types'
-import { formatAcceleratorForDisplay } from '@/lib/shortcut-utils'
+import { formatAcceleratorForDisplay, isValidGlobalAccelerator } from '@/lib/shortcut-utils'
 import { Keyboard, Monitor, Terminal } from 'lucide-react'
+import { toast } from 'sonner'
 
 const APP_SHORTCUT_KEYS = [
   'copyToClipboard',
@@ -36,6 +37,25 @@ export function ShortcutSettings() {
     })
   }
 
+  const rejectInvalidGlobalShortcut = () => {
+    toast.error(t('settings.shortcuts.globalSingleKeyNotAllowed'))
+    patchSettings({
+      shortcuts: {
+        ...shortcuts,
+        global: { showApp: '' },
+      },
+    })
+  }
+
+  const patchGlobalShowApp = (value: string) => {
+    patchSettings({
+      shortcuts: {
+        ...shortcuts,
+        global: { showApp: value },
+      },
+    })
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -53,17 +73,12 @@ export function ShortcutSettings() {
             current: formatAcceleratorForDisplay(shortcuts.global.showApp),
           })}
         >
-          <Input
+          <ShortcutInput
             className="max-w-md font-mono text-sm"
             value={shortcuts.global.showApp}
-            onChange={(e) =>
-              patchSettings({
-                shortcuts: {
-                  ...shortcuts,
-                  global: { showApp: e.target.value },
-                },
-              })
-            }
+            onChange={patchGlobalShowApp}
+            validate={isValidGlobalAccelerator}
+            onInvalid={rejectInvalidGlobalShortcut}
           />
         </SettingField>
 
@@ -74,10 +89,10 @@ export function ShortcutSettings() {
           </p>
           {APP_SHORTCUT_KEYS.map((key) => (
             <SettingField key={key} icon={Keyboard} label={t(`settings.shortcuts.${key}`)}>
-              <Input
+              <ShortcutInput
                 className="max-w-md font-mono text-sm"
                 value={shortcuts.app[key]}
-                onChange={(e) => patchApp(key, e.target.value)}
+                onChange={(v) => patchApp(key, v)}
               />
             </SettingField>
           ))}
