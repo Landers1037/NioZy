@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  ArrowLeftRight,
   Download,
   FolderOpen,
   ListX,
@@ -44,6 +45,8 @@ import {
   closeTerminalTabs,
   exportTerminalTab,
 } from '@/lib/tab-actions'
+import { openScpTransferForTab } from '@/lib/scp-transfer-actions'
+import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI } from '@/lib/electron-client'
 
 interface TerminalTabItemProps {
@@ -150,6 +153,15 @@ export function TerminalTabItem({
             <ListX className="size-4 text-muted-foreground" />
             {t('tab.closeOther')}
           </ContextMenuItem>
+          {isSshTerminalTab(tab) ? (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={() => openScpTransferForTab(tab.id)}>
+                <ArrowLeftRight className="size-4 text-muted-foreground" />
+                {t('tab.openScpTransfer')}
+              </ContextMenuItem>
+            </>
+          ) : null}
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={openEditDialog}>
             <Pencil className="size-4 text-muted-foreground" />

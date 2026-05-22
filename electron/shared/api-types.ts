@@ -26,6 +26,15 @@ import type { TerminalColorScheme } from './terminal-color-schemes'
 import type { AppShortcuts } from './shortcuts'
 export type { AppShortcuts } from './shortcuts'
 export { DEFAULT_SHORTCUTS, APP_SHORTCUT_LABELS } from './shortcuts'
+export type { SshSettings } from './ssh-settings'
+export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
+export type {
+  SshConnectionProfile,
+  ScpFileEntry,
+  ScpCheckResult,
+  ScpListResult,
+  ScpTransferResult,
+} from './ssh-types'
 
 export type VaultVariableType = 'plain' | 'secret'
 
@@ -121,6 +130,7 @@ export interface AppSettings {
     lastWindowState?: import('./window-state').SavedWindowState
   }
   shortcuts: AppShortcuts
+  ssh: import('./ssh-settings').SshSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -234,5 +244,24 @@ export interface ElectronAPI {
   files: {
     /** 弹出保存对话框并写入文本；用户取消时返回 false */
     saveText: (content: string, defaultFileName: string) => Promise<boolean>
+  }
+  ssh: {
+    checkScp: () => Promise<import('./ssh-types').ScpCheckResult>
+    getProfile: (connectionId: string) => Promise<import('./ssh-types').SshConnectionProfile | null>
+    listLocal: (dirPath: string) => Promise<import('./ssh-types').ScpListResult>
+    listRemote: (
+      profile: import('./ssh-types').SshConnectionProfile,
+      remotePath: string,
+    ) => Promise<import('./ssh-types').ScpListResult>
+    upload: (
+      profile: import('./ssh-types').SshConnectionProfile,
+      localPath: string,
+      remotePath: string,
+    ) => Promise<import('./ssh-types').ScpTransferResult>
+    download: (
+      profile: import('./ssh-types').SshConnectionProfile,
+      remotePath: string,
+      localPath: string,
+    ) => Promise<import('./ssh-types').ScpTransferResult>
   }
 }

@@ -11,8 +11,11 @@ import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, openTerminalInDirectory } from '@/lib/terminal-actions'
+import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
+import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
+import { ScpTransferDialog } from '@/components/scp/ScpTransferDialog'
 import { cn } from '@/lib/utils'
 
 export default function App() {
@@ -32,6 +35,7 @@ export default function App() {
   const booted = useRef(false)
 
   useAppShortcuts()
+  useSshDisconnectAlert()
 
   useEffect(() => {
     let cancelled = false
@@ -121,6 +125,11 @@ export default function App() {
   }
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
+  const scpTransferTabId = useAppStore((s) => s.scpTransferTabId)
+  const setScpTransferTabId = useAppStore((s) => s.setScpTransferTabId)
+  const scpTransferTab = scpTransferTabId
+    ? tabs.find((t) => t.id === scpTransferTabId)
+    : undefined
   const browserDevPreview = isBrowserDevPreview()
   const terminalActive = activeTab?.type === 'terminal'
 
@@ -166,6 +175,15 @@ export default function App() {
       </div>
       <StatusBar />
       <Toaster position="bottom-right" richColors closeButton />
+      {scpTransferTab && isSshTerminalTab(scpTransferTab) && (
+        <ScpTransferDialog
+          tab={scpTransferTab}
+          open
+          onOpenChange={(open) => {
+            if (!open) setScpTransferTabId(null)
+          }}
+        />
+      )}
     </div>
   )
 }

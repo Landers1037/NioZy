@@ -6,6 +6,7 @@ import type {
 } from '../../electron/shared/api-types'
 import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
+import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
 
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
@@ -43,6 +44,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     preserveWindowBounds: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
+  ssh: { ...DEFAULT_SSH_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -87,6 +89,7 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
           app: { ...mockSettings.shortcuts.app, ...partial.shortcuts.app },
         }
       : mockSettings.shortcuts,
+    ssh: partial.ssh ? { ...mockSettings.ssh, ...partial.ssh } : mockSettings.ssh,
     connections: partial.connections ?? mockSettings.connections,
     builtinConnections: partial.builtinConnections ?? mockSettings.builtinConnections,
   }
@@ -210,6 +213,30 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       openExternal: async (url) => {
         window.open(url, '_blank', 'noopener,noreferrer')
       },
+    },
+    ssh: {
+      checkScp: async () => ({ found: false }),
+      getProfile: async () => null,
+      listLocal: async () => ({
+        ok: true,
+        entries: [
+          {
+            name: 'Documents',
+            path: 'C:\\Users\\Developer\\Documents',
+            isDirectory: true,
+          },
+          { name: 'readme.txt', path: 'C:\\Users\\Developer\\readme.txt', isDirectory: false, size: 128 },
+        ],
+      }),
+      listRemote: async () => ({
+        ok: true,
+        entries: [
+          { name: 'home', path: '/home/dev', isDirectory: true },
+          { name: 'app.log', path: '/home/dev/app.log', isDirectory: false, size: 4096 },
+        ],
+      }),
+      upload: async () => ({ ok: false, error: 'Browser preview' }),
+      download: async () => ({ ok: false, error: 'Browser preview' }),
     },
     files: {
       saveText: async (content, defaultFileName) => {
