@@ -18,31 +18,26 @@ import {
 } from '@/lib/terminal-xterm-options'
 import { normalizeRightClickCopyPaste } from '../../../electron/shared/terminal-xterm'
 import i18n from '@/lib/i18n'
-import { cn } from '@/lib/utils'
 
 interface TerminalViewProps {
   tab: AppTab
-  visible: boolean
 }
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
 }
 
-export function TerminalView({ tab, visible }: TerminalViewProps) {
+export function TerminalView({ tab }: TerminalViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
-  const visibleRef = useRef(visible)
   const settings = useAppStore((s) => s.settings)
-
-  visibleRef.current = visible
 
   const safeFit = useCallback((): boolean => {
     const el = containerRef.current
     const fit = fitRef.current
     const term = termRef.current
-    if (!el || !fit || !term || !visibleRef.current || !hasLayout(el)) return false
+    if (!el || !fit || !term || !hasLayout(el)) return false
 
     try {
       fit.fit()
@@ -124,7 +119,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
 
     const ro = new ResizeObserver(() => {
-      if (visibleRef.current) scheduleFit()
+      scheduleFit()
     })
     ro.observe(containerRef.current)
 
@@ -139,6 +134,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
       }
     })
 
+    void api.terminal.setActiveStream(tab.terminalId!)
     scheduleFit()
 
     const renderer = s?.terminal.renderer ?? 'webgl'
@@ -160,6 +156,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     }
 
     return () => {
+      void api.terminal.setActiveStream(null)
       termElement?.removeEventListener('mousedown', onRightMouseDown, captureOpts)
       termElement?.removeEventListener('contextmenu', onContextMenu, captureOpts)
       unsubData()
@@ -173,10 +170,6 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
   }, [tab.terminalId, scheduleFit, safeFit])
 
   useEffect(() => {
-    if (visible) scheduleFit()
-  }, [visible, scheduleFit])
-
-  useEffect(() => {
     if (!termRef.current || !settings) return
     const cursor = getTerminalCursorOptions(settings.terminal)
     termRef.current.options.theme = resolveTerminalTheme(settings.terminal.colorScheme)
@@ -185,7 +178,7 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
     termRef.current.options.cursorBlink = cursor.cursorBlink
     termRef.current.options.cursorStyle = cursor.cursorStyle
     applyTerminalRuntimeOptions(termRef.current, settings.terminal)
-    if (visibleRef.current) scheduleFit()
+    scheduleFit()
   }, [settings?.terminal, scheduleFit])
 
   const terminalBackground =
@@ -193,12 +186,8 @@ export function TerminalView({ tab, visible }: TerminalViewProps) {
 
   return (
     <div
-      className={cn(
-        'absolute inset-0 overflow-hidden p-[10px]',
-        visible ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none',
-      )}
+      className="absolute inset-0 overflow-hidden p-[10px]"
       style={{ backgroundColor: terminalBackground }}
-      aria-hidden={!visible}
     >
       <div ref={containerRef} className="niozy-terminal-host h-full w-full overflow-hidden" />
     </div>

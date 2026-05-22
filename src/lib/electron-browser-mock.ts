@@ -245,6 +245,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
       resize: () => undefined,
       kill: () => undefined,
+      setActiveStream: async () => undefined,
       onData: (cb) => {
         dataListeners.add(cb)
         return () => dataListeners.delete(cb)

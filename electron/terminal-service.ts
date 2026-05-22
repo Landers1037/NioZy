@@ -26,6 +26,9 @@ interface PtySession {
   cwd: string
 }
 
+/** 非活跃标签在主进程侧暂存的输出上限（字符数），切换回来时一次性回放 */
+const MAX_PAUSED_OUTPUT_CHARS = 512 * 1024
+
 const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
   powershell: 'powershell.exe',
   cmd: 'cmd.exe',
@@ -34,6 +37,8 @@ const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
 
 export class TerminalService extends EventEmitter {
   private sessions = new Map<string, PtySession>()
+  private activeStreamId: string | null = null
+  private pausedOutput = new Map<string, string>()
 
   create(options: TerminalCreateOptions): {
     id: string
@@ -96,7 +101,7 @@ export class TerminalService extends EventEmitter {
         session.cwd = cwd
         this.emit('cwd', id, cwd)
       }
-      this.emit('data', id, data)
+      this.pushOutput(id, data)
     })
 
     ptyProcess.onExit(({ exitCode }) => {
@@ -116,6 +121,29 @@ export class TerminalService extends EventEmitter {
     return { id, name, shell: options.shell, cwd: initialCwd }
   }
 
+  /** 仅向当前活跃终端推送 terminal:data；其余会话输出暂存于主进程有限缓冲 */
+  setActiveStream(id: string | null): void {
+    this.activeStreamId = id
+    if (!id) return
+    const buffered = this.pausedOutput.get(id)
+    if (!buffered) return
+    this.pausedOutput.delete(id)
+    this.emit('data', id, buffered)
+  }
+
+  private pushOutput(id: string, data: string): void {
+    if (id === this.activeStreamId) {
+      this.emit('data', id, data)
+      return
+    }
+    const prev = this.pausedOutput.get(id) ?? ''
+    let next = prev + data
+    if (next.length > MAX_PAUSED_OUTPUT_CHARS) {
+      next = next.slice(-MAX_PAUSED_OUTPUT_CHARS)
+    }
+    this.pausedOutput.set(id, next)
+  }
+
   write(id: string, data: string): void {
     this.sessions.get(id)?.pty.write(data)
   }
@@ -132,6 +160,8 @@ export class TerminalService extends EventEmitter {
     const session = this.sessions.get(id)
     if (!session) return
     this.sessions.delete(id)
+    this.pausedOutput.delete(id)
+    if (this.activeStreamId === id) this.activeStreamId = null
     try {
       session.pty.kill()
     } catch {
@@ -142,6 +172,8 @@ export class TerminalService extends EventEmitter {
   disposeAll(): void {
     const sessions = [...this.sessions.values()]
     this.sessions.clear()
+    this.pausedOutput.clear()
+    this.activeStreamId = null
     for (const session of sessions) {
       try {
         session.pty.kill()

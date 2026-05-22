@@ -377,6 +377,9 @@ ipcMain.handle(
   (_, id: string, cols: number, rows: number) => terminalService.resize(id, cols, rows),
 )
 ipcMain.handle('terminal:kill', (_, id: string) => terminalService.kill(id))
+ipcMain.handle('terminal:setActiveStream', (_, id: string | null) => {
+  terminalService.setActiveStream(id)
+})
 
 terminalService.on('data', (id, data) => {
   sendToRenderer(mainWindow, 'terminal:data', id, data)
