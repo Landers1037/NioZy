@@ -4,10 +4,10 @@ import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-uti
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { getElectronAPI } from '@/lib/electron-client'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
-import { applyAppLocale, getSettingsTabTitle } from '@/lib/i18n'
+import { applyAppLocale, getFilesystemTabTitle, getSettingsTabTitle } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
-export type TabType = 'terminal' | 'settings'
+export type TabType = 'terminal' | 'settings' | 'filesystem'
 
 export interface AppTab {
   id: string
@@ -50,6 +50,7 @@ interface AppState {
   setActiveTab: (id: string) => void
   addTerminalTab: (tab: AppTab) => void
   addSettingsTab: () => void
+  addFilesystemTab: () => void
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
   setTabCustomTitle: (id: string, customTitle: string | undefined) => void
@@ -92,6 +93,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
     const tab: AppTab = { id: 'settings', type: 'settings', title: getSettingsTabTitle() }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  addFilesystemTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'filesystem')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'filesystem',
+      type: 'filesystem',
+      title: getFilesystemTabTitle(),
+    }
     set((s) => ({
       tabs: [...s.tabs, tab],
       activeTabId: tab.id,
@@ -146,9 +163,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     applyAppLocale(settings.locale)
     set({
       settings,
-      tabs: get().tabs.map((t) =>
-        t.type === 'settings' ? { ...t, title: getSettingsTabTitle() } : t,
-      ),
+      tabs: get().tabs.map((t) => {
+        if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
+        if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        return t
+      }),
     })
     applyThemeToDocument(settings)
     applyLayoutFromSettings(settings, get().setSidebarCollapsed)
@@ -158,9 +177,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     applyAppLocale(updated.locale)
     set({
       settings: updated,
-      tabs: get().tabs.map((t) =>
-        t.type === 'settings' ? { ...t, title: getSettingsTabTitle() } : t,
-      ),
+      tabs: get().tabs.map((t) => {
+        if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
+        if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        return t
+      }),
     })
     applyThemeToDocument(updated)
     applyLayoutFromSettings(updated, get().setSidebarCollapsed)

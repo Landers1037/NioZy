@@ -271,6 +271,8 @@ export interface ElectronAPI {
   files: {
     /** 弹出保存对话框并写入文本；用户取消时返回 false */
     saveText: (content: string, defaultFileName: string) => Promise<boolean>
+    /** 本机文件系统树根（盘符或 /） */
+    listRoots: () => Promise<import('./ssh-types').ScpListResult>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

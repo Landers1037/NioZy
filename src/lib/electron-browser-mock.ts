@@ -292,6 +292,13 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         URL.revokeObjectURL(url)
         return true
       },
+      listRoots: async () => ({
+        ok: true,
+        entries: [
+          { name: 'C:', path: 'C:\\', isDirectory: true },
+          { name: 'D:', path: 'D:\\', isDirectory: true },
+        ],
+      }),
     },
     terminal: {
       create: async (options) => {

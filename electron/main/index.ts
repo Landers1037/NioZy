@@ -370,6 +370,7 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
 ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
 ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))
 ipcMain.handle('ssh:listLocal', (_, dirPath: string) => sshService.listLocalDirectory(dirPath))
+ipcMain.handle('fs:listRoots', () => sshService.listFilesystemRoots())
 ipcMain.handle(
   'ssh:listRemote',
   (_, profile: SshConnectionProfile, remotePath: string) =>
