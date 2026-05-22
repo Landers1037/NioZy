@@ -1,6 +1,7 @@
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { app } from 'electron'
+import { resolveShellContextMenuIconPath } from './shell-context-menu-icon'
 
 const execFileAsync = promisify(execFile)
 
@@ -28,10 +29,18 @@ async function runReg(args: string[]): Promise<void> {
   await execFileAsync('reg', args, { windowsHide: true })
 }
 
+function resolveContextMenuIconValue(exePath: string): string {
+  const iconPath = resolveShellContextMenuIconPath()
+  if (iconPath) return iconPath
+  // 打包后若未附带 .ico，再回退到 exe 内嵌图标
+  return `${exePath},0`
+}
+
 async function registerContextMenuAt(baseKey: string, exePath: string): Promise<void> {
   const command = buildOpenCommand(exePath)
+  const iconValue = resolveContextMenuIconValue(exePath)
   await runReg(['add', baseKey, '/ve', '/d', MENU_LABEL, '/f'])
-  await runReg(['add', baseKey, '/v', 'Icon', '/d', `${exePath},0`, '/f'])
+  await runReg(['add', baseKey, '/v', 'Icon', '/d', iconValue, '/f'])
   await runReg(['add', `${baseKey}\\command`, '/ve', '/d', command, '/f'])
 }
 

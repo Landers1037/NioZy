@@ -12,14 +12,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const logoPath = resolve(root, 'src/logo.png')
 const outDir = resolve(root, 'build')
+const assetsDir = resolve(root, 'electron/assets')
 const icoPath = resolve(outDir, 'icon.ico')
 const pngPath = resolve(outDir, 'icon.png')
+const shellMenuIcoPath = resolve(assetsDir, 'shell-menu.ico')
 
 /** Windows ICO 常用尺寸 */
 const ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
 
 function iconsAlreadyBuilt() {
-  return existsSync(icoPath) && existsSync(pngPath)
+  return existsSync(icoPath) && existsSync(pngPath) && existsSync(shellMenuIcoPath)
 }
 
 async function main() {
@@ -29,8 +31,16 @@ async function main() {
   }
 
   if (iconsAlreadyBuilt()) {
-    console.log(`[generate-icon] 已存在 ${icoPath}、${pngPath}，跳过生成`)
+    console.log(`[generate-icon] 已存在 ${icoPath}、${shellMenuIcoPath}、${pngPath}，跳过生成`)
     return
+  }
+
+  if (existsSync(icoPath) && !existsSync(shellMenuIcoPath)) {
+    mkdirSync(assetsDir, { recursive: true })
+    const { copyFileSync } = await import('fs')
+    copyFileSync(icoPath, shellMenuIcoPath)
+    console.log(`[generate-icon] 已从 ${icoPath} 同步 ${shellMenuIcoPath}`)
+    if (existsSync(pngPath)) return
   }
 
   mkdirSync(outDir, { recursive: true })
@@ -51,8 +61,11 @@ async function main() {
     .toFile(pngPath)
 
   writeFileSync(icoPath, ico)
+  mkdirSync(assetsDir, { recursive: true })
+  writeFileSync(shellMenuIcoPath, ico)
 
   console.log(`[generate-icon] 已生成 ${icoPath}`)
+  console.log(`[generate-icon] 已生成 ${shellMenuIcoPath}`)
   console.log(`[generate-icon] 已生成 ${pngPath}`)
 }
 
