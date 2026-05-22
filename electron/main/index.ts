@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, Tray, Menu, dialog } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { writeFile } from 'fs/promises'
@@ -11,6 +11,7 @@ import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 import { sendToRenderer } from './window-ipc'
 import { augmentWindowsPath } from '../resolve-executable'
+import { loadTrayIcon } from '../tray-icon'
 import type { TerminalCreateOptions } from '../shared/api-types'
 
 augmentWindowsPath()
@@ -135,8 +136,7 @@ function createWindow(): void {
 }
 
 function createTray(): void {
-  const icon = nativeImage.createEmpty()
-  tray = new Tray(icon)
+  tray = new Tray(loadTrayIcon(__dirname))
   tray.setToolTip('NioZy')
   const contextMenu = Menu.buildFromTemplate([
     { label: '显示 NioZy', click: () => mainWindow?.show() },

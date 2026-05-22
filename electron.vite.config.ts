@@ -3,16 +3,21 @@ import { resolve } from 'path'
 import type { Plugin } from 'vite'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
-function copyShellIntegrationScript(): Plugin {
-  const src = resolve('electron/scripts/shell-integration.ps1')
-  const destDir = resolve('out/main/scripts')
-  const dest = resolve(destDir, 'shell-integration.ps1')
+function copyMainAssets(): Plugin {
+  const shellSrc = resolve('electron/scripts/shell-integration.ps1')
+  const traySrc = resolve('electron/assets/tray.png')
+  const mainOut = resolve('out/main')
+  const scriptsOut = resolve(mainOut, 'scripts')
   return {
-    name: 'copy-shell-integration-script',
+    name: 'copy-main-assets',
     writeBundle() {
-      mkdirSync(destDir, { recursive: true })
-      const content = readFileSync(src)
-      writeFileSync(dest, Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), content]))
+      mkdirSync(scriptsOut, { recursive: true })
+      const ps1 = readFileSync(shellSrc)
+      writeFileSync(
+        resolve(scriptsOut, 'shell-integration.ps1'),
+        Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), ps1]),
+      )
+      writeFileSync(resolve(mainOut, 'tray.png'), readFileSync(traySrc))
     },
   }
 }
@@ -28,7 +33,7 @@ export default defineConfig({
         formats: ['es'],
       },
       rollupOptions: {
-        plugins: [copyShellIntegrationScript()],
+        plugins: [copyMainAssets()],
         output: {
           entryFileNames: '[name].mjs',
         },
