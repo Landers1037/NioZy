@@ -113,6 +113,52 @@ html.dark[data-ui-style='niozy'] {
   --ring: #00d2ff;
 }
 
+/* —— Windows Classic（XP Luna 怀旧）—— */
+html[data-ui-style='windows-classic'] {
+  --radius: 0;
+  --background: #ece9d8;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --muted: #d4d0c8;
+  --muted-foreground: #444444;
+  --border: #808080;
+  --primary: #0054e3;
+  --primary-foreground: #ffffff;
+  --accent: #d4d0c8;
+  --accent-foreground: #000000;
+  --destructive: #c00000;
+  --ring: #0054e3;
+  --xp-3d-highlight: #ffffff;
+  --xp-3d-face: #ece9d8;
+  --xp-3d-shadow: #808080;
+  --xp-3d-dark: #404040;
+}
+
+html.dark[data-ui-style='windows-classic'] {
+  --background: #2a2a2a;
+  --foreground: #ffffff;
+  --card: #3a3a3a;
+  --card-foreground: #ffffff;
+  --popover: #3a3a3a;
+  --popover-foreground: #ffffff;
+  --muted: #4a4a4a;
+  --muted-foreground: #c0c0c0;
+  --border: #606060;
+  --primary: #3a6ea5;
+  --primary-foreground: #ffffff;
+  --accent: #4a4a4a;
+  --accent-foreground: #ffffff;
+  --destructive: #e57373;
+  --ring: #3a6ea5;
+  --xp-3d-highlight: #6a6a6a;
+  --xp-3d-face: #4a4a4a;
+  --xp-3d-shadow: #1a1a1a;
+  --xp-3d-dark: #101010;
+}
+
 @layer base {
   body {
     font-weight: 400;
@@ -135,6 +181,144 @@ html.dark[data-ui-style='niozy'] {
   html[data-ui-style='niozy'] h6 {
     font-weight: 600;
   }
+
+  html[data-ui-style='windows-classic'] body {
+    font-family: Tahoma, 'MS Sans Serif', 'Segoe UI', var(--font-sans);
+    font-size: 11px;
+  }
+
+  html[data-ui-style='windows-classic'] h1,
+  html[data-ui-style='windows-classic'] h2,
+  html[data-ui-style='windows-classic'] h3,
+  html[data-ui-style='windows-classic'] h4,
+  html[data-ui-style='windows-classic'] h5,
+  html[data-ui-style='windows-classic'] h6 {
+    font-weight: 700;
+  }
+}
+
+/* Windows Classic：3D 边框与控件 */
+html[data-ui-style='windows-classic'] .ui-xp-outset {
+  border: 2px solid;
+  border-color: var(--xp-3d-highlight) var(--xp-3d-dark) var(--xp-3d-dark) var(--xp-3d-highlight);
+  background: var(--xp-3d-face);
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-inset {
+  border: 2px solid;
+  border-color: var(--xp-3d-dark) var(--xp-3d-highlight) var(--xp-3d-highlight) var(--xp-3d-dark);
+  background: var(--card);
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-titlebar {
+  background: linear-gradient(
+    180deg,
+    #0997ff 0%,
+    #0053ee 8%,
+    #0050ee 40%,
+    #06f 88%,
+    #06f 93%,
+    #005eea 95%,
+    #003deb 96%,
+    #005eea 100%
+  );
+  color: #fff;
+}
+
+html.dark[data-ui-style='windows-classic'] .ui-xp-titlebar {
+  background: linear-gradient(180deg, #4a6ea5 0%, #2a4a7a 50%, #1a3a6a 100%);
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-caption-btn {
+  color: #fff;
+  min-width: 22px;
+  min-height: 22px;
+  height: 22px;
+  width: 22px;
+  padding: 0;
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-caption-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-caption-btn-close:hover {
+  background: #e81123;
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-tab-strip {
+  border-bottom: 1px solid var(--xp-3d-shadow);
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-tab-active {
+  border: 2px solid;
+  border-color: var(--xp-3d-highlight) var(--xp-3d-dark) var(--card) var(--xp-3d-highlight);
+  border-bottom-color: var(--card);
+  margin-bottom: -1px;
+  background: var(--card);
+  position: relative;
+  z-index: 1;
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-statusbar {
+  background: var(--muted);
+  border-top: 1px solid var(--xp-3d-shadow);
+}
+
+html[data-ui-style='windows-classic'] .ui-xp-status-field {
+  border: 1px solid;
+  border-color: var(--xp-3d-dark) var(--xp-3d-highlight) var(--xp-3d-highlight) var(--xp-3d-dark);
+  background: var(--card);
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--foreground);
+}
+
+html[data-ui-style='windows-classic'] .ui-card {
+  border-radius: 0;
+}
+
+html[data-ui-style='windows-classic'] .ui-btn {
+  border: 2px solid;
+  border-color: var(--xp-3d-highlight) var(--xp-3d-dark) var(--xp-3d-dark) var(--xp-3d-highlight);
+  border-radius: 0;
+  background: var(--xp-3d-face);
+  font-weight: 400;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+html[data-ui-style='windows-classic'] .ui-btn:hover {
+  filter: brightness(1.03);
+}
+
+html[data-ui-style='windows-classic'] .ui-btn:active {
+  border-color: var(--xp-3d-dark) var(--xp-3d-highlight) var(--xp-3d-highlight) var(--xp-3d-dark);
+  padding-top: 1px;
+  padding-left: 1px;
+}
+
+html[data-ui-style='windows-classic'] .ui-btn.bg-primary,
+html[data-ui-style='windows-classic'] .ui-btn[class*='bg-destructive'] {
+  border-color: var(--xp-3d-highlight) var(--xp-3d-dark) var(--xp-3d-dark) var(--xp-3d-highlight);
+}
+
+html[data-ui-style='windows-classic'] .ui-overlay-panel {
+  border: 2px solid var(--xp-3d-dark);
+  border-radius: 0;
+  box-shadow: 2px 2px 6px rgb(0 0 0 / 0.35);
+}
+
+html[data-ui-style='windows-classic'] .ui-label,
+html[data-ui-style='windows-classic'] .ui-card-title {
+  font-weight: 700;
+  font-size: 11px;
+}
+
+html[data-ui-style='windows-classic'] .ui-switch-thumb {
+  border-radius: 0;
+  border: 1px solid var(--xp-3d-dark);
 }
 
 /* NioZy：阴影与圆角 */

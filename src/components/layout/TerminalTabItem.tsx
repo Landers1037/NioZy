@@ -38,7 +38,7 @@ import { Input } from '@/components/ui/input'
 import { useAppStore, type AppTab } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { getTabDisplayTitle, getTabHighlightClasses } from '@/lib/tab-display'
-import { useUiStyle } from '@/lib/ui-style'
+import { getTabCornerRadius, useUiStyle } from '@/lib/ui-style'
 import {
   closeOtherTerminalTabs,
   closeTerminalTabs,
@@ -104,12 +104,8 @@ export function TerminalTabItem({
       className={cn(
         'group flex cursor-pointer items-center transition-colors',
         iconOnly
-          ? 'size-6 shrink-0 justify-center rounded-md'
-          : cn(
-              uiStyle === 'niozy' ? 'rounded-[10px]' : 'rounded-lg',
-              'py-1.5',
-              compact ? 'justify-center px-0' : 'gap-2 px-2',
-            ),
+          ? cn('size-6 shrink-0 justify-center', getTabCornerRadius(uiStyle))
+          : cn(getTabCornerRadius(uiStyle), 'py-1.5', compact ? 'justify-center px-0' : 'gap-2 px-2'),
         getTabHighlightClasses(isActive, iconOnly, uiStyle),
       )}
       onClick={() => setActiveTab(tab.id)}

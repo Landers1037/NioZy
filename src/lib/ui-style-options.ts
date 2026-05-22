@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import { UI_STYLE_VALUES, type UiStyle } from '../../electron/shared/ui-style'
+import { UI_STYLE_VALUES, normalizeUiStyle, type UiStyle } from '../../electron/shared/ui-style'
 
 export function getUiStyleOptions(t: TFunction) {
   return UI_STYLE_VALUES.map((value) => ({
@@ -10,5 +10,5 @@ export function getUiStyleOptions(t: TFunction) {
 }
 
 export function normalizeUiStyleOption(value: unknown): UiStyle {
-  return value === 'niozy' ? 'niozy' : 'minimal'
+  return normalizeUiStyle(value)
 }
