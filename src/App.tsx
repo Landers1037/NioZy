@@ -6,7 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
-import { TerminalView } from '@/components/terminal/TerminalView'
+import { SplitTerminalPanel } from '@/components/terminal/SplitTerminalPanel'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
@@ -157,7 +157,7 @@ export default function App() {
           >
             {activeTab?.type === 'terminal' && activeTab.terminalId && (
               <div key={activeTab.id} className="absolute inset-0">
-                <TerminalView tab={activeTab} />
+                <SplitTerminalPanel tab={activeTab} />
               </div>
             )}
             {activeTab?.type === 'settings' && (

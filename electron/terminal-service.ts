@@ -37,7 +37,8 @@ const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
 
 export class TerminalService extends EventEmitter {
   private sessions = new Map<string, PtySession>()
-  private activeStreamId: string | null = null
+  /** 向渲染进程实时推流的终端 id（拆分视图可同时包含多个） */
+  private activeStreamIds = new Set<string>()
   private pausedOutput = new Map<string, string>()
 
   create(options: TerminalCreateOptions): {
@@ -121,10 +122,24 @@ export class TerminalService extends EventEmitter {
     return { id, name, shell: options.shell, cwd: initialCwd }
   }
 
-  /** 仅向当前活跃终端推送 terminal:data；其余会话输出暂存于主进程有限缓冲 */
+  /** 单终端 Tab：仅一个 id 实时推流，其余缓冲 */
   setActiveStream(id: string | null): void {
-    this.activeStreamId = id
-    if (!id) return
+    this.activeStreamIds.clear()
+    if (id) {
+      this.activeStreamIds.add(id)
+      this.flushBufferedOutput(id)
+    }
+  }
+
+  /** 拆分终端：所有可见 pane 同时实时推流 */
+  setActiveStreams(ids: string[]): void {
+    this.activeStreamIds = new Set(ids)
+    for (const id of ids) {
+      this.flushBufferedOutput(id)
+    }
+  }
+
+  private flushBufferedOutput(id: string): void {
     const buffered = this.pausedOutput.get(id)
     if (!buffered) return
     this.pausedOutput.delete(id)
@@ -132,7 +147,7 @@ export class TerminalService extends EventEmitter {
   }
 
   private pushOutput(id: string, data: string): void {
-    if (id === this.activeStreamId) {
+    if (this.activeStreamIds.has(id)) {
       this.emit('data', id, data)
       return
     }
@@ -161,7 +176,7 @@ export class TerminalService extends EventEmitter {
     if (!session) return
     this.sessions.delete(id)
     this.pausedOutput.delete(id)
-    if (this.activeStreamId === id) this.activeStreamId = null
+    this.activeStreamIds.delete(id)
     try {
       session.pty.kill()
     } catch {
@@ -173,7 +188,7 @@ export class TerminalService extends EventEmitter {
     const sessions = [...this.sessions.values()]
     this.sessions.clear()
     this.pausedOutput.clear()
-    this.activeStreamId = null
+    this.activeStreamIds.clear()
     for (const session of sessions) {
       try {
         session.pty.kill()

@@ -4,10 +4,13 @@ import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminal } from '@/lib/terminal-registry'
 import { getTerminalBufferText } from '@/lib/terminal-buffer'
+import { getActiveTerminalId, getAllTerminalIds } from '@/lib/terminal-tab-utils'
+import type { AppTab } from '@/stores/app-store'
 
-function killTerminalIfNeeded(tab: { type: string; terminalId?: string }): void {
-  if (tab.type === 'terminal' && tab.terminalId) {
-    getElectronAPI().terminal.kill(tab.terminalId)
+function killTerminalTab(tab: AppTab): void {
+  if (tab.type !== 'terminal') return
+  for (const terminalId of getAllTerminalIds(tab)) {
+    getElectronAPI().terminal.kill(terminalId)
   }
 }
 
@@ -15,7 +18,7 @@ export function closeTerminalTabs(tabIds: string[]): void {
   const { tabs, removeTabs } = useAppStore.getState()
   const toClose = tabs.filter((t) => tabIds.includes(t.id) && t.type === 'terminal')
   for (const tab of toClose) {
-    killTerminalIfNeeded(tab)
+    killTerminalTab(tab)
   }
   removeTabs(tabIds)
 }
@@ -37,11 +40,12 @@ export function formatExportFileName(): string {
 
 export async function exportTerminalTab(tabId: string): Promise<void> {
   const tab = useAppStore.getState().tabs.find((t) => t.id === tabId)
-  if (!tab?.terminalId) {
+  const terminalId = tab ? getActiveTerminalId(tab) : undefined
+  if (!terminalId) {
     toast.error(i18n.t('toast.exportNoTerminal'))
     return
   }
-  const term = getTerminal(tab.terminalId)
+  const term = getTerminal(terminalId)
   if (!term) {
     toast.error(i18n.t('toast.exportNotReady'))
     return

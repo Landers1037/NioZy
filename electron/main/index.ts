@@ -419,6 +419,9 @@ ipcMain.handle('terminal:kill', (_, id: string) => terminalService.kill(id))
 ipcMain.handle('terminal:setActiveStream', (_, id: string | null) => {
   terminalService.setActiveStream(id)
 })
+ipcMain.handle('terminal:setActiveStreams', (_, ids: string[]) => {
+  terminalService.setActiveStreams(ids)
+})
 
 terminalService.on('data', (id, data) => {
   sendToRenderer(mainWindow, 'terminal:data', id, data)

@@ -15,6 +15,7 @@ import { useAppStore } from '@/stores/app-store'
 import { getTabDisplayTitle } from '@/lib/tab-display'
 import { useUiClasses, useUiStyle } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
+import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 import { AppMetricsDialog } from '@/components/layout/AppMetricsDialog'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 
@@ -251,10 +252,9 @@ export function StatusBar() {
   const activeTabId = useAppStore((s) => s.activeTabId)
   const terminalCwds = useAppStore((s) => s.terminalCwds)
   const activeTab = tabs.find((tab) => tab.id === activeTabId)
-  const activeCwd =
-    activeTab?.type === 'terminal' && activeTab.terminalId
-      ? terminalCwds[activeTab.terminalId]
-      : undefined
+  const activeTerminalId =
+    activeTab?.type === 'terminal' ? getActiveTerminalId(activeTab) : undefined
+  const activeCwd = activeTerminalId ? terminalCwds[activeTerminalId] : undefined
   const isDark = theme === 'dark'
   const isNiozy = uiStyle === 'niozy'
   const isClassic = uiStyle === 'windowsClassic'
