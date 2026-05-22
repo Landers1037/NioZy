@@ -268,6 +268,8 @@
   "tab": {
     "closeAria": "Close {{title}}",
     "closeOther": "Close others",
+    "splitTerminal": "Split terminal",
+    "closeSplitPaneAria": "Close split pane",
     "exportTerminal": "Export terminal",
     "closeTerminalTitle": "Close terminal",
     "closeTerminalDesc": "Close \"{{title}}\"? The process will end and unsaved output will be lost.",
@@ -354,7 +356,9 @@
     "updateCheckFailed": "Could not check for updates. Check your network and try again.",
     "updateDownloadFailed": "Failed to download or launch the installer",
     "sshDisconnected": "SSH disconnected: {{title}}",
-    "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first"
+    "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first",
+    "splitTerminalMax": "Each terminal tab can have at most 3 panes",
+    "splitTerminalUnknown": "Cannot split: missing spawn options to reuse"
   },
   "terminal": {
     "processExited": "[Process exited]"

@@ -4,6 +4,7 @@ import { matchAccelerator } from '@/lib/shortcut-utils'
 import { getTerminal } from '@/lib/terminal-registry'
 import { createTerminal } from '@/lib/terminal-actions'
 import { handleTerminalKeyboardShortcut } from '@/lib/terminal-shortcut-actions'
+import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 
 export function useAppShortcuts(): void {
   const shortcuts = useAppStore((s) => s.settings?.shortcuts)
@@ -61,12 +62,14 @@ export function useAppShortcuts(): void {
         return
       }
 
-      if (activeTab?.type !== 'terminal' || !activeTab.terminalId) return
+      const activeTerminalId =
+        activeTab?.type === 'terminal' ? getActiveTerminalId(activeTab) : undefined
+      if (!activeTerminalId) return
 
-      const term = getTerminal(activeTab.terminalId)
+      const term = getTerminal(activeTerminalId)
       if (!term) return
 
-      if (handleTerminalKeyboardShortcut(term, activeTab.terminalId, app, e)) return
+      if (handleTerminalKeyboardShortcut(term, activeTerminalId, app, e)) return
     }
 
     window.addEventListener('keydown', onKeyDown)

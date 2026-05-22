@@ -21,16 +21,19 @@ import i18n from '@/lib/i18n'
 
 interface TerminalViewProps {
   tab: AppTab
+  /** 拆分多 pane 时用 DOM 渲染，避免多 WebGL 上下文 dispose 冲突 */
+  preferDomRenderer?: boolean
 }
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
 }
 
-export function TerminalView({ tab }: TerminalViewProps) {
+export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
+  const webglRef = useRef<WebglAddon | null>(null)
   const settings = useAppStore((s) => s.settings)
 
   const safeFit = useCallback((): boolean => {
@@ -64,8 +67,13 @@ export function TerminalView({ tab }: TerminalViewProps) {
   useEffect(() => {
     if (!tab.terminalId || termRef.current || !containerRef.current) return
 
+    let disposed = false
+    let webglFrame = 0
+
     const s = useAppStore.getState().settings
     const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
+    const useWebgl =
+      !preferDomRenderer && (s?.terminal.renderer ?? 'webgl') === 'webgl'
 
     const term = new Terminal(
       buildTerminalOptions(s?.terminal, theme, getTerminalCursorOptions(s?.terminal)),
@@ -78,6 +86,31 @@ export function TerminalView({ tab }: TerminalViewProps) {
     termRef.current = term
     fitRef.current = fit
     registerTerminal(tab.terminalId!, term)
+
+    const loadWebgl = () => {
+      if (disposed || !termRef.current) return
+      const prev = webglRef.current
+      webglRef.current = null
+      if (prev) {
+        try {
+          prev.dispose()
+        } catch {
+          /* WebGL 上下文已丢失时 delete 会报 INVALID_OPERATION */
+        }
+      }
+      try {
+        const webgl = new WebglAddon()
+        webglRef.current = webgl
+        term.loadAddon(webgl)
+        webgl.onContextLoss(() => {
+          if (disposed) return
+          webglFrame = requestAnimationFrame(loadWebgl)
+        })
+        scheduleFit()
+      } catch {
+        webglRef.current = null
+      }
+    }
 
     const api = getElectronAPI()
     const onData = (data: string) => {
@@ -134,40 +167,33 @@ export function TerminalView({ tab }: TerminalViewProps) {
       }
     })
 
-    void api.terminal.setActiveStream(tab.terminalId!)
     scheduleFit()
 
-    const renderer = s?.terminal.renderer ?? 'webgl'
-    if (renderer === 'webgl') {
-      requestAnimationFrame(() => {
-        if (!termRef.current || !safeFit()) return
-        try {
-          const webgl = new WebglAddon()
-          term.loadAddon(webgl)
-          webgl.onContextLoss(() => {
-            webgl.dispose()
-            scheduleFit()
-          })
-          scheduleFit()
-        } catch {
-          /* DOM 渲染回退 */
+    if (useWebgl) {
+      webglFrame = requestAnimationFrame(() => {
+        if (!safeFit()) {
+          webglFrame = requestAnimationFrame(loadWebgl)
+          return
         }
+        loadWebgl()
       })
     }
 
     return () => {
-      void api.terminal.setActiveStream(null)
+      disposed = true
+      cancelAnimationFrame(webglFrame)
       termElement?.removeEventListener('mousedown', onRightMouseDown, captureOpts)
       termElement?.removeEventListener('contextmenu', onContextMenu, captureOpts)
       unsubData()
       unsubExit()
       ro.disconnect()
       unregisterTerminal(tab.terminalId!)
+      webglRef.current = null
       term.dispose()
       termRef.current = null
       fitRef.current = null
     }
-  }, [tab.terminalId, scheduleFit, safeFit])
+  }, [tab.terminalId, scheduleFit, safeFit, preferDomRenderer])
 
   useEffect(() => {
     if (!termRef.current || !settings) return

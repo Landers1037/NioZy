@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
+import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
+import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { getElectronAPI } from '@/lib/electron-client'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import { applyAppLocale, getSettingsTabTitle } from '@/lib/i18n'
@@ -17,6 +19,12 @@ export interface AppTab {
   shell?: string
   /** 由自定义 SSH 连接打开时关联的连接 id，用于 SCP 与断开告警 */
   sshConnectionId?: string
+  /** 横向拆分的子终端（含主 pane），最多 3 个 */
+  splitPanes?: TerminalSplitPane[]
+  /** 拆分终端时复用的启动参数 */
+  terminalSpawn?: TabTerminalSpawn
+  /** 当前获得输入与输出流的拆分 pane 索引 */
+  activeSplitIndex?: number
 }
 
 interface AppState {
@@ -105,7 +113,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       const terminalCwds = { ...s.terminalCwds }
       for (const tab of removed) {
-        if (tab.terminalId) delete terminalCwds[tab.terminalId]
+        for (const terminalId of getAllTerminalIds(tab)) {
+          delete terminalCwds[terminalId]
+        }
       }
       return { tabs, activeTabId, terminalCwds }
     })

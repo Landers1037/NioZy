@@ -9,14 +9,12 @@ import {
 } from '@/lib/builtin-connection-options'
 import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
 import type { TerminalCreateOptions } from '../../electron/shared/api-types'
+import type { TabTerminalSpawn } from '@/lib/terminal-tab-utils'
+import { connectionToTerminalSpawn } from '@/lib/terminal-tab-utils'
 
 type ShellType = BuiltinShellType | 'custom' | 'ssh'
 
-function builtinShellOptions(shell: BuiltinShellType): Pick<TerminalCreateOptions, 'shell' | 'args' | 'env'> {
-  return getBuiltinTerminalOptions(shell, useAppStore.getState().settings)
-}
-
-function toastTerminalError(error: unknown, context?: string): void {
+export function toastTerminalError(error: unknown, context?: string): void {
   const message =
     error instanceof Error
       ? error.message
@@ -27,6 +25,10 @@ function toastTerminalError(error: unknown, context?: string): void {
   toast.error(context ? `${context}${sep}${message}` : message)
 }
 
+function builtinShellOptions(shell: BuiltinShellType): Pick<TerminalCreateOptions, 'shell' | 'args' | 'env'> {
+  return getBuiltinTerminalOptions(shell, useAppStore.getState().settings)
+}
+
 async function openTerminalTab(
   options: TerminalCreateOptions & { sshConnectionId?: string },
 ): Promise<void> {
@@ -34,6 +36,7 @@ async function openTerminalTab(
   const { sshConnectionId, ...createOptions } = options
   const result = await getElectronAPI().terminal.create(createOptions)
   setTerminalCwd(result.id, result.cwd)
+  const terminalSpawn: TabTerminalSpawn = { create: createOptions, sshConnectionId }
   addTerminalTab({
     id: `tab-${result.id}`,
     type: 'terminal',
@@ -41,6 +44,7 @@ async function openTerminalTab(
     terminalId: result.id,
     shell: result.shell,
     sshConnectionId,
+    terminalSpawn,
   })
 }
 
@@ -74,25 +78,8 @@ export async function createConnection(
 ): Promise<void> {
   try {
     if (custom) {
-      const args =
-        custom.type === 'ssh'
-          ? [
-              ...(custom.sshPort && custom.sshPort !== 22 ? ['-p', String(custom.sshPort)] : []),
-              ...(custom.sshAuth === 'publickey' && custom.sshKeyPath
-                ? ['-i', custom.sshKeyPath]
-                : []),
-              `${custom.sshUser ?? 'user'}@${custom.sshHost ?? custom.command}`,
-            ]
-          : custom.args
-
-      await openTerminalTab({
-        shell: custom.type === 'ssh' ? 'ssh' : 'custom',
-        name: custom.name,
-        command: custom.type === 'ssh' ? 'ssh' : custom.command,
-        args,
-        env: custom.env,
-        sshConnectionId: custom.type === 'ssh' ? custom.id : undefined,
-      })
+      const { create, sshConnectionId } = connectionToTerminalSpawn(custom)
+      await openTerminalTab({ ...create, sshConnectionId })
       return
     }
 

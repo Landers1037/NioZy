@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftRight,
+  Columns2,
   Download,
   FolderOpen,
   ListX,
@@ -48,6 +49,12 @@ import {
 import { openScpTransferForTab } from '@/lib/scp-transfer-actions'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI } from '@/lib/electron-client'
+import {
+  getAllTerminalIds,
+  getSplitPanes,
+  MAX_TERMINAL_SPLITS,
+} from '@/lib/terminal-tab-utils'
+import { splitTerminalTab } from '@/lib/terminal-split-actions'
 
 interface TerminalTabItemProps {
   tab: AppTab
@@ -78,9 +85,14 @@ export function TerminalTabItem({
 
   const handleQuickClose = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (tab.terminalId) getElectronAPI().terminal.kill(tab.terminalId)
+    for (const terminalId of getAllTerminalIds(tab)) {
+      getElectronAPI().terminal.kill(terminalId)
+    }
     removeTab(tab.id)
   }
+
+  const splitCount = getSplitPanes(tab).length
+  const canSplit = splitCount < MAX_TERMINAL_SPLITS
 
   const openEditDialog = () => {
     setEditValue(tab.customTitle ?? tab.title)
@@ -152,6 +164,16 @@ export function TerminalTabItem({
           <ContextMenuItem onSelect={() => closeOtherTerminalTabs(tab.id)}>
             <ListX className="size-4 text-muted-foreground" />
             {t('tab.closeOther')}
+          </ContextMenuItem>
+          <ContextMenuItem
+            disabled={!canSplit}
+            onSelect={() => {
+              if (!isActive) setActiveTab(tab.id)
+              void splitTerminalTab(tab.id)
+            }}
+          >
+            <Columns2 className="size-4 text-muted-foreground" />
+            {t('tab.splitTerminal')}
           </ContextMenuItem>
           {isSshTerminalTab(tab) ? (
             <>

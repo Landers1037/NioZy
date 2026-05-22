@@ -59,6 +59,7 @@ const api: ElectronAPI = {
     resize: (id, cols, rows) => ipcRenderer.invoke('terminal:resize', id, cols, rows),
     kill: (id) => ipcRenderer.invoke('terminal:kill', id),
     setActiveStream: (id) => ipcRenderer.invoke('terminal:setActiveStream', id),
+    setActiveStreams: (ids) => ipcRenderer.invoke('terminal:setActiveStreams', ids),
     onData: (cb) => {
       const handler = (_: unknown, id: string, data: string) => cb(id, data)
       ipcRenderer.on('terminal:data', handler)

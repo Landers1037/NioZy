@@ -240,6 +240,8 @@ export interface ElectronAPI {
     kill: (id: string) => void
     /** 声明当前向渲染进程推流的终端；非活跃会话输出在主进程有限缓冲 */
     setActiveStream: (id: string | null) => Promise<void>
+    /** 拆分终端：多个 pane 同时推流 */
+    setActiveStreams: (ids: string[]) => Promise<void>
     onData: (cb: (id: string, data: string) => void) => () => void
     onCwd: (cb: (id: string, cwd: string) => void) => () => void
     onExit: (cb: (id: string, code: number) => void) => () => void
