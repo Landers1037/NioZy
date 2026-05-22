@@ -12,7 +12,12 @@ export {
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type { UiStyle } from './ui-style'
-export { UI_STYLE_VALUES, normalizeUiStyle, getWindowBackgroundColor } from './ui-style'
+export {
+  UI_STYLE_VALUES,
+  normalizeUiStyle,
+  uiStyleToDataAttribute,
+  getWindowBackgroundColor,
+} from './ui-style'
 export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
 import type { TerminalCursorStyle } from './terminal-cursor'
 export type { TerminalCursorStyle } from './terminal-cursor'

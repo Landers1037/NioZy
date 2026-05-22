@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { getTabDisplayTitle } from '@/lib/tab-display'
-import { useUiStyle } from '@/lib/ui-style'
+import { useUiClasses, useUiStyle } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 
@@ -84,6 +84,22 @@ function MinimalStatusTag({
   )
 }
 
+function ClassicStatusTag({
+  children,
+  className,
+  fieldClass,
+}: {
+  children: ReactNode
+  className?: string
+  fieldClass: string
+}) {
+  return (
+    <span className={cn('inline-flex max-w-full min-h-[18px] items-center', fieldClass, className)}>
+      {children}
+    </span>
+  )
+}
+
 function MinimalStatusLabel({ children }: { children: ReactNode }) {
   return <span className="shrink-0 text-muted-foreground">{children}</span>
 }
@@ -94,6 +110,7 @@ function MinimalStatusDivider() {
 
 export function StatusBar() {
   const { t } = useTranslation()
+  const ui = useUiClasses()
   const uiStyle = useUiStyle()
   const stats = useAppStore((s) => s.systemStats)
   const settings = useAppStore((s) => s.settings)
@@ -109,10 +126,28 @@ export function StatusBar() {
       : undefined
   const isDark = theme === 'dark'
   const isNiozy = uiStyle === 'niozy'
+  const isClassic = uiStyle === 'windowsClassic'
+  const fieldClass = ui.statusTag
+
+  const renderTag = (content: ReactNode, className?: string) => {
+    if (isClassic) {
+      return (
+        <ClassicStatusTag fieldClass={fieldClass} className={className}>
+          {content}
+        </ClassicStatusTag>
+      )
+    }
+    return <MinimalStatusTag className={className}>{content}</MinimalStatusTag>
+  }
 
   return (
-    <footer className="flex h-8 shrink-0 cursor-pointer select-none items-center justify-between gap-3 border-t border-border bg-card px-3">
-      <div className="flex min-w-0 items-center gap-1.5">
+    <footer
+      className={cn(
+        'flex cursor-pointer select-none items-center justify-between',
+        ui.statusBar,
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-1">
         {liveStats ? (
           <>
             {isNiozy ? (
@@ -136,16 +171,17 @@ export function StatusBar() {
               </>
             ) : (
               <>
-                <MinimalStatusTag>{stats.date}</MinimalStatusTag>
-                <MinimalStatusTag>{stats.time}</MinimalStatusTag>
-                <MinimalStatusTag>{t('statusBar.cpu', { percent: stats.cpuPercent })}</MinimalStatusTag>
-                <MinimalStatusTag className="truncate">
-                  {t('statusBar.memory', {
+                {renderTag(stats.date)}
+                {renderTag(stats.time)}
+                {renderTag(t('statusBar.cpu', { percent: stats.cpuPercent }))}
+                {renderTag(
+                  t('statusBar.memory', {
                     percent: stats.memoryPercent,
                     used: stats.memoryUsedMb,
                     total: stats.memoryTotalMb,
-                  })}
-                </MinimalStatusTag>
+                  }),
+                  'truncate',
+                )}
               </>
             )}
           </>
@@ -154,10 +190,10 @@ export function StatusBar() {
             {t('statusBar.liveStatsOff')}
           </NiozyStatusTag>
         ) : (
-          <MinimalStatusTag>{t('statusBar.liveStatsOff')}</MinimalStatusTag>
+          renderTag(t('statusBar.liveStatsOff'))
         )}
       </div>
-      <div className="flex min-w-0 shrink items-center gap-1.5">
+      <div className="flex min-w-0 shrink items-center gap-1">
         {activeTab?.type === 'terminal' &&
           (isNiozy ? (
             <NiozyStatusTag variant="cwd" theme={theme} className="max-w-[min(50vw,320px)]">
@@ -171,6 +207,17 @@ export function StatusBar() {
                 {activeCwd ?? t('statusBar.cwdUnknown')}
               </span>
             </NiozyStatusTag>
+          ) : isClassic ? (
+            renderTag(
+              <>
+                <span className="shrink-0 text-muted-foreground">{t('statusBar.cwd')}</span>
+                <span className="mx-1 shrink-0 text-muted-foreground">·</span>
+                <span className="min-w-0 truncate" title={activeCwd}>
+                  {activeCwd ?? t('statusBar.cwdUnknown')}
+                </span>
+              </>,
+              'max-w-[min(50vw,320px)]',
+            )
           ) : (
             <MinimalStatusTag className="max-w-[min(50vw,320px)]">
               <MinimalStatusLabel>{t('statusBar.cwd')}</MinimalStatusLabel>
@@ -193,6 +240,20 @@ export function StatusBar() {
               {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
             </span>
           </NiozyStatusTag>
+        ) : isClassic ? (
+          renderTag(
+            <>
+              <span className="shrink-0 text-muted-foreground">{t('statusBar.current')}</span>
+              <span className="mx-1 shrink-0 text-muted-foreground">·</span>
+              <span
+                className="min-w-0 truncate"
+                title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
+              >
+                {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
+              </span>
+            </>,
+            'max-w-[160px] shrink-0',
+          )
         ) : (
           <MinimalStatusTag className="max-w-[160px] shrink-0">
             <MinimalStatusLabel>{t('statusBar.current')}</MinimalStatusLabel>

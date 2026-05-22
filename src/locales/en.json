@@ -39,6 +39,10 @@
     "niozy": {
       "label": "NioZy",
       "description": "Original blue/cyan accents, card shadows, and colorful status tags"
+    },
+    "windowsClassic": {
+      "label": "Windows Classic",
+      "description": "Windows XP Luna nostalgia: blue title bar, 3D borders, Tahoma sizing, sunken panels"
     }
   },
   "settings": {

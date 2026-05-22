@@ -3,6 +3,7 @@ import type { AppSettings, CustomConnection } from '../../electron/shared/api-ty
 import { getElectronAPI } from '@/lib/electron-client'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import { applyAppLocale, getSettingsTabTitle } from '@/lib/i18n'
+import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
 export type TabType = 'terminal' | 'settings'
 
@@ -154,7 +155,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 export function applyThemeToDocument(settings: AppSettings): void {
   const root = document.documentElement
   root.classList.toggle('dark', settings.theme === 'dark')
-  root.dataset.uiStyle = settings.uiStyle === 'niozy' ? 'niozy' : 'minimal'
+  root.dataset.uiStyle = uiStyleToDataAttribute(settings.uiStyle)
   root.style.setProperty('--primary', settings.accentColor)
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)

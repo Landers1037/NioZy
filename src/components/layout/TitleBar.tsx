@@ -13,38 +13,38 @@ export function TitleBar() {
   const ui = useUiClasses()
 
   return (
-    <header className="flex h-10 shrink-0 select-none items-center border-b border-border bg-card">
-      <div className="flex items-center gap-2 px-3 no-drag">
-        <img src={logoUrl} alt="NioZy" className="size-6 object-contain" />
+    <header className={cn('flex shrink-0 select-none items-center', ui.titleBar)}>
+      <div className="flex items-center gap-2 px-2 no-drag">
+        <img src={logoUrl} alt="NioZy" className="size-5 object-contain" />
         <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
       </div>
-      <div className="drag-region flex flex-1 items-center justify-center text-xs text-muted-foreground">
+      <div className={cn('drag-region flex flex-1 items-center justify-center', ui.titleTagline)}>
         {t('app.tagline')}
       </div>
       <div className="flex items-center no-drag">
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-none hover:bg-muted"
+          className={ui.windowControlBtn}
           onClick={() => getElectronAPI().window.minimize()}
         >
-          <Minus className="size-4" />
+          <Minus className="size-3.5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-none hover:bg-muted"
+          className={ui.windowControlBtn}
           onClick={() => getElectronAPI().window.maximize()}
         >
-          {maximized ? <Copy className="size-3.5" /> : <Square className="size-3.5" />}
+          {maximized ? <Copy className="size-3" /> : <Square className="size-3" />}
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-none hover:bg-destructive hover:text-white"
+          className={ui.windowCloseBtn}
           onClick={() => getElectronAPI().window.close()}
         >
-          <X className="size-4" />
+          <X className="size-3.5" />
         </Button>
       </div>
     </header>

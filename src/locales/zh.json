@@ -39,6 +39,10 @@
     "niozy": {
       "label": "NioZy",
       "description": "原版蓝青强调色、卡片阴影与彩色状态栏标签"
+    },
+    "windowsClassic": {
+      "label": "Windows Classic",
+      "description": "模拟 Windows XP Luna：蓝色标题栏、3D 边框、Tahoma 字号与内凹面板"
     }
   },
   "settings": {
