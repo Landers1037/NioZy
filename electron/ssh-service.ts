@@ -1,8 +1,14 @@
-import { spawn } from 'child_process'
 import { readdir, stat } from 'fs/promises'
 import { homedir, platform } from 'os'
 import { join, normalize } from 'path'
 import { resolveExecutable } from './resolve-executable'
+import { scpLog } from './scp-logger'
+import {
+  downloadViaSsh2,
+  listRemoteViaSsh2,
+  uploadViaSsh2,
+} from './ssh2-transfer'
+import type { ScpProgressCallback } from './ssh2-transfer'
 import type {
   ScpCheckResult,
   ScpFileEntry,
@@ -11,45 +17,19 @@ import type {
   SshConnectionProfile,
 } from './shared/ssh-types'
 
-function quoteRemotePath(p: string): string {
-  return `'${p.replace(/'/g, `'\\''`)}'`
+const POST_TRANSFER_LIST_DELAY_MS = 800
+const LIST_REMOTE_RETRY_DELAY_MS = 1_500
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function buildSshBaseArgs(profile: SshConnectionProfile): string[] {
-  const args: string[] = []
-  if (profile.port !== 22) args.push('-p', String(profile.port))
-  if (profile.keyPath?.trim()) args.push('-i', profile.keyPath.trim())
-  args.push('-o', 'BatchMode=yes')
-  args.push('-o', 'ConnectTimeout=15')
-  args.push('-o', 'StrictHostKeyChecking=accept-new')
-  return args
-}
-
-function runProcess(
-  file: string,
-  args: string[],
-): Promise<{ stdout: string; stderr: string; code: number | null }> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(file, args, { windowsHide: true })
-    let stdout = ''
-    let stderr = ''
-    child.stdout?.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString()
-    })
-    child.stderr?.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString()
-    })
-    child.on('error', reject)
-    child.on('close', (code) => resolve({ stdout, stderr, code }))
-  })
-}
-
+/** 设置页检测系统是否安装 OpenSSH scp；实际传输走 ssh2/SFTP */
 export function checkScpInPath(): ScpCheckResult {
   const path = resolveExecutable('scp')
   return path ? { found: true, path } : { found: false }
 }
 
-/** 文件系统树根节点：Windows 为盘符，其它平台为 / */
 export async function listFilesystemRoots(): Promise<ScpListResult> {
   try {
     if (platform() === 'win32') {
@@ -113,113 +93,57 @@ export async function listLocalDirectory(dirPath: string): Promise<ScpListResult
   }
 }
 
-function parseRemoteLsOutput(stdout: string, basePath: string): ScpFileEntry[] {
-  const entries: ScpFileEntry[] = []
-  const lines = stdout.split(/\r?\n/).filter(Boolean)
-  for (const line of lines) {
-    if (line.startsWith('total ')) continue
-    const parts = line.trim().split(/\s+/)
-    if (parts.length < 9) continue
-    const permissions = parts[0] ?? ''
-    const name = parts.slice(8).join(' ')
-    if (!name || name === '.' || name === '..') continue
-    const isDirectory = permissions.startsWith('d')
-    const size = parseInt(parts[4] ?? '0', 10)
-    const remotePath =
-      basePath === '/' || basePath === ''
-        ? `/${name}`
-        : `${basePath.replace(/\/$/, '')}/${name}`
-    entries.push({
-      name,
-      path: remotePath,
-      isDirectory,
-      size: Number.isFinite(size) ? size : undefined,
-    })
-  }
-  entries.sort((a, b) => {
-    if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
-    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-  })
-  return entries
-}
-
 export async function listRemoteDirectory(
   profile: SshConnectionProfile,
   remotePath: string,
 ): Promise<ScpListResult> {
-  const ssh = resolveExecutable('ssh')
-  if (!ssh) {
-    return { ok: false, error: '未找到 ssh 命令。请安装 OpenSSH 客户端或 Git for Windows。' }
-  }
-
-  const path = remotePath?.trim() || '~'
-  const quoted = quoteRemotePath(path)
-  const args = [
-    ...buildSshBaseArgs(profile),
-    `${profile.user}@${profile.host}`,
-    `ls -la -- ${quoted} 2>/dev/null || ls -la ${quoted}`,
-  ]
-
-  try {
-    const { stdout, stderr, code } = await runProcess(ssh, args)
-    if (code !== 0) {
-      return { ok: false, error: stderr.trim() || `ssh 退出码 ${code}` }
-    }
-    const base =
-      path === '~' ? `/home/${profile.user}` : path.startsWith('/') ? path : `/${path}`
-    return { ok: true, entries: parseRemoteLsOutput(stdout, base) }
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : String(err),
-    }
-  }
+  scpLog('listRemote via ssh2/sftp (in-process password/key auth)')
+  return listRemoteViaSsh2(profile, remotePath)
 }
 
-function buildScpArgs(profile: SshConnectionProfile, scpArgs: string[]): string[] {
-  const args: string[] = []
-  if (profile.port !== 22) args.push('-P', String(profile.port))
-  if (profile.keyPath?.trim()) args.push('-i', profile.keyPath.trim())
-  args.push('-o', 'BatchMode=yes')
-  args.push('-o', 'ConnectTimeout=60')
-  args.push(...scpArgs)
-  return args
+export async function listRemoteDirectoryWithRetry(
+  profile: SshConnectionProfile,
+  remotePath: string,
+  options?: { afterTransfer?: boolean },
+): Promise<ScpListResult> {
+  const maxAttempts = options?.afterTransfer ? 3 : 1
+  if (options?.afterTransfer) {
+    scpLog('listRemote after transfer: wait before refresh', {
+      delayMs: POST_TRANSFER_LIST_DELAY_MS,
+    })
+    await delay(POST_TRANSFER_LIST_DELAY_MS)
+  }
+
+  let last: ScpListResult = { ok: false, error: 'listRemote failed' }
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (attempt > 1) {
+      scpLog('listRemote retry', { attempt, maxAttempts, remotePath })
+      await delay(LIST_REMOTE_RETRY_DELAY_MS)
+    }
+    last = await listRemoteDirectory(profile, remotePath)
+    if (last.ok) return last
+    const retryable = /timed out|timeout|Connection reset|Connection refused|ECONN/i.test(
+      last.error ?? '',
+    )
+    if (!retryable || attempt === maxAttempts) break
+  }
+  return last
 }
 
 export async function scpUpload(
   profile: SshConnectionProfile,
   localPath: string,
   remotePath: string,
+  onProgress?: ScpProgressCallback,
 ): Promise<ScpTransferResult> {
-  const scp = resolveExecutable('scp')
-  if (!scp) return { ok: false, error: '未找到 scp.exe，请确认 PATH 中已安装 OpenSSH 客户端。' }
-
-  const target = `${profile.user}@${profile.host}:${remotePath}`
-  const args = buildScpArgs(profile, [localPath, target])
-  try {
-    const { stderr, code } = await runProcess(scp, args)
-    if (code !== 0) return { ok: false, error: stderr.trim() || `scp 退出码 ${code}` }
-    return { ok: true }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) }
-  }
+  return uploadViaSsh2(profile, localPath, remotePath, onProgress)
 }
 
 export async function scpDownload(
   profile: SshConnectionProfile,
   remotePath: string,
   localPath: string,
+  onProgress?: ScpProgressCallback,
 ): Promise<ScpTransferResult> {
-  const scp = resolveExecutable('scp')
-  if (!scp) return { ok: false, error: '未找到 scp.exe，请确认 PATH 中已安装 OpenSSH 客户端。' }
-
-  const source = `${profile.user}@${profile.host}:${remotePath}`
-  const args = buildScpArgs(profile, [source, localPath])
-  try {
-    const { stderr, code } = await runProcess(scp, args)
-    if (code !== 0) return { ok: false, error: stderr.trim() || `scp 退出码 ${code}` }
-    return { ok: true }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) }
-  }
+  return downloadViaSsh2(profile, remotePath, localPath, onProgress)
 }

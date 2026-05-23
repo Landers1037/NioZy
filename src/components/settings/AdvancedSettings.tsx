@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
+import { Activity, AppWindow, Bug, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
 import { getElectronAPI } from '@/lib/electron-client'
 
 export function AdvancedSettings() {
@@ -85,6 +85,24 @@ export function AdvancedSettings() {
             checked={settings.advanced.preserveWindowBounds === true}
             onCheckedChange={(v) =>
               patchSettings({ advanced: { ...settings.advanced, preserveWindowBounds: v } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Bug}
+          label={t('settings.advanced.debugLog')}
+          description={t('settings.advanced.debugLogDesc')}
+          row
+        >
+          <Switch
+            checked={settings.advanced.debugLog === true}
+            onCheckedChange={(v) =>
+              void patchSettings({ advanced: { ...settings.advanced, debugLog: v } }).then(
+                () => {
+                  if (v) toast.info(t('toast.debugLogEnabled'))
+                },
+              )
             }
           />
         </SettingField>

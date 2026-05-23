@@ -203,6 +203,8 @@
       "shellContextMenuDesc": "Adds “Open with NioZy” to folder and folder-background context menus, opening a new PowerShell tab in that directory",
       "preserveWindowBounds": "Remember window size",
       "preserveWindowBoundsDesc": "Saves size and position when you close the window; if maximized on close, starts maximized next time",
+      "debugLog": "Enable debug logging",
+      "debugLogDesc": "Append main-process console output to NioZy.log in the current working directory",
       "transparency": "Window opacity: {{value}}%"
     },
     "shortcuts": {
@@ -340,11 +342,14 @@
     "desc": "{{user}}@{{host}} · local on the left, remote on the right",
     "descGeneric": "Local files on the left, remote server on the right",
     "local": "Local",
+    "localComputer": "This PC",
     "remote": "Remote",
     "goUp": "Parent folder",
     "refresh": "Refresh",
     "upload": "Upload to remote",
     "download": "Download to local",
+    "uploadingProgress": "Uploading {{name}} · {{percent}}%",
+    "downloadingProgress": "Downloading {{name}} · {{percent}}%",
     "listFailed": "Could not list directory",
     "profileFailed": "Could not resolve SSH connection",
     "passwordAuthHint": "SCP with password login may require interaction; public key login is recommended",
@@ -352,7 +357,8 @@
     "selectRemoteFile": "Select a remote file first",
     "uploadSuccess": "Upload complete",
     "downloadSuccess": "Download complete",
-    "transferFailed": "Transfer failed"
+    "transferFailed": "Transfer failed",
+    "refreshAfterTransferFailed": "Upload succeeded but could not refresh the remote list. Click Refresh."
   },
   "cursor": {
     "block": "Block",
@@ -406,6 +412,7 @@
     "exportNoTerminal": "Export failed: terminal not found",
     "exportNotReady": "Export failed: terminal not ready",
     "exportSuccess": "Terminal exported",
+    "debugLogEnabled": "Debug logging enabled. Main-process output is appended to NioZy.log in the current directory.",
     "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
     "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
     "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry.",

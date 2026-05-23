@@ -203,6 +203,8 @@
       "shellContextMenuDesc": "在资源管理器的文件夹与空白处右键菜单中注册「使用 NioZy 打开」，并在该目录下新建 PowerShell 终端 Tab",
       "preserveWindowBounds": "保留当前设置的窗口大小",
       "preserveWindowBoundsDesc": "关闭窗口时记住大小与位置；若关闭时为最大化，下次启动将直接最大化",
+      "debugLog": "开启 Debug 日志",
+      "debugLogDesc": "开启后将主进程 console 输出追加写入当前工作目录下的 NioZy.log",
       "transparency": "窗口透明度: {{value}}%"
     },
     "shortcuts": {
@@ -340,11 +342,14 @@
     "desc": "{{user}}@{{host}} · 左侧为本机，右侧为远程",
     "descGeneric": "左侧为本机文件，右侧为远程服务器文件",
     "local": "本机",
+    "localComputer": "此电脑",
     "remote": "远程",
     "goUp": "上级目录",
     "refresh": "刷新",
     "upload": "上传到远程",
     "download": "下载到本机",
+    "uploadingProgress": "上传 {{name}} · {{percent}}%",
+    "downloadingProgress": "下载 {{name}} · {{percent}}%",
     "listFailed": "无法列出目录",
     "profileFailed": "无法解析 SSH 连接配置",
     "passwordAuthHint": "密码登录的 SCP 可能需交互输入；建议使用公钥登录",
@@ -352,7 +357,8 @@
     "selectRemoteFile": "请在远程侧选择一个文件",
     "uploadSuccess": "上传成功",
     "downloadSuccess": "下载成功",
-    "transferFailed": "传输失败"
+    "transferFailed": "传输失败",
+    "refreshAfterTransferFailed": "文件已上传，但刷新远程列表失败，请手动点刷新"
   },
   "cursor": {
     "block": "方块",
@@ -406,6 +412,7 @@
     "exportNoTerminal": "无法导出：未找到终端",
     "exportNotReady": "无法导出：终端尚未就绪",
     "exportSuccess": "终端内容已导出",
+    "debugLogEnabled": "Debug 日志已开启，主进程输出将追加写入当前目录下的 NioZy.log",
     "hardwareAccelerationRestart": "硬件加速已保存，请完全退出并重启应用后生效",
     "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效",
     "shellContextMenuFailed": "无法更新资源管理器右键菜单，请确认具有当前用户注册表写入权限",
