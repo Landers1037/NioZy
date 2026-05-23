@@ -120,6 +120,8 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
           if (disposed) return
           webglFrame = requestAnimationFrame(loadWebgl)
         })
+        const shellAfterWebgl = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+        applyTerminalShellAddons(term, shellAddonsRef.current, shellAfterWebgl)
         scheduleFit()
       } catch {
         webglRef.current = null

@@ -416,6 +416,11 @@ body {
   text-decoration-color: #58a6ff;
 }
 
+/* 高亮装饰仅着色；点击由缓冲区坐标检测（兼容 WebGL canvas 盖住装饰层） */
+.niozy-terminal-host .xterm-decoration-container .xterm-decoration {
+  pointer-events: none;
+}
+
 /* 弹框开关动画（设置 → 外观 → 动画效果） */
 @keyframes dialog-overlay-in {
   from {
