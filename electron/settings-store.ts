@@ -20,6 +20,10 @@ import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
 import { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shared/shell-settings'
 import {
+  DEFAULT_FILESYSTEM_SETTINGS,
+  normalizeFilesystemSettings,
+} from './shared/filesystem-settings'
+import {
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
   normalizeDefaultTerminal,
@@ -87,6 +91,7 @@ export interface AppSettings {
   shortcuts: AppShortcuts
   ssh: import('./shared/ssh-settings').SshSettings
   shell: import('./shared/shell-settings').ShellSettings
+  filesystem: import('./shared/filesystem-settings').FilesystemSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -154,6 +159,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
+  filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
 }
 
 export class SettingsStore {
@@ -227,6 +233,7 @@ export class SettingsStore {
             ? (stored.ssh as { shell?: unknown }).shell
             : undefined),
       ),
+      filesystem: normalizeFilesystemSettings(stored.filesystem),
       builtinConnections: normalizeBuiltinConnections(
         (stored as Partial<AppSettings>).builtinConnections,
       ),

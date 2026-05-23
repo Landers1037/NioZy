@@ -9,6 +9,7 @@ import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
+import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
 
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
@@ -49,6 +50,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
+  filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -299,6 +301,31 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           { name: 'D:', path: 'D:\\', isDirectory: true },
         ],
       }),
+      readImagePreview: async (filePath) => {
+        if (!/\.(png|jpe?g|gif|webp|svg)$/i.test(filePath)) {
+          return { ok: false, error: 'Browser preview: not an image' }
+        }
+        return {
+          ok: true,
+          dataUrl:
+            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIj48cmVjdCBmaWxsPSIjZGRkIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5QcmV2aWV3PC90ZXh0Pjwvc3ZnPg==',
+        }
+      },
+      detectProgram: async ({ kind, path }) => {
+        if (kind === 'custom') {
+          return path?.trim()
+            ? { found: true, path: path.trim() }
+            : { found: false, error: 'Empty path' }
+        }
+        return {
+          found: true,
+          path:
+            kind === 'vscode'
+              ? 'C:\\Users\\Developer\\AppData\\Local\\Programs\\Microsoft VS Code\\bin\\code.cmd'
+              : 'C:\\mock\\Cursor.exe',
+        }
+      },
+      openWithProgram: async () => ({ ok: true }),
     },
     terminal: {
       create: async (options) => {
