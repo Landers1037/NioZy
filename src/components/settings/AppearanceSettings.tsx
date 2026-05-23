@@ -12,7 +12,16 @@ import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { SettingField } from './SettingField'
-import { Languages, Moon, Palette, Type, LayoutPanelLeft, Sparkles, AppWindow } from 'lucide-react'
+import {
+  Languages,
+  Moon,
+  Palette,
+  Type,
+  LayoutPanelLeft,
+  Sparkles,
+  AppWindow,
+  Wand2,
+} from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
 import { cn } from '@/lib/utils'
@@ -133,6 +142,20 @@ export function AppearanceSettings() {
           <Switch
             checked={settings.showAppTitle}
             onCheckedChange={(showAppTitle) => patchSettings({ showAppTitle })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Wand2}
+          label={t('settings.appearance.enableDialogAnimations')}
+          description={t('settings.appearance.enableDialogAnimationsDesc')}
+          row
+        >
+          <Switch
+            checked={settings.enableDialogAnimations}
+            onCheckedChange={(enableDialogAnimations) =>
+              patchSettings({ enableDialogAnimations })
+            }
           />
         </SettingField>
 

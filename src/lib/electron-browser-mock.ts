@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   accentColor: '#5C6B7A',
   fontSize: 13,
   showAppTitle: true,
+  enableDialogAnimations: true,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
@@ -301,14 +302,13 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           { name: 'D:', path: 'D:\\', isDirectory: true },
         ],
       }),
-      readImagePreview: async (filePath) => {
+      getImagePreviewUrl: async (filePath) => {
         if (!/\.(png|jpe?g|gif|webp|svg)$/i.test(filePath)) {
           return { ok: false, error: 'Browser preview: not an image' }
         }
         return {
           ok: true,
-          dataUrl:
-            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIj48cmVjdCBmaWxsPSIjZGRkIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5QcmV2aWV3PC90ZXh0Pjwvc3ZnPg==',
+          url: `niozy-local://preview?path=${encodeURIComponent(filePath)}`,
         }
       },
       detectProgram: async ({ kind, path }) => {

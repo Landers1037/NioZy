@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -27,10 +27,11 @@ export function FilesystemImagePreviewDialog({
   onOpenChange,
 }: FilesystemImagePreviewDialogProps) {
   const { t } = useTranslation()
-  const [dataUrl, setDataUrl] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [zoom, setZoom] = useState(1)
+  const previewRef = useRef<HTMLDivElement>(null)
 
   const clampZoom = useCallback(
     (value: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value)),
@@ -49,7 +50,7 @@ export function FilesystemImagePreviewDialog({
 
   useEffect(() => {
     if (!filePath) {
-      setDataUrl(null)
+      setImageUrl(null)
       setError(null)
       setZoom(1)
       return
@@ -57,14 +58,14 @@ export function FilesystemImagePreviewDialog({
     let cancelled = false
     setLoading(true)
     setError(null)
-    setDataUrl(null)
+    setImageUrl(null)
     setZoom(1)
     void (async () => {
-      const result = await getElectronAPI().files.readImagePreview(filePath)
+      const result = await getElectronAPI().files.getImagePreviewUrl(filePath)
       if (cancelled) return
       setLoading(false)
-      if (result.ok && result.dataUrl) {
-        setDataUrl(result.dataUrl)
+      if (result.ok && result.url) {
+        setImageUrl(result.url)
       } else {
         setError(result.error ?? t('filesystem.previewFailed'))
       }
@@ -74,15 +75,19 @@ export function FilesystemImagePreviewDialog({
     }
   }, [filePath, t])
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (!dataUrl) return
+  useEffect(() => {
+    const el = previewRef.current
+    if (!el || !imageUrl) return
+
+    const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP
       setZoom((z) => clampZoom(Math.round((z + delta) * 100) / 100))
-    },
-    [dataUrl, clampZoom],
-  )
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [imageUrl, clampZoom])
 
   const zoomPercent = Math.round(zoom * 100)
 
@@ -91,7 +96,7 @@ export function FilesystemImagePreviewDialog({
       <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col gap-3">
         <DialogHeader className="flex flex-row items-center gap-2 space-y-0">
           <DialogTitle className="min-w-0 flex-1 truncate pr-2">{fileName}</DialogTitle>
-          {dataUrl && !loading && !error && (
+          {imageUrl && !loading && !error && (
             <div className="flex shrink-0 items-center gap-1">
               <Button
                 type="button"
@@ -133,8 +138,8 @@ export function FilesystemImagePreviewDialog({
           )}
         </DialogHeader>
         <div
+          ref={previewRef}
           className="flex min-h-[200px] max-h-[calc(90vh-8rem)] items-center justify-center overflow-auto rounded-md border border-border bg-muted/30 p-2"
-          onWheel={handleWheel}
         >
           {loading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -145,9 +150,9 @@ export function FilesystemImagePreviewDialog({
           {!loading && error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
-          {!loading && dataUrl && (
+          {!loading && imageUrl && (
             <img
-              src={dataUrl}
+              src={imageUrl}
               alt={fileName}
               draggable={false}
               className={cn('object-contain transition-transform duration-150')}

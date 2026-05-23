@@ -56,6 +56,7 @@ export interface AppSettings {
   accentColor: string
   fontSize: number
   showAppTitle: boolean
+  enableDialogAnimations: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
@@ -129,6 +130,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accentColor: '#5C6B7A',
   fontSize: 13,
   showAppTitle: true,
+  enableDialogAnimations: true,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
@@ -185,6 +187,10 @@ export class SettingsStore {
         typeof stored.showAppTitle === 'boolean'
           ? stored.showAppTitle
           : DEFAULT_SETTINGS.showAppTitle,
+      enableDialogAnimations:
+        typeof stored.enableDialogAnimations === 'boolean'
+          ? stored.enableDialogAnimations
+          : DEFAULT_SETTINGS.enableDialogAnimations,
       connections,
       terminal: {
         ...DEFAULT_SETTINGS.terminal,

@@ -3,6 +3,11 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
+import {
+  dialogContentClass,
+  dialogOverlayClass,
+  useDialogAnimationEnabled,
+} from '@/lib/dialog-animations'
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -12,41 +17,53 @@ const DialogClose = DialogPrimitive.Close
 const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/50 no-drag', className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const animate = useDialogAnimationEnabled()
+  return (
+    <DialogPrimitive.Overlay
+      ref={ref}
+      className={cn(
+        'fixed inset-0 z-50 bg-black/50 no-drag',
+        dialogOverlayClass(animate),
+        className,
+      )}
+      {...props}
+    />
+  )
+})
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'ui-overlay-panel fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 no-drag',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close
+>(({ className, children, ...props }, ref) => {
+  const animate = useDialogAnimationEnabled()
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
         className={cn(
-          'absolute right-4 top-4 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring',
+          /* inset-0 + m-auto 居中，避免 transform 与退出动画冲突；勿在 Portal 下再包一层 div（会抢先卸载） */
+          'ui-overlay-panel pointer-events-auto fixed inset-0 z-50 m-auto h-fit w-full max-w-md max-h-[min(90vh,calc(100%-2rem))] overflow-hidden rounded-lg border border-border bg-card p-6 no-drag',
+          dialogContentClass(animate),
+          className,
         )}
+        {...props}
       >
-        <X className="size-4" />
-        <span className="sr-only">关闭</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-))
+        {children}
+        <DialogPrimitive.Close
+          className={cn(
+            'absolute right-4 top-4 cursor-pointer rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring',
+          )}
+        >
+          <X className="size-4" />
+          <span className="sr-only">关闭</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+})
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

@@ -89,7 +89,9 @@
       "accentColor": "Accent color",
       "globalFontSize": "Global font size",
       "showAppTitle": "Show app title",
-      "showAppTitleDesc": "When off, the title bar shows only the icon, not the NioZy name"
+      "showAppTitleDesc": "When off, the title bar shows only the icon, not the NioZy name",
+      "enableDialogAnimations": "Animations",
+      "enableDialogAnimationsDesc": "When on, dialogs (including image preview) fade in from below and fade out downward"
     },
     "terminal": {
       "title": "Terminal",
