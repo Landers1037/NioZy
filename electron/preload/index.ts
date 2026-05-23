@@ -95,6 +95,10 @@ const api: ElectronAPI = {
     saveText: (content, defaultFileName) =>
       ipcRenderer.invoke('files:saveText', content, defaultFileName),
     listRoots: () => ipcRenderer.invoke('fs:listRoots'),
+    readImagePreview: (filePath) => ipcRenderer.invoke('fs:readImagePreview', filePath),
+    detectProgram: (options) => ipcRenderer.invoke('fs:detectProgram', options),
+    openWithProgram: (programPath, targetPath) =>
+      ipcRenderer.invoke('fs:openWithProgram', programPath, targetPath),
   },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),

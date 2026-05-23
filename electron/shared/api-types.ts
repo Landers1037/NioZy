@@ -31,6 +31,14 @@ export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
 export type { ShellSettings } from './shell-settings'
 export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
 export type {
+  FilesystemSettings,
+  FilesystemCustomOpener,
+} from './filesystem-settings'
+export {
+  DEFAULT_FILESYSTEM_SETTINGS,
+  normalizeFilesystemSettings,
+} from './filesystem-settings'
+export type {
   SshConnectionProfile,
   ScpFileEntry,
   ScpCheckResult,
@@ -136,6 +144,7 @@ export interface AppSettings {
   shortcuts: AppShortcuts
   ssh: import('./ssh-settings').SshSettings
   shell: import('./shell-settings').ShellSettings
+  filesystem: import('./filesystem-settings').FilesystemSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -273,6 +282,15 @@ export interface ElectronAPI {
     saveText: (content: string, defaultFileName: string) => Promise<boolean>
     /** 本机文件系统树根（盘符或 /） */
     listRoots: () => Promise<import('./ssh-types').ScpListResult>
+    readImagePreview: (filePath: string) => Promise<import('../fs-service').ImagePreviewResult>
+    detectProgram: (options: {
+      kind: 'vscode' | 'cursor' | 'custom'
+      path?: string
+    }) => Promise<import('../fs-service').ProgramDetectResult>
+    openWithProgram: (
+      programPath: string,
+      targetPath: string,
+    ) => Promise<import('../fs-service').OpenWithProgramResult>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

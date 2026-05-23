@@ -5,7 +5,10 @@ import {
   ChevronDown,
   ChevronRight,
   File,
+  FileCode,
   Folder,
+  ExternalLink,
+  ImageIcon,
   Loader2,
   Terminal,
 } from 'lucide-react'
@@ -13,12 +16,18 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { getElectronAPI } from '@/lib/electron-client'
 import { openTerminalInDirectory } from '@/lib/terminal-actions'
+import { openPathWithCustom, openPathWithEditor } from '@/lib/filesystem-open'
 import { parentDirectory } from '@/lib/path-utils'
+import { useAppStore } from '@/stores/app-store'
+import type { FilesystemSettings } from '../../../electron/shared/filesystem-settings'
+import { isImageFilePath } from '../../../electron/shared/filesystem-image'
 import type { ScpFileEntry } from '../../../electron/shared/ssh-types'
+import { FilesystemImagePreviewDialog } from '@/components/filesystem/FilesystemImagePreviewDialog'
 import { cn } from '@/lib/utils'
 
 interface TreeNode {
@@ -36,24 +45,64 @@ function entryKey(entry: ScpFileEntry): string {
 function TreeRow({
   node,
   depth,
+  selectedPath,
+  filesystem,
   onToggle,
+  onSelect,
+  onPreviewImage,
 }: {
   node: TreeNode
   depth: number
+  selectedPath: string | null
+  filesystem: FilesystemSettings
   onToggle: (path: string) => void
+  onSelect: (entry: ScpFileEntry) => void
+  onPreviewImage: (entry: ScpFileEntry) => void
 }) {
   const { t } = useTranslation()
   const { entry, children, expanded, loading } = node
   const isDir = entry.isDirectory
+  const isSelected = selectedPath === entry.path
+  const isImage = !isDir && isImageFilePath(entry.path)
 
   const terminalCwd = isDir ? entry.path : parentDirectory(entry.path)
+  const targetPath = entry.path
+
+  const customOpeners = filesystem.customOpeners.filter(
+    (o) => o.label.trim() && o.path.trim(),
+  )
+
+  const handleRowClick = () => {
+    onSelect(entry)
+    if (isImage && filesystem.imagePreviewEnabled) {
+      onPreviewImage(entry)
+    }
+  }
+
+  const handleDoubleClick = () => {
+    if (isDir) {
+      onToggle(entry.path)
+      return
+    }
+    if (isImage && filesystem.imagePreviewEnabled) {
+      onPreviewImage(entry)
+    }
+  }
 
   const rowContent = (
     <div
+      role="button"
+      tabIndex={0}
       className={cn(
-        'flex min-w-0 cursor-default items-center gap-1 rounded-md py-1 pr-2 text-sm hover:bg-muted/80',
+        'flex min-w-0 cursor-default items-center gap-1 rounded-md py-1 pr-2 text-sm outline-none',
+        isSelected ? 'bg-muted' : 'hover:bg-muted/80',
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
+      onClick={handleRowClick}
+      onDoubleClick={handleDoubleClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') handleRowClick()
+      }}
     >
       {isDir ? (
         <button
@@ -78,6 +127,8 @@ function TreeRow({
       )}
       {isDir ? (
         <Folder className="size-4 shrink-0 text-amber-600" />
+      ) : isImage ? (
+        <ImageIcon className="size-4 shrink-0 text-sky-600" />
       ) : (
         <File className="size-4 shrink-0 text-muted-foreground" />
       )}
@@ -100,15 +151,54 @@ function TreeRow({
             <Terminal className="size-4 text-muted-foreground" />
             {t('filesystem.newTerminalHere')}
           </ContextMenuItem>
+          {(filesystem.openWithVsCode ||
+            filesystem.openWithCursor ||
+            customOpeners.length > 0) && <ContextMenuSeparator />}
+          {filesystem.openWithVsCode && (
+            <ContextMenuItem
+              onSelect={() => {
+                void openPathWithEditor(filesystem, 'vscode', targetPath)
+              }}
+            >
+              <FileCode className="size-4 text-muted-foreground" />
+              {t('filesystem.openWithVsCode')}
+            </ContextMenuItem>
+          )}
+          {filesystem.openWithCursor && (
+            <ContextMenuItem
+              onSelect={() => {
+                void openPathWithEditor(filesystem, 'cursor', targetPath)
+              }}
+            >
+              <FileCode className="size-4 text-muted-foreground" />
+              {t('filesystem.openWithCursor')}
+            </ContextMenuItem>
+          )}
+          {customOpeners.map((opener) => (
+            <ContextMenuItem
+              key={opener.id}
+              onSelect={() => {
+                void openPathWithCustom(opener.path, targetPath)
+              }}
+            >
+              <ExternalLink className="size-4 text-muted-foreground" />
+              {t('filesystem.openWithCustom', { name: opener.label })}
+            </ContextMenuItem>
+          ))}
         </ContextMenuContent>
       </ContextMenu>
-      {isDir && expanded &&
+      {isDir &&
+        expanded &&
         children.map((child) => (
           <TreeRow
             key={entryKey(child.entry)}
             node={child}
             depth={depth + 1}
+            selectedPath={selectedPath}
+            filesystem={filesystem}
             onToggle={onToggle}
+            onSelect={onSelect}
+            onPreviewImage={onPreviewImage}
           />
         ))}
     </>
@@ -139,10 +229,27 @@ function entriesToNodes(entries: ScpFileEntry[]): TreeNode[] {
   }))
 }
 
+function findNode(nodes: TreeNode[], path: string): TreeNode | undefined {
+  for (const n of nodes) {
+    if (n.entry.path === path) return n
+    const found = findNode(n.children, path)
+    if (found) return found
+  }
+  return undefined
+}
+
 export function FilesystemPanel() {
   const { t } = useTranslation()
+  const settings = useAppStore((s) => s.settings)
   const [roots, setRoots] = useState<TreeNode[]>([])
   const [loadingRoots, setLoadingRoots] = useState(true)
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const [previewFile, setPreviewFile] = useState<{
+    path: string
+    name: string
+  } | null>(null)
+
+  const filesystem = settings?.filesystem
 
   const loadChildren = useCallback(
     async (dirPath: string) => {
@@ -214,6 +321,8 @@ export function FilesystemPanel() {
     [loadChildren],
   )
 
+  if (!filesystem) return null
+
   return (
     <div className="flex h-full flex-col overflow-hidden p-4 no-drag">
       <h2 className="mb-3 shrink-0 text-sm font-semibold text-foreground">
@@ -235,20 +344,25 @@ export function FilesystemPanel() {
               key={entryKey(node.entry)}
               node={node}
               depth={0}
+              selectedPath={selectedPath}
+              filesystem={filesystem}
               onToggle={handleToggle}
+              onSelect={(entry) => setSelectedPath(entry.path)}
+              onPreviewImage={(entry) =>
+                setPreviewFile({ path: entry.path, name: entry.name })
+              }
             />
           ))
         )}
       </div>
+
+      <FilesystemImagePreviewDialog
+        filePath={previewFile?.path ?? null}
+        fileName={previewFile?.name ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFile(null)
+        }}
+      />
     </div>
   )
-}
-
-function findNode(nodes: TreeNode[], path: string): TreeNode | undefined {
-  for (const n of nodes) {
-    if (n.entry.path === path) return n
-    const found = findNode(n.children, path)
-    if (found) return found
-  }
-  return undefined
 }

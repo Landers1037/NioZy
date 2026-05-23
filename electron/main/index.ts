@@ -27,6 +27,7 @@ import {
 } from '../windows-shell-context-menu'
 import type { SshConnectionProfile, TerminalCreateOptions } from '../shared/api-types'
 import * as sshService from '../ssh-service'
+import * as fsService from '../fs-service'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
@@ -371,6 +372,17 @@ ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
 ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))
 ipcMain.handle('ssh:listLocal', (_, dirPath: string) => sshService.listLocalDirectory(dirPath))
 ipcMain.handle('fs:listRoots', () => sshService.listFilesystemRoots())
+ipcMain.handle('fs:readImagePreview', (_, filePath: string) =>
+  fsService.readImagePreview(filePath),
+)
+ipcMain.handle(
+  'fs:detectProgram',
+  (_, options: { kind: 'vscode' | 'cursor' | 'custom'; path?: string }) =>
+    fsService.detectProgram(options.kind, options.path),
+)
+ipcMain.handle('fs:openWithProgram', (_, programPath: string, targetPath: string) =>
+  fsService.openWithProgram(programPath, targetPath),
+)
 ipcMain.handle(
   'ssh:listRemote',
   (_, profile: SshConnectionProfile, remotePath: string) =>
