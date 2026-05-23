@@ -10,6 +10,73 @@ const URL_REGEX =
 
 const LINK_FOREGROUND = '#58a6ff'
 
+function openTerminalExternalLink(uri: string): void {
+  void getElectronAPI().shell.openExternal(uri)
+}
+
+function isValidHttpUrl(text: string): boolean {
+  try {
+    const url = new URL(text)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function findUrlAtColumn(lineText: string, col: number): string | null {
+  URL_REGEX.lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = URL_REGEX.exec(lineText)) !== null) {
+    const url = match[0]
+    const start = match.index
+    const end = start + url.length
+    if (col >= start && col < end && isValidHttpUrl(url)) return url
+  }
+  return null
+}
+
+/** WebGL 下 canvas 盖住 bottom 装饰，用屏幕坐标换算缓冲区列行再匹配 URL */
+function getViewportCellFromMouse(term: Terminal, event: MouseEvent): { col: number; row: number } | null {
+  const screen = term.element?.querySelector('.xterm-screen')
+  if (!screen) return null
+  const rect = screen.getBoundingClientRect()
+  if (rect.width <= 0 || rect.height <= 0) return null
+  const relX = event.clientX - rect.left
+  const relY = event.clientY - rect.top
+  if (relX < 0 || relY < 0 || relX >= rect.width || relY >= rect.height) return null
+  const col = Math.floor((relX / rect.width) * term.cols)
+  const row = Math.floor((relY / rect.height) * term.rows)
+  return {
+    col: Math.min(term.cols - 1, Math.max(0, col)),
+    row: Math.min(term.rows - 1, Math.max(0, row)),
+  }
+}
+
+function bindHighlightLinkClickHandler(term: Terminal, listeners: IDisposable[]): void {
+  const el = term.element
+  if (!el) return
+
+  const onMouseUp = (event: MouseEvent) => {
+    if (event.button !== 0 || term.hasSelection()) return
+    const cell = getViewportCellFromMouse(term, event)
+    if (!cell) return
+    const bufferLine = term.buffer.active.viewportY + cell.row
+    const line = term.buffer.active.getLine(bufferLine)
+    if (!line) return
+    const url = findUrlAtColumn(line.translateToString(false), cell.col)
+    if (!url) return
+    event.preventDefault()
+    event.stopPropagation()
+    openTerminalExternalLink(url)
+  }
+
+  const opts = { capture: true } as const
+  el.addEventListener('mouseup', onMouseUp, opts)
+  listeners.push({
+    dispose: () => el.removeEventListener('mouseup', onMouseUp, opts),
+  })
+}
+
 export interface TerminalShellAddonState {
   unicode11: Unicode11Addon | null
   webLinks: WebLinksAddon | null
@@ -32,15 +99,6 @@ export function createTerminalShellAddonState(): TerminalShellAddonState {
 
 function ensureUnicodeProposedApi(term: Terminal): void {
   term.options.allowProposedApi = true
-}
-
-function isValidHttpUrl(text: string): boolean {
-  try {
-    const url = new URL(text)
-    return url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    return false
-  }
 }
 
 function markerForBufferLine(term: Terminal, bufferLine: number) {
@@ -100,10 +158,18 @@ function refreshLinkHighlightDecorations(term: Terminal, state: TerminalShellAdd
   }
 }
 
-function bindLinkHighlightListeners(term: Terminal, state: TerminalShellAddonState): void {
+function bindLinkHighlightListeners(
+  term: Terminal,
+  state: TerminalShellAddonState,
+  clickToOpenLinks: boolean,
+): void {
   disposeAll(state.linkHighlightListeners)
   cancelAnimationFrame(state.linkHighlightFrame)
   state.linkHighlightFrame = 0
+
+  if (clickToOpenLinks) {
+    bindHighlightLinkClickHandler(term, state.linkHighlightListeners)
+  }
 
   const scheduleRefresh = () => {
     cancelAnimationFrame(state.linkHighlightFrame)
@@ -135,7 +201,8 @@ function syncWebLinksAddon(
   shell: ShellSettings,
 ): void {
   const enable = shell.highlightLinks || shell.clickToOpenLinks
-  const click = shell.clickToOpenLinks
+  /** 高亮 + 点击：由缓冲区坐标处理，避免 WebGL canvas 挡住装饰/WebLinks */
+  const click = shell.clickToOpenLinks && !shell.highlightLinks
 
   if (!enable) {
     if (state.webLinks) {
@@ -155,7 +222,7 @@ function syncWebLinksAddon(
 
   const handler = click
     ? (_event: MouseEvent, uri: string) => {
-        void getElectronAPI().shell.openExternal(uri)
+        openTerminalExternalLink(uri)
       }
     : () => {}
 
@@ -189,7 +256,7 @@ export function applyTerminalShellAddons(
   syncWebLinksAddon(term, state, shell)
 
   if (shell.highlightLinks) {
-    bindLinkHighlightListeners(term, state)
+    bindLinkHighlightListeners(term, state, shell.clickToOpenLinks)
   } else {
     clearLinkHighlight(term, state)
   }
