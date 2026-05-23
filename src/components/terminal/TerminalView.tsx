@@ -9,6 +9,10 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import {
+  applyInteractiveCliTerminalOptions,
+  handleInteractiveCliMouseDown,
+} from '@/lib/terminal-interactive-cli'
+import {
   handleTerminalKeyboardShortcut,
   handleTerminalModifiedEnterKey,
   handleTerminalRightClick,
@@ -29,13 +33,15 @@ interface TerminalViewProps {
   tab: AppTab
   /** 拆分多 pane 时用 DOM 渲染，避免多 WebGL 上下文 dispose 冲突 */
   preferDomRenderer?: boolean
+  /** 当前 Tab / pane 处于前台时 refit 并聚焦 */
+  isFocused?: boolean
 }
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
 }
 
-export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewProps) {
+export function TerminalView({ tab, preferDomRenderer = false, isFocused = false }: TerminalViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
@@ -95,6 +101,7 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
     const fit = new FitAddon()
     term.loadAddon(fit)
     term.open(containerRef.current)
+    applyInteractiveCliTerminalOptions(term, shellSettings.shiftEnterNewline)
 
     termRef.current = term
     fitRef.current = fit
@@ -160,6 +167,11 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
       )
     }
 
+    const onLeftMouseDown = (e: MouseEvent) => {
+      const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+      handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
+    }
+
     const onRightMouseDown = (e: MouseEvent) => {
       if (e.button !== 2 || !isRightClickCopyPasteEnabled()) return
       handleTerminalRightClick(term, tab.terminalId!, e)
@@ -171,6 +183,7 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
       e.stopPropagation()
     }
 
+    termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
     termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
     termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
 
@@ -205,6 +218,7 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
     return () => {
       disposed = true
       cancelAnimationFrame(webglFrame)
+      termElement?.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
       termElement?.removeEventListener('mousedown', onRightMouseDown, captureOpts)
       termElement?.removeEventListener('contextmenu', onContextMenu, captureOpts)
       unsubData()
@@ -221,11 +235,9 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
 
   useEffect(() => {
     if (!termRef.current || !settings) return
-    applyTerminalShellAddons(
-      termRef.current,
-      shellAddonsRef.current,
-      settings.shell ?? DEFAULT_SHELL_SETTINGS,
-    )
+    const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
+    applyInteractiveCliTerminalOptions(termRef.current, shell.shiftEnterNewline)
+    applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shell)
   }, [settings?.shell])
 
   useEffect(() => {
@@ -239,6 +251,16 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
     applyTerminalRuntimeOptions(termRef.current, settings.terminal)
     scheduleFit()
   }, [settings?.terminal, scheduleFit])
+
+  useEffect(() => {
+    if (!termRef.current) return
+    if (isFocused) {
+      scheduleFit()
+      termRef.current.focus()
+      return
+    }
+    termRef.current.blur()
+  }, [isFocused, scheduleFit])
 
   const terminalBackground =
     resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'

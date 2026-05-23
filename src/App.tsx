@@ -9,6 +9,8 @@ import { isMinimalLayout } from '@/lib/layout-mode'
 import { SplitTerminalPanel } from '@/components/terminal/SplitTerminalPanel'
 import { SettingsPanel } from '@/components/settings/SettingsPanel'
 import { FilesystemPanel } from '@/components/filesystem/FilesystemPanel'
+import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
+import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, openTerminalInDirectory } from '@/lib/terminal-actions'
@@ -37,6 +39,7 @@ export default function App() {
 
   useAppShortcuts()
   useSshDisconnectAlert()
+  useTerminalStreamSync(tabs)
 
   useEffect(() => {
     let cancelled = false
@@ -133,6 +136,9 @@ export default function App() {
     : undefined
   const browserDevPreview = isBrowserDevPreview()
   const terminalActive = activeTab?.type === 'terminal'
+  const terminalTabs = tabs.filter(
+    (t) => t.type === 'terminal' && getAllTerminalIds(t).length > 0,
+  )
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -156,11 +162,21 @@ export default function App() {
               terminalActive ? ui.mainPanelTerminal : ui.mainPanel,
             )}
           >
-            {activeTab?.type === 'terminal' && activeTab.terminalId && (
-              <div key={activeTab.id} className="absolute inset-0">
-                <SplitTerminalPanel tab={activeTab} />
-              </div>
-            )}
+            {terminalTabs.map((tab) => {
+              const isActive = tab.id === activeTabId
+              return (
+                <div
+                  key={tab.id}
+                  className={cn(
+                    'absolute inset-0',
+                    !isActive && 'pointer-events-none invisible',
+                  )}
+                  aria-hidden={!isActive}
+                >
+                  <SplitTerminalPanel tab={tab} isTabActive={isActive} />
+                </div>
+              )
+            })}
             {activeTab?.type === 'settings' && (
               <div className="absolute inset-0">
                 <SettingsPanel />

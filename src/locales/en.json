@@ -139,7 +139,7 @@
       "clickToOpenLinks": "Click to open links",
       "clickToOpenLinksDesc": "Open a link in the default browser when you click it with the mouse",
       "shiftEnterNewline": "Use Shift+Enter for newline",
-      "shiftEnterNewlineDesc": "When enabled, Shift+Enter or Ctrl+Enter inserts a newline in interactive CLIs (e.g. Claude, Cursor agent); Enter sends the message"
+      "shiftEnterNewlineDesc": "When enabled, Shift+Enter or Ctrl+Enter inserts a newline in interactive CLIs (e.g. Claude, Cursor agent); Enter sends the message. Clicks on output no longer move the cursor to the end of the screen"
     },
     "filesystem": {
       "title": "File system",
