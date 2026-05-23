@@ -104,12 +104,28 @@ const api: ElectronAPI = {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
     getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),
     listLocal: (dirPath) => ipcRenderer.invoke('ssh:listLocal', dirPath),
-    listRemote: (profile, remotePath) =>
-      ipcRenderer.invoke('ssh:listRemote', profile, remotePath),
-    upload: (profile, localPath, remotePath) =>
-      ipcRenderer.invoke('ssh:upload', profile, localPath, remotePath),
-    download: (profile, remotePath, localPath) =>
-      ipcRenderer.invoke('ssh:download', profile, remotePath, localPath),
+    listRemote: (connectionId, remotePath, options) =>
+      ipcRenderer.invoke('ssh:listRemote', connectionId, remotePath, options),
+    upload: async (connectionId, localPath, remotePath, onProgress) => {
+      const handler = (_: Electron.IpcRendererEvent, progress: import('../shared/ssh-types').ScpTransferProgress) =>
+        onProgress?.(progress)
+      if (onProgress) ipcRenderer.on('ssh:transferProgress', handler)
+      try {
+        return await ipcRenderer.invoke('ssh:upload', connectionId, localPath, remotePath)
+      } finally {
+        if (onProgress) ipcRenderer.removeListener('ssh:transferProgress', handler)
+      }
+    },
+    download: async (connectionId, remotePath, localPath, onProgress) => {
+      const handler = (_: Electron.IpcRendererEvent, progress: import('../shared/ssh-types').ScpTransferProgress) =>
+        onProgress?.(progress)
+      if (onProgress) ipcRenderer.on('ssh:transferProgress', handler)
+      try {
+        return await ipcRenderer.invoke('ssh:download', connectionId, remotePath, localPath)
+      } finally {
+        if (onProgress) ipcRenderer.removeListener('ssh:transferProgress', handler)
+      }
+    },
   },
 }
 

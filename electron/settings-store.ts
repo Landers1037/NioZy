@@ -88,6 +88,8 @@ export interface AppSettings {
     preserveWindowBounds: boolean
     /** preserveWindowBounds 为 true 时由主进程写入 */
     lastWindowState?: SavedWindowState
+    /** 为 true 时将主进程 console 追加写入当前工作目录 NioZy.log */
+    debugLog: boolean
   }
   shortcuts: AppShortcuts
   ssh: import('./shared/ssh-settings').SshSettings
@@ -157,6 +159,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     statusBarLiveStats: true,
     shellContextMenu: false,
     preserveWindowBounds: false,
+    debugLog: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
@@ -224,6 +227,10 @@ export class SettingsStore {
           typeof stored.advanced?.preserveWindowBounds === 'boolean'
             ? stored.advanced.preserveWindowBounds
             : DEFAULT_SETTINGS.advanced.preserveWindowBounds,
+        debugLog:
+          typeof stored.advanced?.debugLog === 'boolean'
+            ? stored.advanced.debugLog
+            : DEFAULT_SETTINGS.advanced.debugLog,
         lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
       },
       shortcuts: {

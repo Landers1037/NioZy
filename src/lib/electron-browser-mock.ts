@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     statusBarLiveStats: true,
     shellContextMenu: false,
     preserveWindowBounds: false,
+    debugLog: false,
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
@@ -281,8 +282,24 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           { name: 'app.log', path: '/home/dev/app.log', isDirectory: false, size: 4096 },
         ],
       }),
-      upload: async () => ({ ok: false, error: 'Browser preview' }),
-      download: async () => ({ ok: false, error: 'Browser preview' }),
+      upload: async (_id, _local, _remote, onProgress) => {
+        onProgress?.({
+          direction: 'upload',
+          fileName: 'sample.bin',
+          transferred: 512,
+          total: 1024,
+        })
+        return { ok: false, error: 'Browser preview' }
+      },
+      download: async (_id, _remote, _local, onProgress) => {
+        onProgress?.({
+          direction: 'download',
+          fileName: 'sample.bin',
+          transferred: 256,
+          total: 1024,
+        })
+        return { ok: false, error: 'Browser preview' }
+      },
     },
     files: {
       saveText: async (content, defaultFileName) => {

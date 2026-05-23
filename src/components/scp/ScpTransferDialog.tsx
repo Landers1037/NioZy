@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -13,7 +13,8 @@ import { useAppStore, type AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getSshConnection } from '@/lib/ssh-connection'
 import { getTabDisplayTitle } from '@/lib/tab-display'
-import type { ScpFileEntry, SshConnectionProfile } from '../../../electron/shared/api-types'
+import type { ScpFileEntry, ScpTransferProgress } from '../../../electron/shared/api-types'
+import type { ScpListRemoteOptions } from '../../../electron/shared/ssh-types'
 import {
   ArrowDown,
   ArrowUp,
@@ -24,6 +25,19 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  canGoUpScpLocalPath,
+  isScpLocalRoots,
+  parentScpLocalPath,
+  SCP_LOCAL_ROOTS,
+} from '@/lib/scp-local-path'
+
+function formatTransferBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
+}
 
 interface ScpTransferDialogProps {
   tab: AppTab
@@ -41,6 +55,7 @@ function FileListPanel({
   onEnterDir,
   onGoUp,
   onRefresh,
+  canGoUp = true,
 }: {
   title: string
   path: string
@@ -51,6 +66,7 @@ function FileListPanel({
   onEnterDir: (entry: ScpFileEntry) => void
   onGoUp: () => void
   onRefresh: () => void
+  canGoUp?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -61,7 +77,14 @@ function FileListPanel({
         <span className="min-w-0 flex-1 truncate font-mono text-xs" title={path}>
           {path}
         </span>
-        <Button type="button" variant="ghost" size="icon" className="size-7" onClick={onGoUp}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          disabled={!canGoUp}
+          onClick={onGoUp}
+        >
           <ChevronUp className="size-4" />
           <span className="sr-only">{t('scp.goUp')}</span>
         </Button>
@@ -119,7 +142,6 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
   const settings = useAppStore((s) => s.settings)
   const terminalCwds = useAppStore((s) => s.terminalCwds)
 
-  const [profile, setProfile] = useState<SshConnectionProfile | null>(null)
   const [localPath, setLocalPath] = useState('')
   const [remotePath, setRemotePath] = useState('~')
   const [localEntries, setLocalEntries] = useState<ScpFileEntry[]>([])
@@ -129,39 +151,82 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
   const [selectedLocal, setSelectedLocal] = useState<ScpFileEntry | null>(null)
   const [selectedRemote, setSelectedRemote] = useState<ScpFileEntry | null>(null)
   const [transferring, setTransferring] = useState(false)
+  const [transferProgress, setTransferProgress] = useState<ScpTransferProgress | null>(null)
+  const remoteListQueue = useRef(Promise.resolve())
 
   const connection = getSshConnection(settings, tab.sshConnectionId)
+  const connectionId = tab.sshConnectionId
   const displayTitle = getTabDisplayTitle(tab)
 
   const loadLocal = useCallback(async (dir: string) => {
     setLocalLoading(true)
-    setLocalPath(dir)
-    const result = await getElectronAPI().ssh.listLocal(dir)
-    setLocalLoading(false)
-    if (result.ok && result.entries) {
-      setLocalEntries(result.entries)
-      if (!dir && result.entries.length > 0) {
-        const parent = result.entries[0]!.path.replace(/[/\\][^/\\]+$/, '')
-        if (parent) setLocalPath(parent)
+    try {
+      if (isScpLocalRoots(dir)) {
+        setLocalPath(SCP_LOCAL_ROOTS)
+        const result = await getElectronAPI().files.listRoots()
+        if (result.ok && result.entries) {
+          setLocalEntries(result.entries)
+        } else {
+          toast.error(result.error ?? t('scp.listFailed'))
+        }
+        return
       }
-    } else {
-      toast.error(result.error ?? t('scp.listFailed'))
+
+      setLocalPath(dir)
+      const result = await getElectronAPI().ssh.listLocal(dir)
+      if (result.ok && result.entries) {
+        setLocalEntries(result.entries)
+      } else {
+        toast.error(result.error ?? t('scp.listFailed'))
+      }
+    } finally {
+      setLocalLoading(false)
     }
   }, [t])
 
   const loadRemote = useCallback(
-    async (dir: string, prof: SshConnectionProfile) => {
-      setRemoteLoading(true)
-      const result = await getElectronAPI().ssh.listRemote(prof, dir)
-      setRemoteLoading(false)
-      if (result.ok && result.entries) {
-        setRemoteEntries(result.entries)
-        setRemotePath(dir)
-      } else {
-        toast.error(result.error ?? t('scp.listFailed'))
+    (dir: string, options?: ScpListRemoteOptions) => {
+      if (!connectionId) return Promise.resolve()
+
+      const run = async () => {
+        setRemoteLoading(true)
+        console.log('[NioZy][SCP] renderer listRemote start', {
+          connectionId,
+          dir,
+          afterTransfer: Boolean(options?.afterTransfer),
+        })
+        try {
+          const result = await getElectronAPI().ssh.listRemote(connectionId, dir, options)
+          console.log('[NioZy][SCP] renderer listRemote done', {
+            ok: result.ok,
+            entryCount: result.entries?.length,
+            resolvedPath: result.resolvedPath,
+            error: result.error,
+          })
+          if (result.ok && result.entries) {
+            setRemoteEntries(result.entries)
+            setRemotePath(result.resolvedPath ?? dir)
+          } else if (!options?.afterTransfer) {
+            toast.error(result.error ?? t('scp.listFailed'))
+          } else {
+            toast.message(t('scp.refreshAfterTransferFailed'))
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error('[NioZy][SCP] renderer listRemote error', message)
+          if (!options?.afterTransfer) {
+            toast.error(message || t('scp.listFailed'))
+          }
+        } finally {
+          setRemoteLoading(false)
+        }
       }
+
+      const next = remoteListQueue.current.then(run, run)
+      remoteListQueue.current = next
+      return next
     },
-    [t],
+    [connectionId, t],
   )
 
   useEffect(() => {
@@ -169,36 +234,37 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
     let cancelled = false
 
     void (async () => {
+      console.log('[NioZy][SCP] renderer open panel', {
+        connectionId: tab.sshConnectionId,
+        tabId: tab.id,
+      })
       const prof = await getElectronAPI().ssh.getProfile(tab.sshConnectionId!)
       if (cancelled) return
       if (!prof) {
+        console.error('[NioZy][SCP] renderer getProfile failed')
         toast.error(t('scp.profileFailed'))
         onOpenChange(false)
         return
       }
-      if (connection?.sshAuth === 'password') {
-        toast.message(t('scp.passwordAuthHint'))
-      }
-      setProfile(prof)
+      console.log('[NioZy][SCP] renderer getProfile ok', {
+        host: prof.host,
+        user: prof.user,
+        hasPassword: Boolean(prof.password),
+        hasKey: Boolean(prof.keyPath),
+      })
       const initialLocal = (tab.terminalId && terminalCwds[tab.terminalId]) || ''
       setLocalPath(initialLocal)
       setRemotePath('~')
       setSelectedLocal(null)
       setSelectedRemote(null)
       await loadLocal(initialLocal)
-      if (!cancelled) await loadRemote('~', prof)
+      if (!cancelled) await loadRemote('~')
     })()
 
     return () => {
       cancelled = true
     }
-  }, [open, tab.sshConnectionId, tab.terminalId, terminalCwds, connection?.sshAuth, loadLocal, loadRemote, onOpenChange, t])
-
-  const parentLocalPath = () => {
-    const sep = localPath.includes('\\') ? '\\' : '/'
-    const idx = localPath.lastIndexOf(sep)
-    return idx > 0 ? localPath.slice(0, idx) : localPath
-  }
+  }, [open, tab.sshConnectionId, tab.terminalId, terminalCwds, loadLocal, loadRemote, onOpenChange, t])
 
   const parentRemotePath = () => {
     if (remotePath === '/' || remotePath === '~') return remotePath
@@ -207,7 +273,7 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
   }
 
   const upload = async () => {
-    if (!profile || !selectedLocal || selectedLocal.isDirectory) {
+    if (!connectionId || !selectedLocal || selectedLocal.isDirectory) {
       toast.message(t('scp.selectLocalFile'))
       return
     }
@@ -218,18 +284,25 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
         : `${remotePath}/${selectedLocal.name}`
 
     setTransferring(true)
-    const result = await getElectronAPI().ssh.upload(profile, selectedLocal.path, remoteTarget)
+    setTransferProgress(null)
+    const result = await getElectronAPI().ssh.upload(
+      connectionId,
+      selectedLocal.path,
+      remoteTarget,
+      (p) => setTransferProgress(p),
+    )
     setTransferring(false)
+    setTransferProgress(null)
     if (result.ok) {
       toast.success(t('scp.uploadSuccess'))
-      void loadRemote(remotePath, profile)
+      await loadRemote(remotePath, { afterTransfer: true })
     } else {
       toast.error(result.error ?? t('scp.transferFailed'))
     }
   }
 
   const download = async () => {
-    if (!profile || !selectedRemote || selectedRemote.isDirectory) {
+    if (!connectionId || !selectedRemote || selectedRemote.isDirectory) {
       toast.message(t('scp.selectRemoteFile'))
       return
     }
@@ -240,12 +313,15 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
         : `${localPath}/${selectedRemote.name}`
 
     setTransferring(true)
+    setTransferProgress(null)
     const result = await getElectronAPI().ssh.download(
-      profile,
+      connectionId,
       selectedRemote.path,
       localTarget,
+      (p) => setTransferProgress(p),
     )
     setTransferring(false)
+    setTransferProgress(null)
     if (result.ok) {
       toast.success(t('scp.downloadSuccess'))
       void loadLocal(localPath)
@@ -272,14 +348,15 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
         <div className="flex min-h-[360px] gap-3">
           <FileListPanel
             title={t('scp.local')}
-            path={localPath}
+            path={isScpLocalRoots(localPath) ? t('scp.localComputer') : localPath}
             entries={localEntries}
             loading={localLoading}
             selectedPath={selectedLocal?.path ?? null}
             onSelect={setSelectedLocal}
             onEnterDir={(e) => void loadLocal(e.path)}
-            onGoUp={() => void loadLocal(parentLocalPath())}
+            onGoUp={() => void loadLocal(parentScpLocalPath(localPath))}
             onRefresh={() => void loadLocal(localPath)}
+            canGoUp={canGoUpScpLocalPath(localPath)}
           />
           <FileListPanel
             title={t('scp.remote')}
@@ -288,17 +365,68 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
             loading={remoteLoading}
             selectedPath={selectedRemote?.path ?? null}
             onSelect={setSelectedRemote}
-            onEnterDir={(e) => profile && void loadRemote(e.path, profile)}
-            onGoUp={() => profile && void loadRemote(parentRemotePath(), profile)}
-            onRefresh={() => profile && void loadRemote(remotePath, profile)}
+            onEnterDir={(e) => void loadRemote(e.path)}
+            onGoUp={() => void loadRemote(parentRemotePath())}
+            onRefresh={() => void loadRemote(remotePath)}
           />
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-h-10 min-w-0 max-w-md flex-1">
+            {transferProgress && (
+              <div className="flex flex-col gap-1.5">
+                <p className="truncate text-xs text-muted-foreground">
+                  {transferProgress.direction === 'upload'
+                    ? t('scp.uploadingProgress', {
+                        name: transferProgress.fileName,
+                        percent:
+                          transferProgress.total > 0
+                            ? Math.min(
+                                100,
+                                Math.round(
+                                  (transferProgress.transferred / transferProgress.total) * 100,
+                                ),
+                              )
+                            : 0,
+                      })
+                    : t('scp.downloadingProgress', {
+                        name: transferProgress.fileName,
+                        percent:
+                          transferProgress.total > 0
+                            ? Math.min(
+                                100,
+                                Math.round(
+                                  (transferProgress.transferred / transferProgress.total) * 100,
+                                ),
+                              )
+                            : 0,
+                      })}
+                </p>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-150"
+                    style={{
+                      width:
+                        transferProgress.total > 0
+                          ? `${Math.min(100, (transferProgress.transferred / transferProgress.total) * 100)}%`
+                          : '30%',
+                    }}
+                  />
+                </div>
+                {transferProgress.total > 0 && (
+                  <p className="font-mono text-[10px] text-muted-foreground">
+                    {formatTransferBytes(transferProgress.transferred)} /{' '}
+                    {formatTransferBytes(transferProgress.total)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <Button
             type="button"
             variant="outline"
-            disabled={transferring || !profile}
+            disabled={transferring || !connectionId}
             onClick={() => void upload()}
           >
             <ArrowUp className="size-4" />
@@ -307,7 +435,7 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
           <Button
             type="button"
             variant="outline"
-            disabled={transferring || !profile}
+            disabled={transferring || !connectionId}
             onClick={() => void download()}
           >
             <ArrowDown className="size-4" />
@@ -316,6 +444,7 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
             {t('common.close')}
           </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

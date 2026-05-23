@@ -5,6 +5,7 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
 function copyMainAssets(): Plugin {
   const shellSrc = resolve('electron/scripts/shell-integration.ps1')
+  const askpassSrc = resolve('electron/scripts/ssh-askpass.mjs')
   const traySrc = resolve('electron/assets/tray.png')
   const mainOut = resolve('out/main')
   const scriptsOut = resolve(mainOut, 'scripts')
@@ -17,6 +18,7 @@ function copyMainAssets(): Plugin {
         resolve(scriptsOut, 'shell-integration.ps1'),
         Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), ps1]),
       )
+      writeFileSync(resolve(scriptsOut, 'ssh-askpass.mjs'), readFileSync(askpassSrc))
       writeFileSync(resolve(mainOut, 'tray.png'), readFileSync(traySrc))
     },
   }

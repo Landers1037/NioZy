@@ -44,6 +44,7 @@
     "react-dom": "^19.0.0",
     "react-i18next": "^17.0.8",
     "sonner": "^2.0.1",
+    "ssh2": "^1.17.0",
     "systeminformation": "^5.31.6",
     "tailwind-merge": "^3.0.1",
     "zustand": "^5.0.3"
@@ -53,6 +54,7 @@
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "@types/ssh2": "^1.15.5",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8",

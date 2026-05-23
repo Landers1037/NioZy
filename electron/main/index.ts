@@ -25,7 +25,9 @@ import {
   isWindowsShellContextMenuSupported,
   setWindowsShellContextMenu,
 } from '../windows-shell-context-menu'
+import { scpLog, scpProfileForLog } from '../scp-logger'
 import type { SshConnectionProfile, TerminalCreateOptions } from '../shared/api-types'
+import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
@@ -36,6 +38,7 @@ import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
 } from '../local-file-protocol'
+import { setDebugLogEnabled } from '../debug-log'
 
 registerLocalFileScheme()
 
@@ -243,6 +246,7 @@ app.whenReady().then(async () => {
 
   settingsStore.load()
   vaultStore.load()
+  setDebugLogEnabled(settingsStore.get().advanced.debugLog === true)
 
   if (isDev) {
     console.log('[NioZy] app path:', app.getAppPath())
@@ -337,6 +341,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.advanced?.transparency !== undefined) {
     syncWindowOpacity()
   }
+  if (partial.advanced?.debugLog !== undefined) {
+    setDebugLogEnabled(updated.advanced.debugLog === true)
+  }
   if (partial.theme !== undefined || partial.uiStyle !== undefined) {
     mainWindow?.setBackgroundColor(
       getWindowBackgroundColor(updated.theme, updated.uiStyle),
@@ -362,10 +369,15 @@ ipcMain.handle('fonts:list', () => listSystemFonts())
 function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
   const conn = settingsStore.get().connections.find((c) => c.id === connectionId)
   if (!conn || conn.type !== 'ssh' || !conn.sshHost?.trim() || !conn.sshUser?.trim()) {
+    scpLog('getProfile: connection not found or invalid', { connectionId })
     return null
   }
   vaultStore.load()
-  return {
+  const password =
+    conn.sshAuth === 'password' && conn.sshPassword?.trim()
+      ? vaultStore.resolveText(conn.sshPassword.trim())
+      : undefined
+  const profile: SshConnectionProfile = {
     host: vaultStore.resolveText(conn.sshHost.trim()),
     user: vaultStore.resolveText(conn.sshUser.trim()),
     port: conn.sshPort ?? 22,
@@ -373,7 +385,15 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
       conn.sshAuth === 'publickey' && conn.sshKeyPath?.trim()
         ? vaultStore.resolveText(conn.sshKeyPath.trim())
         : undefined,
+    password: password || undefined,
   }
+  scpLog('getProfile', {
+    connectionId,
+    connectionName: conn.name,
+    sshAuth: conn.sshAuth,
+    ...scpProfileForLog(profile),
+  })
+  return profile
 }
 
 ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
@@ -391,20 +411,50 @@ ipcMain.handle(
 ipcMain.handle('fs:openWithProgram', (_, programPath: string, targetPath: string) =>
   fsService.openWithProgram(programPath, targetPath),
 )
+const SSH_PROFILE_NOT_FOUND = { ok: false as const, error: '无法解析 SSH 连接配置' }
+
 ipcMain.handle(
   'ssh:listRemote',
-  (_, profile: SshConnectionProfile, remotePath: string) =>
-    sshService.listRemoteDirectory(profile, remotePath),
+  (
+    _,
+    connectionId: string,
+    remotePath: string,
+    options?: import('../shared/ssh-types').ScpListRemoteOptions,
+  ) => {
+    const profile = resolveSshProfile(connectionId)
+    if (!profile) return SSH_PROFILE_NOT_FOUND
+    scpLog('ipc listRemote', {
+      connectionId,
+      remotePath,
+      afterTransfer: Boolean(options?.afterTransfer),
+      ...scpProfileForLog(profile),
+    })
+    return sshService.listRemoteDirectoryWithRetry(profile, remotePath, options)
+  },
 )
 ipcMain.handle(
   'ssh:upload',
-  (_, profile: SshConnectionProfile, localPath: string, remotePath: string) =>
-    sshService.scpUpload(profile, localPath, remotePath),
+  async (event, connectionId: string, localPath: string, remotePath: string) => {
+    const profile = resolveSshProfile(connectionId)
+    if (!profile) return SSH_PROFILE_NOT_FOUND
+    scpLog('ipc upload', { connectionId, localPath, remotePath, ...scpProfileForLog(profile) })
+    const sendProgress = (progress: ScpTransferProgress) => {
+      event.sender.send('ssh:transferProgress', progress)
+    }
+    return sshService.scpUpload(profile, localPath, remotePath, sendProgress)
+  },
 )
 ipcMain.handle(
   'ssh:download',
-  (_, profile: SshConnectionProfile, remotePath: string, localPath: string) =>
-    sshService.scpDownload(profile, remotePath, localPath),
+  async (event, connectionId: string, remotePath: string, localPath: string) => {
+    const profile = resolveSshProfile(connectionId)
+    if (!profile) return SSH_PROFILE_NOT_FOUND
+    scpLog('ipc download', { connectionId, remotePath, localPath, ...scpProfileForLog(profile) })
+    const sendProgress = (progress: ScpTransferProgress) => {
+      event.sender.send('ssh:transferProgress', progress)
+    }
+    return sshService.scpDownload(profile, remotePath, localPath, sendProgress)
+  },
 )
 
 ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {

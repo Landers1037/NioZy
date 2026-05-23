@@ -44,6 +44,7 @@ export type {
   ScpCheckResult,
   ScpListResult,
   ScpTransferResult,
+  ScpTransferProgress,
 } from './ssh-types'
 
 export type VaultVariableType = 'plain' | 'secret'
@@ -142,6 +143,8 @@ export interface AppSettings {
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
     preserveWindowBounds: boolean
     lastWindowState?: import('./window-state').SavedWindowState
+    /** 为 true 时将主进程 console 追加写入当前工作目录 NioZy.log */
+    debugLog: boolean
   }
   shortcuts: AppShortcuts
   ssh: import('./ssh-settings').SshSettings
@@ -299,18 +302,21 @@ export interface ElectronAPI {
     getProfile: (connectionId: string) => Promise<import('./ssh-types').SshConnectionProfile | null>
     listLocal: (dirPath: string) => Promise<import('./ssh-types').ScpListResult>
     listRemote: (
-      profile: import('./ssh-types').SshConnectionProfile,
+      connectionId: string,
       remotePath: string,
+      options?: import('./ssh-types').ScpListRemoteOptions,
     ) => Promise<import('./ssh-types').ScpListResult>
     upload: (
-      profile: import('./ssh-types').SshConnectionProfile,
+      connectionId: string,
       localPath: string,
       remotePath: string,
+      onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
     ) => Promise<import('./ssh-types').ScpTransferResult>
     download: (
-      profile: import('./ssh-types').SshConnectionProfile,
+      connectionId: string,
       remotePath: string,
       localPath: string,
+      onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
     ) => Promise<import('./ssh-types').ScpTransferResult>
   }
 }
