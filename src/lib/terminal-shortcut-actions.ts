@@ -5,6 +5,35 @@ import { matchAccelerator } from '@/lib/shortcut-utils'
 import i18n from '@/lib/i18n'
 import { toast } from 'sonner'
 
+/** Kitty CSI u 修饰键位掩码 + 1（shift=2, alt=3, ctrl=5, super=9）。 */
+function kittyEnterModifier(event: KeyboardEvent): number | null {
+  let mask = 0
+  if (event.shiftKey) mask |= 1
+  if (event.altKey) mask |= 2
+  if (event.ctrlKey) mask |= 4
+  if (event.metaKey) mask |= 8
+  return mask === 0 ? null : mask + 1
+}
+
+/**
+ * xterm.js 未实现 Kitty 键盘协议时，修饰键+Enter 与裸 Enter 均发送 \\r。
+ * 交互式 CLI（Claude/Cursor agent 等）依赖 \\x1b[13;Nu 区分换行与提交。
+ */
+export function handleTerminalModifiedEnterKey(
+  terminalId: string,
+  event: KeyboardEvent,
+  enabled: boolean,
+): boolean {
+  if (!enabled || event.type !== 'keydown' || event.key !== 'Enter') return false
+
+  const modifier = kittyEnterModifier(event)
+  if (modifier === null) return false
+
+  event.preventDefault()
+  getElectronAPI().terminal.write(terminalId, `\x1b[13;${modifier}u`)
+  return true
+}
+
 /** 在 xterm 获得焦点时处理终端快捷键；返回 true 表示已处理。 */
 export function handleTerminalKeyboardShortcut(
   term: Terminal,

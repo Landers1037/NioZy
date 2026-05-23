@@ -10,6 +10,7 @@ import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import {
   handleTerminalKeyboardShortcut,
+  handleTerminalModifiedEnterKey,
   handleTerminalRightClick,
 } from '@/lib/terminal-shortcut-actions'
 import {
@@ -135,8 +136,14 @@ export function TerminalView({ tab, preferDomRenderer = false }: TerminalViewPro
     term.onData(onData)
 
     term.attachCustomKeyEventHandler((event) => {
+      if (!tab.terminalId) return true
+      const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+      if (handleTerminalModifiedEnterKey(tab.terminalId, event, shell.shiftEnterNewline)) {
+        return false
+      }
+
       const shortcuts = useAppStore.getState().settings?.shortcuts.app
-      if (!shortcuts || !tab.terminalId) return true
+      if (!shortcuts) return true
       const handled = handleTerminalKeyboardShortcut(term, tab.terminalId, shortcuts, event)
       return !handled
     })

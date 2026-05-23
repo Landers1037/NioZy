@@ -137,7 +137,9 @@
       "highlightLinks": "Highlight links",
       "highlightLinksDesc": "Highlight http and https URLs in terminal output",
       "clickToOpenLinks": "Click to open links",
-      "clickToOpenLinksDesc": "Open a link in the default browser when you click it with the mouse"
+      "clickToOpenLinksDesc": "Open a link in the default browser when you click it with the mouse",
+      "shiftEnterNewline": "Use Shift+Enter for newline",
+      "shiftEnterNewlineDesc": "When enabled, Shift+Enter or Ctrl+Enter inserts a newline in interactive CLIs (e.g. Claude, Cursor agent); Enter sends the message"
     },
     "filesystem": {
       "title": "File system",
