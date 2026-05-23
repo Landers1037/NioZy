@@ -5,12 +5,15 @@ export interface ShellSettings {
   highlightLinks: boolean
   /** 单击链接时用系统默认浏览器打开 */
   clickToOpenLinks: boolean
+  /** 将 Shift/Ctrl+Enter 等修饰键组合映射为换行（交互式 CLI） */
+  shiftEnterNewline: boolean
 }
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   emojiNativeRendering: false,
   highlightLinks: false,
   clickToOpenLinks: false,
+  shiftEnterNewline: false,
 }
 
 export function normalizeShellSettings(value: unknown): ShellSettings {
@@ -28,5 +31,9 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.clickToOpenLinks === 'boolean'
         ? v.clickToOpenLinks
         : DEFAULT_SHELL_SETTINGS.clickToOpenLinks,
+    shiftEnterNewline:
+      typeof v.shiftEnterNewline === 'boolean'
+        ? v.shiftEnterNewline
+        : DEFAULT_SHELL_SETTINGS.shiftEnterNewline,
   }
 }

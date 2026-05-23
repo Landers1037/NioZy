@@ -3,7 +3,7 @@ import { Switch } from '@/components/ui/switch'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { TerminalSquare, Smile, Link2, MousePointerClick } from 'lucide-react'
+import { TerminalSquare, Smile, Link2, MousePointerClick, CornerDownLeft } from 'lucide-react'
 
 export function ShellSettings() {
   const { t } = useTranslation()
@@ -59,6 +59,18 @@ export function ShellSettings() {
           <Switch
             checked={shell.clickToOpenLinks}
             onCheckedChange={(v) => patchShell({ clickToOpenLinks: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={CornerDownLeft}
+          label={t('settings.shell.shiftEnterNewline')}
+          description={t('settings.shell.shiftEnterNewlineDesc')}
+          row
+        >
+          <Switch
+            checked={shell.shiftEnterNewline}
+            onCheckedChange={(v) => patchShell({ shiftEnterNewline: v })}
           />
         </SettingField>
       </CardContent>
