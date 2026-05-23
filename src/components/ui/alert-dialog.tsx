@@ -2,6 +2,11 @@ import * as React from 'react'
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
+import {
+  dialogContentClass,
+  dialogOverlayClass,
+  useDialogAnimationEnabled,
+} from '@/lib/dialog-animations'
 
 const AlertDialog = AlertDialogPrimitive.Root
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
@@ -10,31 +15,42 @@ const AlertDialogPortal = AlertDialogPrimitive.Portal
 const AlertDialogOverlay = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Overlay
-    ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/50 no-drag', className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const animate = useDialogAnimationEnabled()
+  return (
+    <AlertDialogPrimitive.Overlay
+      ref={ref}
+      className={cn(
+        'fixed inset-0 z-50 bg-black/50 no-drag',
+        dialogOverlayClass(animate),
+        className,
+      )}
+      {...props}
+    />
+  )
+})
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
 const AlertDialogContent = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        'ui-overlay-panel fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 no-drag',
-        className,
-      )}
-      {...props}
-    />
-  </AlertDialogPortal>
-))
+>(({ className, ...props }, ref) => {
+  const animate = useDialogAnimationEnabled()
+  return (
+    <AlertDialogPortal>
+      <AlertDialogOverlay />
+      <AlertDialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          'ui-overlay-panel pointer-events-auto fixed inset-0 z-50 m-auto h-fit w-full max-w-md max-h-[min(90vh,calc(100%-2rem))] overflow-hidden rounded-lg border border-border bg-card p-6 no-drag',
+          dialogContentClass(animate),
+          className,
+        )}
+        {...props}
+      />
+    </AlertDialogPortal>
+  )
+})
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

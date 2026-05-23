@@ -105,6 +105,8 @@ export interface AppSettings {
   fontSize: number
   /** 顶栏是否显示程序名 NioZy（关闭后仅显示图标） */
   showAppTitle: boolean
+  /** 弹框打开/关闭过渡动画 */
+  enableDialogAnimations: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
@@ -282,7 +284,7 @@ export interface ElectronAPI {
     saveText: (content: string, defaultFileName: string) => Promise<boolean>
     /** 本机文件系统树根（盘符或 /） */
     listRoots: () => Promise<import('./ssh-types').ScpListResult>
-    readImagePreview: (filePath: string) => Promise<import('../fs-service').ImagePreviewResult>
+    getImagePreviewUrl: (filePath: string) => Promise<import('../fs-service').ImagePreviewResult>
     detectProgram: (options: {
       kind: 'vscode' | 'cursor' | 'custom'
       path?: string

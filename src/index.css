@@ -415,3 +415,82 @@ body {
   text-decoration: underline;
   text-decoration-color: #58a6ff;
 }
+
+/* 弹框开关动画（设置 → 外观 → 动画效果） */
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 仅 translateY，居中由 flex 容器负责，避免与 left/top + translate(-50%,-50%) 冲突导致左上角闪一下 */
+@keyframes dialog-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dialog-content-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+}
+
+.dialog-overlay-animate[data-state='open'] {
+  animation-name: dialog-overlay-in;
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: backwards;
+}
+
+.dialog-overlay-animate[data-state='closed'] {
+  animation-name: dialog-overlay-out;
+  animation-duration: 0.1s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+.dialog-content-animate[data-state='open'] {
+  animation-name: dialog-content-in;
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: backwards;
+}
+
+.dialog-content-animate[data-state='closed'] {
+  animation-name: dialog-content-out;
+  animation-duration: 0.1s;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay-animate[data-state='open'],
+  .dialog-overlay-animate[data-state='closed'],
+  .dialog-content-animate[data-state='open'],
+  .dialog-content-animate[data-state='closed'] {
+    animation: none !important;
+  }
+}

@@ -1,10 +1,11 @@
 import { spawn } from 'child_process'
 import { existsSync } from 'fs'
-import { readFile, stat } from 'fs/promises'
+import { stat } from 'fs/promises'
+import { buildLocalPreviewUrl } from './local-file-protocol'
 import { homedir } from 'os'
 import { join, normalize } from 'path'
 import { resolveExecutable } from './resolve-executable'
-import { imageMimeFromPath, isImageFilePath } from './shared/filesystem-image'
+import { isImageFilePath } from './shared/filesystem-image'
 
 const MAX_PREVIEW_BYTES = 20 * 1024 * 1024
 
@@ -21,7 +22,8 @@ export interface ProgramDetectResult {
 
 export interface ImagePreviewResult {
   ok: boolean
-  dataUrl?: string
+  /** 自定义协议 URL，由 Chromium 流式读取本地文件（非 base64） */
+  url?: string
   error?: string
 }
 
@@ -216,20 +218,22 @@ export function detectProgram(
   return { found: false, error: 'Executable not found at the given path' }
 }
 
-export async function readImagePreview(filePath: string): Promise<ImagePreviewResult> {
+/** 校验后返回 niozy-local 协议 URL，避免整文件 base64 经 IPC 传入渲染进程 */
+export async function getImagePreviewUrl(filePath: string): Promise<ImagePreviewResult> {
   try {
-    if (!isImageFilePath(filePath)) {
+    const resolved = normalize(filePath)
+    if (!isImageFilePath(resolved)) {
       return { ok: false, error: 'Not an image file' }
     }
-    const st = await stat(filePath)
+    if (!existsSync(resolved)) {
+      return { ok: false, error: 'File not found' }
+    }
+    const st = await stat(resolved)
     if (!st.isFile()) return { ok: false, error: 'Not a file' }
     if (st.size > MAX_PREVIEW_BYTES) {
       return { ok: false, error: 'Image is too large to preview' }
     }
-    const buf = await readFile(filePath)
-    const mime = imageMimeFromPath(filePath)
-    const dataUrl = `data:${mime};base64,${buf.toString('base64')}`
-    return { ok: true, dataUrl }
+    return { ok: true, url: buildLocalPreviewUrl(resolved) }
   } catch (err) {
     return {
       ok: false,

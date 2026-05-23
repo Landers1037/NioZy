@@ -32,6 +32,12 @@ import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
 import { getWindowBackgroundColor } from '../shared/ui-style'
+import {
+  registerLocalFileScheme,
+  registerLocalFileProtocolHandler,
+} from '../local-file-protocol'
+
+registerLocalFileScheme()
 
 augmentWindowsPath()
 
@@ -233,6 +239,8 @@ if (gotSingleInstanceLock) {
 }
 
 app.whenReady().then(async () => {
+  await registerLocalFileProtocolHandler()
+
   settingsStore.load()
   vaultStore.load()
 
@@ -372,8 +380,8 @@ ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
 ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))
 ipcMain.handle('ssh:listLocal', (_, dirPath: string) => sshService.listLocalDirectory(dirPath))
 ipcMain.handle('fs:listRoots', () => sshService.listFilesystemRoots())
-ipcMain.handle('fs:readImagePreview', (_, filePath: string) =>
-  fsService.readImagePreview(filePath),
+ipcMain.handle('fs:getImagePreviewUrl', (_, filePath: string) =>
+  fsService.getImagePreviewUrl(filePath),
 )
 ipcMain.handle(
   'fs:detectProgram',
