@@ -1,44 +1,27 @@
-import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import type { AppTab } from '@/stores/app-store'
 import { TerminalView } from '@/components/terminal/TerminalView'
 import { getActiveSplitIndex, getSplitPanes } from '@/lib/terminal-tab-utils'
 import { closeSplitPane, setActiveSplitPane } from '@/lib/terminal-split-actions'
-import { getElectronAPI } from '@/lib/electron-client'
 import { cn } from '@/lib/utils'
 
 interface SplitTerminalPanelProps {
   tab: AppTab
+  isTabActive: boolean
 }
 
-export function SplitTerminalPanel({ tab }: SplitTerminalPanelProps) {
+export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps) {
   const { t } = useTranslation()
   const panes = getSplitPanes(tab)
   const activeIndex = getActiveSplitIndex(tab)
-
-  const paneIds = panes.map((p) => p.terminalId).join(',')
-
-  useEffect(() => {
-    const ids = panes.map((p) => p.terminalId)
-    if (ids.length === 0) return
-    const api = getElectronAPI()
-    if (ids.length > 1) {
-      void api.terminal.setActiveStreams(ids)
-    } else {
-      void api.terminal.setActiveStream(ids[0]!)
-    }
-    return () => {
-      void api.terminal.setActiveStream(null)
-    }
-  }, [paneIds])
 
   if (panes.length === 0) return null
 
   return (
     <div className="absolute inset-0 flex min-w-0">
       {panes.map((pane, index) => {
-        const isActive = index === activeIndex
+        const isPaneActive = index === activeIndex
         const showClose = panes.length > 1 && index > 0
 
         return (
@@ -49,7 +32,7 @@ export function SplitTerminalPanel({ tab }: SplitTerminalPanelProps) {
               index > 0 && 'border-l border-border/50',
             )}
             onPointerDown={() => {
-              if (!isActive) setActiveSplitPane(tab.id, index)
+              if (!isPaneActive) setActiveSplitPane(tab.id, index)
             }}
           >
             {showClose && (
@@ -66,6 +49,7 @@ export function SplitTerminalPanel({ tab }: SplitTerminalPanelProps) {
             <TerminalView
               tab={{ ...tab, terminalId: pane.terminalId }}
               preferDomRenderer={panes.length > 1}
+              isFocused={isTabActive && isPaneActive}
             />
           </div>
         )

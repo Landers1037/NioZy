@@ -139,7 +139,7 @@
       "clickToOpenLinks": "点击打开链接",
       "clickToOpenLinksDesc": "开启后可用鼠标单击链接，使用系统默认浏览器打开",
       "shiftEnterNewline": "使用 Shift+Enter 进行换行",
-      "shiftEnterNewlineDesc": "开启后在交互式 CLI（如 Claude、Cursor agent）中，Shift+Enter 或 Ctrl+Enter 可换行，Enter 发送消息"
+      "shiftEnterNewlineDesc": "开启后在交互式 CLI（如 Claude、Cursor agent）中，Shift+Enter 或 Ctrl+Enter 可换行，Enter 发送消息；点击输出区不会把光标移到页面末尾"
     },
     "filesystem": {
       "title": "文件系统",
