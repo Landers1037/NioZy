@@ -11,8 +11,7 @@ import { NewConnectionMenuContent } from '@/components/layout/NewConnectionMenuC
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { createTerminal } from '@/lib/terminal-actions'
-import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
-import { SpecialTabItem } from '@/components/layout/SpecialTabItem'
+import { SidebarTabList } from '@/components/layout/SidebarTabList'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
 import { DEFAULT_SIDEBAR_WIDTH } from '../../../electron/shared/sidebar-width'
 import { useUiClasses } from '@/lib/ui-style'
@@ -21,8 +20,6 @@ export function Sidebar() {
   const { t } = useTranslation()
   const collapsed = useAppStore((s) => s.sidebarCollapsed)
   const setCollapsed = useAppStore((s) => s.setSidebarCollapsed)
-  const tabs = useAppStore((s) => s.tabs)
-  const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const settings = useAppStore((s) => s.settings)
@@ -69,25 +66,7 @@ export function Sidebar() {
           </Button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 no-drag">
-          {tabs.map((tab) =>
-            tab.type === 'terminal' ? (
-              <TerminalTabItem
-                key={tab.id}
-                tab={tab}
-                collapsed={collapsed}
-                isActive={activeTabId === tab.id}
-              />
-            ) : (
-              <SpecialTabItem
-                key={tab.id}
-                tab={tab}
-                collapsed={collapsed}
-                isActive={activeTabId === tab.id}
-              />
-            ),
-          )}
-        </div>
+        <SidebarTabList collapsed={collapsed} />
 
         <div
           className={cn(

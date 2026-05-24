@@ -7,6 +7,10 @@ export interface ShellSettings {
   clickToOpenLinks: boolean
   /** 将 Shift/Ctrl+Enter 等修饰键组合映射为换行（交互式 CLI） */
   shiftEnterNewline: boolean
+  /** 在侧栏终端 Tab 名称左侧显示编号 */
+  showTerminalIndex: boolean
+  /** 长按侧栏终端 Tab 2s 后可拖拽调整顺序 */
+  enableTabDrag: boolean
 }
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
@@ -14,6 +18,8 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   highlightLinks: false,
   clickToOpenLinks: false,
   shiftEnterNewline: false,
+  showTerminalIndex: false,
+  enableTabDrag: false,
 }
 
 export function normalizeShellSettings(value: unknown): ShellSettings {
@@ -35,5 +41,13 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.shiftEnterNewline === 'boolean'
         ? v.shiftEnterNewline
         : DEFAULT_SHELL_SETTINGS.shiftEnterNewline,
+    showTerminalIndex:
+      typeof v.showTerminalIndex === 'boolean'
+        ? v.showTerminalIndex
+        : DEFAULT_SHELL_SETTINGS.showTerminalIndex,
+    enableTabDrag:
+      typeof v.enableTabDrag === 'boolean'
+        ? v.enableTabDrag
+        : DEFAULT_SHELL_SETTINGS.enableTabDrag,
   }
 }
