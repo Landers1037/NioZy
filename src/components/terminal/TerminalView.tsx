@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react'
-import { Terminal } from '@xterm/xterm'
-import { FitAddon } from '@xterm/addon-fit'
-import { WebglAddon } from '@xterm/addon-webgl'
+import { useEffect, useRef, useCallback, useState } from 'react'
+import type { Terminal } from '@xterm/xterm'
+import type { FitAddon } from '@xterm/addon-fit'
+import type { WebglAddon } from '@xterm/addon-webgl'
 import { useAppStore } from '@/stores/app-store'
 import { resolveTerminalTheme } from '@/lib/terminal-themes'
 import type { AppTab } from '@/stores/app-store'
@@ -17,6 +17,7 @@ import {
   handleTerminalModifiedEnterKey,
   handleTerminalRightClick,
 } from '@/lib/terminal-shortcut-actions'
+import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
 import {
   applyTerminalRuntimeOptions,
   buildTerminalOptions,
@@ -27,6 +28,15 @@ import {
 } from '@/lib/terminal-shell-addons'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
 import { normalizeRightClickCopyPaste } from '../../../electron/shared/terminal-xterm'
+import {
+  isLayoutResizing,
+  registerLayoutFitOnResizeEnd,
+} from '@/lib/layout-resize'
+import {
+  hasWebglSlot,
+  releaseWebglSlot,
+  tryAcquireWebglSlot,
+} from '@/lib/terminal-webgl-registry'
 import i18n from '@/lib/i18n'
 
 interface TerminalViewProps {
@@ -47,7 +57,11 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   const fitRef = useRef<FitAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
   const shellAddonsRef = useRef(createTerminalShellAddonState())
+  /** WebGL 上下文丢失或无法分配 slot 后，本会话内不再尝试 WebGL */
+  const domOnlyRef = useRef(false)
+  const [termReady, setTermReady] = useState(false)
   const settings = useAppStore((s) => s.settings)
+  const rendererPreference = settings?.terminal.renderer ?? 'webgl'
 
   const safeFit = useCallback((): boolean => {
     const el = containerRef.current
@@ -77,161 +91,228 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     requestAnimationFrame(tryFit)
   }, [safeFit])
 
+  const disposeWebgl = useCallback(() => {
+    const term = termRef.current
+    const webgl = webglRef.current
+    webglRef.current = null
+    if (!webgl) return
+    try {
+      webgl.dispose()
+    } catch {
+      /* WebGL 上下文已丢失时 dispose 可能报错 */
+    }
+    if (term && tab.terminalId && hasWebglSlot(tab.terminalId)) {
+      releaseWebglSlot(tab.terminalId)
+    }
+  }, [tab.terminalId])
+
   useEffect(() => {
     if (!tab.terminalId || termRef.current || !containerRef.current) return
 
     let disposed = false
-    let webglFrame = 0
-
-    const s = useAppStore.getState().settings
-    const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
-    const useWebgl =
-      !preferDomRenderer && (s?.terminal.renderer ?? 'webgl') === 'webgl'
-
-    const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
-    const term = new Terminal(
-      buildTerminalOptions(
-        s?.terminal,
-        theme,
-        getTerminalCursorOptions(s?.terminal),
-        shellSettings.emojiNativeRendering,
-      ),
-    )
-
-    const fit = new FitAddon()
-    term.loadAddon(fit)
-    term.open(containerRef.current)
-    applyInteractiveCliTerminalOptions(term, shellSettings.shiftEnterNewline)
-
-    termRef.current = term
-    fitRef.current = fit
-    registerTerminal(tab.terminalId!, term)
-
-    applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
-
-    const loadWebgl = () => {
-      if (disposed || !termRef.current) return
-      const prev = webglRef.current
-      webglRef.current = null
-      if (prev) {
-        try {
-          prev.dispose()
-        } catch {
-          /* WebGL 上下文已丢失时 delete 会报 INVALID_OPERATION */
-        }
-      }
-      try {
-        const webgl = new WebglAddon()
-        webglRef.current = webgl
-        term.loadAddon(webgl)
-        webgl.onContextLoss(() => {
-          if (disposed) return
-          webglFrame = requestAnimationFrame(loadWebgl)
-        })
-        const shellAfterWebgl = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-        applyTerminalShellAddons(term, shellAddonsRef.current, shellAfterWebgl)
-        scheduleFit()
-      } catch {
-        webglRef.current = null
-      }
-    }
-
-    const api = getElectronAPI()
-    const onData = (data: string) => {
-      api.terminal.write(tab.terminalId!, data)
-    }
-    term.onData(onData)
-
-    term.attachCustomKeyEventHandler((event) => {
-      if (!tab.terminalId) return true
-      const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-      if (handleTerminalModifiedEnterKey(tab.terminalId, event, shell.shiftEnterNewline)) {
-        return false
-      }
-
-      const shortcuts = useAppStore.getState().settings?.shortcuts.app
-      if (!shortcuts) return true
-      const handled = handleTerminalKeyboardShortcut(term, tab.terminalId, shortcuts, event)
-      return !handled
-    })
-
+    let ro: ResizeObserver | null = null
+    let unsubData: (() => void) | undefined
+    let unsubExit: (() => void) | undefined
+    let unsubLayoutFit: (() => void) | undefined
+    let termElement: HTMLElement | undefined
+    let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
+    let onRightMouseDown: ((e: MouseEvent) => void) | undefined
+    let onContextMenu: ((e: MouseEvent) => void) | undefined
     const captureOpts = { capture: true } as const
-    const termElement = term.element
 
-    const isRightClickCopyPasteEnabled = () => {
-      const terminalSettings = useAppStore.getState().settings?.terminal
-      return (
-        !!tab.terminalId &&
-        !!terminalSettings &&
-        normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
+    void (async () => {
+      await import('@xterm/xterm/css/xterm.css')
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+        import('@xterm/xterm'),
+        import('@xterm/addon-fit'),
+      ])
+
+      if (disposed || !containerRef.current) return
+
+      const s = useAppStore.getState().settings
+      const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
+      const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
+      const term = new Terminal(
+        buildTerminalOptions(
+          s?.terminal,
+          theme,
+          getTerminalCursorOptions(s?.terminal),
+          shellSettings.emojiNativeRendering,
+        ),
       )
-    }
 
-    const onLeftMouseDown = (e: MouseEvent) => {
-      const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-      handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
-    }
+      const fit = new FitAddon()
+      term.loadAddon(fit)
+      term.open(containerRef.current)
+      applyInteractiveCliTerminalOptions(term, shellSettings.shiftEnterNewline)
 
-    const onRightMouseDown = (e: MouseEvent) => {
-      if (e.button !== 2 || !isRightClickCopyPasteEnabled()) return
-      handleTerminalRightClick(term, tab.terminalId!, e)
-    }
+      termRef.current = term
+      fitRef.current = fit
+      registerTerminal(tab.terminalId!, term)
 
-    const onContextMenu = (e: MouseEvent) => {
-      if (!isRightClickCopyPasteEnabled()) return
-      e.preventDefault()
-      e.stopPropagation()
-    }
+      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
 
-    termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
-    termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
-    termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
-
-    const ro = new ResizeObserver(() => {
-      scheduleFit()
-    })
-    ro.observe(containerRef.current)
-
-    const unsubData = api.terminal.onData((id, data) => {
-      if (id === tab.terminalId) term.write(data)
-    })
-
-    const unsubExit = api.terminal.onExit((id) => {
-      if (id === tab.terminalId) {
-        const msg = i18n.t('terminal.processExited')
-        term.write(`\r\n\x1b[33m${msg}\x1b[0m\r\n`)
+      const api = getElectronAPI()
+      const onData = (data: string) => {
+        api.terminal.write(tab.terminalId!, data)
       }
-    })
+      term.onData(onData)
 
-    scheduleFit()
+      term.attachCustomKeyEventHandler((event) => {
+        if (!tab.terminalId) return true
+        if (handleTerminalTabNavigationShortcut(event)) return false
 
-    if (useWebgl) {
-      webglFrame = requestAnimationFrame(() => {
-        if (!safeFit()) {
-          webglFrame = requestAnimationFrame(loadWebgl)
-          return
+        const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+        if (handleTerminalModifiedEnterKey(tab.terminalId, event, shell.shiftEnterNewline)) {
+          return false
         }
-        loadWebgl()
+
+        const shortcuts = useAppStore.getState().settings?.shortcuts.app
+        if (!shortcuts) return true
+        const handled = handleTerminalKeyboardShortcut(term, tab.terminalId, shortcuts, event)
+        return !handled
       })
-    }
+
+      termElement = term.element ?? undefined
+
+      const isRightClickCopyPasteEnabled = () => {
+        const terminalSettings = useAppStore.getState().settings?.terminal
+        return (
+          !!tab.terminalId &&
+          !!terminalSettings &&
+          normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
+        )
+      }
+
+      onLeftMouseDown = (e: MouseEvent) => {
+        const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+        handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
+      }
+
+      onRightMouseDown = (e: MouseEvent) => {
+        if (e.button !== 2 || !isRightClickCopyPasteEnabled()) return
+        handleTerminalRightClick(term, tab.terminalId!, e)
+      }
+
+      onContextMenu = (e: MouseEvent) => {
+        if (!isRightClickCopyPasteEnabled()) return
+        e.preventDefault()
+        e.stopPropagation()
+      }
+
+      termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
+      termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
+      termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
+
+      ro = new ResizeObserver(() => {
+        if (isLayoutResizing()) return
+        scheduleFit()
+      })
+      ro.observe(containerRef.current)
+
+      unsubLayoutFit = registerLayoutFitOnResizeEnd(() => {
+        scheduleFit()
+      })
+
+      unsubData = api.terminal.onData((id, data) => {
+        if (id === tab.terminalId) term.write(data)
+      })
+
+      unsubExit = api.terminal.onExit((id) => {
+        if (id === tab.terminalId) {
+          const msg = i18n.t('terminal.processExited')
+          term.write(`\r\n\x1b[33m${msg}\x1b[0m\r\n`)
+        }
+      })
+
+      scheduleFit()
+      setTermReady(true)
+    })()
 
     return () => {
       disposed = true
-      cancelAnimationFrame(webglFrame)
-      termElement?.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
-      termElement?.removeEventListener('mousedown', onRightMouseDown, captureOpts)
-      termElement?.removeEventListener('contextmenu', onContextMenu, captureOpts)
-      unsubData()
-      unsubExit()
-      ro.disconnect()
-      unregisterTerminal(tab.terminalId!)
+      setTermReady(false)
+      domOnlyRef.current = false
+      disposeWebgl()
+      if (termElement && onLeftMouseDown && onRightMouseDown && onContextMenu) {
+        termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
+        termElement.removeEventListener('mousedown', onRightMouseDown, captureOpts)
+        termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
+      }
+      unsubData?.()
+      unsubExit?.()
+      unsubLayoutFit?.()
+      ro?.disconnect()
+      if (tab.terminalId) {
+        unregisterTerminal(tab.terminalId)
+      }
       shellAddonsRef.current = createTerminalShellAddonState()
-      webglRef.current = null
-      term.dispose()
+      termRef.current?.dispose()
       termRef.current = null
       fitRef.current = null
     }
-  }, [tab.terminalId, scheduleFit, safeFit, preferDomRenderer])
+  }, [tab.terminalId, scheduleFit, disposeWebgl])
+
+  useEffect(() => {
+    if (!termReady || !termRef.current || !tab.terminalId) return
+
+    const wantsWebgl =
+      isFocused &&
+      !preferDomRenderer &&
+      !domOnlyRef.current &&
+      rendererPreference === 'webgl'
+
+    if (!wantsWebgl || webglRef.current) {
+      if (!wantsWebgl) disposeWebgl()
+      return
+    }
+
+    if (!tryAcquireWebglSlot(tab.terminalId)) {
+      domOnlyRef.current = true
+      return
+    }
+
+    let cancelled = false
+
+    void (async () => {
+      const { WebglAddon } = await import('@xterm/addon-webgl')
+      if (cancelled || !termRef.current || webglRef.current) {
+        releaseWebglSlot(tab.terminalId!)
+        return
+      }
+
+      try {
+        const webgl = new WebglAddon()
+        webglRef.current = webgl
+        termRef.current!.loadAddon(webgl)
+        webgl.onContextLoss(() => {
+          domOnlyRef.current = true
+          disposeWebgl()
+          scheduleFit()
+        })
+        const shellAfterWebgl =
+          useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+        applyTerminalShellAddons(termRef.current!, shellAddonsRef.current, shellAfterWebgl)
+        scheduleFit()
+      } catch {
+        domOnlyRef.current = true
+        disposeWebgl()
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      disposeWebgl()
+    }
+  }, [
+    termReady,
+    isFocused,
+    preferDomRenderer,
+    rendererPreference,
+    tab.terminalId,
+    disposeWebgl,
+    scheduleFit,
+  ])
 
   useEffect(() => {
     if (!termRef.current || !settings) return
@@ -251,6 +332,14 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     applyTerminalRuntimeOptions(termRef.current, settings.terminal)
     scheduleFit()
   }, [settings?.terminal, scheduleFit])
+
+  useEffect(() => {
+    if (!termRef.current) return
+    if (rendererPreference !== 'webgl') {
+      domOnlyRef.current = false
+      disposeWebgl()
+    }
+  }, [rendererPreference, disposeWebgl])
 
   useEffect(() => {
     if (!termRef.current) return

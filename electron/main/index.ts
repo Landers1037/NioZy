@@ -38,6 +38,7 @@ import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
 } from '../local-file-protocol'
+import { buildInitialSettingsArgv } from '../shared/initial-settings'
 import { setDebugLogEnabled } from '../debug-log'
 
 registerLocalFileScheme()
@@ -159,9 +160,12 @@ function createWindow(): void {
     titleBarStyle: 'hidden',
     backgroundColor: getWindowBackgroundColor(settings.theme, settings.uiStyle),
     opacity: transparencyToOpacity(settings.advanced.transparency),
-    webPreferences: getOptimizedWebPreferences(preloadPath, {
-      disableSandbox: settings.advanced.disableSandbox,
-    }),
+    webPreferences: {
+      ...getOptimizedWebPreferences(preloadPath, {
+        disableSandbox: settings.advanced.disableSandbox,
+      }),
+      additionalArguments: [buildInitialSettingsArgv(settings)],
+    },
   })
 
   mainWindow.webContents.on('preload-error', (_, path, error) => {
@@ -253,18 +257,16 @@ app.whenReady().then(async () => {
     console.log('[NioZy] main dir:', __dirname)
   }
 
-  if (settingsStore.get().advanced.shellContextMenu) {
-    try {
-      await syncShellContextMenuRegistry(true)
-    } catch (err) {
-      console.error('[NioZy] Failed to sync shell context menu registry:', err)
-    }
-  }
-
   createWindow()
   createTray()
   syncSystemStatsPolling()
   syncGlobalShortcuts(settingsStore, () => mainWindow)
+
+  if (settingsStore.get().advanced.shellContextMenu) {
+    void syncShellContextMenuRegistry(true).catch((err) => {
+      console.error('[NioZy] Failed to sync shell context menu registry:', err)
+    })
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

@@ -172,6 +172,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       onMaximized: () => () => undefined,
     },
     settings: {
+      getInitial: () => structuredClone(mockSettings),
       get: async () => structuredClone(mockSettings),
       save: async (partial) => {
         mockSettings = mergeSettings(partial)

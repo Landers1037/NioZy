@@ -7,10 +7,22 @@ import type {
   UpdateCheckResult,
   UpdateDownloadPayload,
   UpdateDownloadResult,
+  AppSettings,
 } from '../shared/api-types'
+import { parseInitialSettingsFromArgv } from '../shared/initial-settings'
+import { createIpcMultiplex } from './ipc-multiplex'
 
 const require = createRequire(import.meta.url)
 const { contextBridge, ipcRenderer } = require('electron') as typeof import('electron')
+
+const initialSettings = parseInitialSettingsFromArgv(process.argv)
+
+const onWindowMaximized = createIpcMultiplex<[boolean]>(ipcRenderer, 'window:maximized')
+const onSystemStats = createIpcMultiplex<[SystemStatsData]>(ipcRenderer, 'system:stats')
+const onAppOpenDirectory = createIpcMultiplex<[string]>(ipcRenderer, 'app:openDirectory')
+const onTerminalData = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:data')
+const onTerminalCwd = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:cwd')
+const onTerminalExit = createIpcMultiplex<[string, number]>(ipcRenderer, 'terminal:exit')
 
 const api: ElectronAPI = {
   window: {
@@ -18,13 +30,10 @@ const api: ElectronAPI = {
     maximize: () => ipcRenderer.send('window:maximize'),
     close: () => ipcRenderer.send('window:close'),
     isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
-    onMaximized: (cb) => {
-      const handler = (_: unknown, maximized: boolean) => cb(maximized)
-      ipcRenderer.on('window:maximized', handler)
-      return () => ipcRenderer.removeListener('window:maximized', handler)
-    },
+    onMaximized: (cb) => onWindowMaximized(cb),
   },
   settings: {
+    getInitial: (): AppSettings | null => initialSettings,
     get: () => ipcRenderer.invoke('settings:get'),
     save: (partial) => ipcRenderer.invoke('settings:save', partial),
   },
@@ -34,11 +43,7 @@ const api: ElectronAPI = {
   system: {
     platform: process.platform,
     getStats: () => ipcRenderer.invoke('system:getStats'),
-    onStats: (cb) => {
-      const handler = (_: unknown, stats: SystemStatsData) => cb(stats)
-      ipcRenderer.on('system:stats', handler)
-      return () => ipcRenderer.removeListener('system:stats', handler)
-    },
+    onStats: (cb) => onSystemStats(cb),
     getAppMetrics: () =>
       ipcRenderer.invoke('system:getAppMetrics') as Promise<AppMetricsData>,
     reloadEnvironment: () =>
@@ -47,11 +52,7 @@ const api: ElectronAPI = {
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion') as Promise<string>,
     getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),
-    onOpenDirectory: (cb) => {
-      const handler = (_: unknown, directory: string) => cb(directory)
-      ipcRenderer.on('app:openDirectory', handler)
-      return () => ipcRenderer.removeListener('app:openDirectory', handler)
-    },
+    onOpenDirectory: (cb) => onAppOpenDirectory(cb),
   },
   terminal: {
     create: (options) => ipcRenderer.invoke('terminal:create', options),
@@ -60,21 +61,9 @@ const api: ElectronAPI = {
     kill: (id) => ipcRenderer.invoke('terminal:kill', id),
     setActiveStream: (id) => ipcRenderer.invoke('terminal:setActiveStream', id),
     setActiveStreams: (ids) => ipcRenderer.invoke('terminal:setActiveStreams', ids),
-    onData: (cb) => {
-      const handler = (_: unknown, id: string, data: string) => cb(id, data)
-      ipcRenderer.on('terminal:data', handler)
-      return () => ipcRenderer.removeListener('terminal:data', handler)
-    },
-    onCwd: (cb) => {
-      const handler = (_: unknown, id: string, cwd: string) => cb(id, cwd)
-      ipcRenderer.on('terminal:cwd', handler)
-      return () => ipcRenderer.removeListener('terminal:cwd', handler)
-    },
-    onExit: (cb) => {
-      const handler = (_: unknown, id: string, code: number) => cb(id, code)
-      ipcRenderer.on('terminal:exit', handler)
-      return () => ipcRenderer.removeListener('terminal:exit', handler)
-    },
+    onData: (cb) => onTerminalData(cb),
+    onCwd: (cb) => onTerminalCwd(cb),
+    onExit: (cb) => onTerminalExit(cb),
   },
   vault: {
     list: () => ipcRenderer.invoke('vault:list'),
