@@ -34,7 +34,9 @@ import {
 } from '@/lib/layout-resize'
 import {
   hasWebglSlot,
+  registerWebglEvictHandler,
   releaseWebglSlot,
+  touchWebglSlot,
   tryAcquireWebglSlot,
 } from '@/lib/terminal-webgl-registry'
 import i18n from '@/lib/i18n'
@@ -57,42 +59,60 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   const fitRef = useRef<FitAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
   const shellAddonsRef = useRef(createTerminalShellAddonState())
-  /** WebGL 上下文丢失或无法分配 slot 后，本会话内不再尝试 WebGL */
-  const domOnlyRef = useRef(false)
+  /** WebGL 上下文丢失或加载失败后，本会话内不再尝试 WebGL */
+  const webglBlockedRef = useRef(false)
+  const lastFitRef = useRef({ cols: 0, rows: 0, width: 0, height: 0 })
   const [termReady, setTermReady] = useState(false)
   const settings = useAppStore((s) => s.settings)
   const rendererPreference = settings?.terminal.renderer ?? 'webgl'
 
-  const safeFit = useCallback((): boolean => {
-    const el = containerRef.current
-    const fit = fitRef.current
-    const term = termRef.current
-    if (!el || !fit || !term || !hasLayout(el)) return false
+  const safeFit = useCallback(
+    (force = false): boolean => {
+      const el = containerRef.current
+      const fit = fitRef.current
+      const term = termRef.current
+      if (!el || !fit || !term || !hasLayout(el)) return false
 
-    try {
-      fit.fit()
-      const { cols, rows } = term
-      if (cols > 0 && rows > 0 && tab.terminalId) {
-        getElectronAPI().terminal.resize(tab.terminalId, cols, rows)
+      const width = el.clientWidth
+      const height = el.clientHeight
+      const prev = lastFitRef.current
+      const sizeUnchanged = prev.width === width && prev.height === height
+
+      if (!force && sizeUnchanged && term.cols === prev.cols && term.rows === prev.rows) {
+        return term.cols > 0 && term.rows > 0
       }
-      return cols > 0 && rows > 0
-    } catch {
-      return false
-    }
-  }, [tab.terminalId])
 
-  const scheduleFit = useCallback(() => {
-    let attempts = 0
-    const tryFit = () => {
-      if (safeFit() || attempts >= 12) return
-      attempts += 1
+      try {
+        fit.fit()
+        const { cols, rows } = term
+        lastFitRef.current = { cols, rows, width, height }
+        if (cols > 0 && rows > 0 && tab.terminalId) {
+          if (force || cols !== prev.cols || rows !== prev.rows) {
+            getElectronAPI().terminal.resize(tab.terminalId, cols, rows)
+          }
+        }
+        return cols > 0 && rows > 0
+      } catch {
+        return false
+      }
+    },
+    [tab.terminalId],
+  )
+
+  const scheduleFit = useCallback(
+    (force = false) => {
+      let attempts = 0
+      const tryFit = () => {
+        if (safeFit(force) || attempts >= 12) return
+        attempts += 1
+        requestAnimationFrame(tryFit)
+      }
       requestAnimationFrame(tryFit)
-    }
-    requestAnimationFrame(tryFit)
-  }, [safeFit])
+    },
+    [safeFit],
+  )
 
   const disposeWebgl = useCallback(() => {
-    const term = termRef.current
     const webgl = webglRef.current
     webglRef.current = null
     if (!webgl) return
@@ -101,10 +121,44 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     } catch {
       /* WebGL 上下文已丢失时 dispose 可能报错 */
     }
-    if (term && tab.terminalId && hasWebglSlot(tab.terminalId)) {
+    if (tab.terminalId && hasWebglSlot(tab.terminalId)) {
       releaseWebglSlot(tab.terminalId)
     }
   }, [tab.terminalId])
+
+  const loadWebgl = useCallback(async () => {
+    if (!termRef.current || !tab.terminalId || webglRef.current) return
+    if (preferDomRenderer || webglBlockedRef.current || rendererPreference !== 'webgl') return
+
+    if (!tryAcquireWebglSlot(tab.terminalId)) return
+
+    try {
+      const { WebglAddon } = await import('@xterm/addon-webgl')
+      if (!termRef.current || webglRef.current) {
+        if (tab.terminalId && hasWebglSlot(tab.terminalId)) {
+          releaseWebglSlot(tab.terminalId)
+        }
+        return
+      }
+
+      const webgl = new WebglAddon()
+      webglRef.current = webgl
+      termRef.current.loadAddon(webgl)
+      touchWebglSlot(tab.terminalId)
+      webgl.onContextLoss(() => {
+        webglBlockedRef.current = true
+        disposeWebgl()
+        scheduleFit(true)
+      })
+      const shellAfterWebgl =
+        useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+      applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shellAfterWebgl)
+      scheduleFit(true)
+    } catch {
+      webglBlockedRef.current = true
+      disposeWebgl()
+    }
+  }, [tab.terminalId, preferDomRenderer, rendererPreference, disposeWebgl, scheduleFit])
 
   useEffect(() => {
     if (!tab.terminalId || termRef.current || !containerRef.current) return
@@ -225,14 +279,15 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
         }
       })
 
-      scheduleFit()
+      scheduleFit(true)
       setTermReady(true)
     })()
 
     return () => {
       disposed = true
       setTermReady(false)
-      domOnlyRef.current = false
+      webglBlockedRef.current = false
+      lastFitRef.current = { cols: 0, rows: 0, width: 0, height: 0 }
       disposeWebgl()
       if (termElement && onLeftMouseDown && onRightMouseDown && onContextMenu) {
         termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
@@ -254,65 +309,18 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   }, [tab.terminalId, scheduleFit, disposeWebgl])
 
   useEffect(() => {
-    if (!termReady || !termRef.current || !tab.terminalId) return
+    if (!termReady || !tab.terminalId) return
 
-    const wantsWebgl =
-      isFocused &&
-      !preferDomRenderer &&
-      !domOnlyRef.current &&
-      rendererPreference === 'webgl'
+    const unregisterEvict = registerWebglEvictHandler(tab.terminalId, () => {
+      disposeWebgl()
+    })
 
-    if (!wantsWebgl || webglRef.current) {
-      if (!wantsWebgl) disposeWebgl()
-      return
-    }
-
-    if (!tryAcquireWebglSlot(tab.terminalId)) {
-      domOnlyRef.current = true
-      return
-    }
-
-    let cancelled = false
-
-    void (async () => {
-      const { WebglAddon } = await import('@xterm/addon-webgl')
-      if (cancelled || !termRef.current || webglRef.current) {
-        releaseWebglSlot(tab.terminalId!)
-        return
-      }
-
-      try {
-        const webgl = new WebglAddon()
-        webglRef.current = webgl
-        termRef.current!.loadAddon(webgl)
-        webgl.onContextLoss(() => {
-          domOnlyRef.current = true
-          disposeWebgl()
-          scheduleFit()
-        })
-        const shellAfterWebgl =
-          useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-        applyTerminalShellAddons(termRef.current!, shellAddonsRef.current, shellAfterWebgl)
-        scheduleFit()
-      } catch {
-        domOnlyRef.current = true
-        disposeWebgl()
-      }
-    })()
+    void loadWebgl()
 
     return () => {
-      cancelled = true
-      disposeWebgl()
+      unregisterEvict()
     }
-  }, [
-    termReady,
-    isFocused,
-    preferDomRenderer,
-    rendererPreference,
-    tab.terminalId,
-    disposeWebgl,
-    scheduleFit,
-  ])
+  }, [termReady, tab.terminalId, loadWebgl, disposeWebgl])
 
   useEffect(() => {
     if (!termRef.current || !settings) return
@@ -334,22 +342,28 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   }, [settings?.terminal, scheduleFit])
 
   useEffect(() => {
-    if (!termRef.current) return
+    if (!termRef.current || !termReady) return
     if (rendererPreference !== 'webgl') {
-      domOnlyRef.current = false
+      webglBlockedRef.current = false
       disposeWebgl()
+      return
     }
-  }, [rendererPreference, disposeWebgl])
+    void loadWebgl()
+  }, [rendererPreference, termReady, disposeWebgl, loadWebgl])
 
   useEffect(() => {
-    if (!termRef.current) return
+    if (!termRef.current || !tab.terminalId) return
     if (isFocused) {
-      scheduleFit()
+      touchWebglSlot(tab.terminalId)
+      safeFit()
       termRef.current.focus()
+      if (!webglRef.current && !webglBlockedRef.current && rendererPreference === 'webgl') {
+        void loadWebgl()
+      }
       return
     }
     termRef.current.blur()
-  }, [isFocused, scheduleFit])
+  }, [isFocused, safeFit, tab.terminalId, loadWebgl, rendererPreference])
 
   const terminalBackground =
     resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'
