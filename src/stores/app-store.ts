@@ -54,6 +54,7 @@ interface AppState {
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
   setTabCustomTitle: (id: string, customTitle: string | undefined) => void
+  reorderTab: (tabId: string, toIndex: number) => void
   setTerminalCwd: (terminalId: string, cwd: string) => void
   clearTerminalCwd: (terminalId: string) => void
   setSettings: (s: AppSettings) => void
@@ -159,6 +160,16 @@ export const useAppStore = create<AppState>((set, get) => ({
         return { ...t, customTitle: trimmed }
       }),
     })),
+  reorderTab: (tabId, toIndex) =>
+    set((s) => {
+      const fromIndex = s.tabs.findIndex((t) => t.id === tabId)
+      if (fromIndex < 0 || fromIndex === toIndex) return s
+      const tabs = [...s.tabs]
+      const [item] = tabs.splice(fromIndex, 1)
+      const clamped = Math.max(0, Math.min(toIndex, tabs.length))
+      tabs.splice(clamped, 0, item)
+      return { tabs }
+    }),
   setSettings: (settings) => {
     applyAppLocale(settings.locale)
     set({

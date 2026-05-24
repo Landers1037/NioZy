@@ -3,7 +3,7 @@ import { Switch } from '@/components/ui/switch'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { TerminalSquare, Smile, Link2, MousePointerClick, CornerDownLeft } from 'lucide-react'
+import { TerminalSquare, Smile, Link2, MousePointerClick, CornerDownLeft, Hash, GripVertical } from 'lucide-react'
 
 export function ShellSettings() {
   const { t } = useTranslation()
@@ -71,6 +71,30 @@ export function ShellSettings() {
           <Switch
             checked={shell.shiftEnterNewline}
             onCheckedChange={(v) => patchShell({ shiftEnterNewline: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Hash}
+          label={t('settings.shell.showTerminalIndex')}
+          description={t('settings.shell.showTerminalIndexDesc')}
+          row
+        >
+          <Switch
+            checked={shell.showTerminalIndex}
+            onCheckedChange={(v) => patchShell({ showTerminalIndex: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={GripVertical}
+          label={t('settings.shell.enableTabDrag')}
+          description={t('settings.shell.enableTabDragDesc')}
+          row
+        >
+          <Switch
+            checked={shell.enableTabDrag}
+            onCheckedChange={(v) => patchShell({ enableTabDrag: v })}
           />
         </SettingField>
       </CardContent>

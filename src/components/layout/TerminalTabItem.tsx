@@ -63,6 +63,21 @@ interface TerminalTabItemProps {
   /** 极简模式横向 Tab：仅图标、紧凑尺寸 */
   iconOnly?: boolean
   isActive: boolean
+  /** 终端 Tab 在侧栏中的序号（从 1 开始） */
+  terminalIndex?: number
+  /** 是否在名称左侧显示序号 */
+  showTerminalIndex?: boolean
+  /** 是否处于拖拽模式 */
+  isDragging?: boolean
+  /** 侧栏是否有 Tab 正在拖拽 */
+  dragModeActive?: boolean
+  /** 是否启用长按拖拽 */
+  dragEnabled?: boolean
+  onDragPointerDown?: (e: React.PointerEvent) => void
+  onDragPointerMove?: (e: React.PointerEvent) => void
+  onDragPointerUp?: (e: React.PointerEvent) => void
+  onDragPointerCancel?: (e: React.PointerEvent) => void
+  shouldSuppressClick?: () => boolean
 }
 
 export function TerminalTabItem({
@@ -70,6 +85,16 @@ export function TerminalTabItem({
   collapsed = false,
   iconOnly = false,
   isActive,
+  terminalIndex,
+  showTerminalIndex = false,
+  isDragging = false,
+  dragModeActive = false,
+  dragEnabled = false,
+  onDragPointerDown,
+  onDragPointerMove,
+  onDragPointerUp,
+  onDragPointerCancel,
+  shouldSuppressClick,
 }: TerminalTabItemProps) {
   const { t } = useTranslation()
   const setActiveTab = useAppStore((s) => s.setActiveTab)
@@ -117,17 +142,38 @@ export function TerminalTabItem({
     <div
       title={displayTitle}
       className={cn(
-        'group flex cursor-pointer items-center transition-colors',
+        'group flex cursor-pointer items-center transition-colors touch-none',
         iconOnly
           ? cn('size-6 shrink-0 justify-center', getTabCornerRadius(uiStyle))
           : cn(getTabCornerRadius(uiStyle), 'py-1.5', compact ? 'justify-center px-0' : 'gap-2 px-2'),
         getTabHighlightClasses(isActive, iconOnly, uiStyle),
+        isDragging && 'z-20 scale-[1.02] shadow-md ring-2 ring-primary/60',
+        dragModeActive && !isDragging && 'opacity-60',
       )}
-      onClick={() => setActiveTab(tab.id)}
+      onClick={() => {
+        if (shouldSuppressClick?.()) return
+        setActiveTab(tab.id)
+      }}
+      onPointerDown={dragEnabled ? onDragPointerDown : undefined}
+      onPointerMove={dragEnabled ? onDragPointerMove : undefined}
+      onPointerUp={dragEnabled ? onDragPointerUp : undefined}
+      onPointerCancel={dragEnabled ? onDragPointerCancel : undefined}
     >
       <Terminal className={cn('shrink-0', iconOnly ? 'size-3' : 'size-4')} />
       {!compact && (
         <>
+          {showTerminalIndex && terminalIndex != null ? (
+            <span
+              className={cn(
+                'inline-flex size-5 shrink-0 items-center justify-center rounded border text-[10px] font-medium tabular-nums leading-none',
+                isActive
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-border bg-muted/40 text-muted-foreground',
+              )}
+            >
+              {terminalIndex}
+            </span>
+          ) : null}
           <span className="min-w-0 flex-1 truncate text-sm" title={displayTitle}>
             {displayTitle}
           </span>
