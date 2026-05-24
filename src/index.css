@@ -3,8 +3,6 @@
 /* 与 settings.theme 的 .dark 类一致，避免 dark: 仅跟随系统偏好 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@import '@xterm/xterm/css/xterm.css';
-
 @font-face {
   font-family: 'Noto Sans SC';
   src: url('./fonts/NotoSansSC-VariableFont_wght.ttf') format('truetype');
@@ -394,6 +392,7 @@ body {
 
 .drag-region {
   -webkit-app-region: drag;
+  touch-action: none;
 }
 
 .no-drag {

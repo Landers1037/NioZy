@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   clampSidebarWidth,
   SIDEBAR_COLLAPSED_WIDTH,
 } from '../../electron/shared/sidebar-width'
+import { setLayoutResizing } from '@/lib/layout-resize'
 
 interface UseSidebarResizeOptions {
   width: number
@@ -11,28 +12,39 @@ interface UseSidebarResizeOptions {
 }
 
 export function useSidebarResize({ width, collapsed, onCommit }: UseSidebarResizeOptions) {
-  const [dragWidth, setDragWidth] = useState<number | null>(null)
-  const isResizing = dragWidth !== null
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isResizing, setIsResizing] = useState(false)
 
-  const displayWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : (dragWidth ?? width)
+  const displayWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : width
 
   const startResize = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (collapsed) return
       e.preventDefault()
       const handle = e.currentTarget
+      const container = containerRef.current
+      if (!container) return
+
       handle.setPointerCapture(e.pointerId)
 
       const startX = e.clientX
       const startWidth = width
 
+      setIsResizing(true)
+      setLayoutResizing(true)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+
       const onMove = (ev: PointerEvent) => {
-        setDragWidth(clampSidebarWidth(startWidth + ev.clientX - startX))
+        const next = clampSidebarWidth(startWidth + ev.clientX - startX)
+        container.style.width = `${next}px`
       }
 
-      const onUp = (ev: PointerEvent) => {
+      const finish = (ev: PointerEvent) => {
         const next = clampSidebarWidth(startWidth + ev.clientX - startX)
-        setDragWidth(null)
+        container.style.width = ''
+        setIsResizing(false)
+        setLayoutResizing(false)
         onCommit(next)
         document.body.style.cursor = ''
         document.body.style.userSelect = ''
@@ -40,16 +52,16 @@ export function useSidebarResize({ width, collapsed, onCommit }: UseSidebarResiz
           handle.releasePointerCapture(ev.pointerId)
         }
         handle.removeEventListener('pointermove', onMove)
-        handle.removeEventListener('pointerup', onUp)
+        handle.removeEventListener('pointerup', finish)
+        handle.removeEventListener('pointercancel', finish)
       }
 
-      document.body.style.cursor = 'col-resize'
-      document.body.style.userSelect = 'none'
       handle.addEventListener('pointermove', onMove)
-      handle.addEventListener('pointerup', onUp)
+      handle.addEventListener('pointerup', finish)
+      handle.addEventListener('pointercancel', finish)
     },
     [collapsed, width, onCommit],
   )
 
-  return { displayWidth, isResizing, startResize }
+  return { containerRef, displayWidth, isResizing, startResize }
 }

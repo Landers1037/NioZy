@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { TitleBar } from '@/components/layout/TitleBar'
@@ -6,9 +6,6 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
-import { SplitTerminalPanel } from '@/components/terminal/SplitTerminalPanel'
-import { SettingsPanel } from '@/components/settings/SettingsPanel'
-import { FilesystemPanel } from '@/components/filesystem/FilesystemPanel'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
@@ -18,8 +15,28 @@ import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
-import { ScpTransferDialog } from '@/components/scp/ScpTransferDialog'
 import { cn } from '@/lib/utils'
+
+const SplitTerminalPanel = lazy(() =>
+  import('@/components/terminal/SplitTerminalPanel').then((m) => ({
+    default: m.SplitTerminalPanel,
+  })),
+)
+const SettingsPanel = lazy(() =>
+  import('@/components/settings/SettingsPanel').then((m) => ({
+    default: m.SettingsPanel,
+  })),
+)
+const FilesystemPanel = lazy(() =>
+  import('@/components/filesystem/FilesystemPanel').then((m) => ({
+    default: m.FilesystemPanel,
+  })),
+)
+const ScpTransferDialog = lazy(() =>
+  import('@/components/scp/ScpTransferDialog').then((m) => ({
+    default: m.ScpTransferDialog,
+  })),
+)
 
 export default function App() {
   const { t } = useTranslation()
@@ -173,18 +190,24 @@ export default function App() {
                   )}
                   aria-hidden={!isActive}
                 >
-                  <SplitTerminalPanel tab={tab} isTabActive={isActive} />
+                  <Suspense fallback={null}>
+                    <SplitTerminalPanel tab={tab} isTabActive={isActive} />
+                  </Suspense>
                 </div>
               )
             })}
             {activeTab?.type === 'settings' && (
               <div className="absolute inset-0">
-                <SettingsPanel />
+                <Suspense fallback={null}>
+                  <SettingsPanel />
+                </Suspense>
               </div>
             )}
             {activeTab?.type === 'filesystem' && (
               <div className="absolute inset-0">
-                <FilesystemPanel />
+                <Suspense fallback={null}>
+                  <FilesystemPanel />
+                </Suspense>
               </div>
             )}
             {tabs.length === 0 && (
@@ -198,13 +221,15 @@ export default function App() {
       <StatusBar />
       <Toaster position="bottom-right" richColors closeButton />
       {scpTransferTab && isSshTerminalTab(scpTransferTab) && (
-        <ScpTransferDialog
-          tab={scpTransferTab}
-          open
-          onOpenChange={(open) => {
-            if (!open) setScpTransferTabId(null)
-          }}
-        />
+        <Suspense fallback={null}>
+          <ScpTransferDialog
+            tab={scpTransferTab}
+            open
+            onOpenChange={(open) => {
+              if (!open) setScpTransferTabId(null)
+            }}
+          />
+        </Suspense>
       )}
     </div>
   )

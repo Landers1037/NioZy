@@ -227,6 +227,7 @@ export interface ElectronAPI {
     onMaximized: (cb: (maximized: boolean) => void) => () => void
   }
   settings: {
+    getInitial: () => AppSettings | null
     get: () => Promise<AppSettings>
     save: (partial: Partial<AppSettings>) => Promise<AppSettings>
   }

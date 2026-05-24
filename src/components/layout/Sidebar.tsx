@@ -39,7 +39,7 @@ export function Sidebar() {
 
   const ui = useUiClasses()
 
-  const { displayWidth, isResizing, startResize } = useSidebarResize({
+  const { containerRef, displayWidth, isResizing, startResize } = useSidebarResize({
     width: storedWidth,
     collapsed,
     onCommit: commitWidth,
@@ -47,6 +47,7 @@ export function Sidebar() {
 
   return (
     <div
+      ref={containerRef}
       className="relative flex h-full shrink-0"
       style={{ width: displayWidth }}
     >
