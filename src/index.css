@@ -314,9 +314,32 @@ html[data-ui-style='windows-classic'] .ui-card-title {
   font-size: 11px;
 }
 
+html[data-ui-style='windows-classic'] .ui-switch-track {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: var(--xp-3d-dark) var(--xp-3d-highlight) var(--xp-3d-highlight) var(--xp-3d-dark);
+  background: var(--card);
+}
+
+html[data-ui-style='windows-classic'] .ui-switch-track[data-state='checked'] {
+  background: var(--primary);
+  border-color: var(--xp-3d-dark) var(--xp-3d-highlight) var(--xp-3d-highlight) var(--xp-3d-dark);
+}
+
 html[data-ui-style='windows-classic'] .ui-switch-thumb {
   border-radius: 0;
-  border: 1px solid var(--xp-3d-dark);
+  border: 2px solid;
+  border-color: var(--xp-3d-highlight) var(--xp-3d-dark) var(--xp-3d-dark) var(--xp-3d-highlight);
+  background: var(--xp-3d-face);
+  box-shadow: none;
+}
+
+html[data-ui-style='windows-classic'] .ui-switch-thumb[data-state='unchecked'] {
+  transform: translateX(2px);
+}
+
+html[data-ui-style='windows-classic'] .ui-switch-thumb[data-state='checked'] {
+  transform: translateX(14px);
 }
 
 /* NioZy：阴影与圆角 */
