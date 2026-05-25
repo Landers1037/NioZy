@@ -5,6 +5,8 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
 function copyMainAssets(): Plugin {
   const shellSrc = resolve('electron/scripts/shell-integration.ps1')
+  const elevBridgeSrc = resolve('electron/scripts/elevated-shell-bridge.ps1')
+  const elevWorkerSrc = resolve('electron/scripts/elevated-shell-bridge-worker.ps1')
   const askpassSrc = resolve('electron/scripts/ssh-askpass.mjs')
   const traySrc = resolve('electron/assets/tray.png')
   const mainOut = resolve('out/main')
@@ -13,11 +15,13 @@ function copyMainAssets(): Plugin {
     name: 'copy-main-assets',
     writeBundle() {
       mkdirSync(scriptsOut, { recursive: true })
-      const ps1 = readFileSync(shellSrc)
-      writeFileSync(
-        resolve(scriptsOut, 'shell-integration.ps1'),
-        Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), ps1]),
-      )
+      const bom = Buffer.from([0xef, 0xbb, 0xbf])
+      const writePs1 = (src: string, name: string) => {
+        writeFileSync(resolve(scriptsOut, name), Buffer.concat([bom, readFileSync(src)]))
+      }
+      writePs1(shellSrc, 'shell-integration.ps1')
+      writePs1(elevBridgeSrc, 'elevated-shell-bridge.ps1')
+      writePs1(elevWorkerSrc, 'elevated-shell-bridge-worker.ps1')
       writeFileSync(resolve(scriptsOut, 'ssh-askpass.mjs'), readFileSync(askpassSrc))
       writeFileSync(resolve(mainOut, 'tray.png'), readFileSync(traySrc))
     },
