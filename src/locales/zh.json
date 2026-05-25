@@ -75,7 +75,8 @@
       "vault": "存储库",
       "shortcuts": "快捷键",
       "system": "系统设置",
-      "advanced": "高级设置"
+      "advanced": "高级设置",
+      "experimental": "实验特性"
     },
     "appearance": {
       "title": "外观设置",
@@ -108,6 +109,7 @@
       "rendererDom": "Canvas / DOM（稳定）",
       "rendererWebgl": "WebGL（推荐）",
       "rendererWebgpu": "WebGPU（实验，可能不可用）",
+      "rendererWtermDesc": "当前使用 Wterm 终端，仅支持 DOM 渲染（Canvas / DOM）。切换回 Xterm 后可选择 WebGL / WebGPU。",
       "scrollback": "回滚",
       "scrollbackDesc": "保留可向上滚动的历史行数（xterm scrollback）",
       "lines": "行",
@@ -195,6 +197,14 @@
       "version": "版本 {{version}} (MVP)",
       "aboutDesc": "多终端管理器 — 基于 Electron、React、xterm.js 与 Windows ConPTY。",
       "cardDescription": "代理、启动项、托盘与关于"
+    },
+    "experimental": {
+      "title": "实验特性",
+      "description": "不稳定功能，可能变更或移除",
+      "terminalEmulator": "终端模拟器",
+      "terminalEmulatorDesc": "选择前端终端模拟器实现。Wterm 使用 WASM/DOM 渲染（实验性）。切换后请重新打开终端 Tab 生效。",
+      "terminalEmulatorXterm": "Xterm.js（默认）",
+      "terminalEmulatorWterm": "Wterm（实验性）"
     },
     "advanced": {
       "title": "高级设置",
@@ -431,7 +441,9 @@
     "scpTransferDisabled": "请先在设置 → SSH 中开启 SCP 传输",
     "splitTerminalMax": "每个终端 Tab 最多拆分 3 个",
     "splitTerminalUnknown": "无法拆分：缺少可复用的启动参数",
-    "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启"
+    "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启",
+    "terminalEmulatorRestart": "终端模拟器已切换，请重启应用后生效",
+    "restartApp": "重启"
   },
   "terminal": {
     "processExited": "[进程已退出]",

@@ -362,6 +362,10 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
 
 ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 ipcMain.handle('app:getVersion', () => app.getVersion())
+ipcMain.on('app:relaunch', () => {
+  app.relaunch()
+  app.exit(0)
+})
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 ipcMain.handle('system:getAppMetrics', () => getAppMetricsSnapshot())

@@ -59,6 +59,7 @@ const api: ElectronAPI = {
     getVersion: () => ipcRenderer.invoke('app:getVersion') as Promise<string>,
     getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),
     onOpenDirectory: (cb) => onAppOpenDirectory(cb),
+    relaunch: () => ipcRenderer.send('app:relaunch'),
   },
   terminal: {
     create: (options) => ipcRenderer.invoke('terminal:create', options),

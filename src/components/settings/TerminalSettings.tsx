@@ -26,6 +26,7 @@ import {
   normalizeTerminalScrollback,
 } from '../../../electron/shared/terminal-xterm'
 import { Bold, Cpu, MousePointer2, Palette, ScrollText, TextCursor, Type } from 'lucide-react'
+import { isWtermEmulator } from '@/lib/terminal-emulator'
 
 export function TerminalSettings() {
   const { t } = useTranslation()
@@ -36,6 +37,7 @@ export function TerminalSettings() {
 
   const scheme = settings.terminal.colorScheme
   const cursorOptions = getCursorStyleOptions(t)
+  const useWterm = isWtermEmulator(settings)
 
   return (
     <Card>
@@ -211,10 +213,15 @@ export function TerminalSettings() {
         <SettingField
           icon={Cpu}
           label={t('settings.terminal.renderer')}
-          description={t('settings.terminal.rendererDesc')}
+          description={
+            useWterm
+              ? t('settings.terminal.rendererWtermDesc')
+              : t('settings.terminal.rendererDesc')
+          }
         >
           <Select
             value={settings.terminal.renderer}
+            disabled={useWterm}
             onValueChange={(v) =>
               patchSettings({
                 terminal: {

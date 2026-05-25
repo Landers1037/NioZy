@@ -4,7 +4,7 @@ import type { FitAddon } from '@xterm/addon-fit'
 import type { WebglAddon } from '@xterm/addon-webgl'
 import { useAppStore } from '@/stores/app-store'
 import { resolveTerminalTheme } from '@/lib/terminal-themes'
-import type { AppTab } from '@/stores/app-store'
+import type { TerminalViewProps } from './terminal-view-props'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
@@ -40,14 +40,6 @@ import {
   tryAcquireWebglSlot,
 } from '@/lib/terminal-webgl-registry'
 import i18n from '@/lib/i18n'
-
-interface TerminalViewProps {
-  tab: AppTab
-  /** 拆分多 pane 时用 DOM 渲染，避免多 WebGL 上下文 dispose 冲突 */
-  preferDomRenderer?: boolean
-  /** 当前 Tab / pane 处于前台时 refit 并聚焦 */
-  isFocused?: boolean
-}
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
