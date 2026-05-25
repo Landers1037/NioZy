@@ -341,7 +341,8 @@
     "closeTerminalDesc": "确定要关闭「{{title}}」吗？终端进程将结束，未导出的内容将丢失。",
     "editTitle": "编辑标题",
     "editTitleDesc": "自定义侧边栏与状态栏中的展示名称。留空或恢复为默认名称时将使用「{{defaultTitle}}」。",
-    "openScpTransfer": "打开传输"
+    "openScpTransfer": "打开传输",
+    "restartAsAdmin": "以管理员身份重启"
   },
   "scp": {
     "title": "SCP 传输 — {{title}}",
@@ -429,10 +430,12 @@
     "sshDisconnected": "SSH 连接已断开：{{title}}",
     "scpTransferDisabled": "请先在设置 → SSH 中开启 SCP 传输",
     "splitTerminalMax": "每个终端 Tab 最多拆分 3 个",
-    "splitTerminalUnknown": "无法拆分：缺少可复用的启动参数"
+    "splitTerminalUnknown": "无法拆分：缺少可复用的启动参数",
+    "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启"
   },
   "terminal": {
-    "processExited": "[进程已退出]"
+    "processExited": "[进程已退出]",
+    "processExitedWithCode": "[进程已退出，代码 {{code}}]"
   },
   "electron": {
     "preloadMissing": "未检测到 Electron 预加载 API。请使用 npm run start 启动桌面应用，不要直接在浏览器中打开 Vite 地址。"

@@ -11,6 +11,7 @@ import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 import { sendToRenderer } from './window-ipc'
+import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
 import { applyChromiumPerformanceFlags, getOptimizedWebPreferences } from '../chromium-tuning'
@@ -32,6 +33,7 @@ import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
+import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import {
@@ -68,6 +70,7 @@ const isDev =
   process.env['NODE_ENV_ELECTRON_VITE'] === 'development'
 
 const terminalService = new TerminalService()
+const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
 const settingsStore = new SettingsStore()
 const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
@@ -283,6 +286,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   persistWindowBoundsIfEnabled()
+  terminalOutputFlusher.dispose()
   terminalService.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()
@@ -300,7 +304,9 @@ ipcMain.on('window:maximize', () => {
 ipcMain.on('window:close', () => mainWindow?.close())
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
 
-ipcMain.handle('shell:openExternal', (_, url: string) => shell.openExternal(url))
+ipcMain.on('shell:openExternal', (_, url: string) => {
+  void shell.openExternal(url)
+})
 
 ipcMain.handle(
   'files:saveText',
@@ -360,6 +366,7 @@ ipcMain.handle('app:getVersion', () => app.getVersion())
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 ipcMain.handle('system:getAppMetrics', () => getAppMetricsSnapshot())
 ipcMain.handle('system:reloadEnvironment', () => reloadSystemEnvironment())
+ipcMain.handle('system:isProcessElevated', () => isWindowsProcessElevated())
 
 ipcMain.handle('update:check', () => checkForAppUpdate())
 ipcMain.handle('update:download', (_, payload: { version: string; downloadUrl: string }) =>
@@ -484,20 +491,19 @@ ipcMain.handle('vault:resolve', (_, text: string) => {
   return vaultStore.resolveText(text)
 })
 ipcMain.on('terminal:write', (_, id: string, data: string) => terminalService.write(id, data))
-ipcMain.handle(
-  'terminal:resize',
-  (_, id: string, cols: number, rows: number) => terminalService.resize(id, cols, rows),
+ipcMain.on('terminal:resize', (_, id: string, cols: number, rows: number) =>
+  terminalService.resize(id, cols, rows),
 )
-ipcMain.handle('terminal:kill', (_, id: string) => terminalService.kill(id))
-ipcMain.handle('terminal:setActiveStream', (_, id: string | null) => {
+ipcMain.on('terminal:kill', (_, id: string) => terminalService.kill(id))
+ipcMain.on('terminal:setActiveStream', (_, id: string | null) => {
   terminalService.setActiveStream(id)
 })
-ipcMain.handle('terminal:setActiveStreams', (_, ids: string[]) => {
+ipcMain.on('terminal:setActiveStreams', (_, ids: string[]) => {
   terminalService.setActiveStreams(ids)
 })
 
 terminalService.on('data', (id, data) => {
-  sendToRenderer(mainWindow, 'terminal:data', id, data)
+  terminalOutputFlusher.queue(id, data)
 })
 terminalService.on('exit', (id, code) => {
   sendToRenderer(mainWindow, 'terminal:exit', id, code)

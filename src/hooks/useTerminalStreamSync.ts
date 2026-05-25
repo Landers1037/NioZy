@@ -12,6 +12,6 @@ export function useTerminalStreamSync(tabs: AppTab[]): void {
   useEffect(() => {
     if (!isElectron()) return
     const ids = terminalIdsKey ? terminalIdsKey.split(',') : []
-    void getElectronAPI().terminal.setActiveStreams(ids)
+    getElectronAPI().terminal.setActiveStreams(ids)
   }, [terminalIdsKey])
 }

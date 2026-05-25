@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftRight,
@@ -7,6 +7,7 @@ import {
   FolderOpen,
   ListX,
   Pencil,
+  Shield,
   Terminal,
   X,
 } from 'lucide-react'
@@ -55,6 +56,10 @@ import {
   MAX_TERMINAL_SPLITS,
 } from '@/lib/terminal-tab-utils'
 import { splitTerminalTab } from '@/lib/terminal-split-actions'
+import {
+  canShowRestartAsAdminMenu,
+  restartTerminalTabAsAdmin,
+} from '@/lib/terminal-restart-actions'
 
 interface TerminalTabItemProps {
   tab: AppTab
@@ -104,6 +109,14 @@ export function TerminalTabItem({
   const [closeOpen, setCloseOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editValue, setEditValue] = useState('')
+  const [appElevated, setAppElevated] = useState(false)
+
+  useEffect(() => {
+    if (getElectronAPI().system.platform !== 'win32') return
+    void getElectronAPI().system.isProcessElevated().then(setAppElevated)
+  }, [])
+
+  const showRestartAsAdmin = canShowRestartAsAdminMenu(tab, appElevated)
 
   const uiStyle = useUiStyle()
   const displayTitle = getTabDisplayTitle(tab)
@@ -227,6 +240,20 @@ export function TerminalTabItem({
               <ContextMenuItem onSelect={() => openScpTransferForTab(tab.id)}>
                 <ArrowLeftRight className="size-4 text-muted-foreground" />
                 {t('tab.openScpTransfer')}
+              </ContextMenuItem>
+            </>
+          ) : null}
+          {showRestartAsAdmin ? (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                onSelect={() => {
+                  if (!isActive) setActiveTab(tab.id)
+                  void restartTerminalTabAsAdmin(tab.id)
+                }}
+              >
+                <Shield className="size-4 text-muted-foreground" />
+                {t('tab.restartAsAdmin')}
               </ContextMenuItem>
             </>
           ) : null}

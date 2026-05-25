@@ -181,6 +181,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     system: {
       platform: 'win32',
+      isProcessElevated: async () => false,
       reloadEnvironment: async () => ({
         ok: true,
         variableCount: 0,
@@ -258,7 +259,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       ],
     },
     shell: {
-      openExternal: async (url) => {
+      openExternal: (url) => {
         window.open(url, '_blank', 'noopener,noreferrer')
       },
     },
@@ -367,8 +368,8 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
       resize: () => undefined,
       kill: () => undefined,
-      setActiveStream: async () => undefined,
-      setActiveStreams: async () => undefined,
+      setActiveStream: () => undefined,
+      setActiveStreams: () => undefined,
       onData: (cb) => {
         dataListeners.add(cb)
         return () => dataListeners.delete(cb)

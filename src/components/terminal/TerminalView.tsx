@@ -272,9 +272,12 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
         if (id === tab.terminalId) term.write(data)
       })
 
-      unsubExit = api.terminal.onExit((id) => {
+      unsubExit = api.terminal.onExit((id, code) => {
         if (id === tab.terminalId) {
-          const msg = i18n.t('terminal.processExited')
+          const msg =
+            code !== 0
+              ? i18n.t('terminal.processExitedWithCode', { code })
+              : i18n.t('terminal.processExited')
           term.write(`\r\n\x1b[33m${msg}\x1b[0m\r\n`)
         }
       })

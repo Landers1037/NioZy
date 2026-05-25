@@ -216,6 +216,8 @@ export interface TerminalCreateOptions {
   cwd?: string
   cols?: number
   rows?: number
+  /** Windows：通过 UAC 以管理员权限启动（应用本身无需已提升） */
+  elevated?: boolean
 }
 
 export interface ElectronAPI {
@@ -240,6 +242,8 @@ export interface ElectronAPI {
     onStats: (cb: (stats: SystemStatsData) => void) => () => void
     getAppMetrics: () => Promise<AppMetricsData>
     reloadEnvironment: () => Promise<ReloadEnvironmentResult>
+    /** Windows：当前进程是否以管理员身份运行 */
+    isProcessElevated: () => Promise<boolean>
   }
   app: {
     getVersion: () => Promise<string>
@@ -257,9 +261,9 @@ export interface ElectronAPI {
     resize: (id: string, cols: number, rows: number) => void
     kill: (id: string) => void
     /** 声明当前向渲染进程推流的终端；非活跃会话输出在主进程有限缓冲 */
-    setActiveStream: (id: string | null) => Promise<void>
+    setActiveStream: (id: string | null) => void
     /** 拆分终端：多个 pane 同时推流 */
-    setActiveStreams: (ids: string[]) => Promise<void>
+    setActiveStreams: (ids: string[]) => void
     onData: (cb: (id: string, data: string) => void) => () => void
     onCwd: (cb: (id: string, cwd: string) => void) => () => void
     onExit: (cb: (id: string, code: number) => void) => () => void
@@ -277,7 +281,7 @@ export interface ElectronAPI {
     resolve: (text: string) => Promise<string>
   }
   shell: {
-    openExternal: (url: string) => Promise<void>
+    openExternal: (url: string) => void
   }
   update: {
     check: () => Promise<UpdateCheckResult>

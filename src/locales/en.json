@@ -341,7 +341,8 @@
     "closeTerminalDesc": "Close \"{{title}}\"? The process will end and unsaved output will be lost.",
     "editTitle": "Edit title",
     "editTitleDesc": "Custom label in sidebar and status bar. Empty or default restores \"{{defaultTitle}}\".",
-    "openScpTransfer": "Open transfer"
+    "openScpTransfer": "Open transfer",
+    "restartAsAdmin": "Restart as administrator"
   },
   "scp": {
     "title": "SCP transfer — {{title}}",
@@ -429,10 +430,12 @@
     "sshDisconnected": "SSH disconnected: {{title}}",
     "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first",
     "splitTerminalMax": "Each terminal tab can have at most 3 panes",
-    "splitTerminalUnknown": "Cannot split: missing spawn options to reuse"
+    "splitTerminalUnknown": "Cannot split: missing spawn options to reuse",
+    "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs"
   },
   "terminal": {
-    "processExited": "[Process exited]"
+    "processExited": "[Process exited]",
+    "processExitedWithCode": "[Process exited, code {{code}}]"
   },
   "electron": {
     "preloadMissing": "Electron preload API not found. Run npm run start instead of opening the Vite URL in a browser."

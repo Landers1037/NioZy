@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto'
 import { resolveExecutable } from './resolve-executable'
 import { extractCwdFromTerminalData } from './terminal-cwd-parser'
 import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integration'
+import { buildElevatedPtySpawn } from './elevated-terminal-spawn'
+import { canSpawnElevatedTerminal } from './windows-admin'
 
 export type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
 
@@ -16,6 +18,8 @@ export interface TerminalCreateOptions {
   cwd?: string
   cols?: number
   rows?: number
+  /** Windows：通过 UAC 以管理员权限启动（应用本身无需已提升） */
+  elevated?: boolean
 }
 
 interface PtySession {
@@ -71,18 +75,54 @@ export class TerminalService extends EventEmitter {
       args = options.args ?? []
     } else {
       file = SHELL_MAP[options.shell as keyof typeof SHELL_MAP] ?? 'powershell.exe'
-      args = mergeShellIntegrationArgs(options.shell, args)
+      if (options.elevated && process.platform === 'win32') {
+        if (args.length === 0) {
+          if (options.shell === 'powershell' || options.shell === 'pwsh') {
+            // Elevated shell runs with redirected I/O so the normal PSHost
+            // prompt is lost. Bootstrap a custom prompt that writes directly
+            // to stdout via [Console]::Out, then return empty string so the
+            // host itself writes nothing extra.
+            const bootstrap = [
+              '[Console]::OutputEncoding = [Console]::InputEncoding = [System.Text.Encoding]::Default',
+              '$OutputEncoding = [Console]::OutputEncoding',
+              'function prompt {',
+              "  $p = 'PS ' + $executionContext.SessionState.Path.CurrentLocation + '> '",
+              '  [Console]::Out.Write($p)',
+              "  return ''",
+              '}',
+            ].join('; ')
+            args = ['-NoLogo', '-NoProfile', '-NoExit', '-Command', bootstrap]
+          } else if (options.shell === 'cmd') {
+            args = ['/K']
+          }
+        }
+      } else {
+        args = mergeShellIntegrationArgs(options.shell, args)
+      }
     }
 
-    const name =
+    const baseName =
       options.name ??
       (options.shell === 'custom' ? file : options.shell.charAt(0).toUpperCase() + options.shell.slice(1))
+    const name = options.elevated ? `${baseName} (Admin)` : baseName
 
     const spawnFile = resolveSpawnFile(file, env as NodeJS.ProcessEnv)
+    let ptyFile = spawnFile
+    let ptyArgs = args
+
+    if (
+      options.elevated &&
+      process.platform === 'win32' &&
+      canSpawnElevatedTerminal(options.shell)
+    ) {
+      const elevated = buildElevatedPtySpawn(spawnFile, args, initialCwd)
+      ptyFile = resolveSpawnFile(elevated.file, env as NodeJS.ProcessEnv)
+      ptyArgs = elevated.args
+    }
 
     let ptyProcess: pty.IPty
     try {
-      ptyProcess = pty.spawn(spawnFile, args, {
+      ptyProcess = pty.spawn(ptyFile, ptyArgs, {
         name: 'xterm-color',
         cols,
         rows,

@@ -23,6 +23,10 @@ const onAppOpenDirectory = createIpcMultiplex<[string]>(ipcRenderer, 'app:openDi
 const onTerminalData = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:data')
 const onTerminalCwd = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:cwd')
 const onTerminalExit = createIpcMultiplex<[string, number]>(ipcRenderer, 'terminal:exit')
+const onSshTransferProgress = createIpcMultiplex<[import('../shared/ssh-types').ScpTransferProgress]>(
+  ipcRenderer,
+  'ssh:transferProgress',
+)
 
 const api: ElectronAPI = {
   window: {
@@ -48,6 +52,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('system:getAppMetrics') as Promise<AppMetricsData>,
     reloadEnvironment: () =>
       ipcRenderer.invoke('system:reloadEnvironment') as Promise<ReloadEnvironmentResult>,
+    isProcessElevated: () =>
+      ipcRenderer.invoke('system:isProcessElevated') as Promise<boolean>,
   },
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion') as Promise<string>,
@@ -57,10 +63,10 @@ const api: ElectronAPI = {
   terminal: {
     create: (options) => ipcRenderer.invoke('terminal:create', options),
     write: (id, data) => ipcRenderer.send('terminal:write', id, data),
-    resize: (id, cols, rows) => ipcRenderer.invoke('terminal:resize', id, cols, rows),
-    kill: (id) => ipcRenderer.invoke('terminal:kill', id),
-    setActiveStream: (id) => ipcRenderer.invoke('terminal:setActiveStream', id),
-    setActiveStreams: (ids) => ipcRenderer.invoke('terminal:setActiveStreams', ids),
+    resize: (id, cols, rows) => ipcRenderer.send('terminal:resize', id, cols, rows),
+    kill: (id) => ipcRenderer.send('terminal:kill', id),
+    setActiveStream: (id) => ipcRenderer.send('terminal:setActiveStream', id),
+    setActiveStreams: (ids) => ipcRenderer.send('terminal:setActiveStreams', ids),
     onData: (cb) => onTerminalData(cb),
     onCwd: (cb) => onTerminalCwd(cb),
     onExit: (cb) => onTerminalExit(cb),
@@ -73,7 +79,7 @@ const api: ElectronAPI = {
     resolve: (text) => ipcRenderer.invoke('vault:resolve', text),
   },
   shell: {
-    openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
+    openExternal: (url) => ipcRenderer.send('shell:openExternal', url),
   },
   update: {
     check: () => ipcRenderer.invoke('update:check') as Promise<UpdateCheckResult>,
@@ -96,23 +102,23 @@ const api: ElectronAPI = {
     listRemote: (connectionId, remotePath, options) =>
       ipcRenderer.invoke('ssh:listRemote', connectionId, remotePath, options),
     upload: async (connectionId, localPath, remotePath, onProgress) => {
-      const handler = (_: Electron.IpcRendererEvent, progress: import('../shared/ssh-types').ScpTransferProgress) =>
-        onProgress?.(progress)
-      if (onProgress) ipcRenderer.on('ssh:transferProgress', handler)
+      const unsubscribe = onProgress
+        ? onSshTransferProgress((progress) => onProgress(progress))
+        : undefined
       try {
         return await ipcRenderer.invoke('ssh:upload', connectionId, localPath, remotePath)
       } finally {
-        if (onProgress) ipcRenderer.removeListener('ssh:transferProgress', handler)
+        unsubscribe?.()
       }
     },
     download: async (connectionId, remotePath, localPath, onProgress) => {
-      const handler = (_: Electron.IpcRendererEvent, progress: import('../shared/ssh-types').ScpTransferProgress) =>
-        onProgress?.(progress)
-      if (onProgress) ipcRenderer.on('ssh:transferProgress', handler)
+      const unsubscribe = onProgress
+        ? onSshTransferProgress((progress) => onProgress(progress))
+        : undefined
       try {
         return await ipcRenderer.invoke('ssh:download', connectionId, remotePath, localPath)
       } finally {
-        if (onProgress) ipcRenderer.removeListener('ssh:transferProgress', handler)
+        unsubscribe?.()
       }
     },
   },
