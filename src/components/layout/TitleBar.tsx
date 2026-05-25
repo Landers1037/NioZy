@@ -24,7 +24,7 @@ export function TitleBar() {
       <div className={cn('drag-region flex flex-1 items-center justify-center', ui.titleTagline)}>
         {t('app.tagline')}
       </div>
-      <div className="flex items-center no-drag">
+      <div className="flex items-center pr-2 no-drag">
         <Button
           variant="ghost"
           size="icon"
