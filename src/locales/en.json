@@ -75,7 +75,8 @@
       "vault": "Vault",
       "shortcuts": "Shortcuts",
       "system": "System",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "experimental": "Experimental"
     },
     "appearance": {
       "title": "Appearance",
@@ -108,6 +109,7 @@
       "rendererDom": "Canvas / DOM (stable)",
       "rendererWebgl": "WebGL (recommended)",
       "rendererWebgpu": "WebGPU (experimental, may be unavailable)",
+      "rendererWtermDesc": "Wterm is active and only supports DOM rendering (Canvas / DOM). Switch back to Xterm to use WebGL or WebGPU.",
       "scrollback": "Scrollback",
       "scrollbackDesc": "Number of lines kept for scroll-up history (xterm scrollback)",
       "lines": "lines",
@@ -195,6 +197,14 @@
       "version": "Version {{version}} (MVP)",
       "aboutDesc": "Multi-terminal manager — Electron, React, xterm.js, and Windows ConPTY.",
       "cardDescription": "Proxy, startup, tray, and about"
+    },
+    "experimental": {
+      "title": "Experimental",
+      "description": "Unstable features that may change or be removed",
+      "terminalEmulator": "Terminal emulator",
+      "terminalEmulatorDesc": "Choose the frontend terminal implementation. Wterm uses WASM/DOM rendering (experimental). Restart open terminals after switching.",
+      "terminalEmulatorXterm": "Xterm.js (default)",
+      "terminalEmulatorWterm": "Wterm (experimental)"
     },
     "advanced": {
       "title": "Advanced",
@@ -431,7 +441,9 @@
     "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first",
     "splitTerminalMax": "Each terminal tab can have at most 3 panes",
     "splitTerminalUnknown": "Cannot split: missing spawn options to reuse",
-    "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs"
+    "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs",
+    "terminalEmulatorRestart": "Terminal emulator changed. Restart the app for it to take effect.",
+    "restartApp": "Restart"
   },
   "terminal": {
     "processExited": "[Process exited]",

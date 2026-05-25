@@ -150,6 +150,7 @@ export interface AppSettings {
   ssh: import('./ssh-settings').SshSettings
   shell: import('./shell-settings').ShellSettings
   filesystem: import('./filesystem-settings').FilesystemSettings
+  experimental: import('./experimental-settings').ExperimentalSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -249,6 +250,8 @@ export interface ElectronAPI {
     getVersion: () => Promise<string>
     getPendingOpenDirectory: () => Promise<string | null>
     onOpenDirectory: (cb: (directory: string) => void) => () => void
+    /** 重启应用（保存设置后使终端模拟器等变更生效） */
+    relaunch: () => void
   }
   terminal: {
     create: (options: TerminalCreateOptions) => Promise<{

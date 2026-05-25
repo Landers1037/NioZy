@@ -2,38 +2,13 @@ import type { IDisposable, Terminal } from '@xterm/xterm'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import type { ShellSettings } from '../../electron/shared/shell-settings'
-import { getElectronAPI } from '@/lib/electron-client'
-
-/** 与 @xterm/addon-web-links 内置规则一致 */
-const URL_REGEX =
-  /(https?):[/]{2}[^\s"'!*(){}|\\\^<>`]*[^\s"':,.!?{}|\\\^~\[\]`()<>]/gi
-
-const LINK_FOREGROUND = '#58a6ff'
-
-function openTerminalExternalLink(uri: string): void {
-  void getElectronAPI().shell.openExternal(uri)
-}
-
-function isValidHttpUrl(text: string): boolean {
-  try {
-    const url = new URL(text)
-    return url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    return false
-  }
-}
-
-function findUrlAtColumn(lineText: string, col: number): string | null {
-  URL_REGEX.lastIndex = 0
-  let match: RegExpExecArray | null
-  while ((match = URL_REGEX.exec(lineText)) !== null) {
-    const url = match[0]
-    const start = match.index
-    const end = start + url.length
-    if (col >= start && col < end && isValidHttpUrl(url)) return url
-  }
-  return null
-}
+import {
+  findUrlAtColumn,
+  isValidHttpUrl,
+  openTerminalExternalLink,
+  TERMINAL_LINK_FOREGROUND,
+  TERMINAL_URL_REGEX,
+} from '@/lib/terminal-url'
 
 /** WebGL 下 canvas 盖住 bottom 装饰，用屏幕坐标换算缓冲区列行再匹配 URL */
 function getViewportCellFromMouse(term: Terminal, event: MouseEvent): { col: number; row: number } | null {
@@ -125,10 +100,10 @@ function refreshLinkHighlightDecorations(term: Terminal, state: TerminalShellAdd
     if (!line) continue
 
     const text = line.translateToString(false)
-    URL_REGEX.lastIndex = 0
+    TERMINAL_URL_REGEX.lastIndex = 0
     let match: RegExpExecArray | null
 
-    while ((match = URL_REGEX.exec(text)) !== null) {
+    while ((match = TERMINAL_URL_REGEX.exec(text)) !== null) {
       const url = match[0]
       if (!isValidHttpUrl(url)) continue
 
@@ -139,7 +114,7 @@ function refreshLinkHighlightDecorations(term: Terminal, state: TerminalShellAdd
         marker,
         x: match.index,
         width: url.length,
-        foregroundColor: LINK_FOREGROUND,
+        foregroundColor: TERMINAL_LINK_FOREGROUND,
         layer: 'bottom',
       })
 

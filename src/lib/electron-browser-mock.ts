@@ -10,6 +10,7 @@ import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shell
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
 import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
+import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
 
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
@@ -53,6 +54,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
+  experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -136,6 +138,9 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
       : mockSettings.shortcuts,
     ssh: partial.ssh ? { ...mockSettings.ssh, ...partial.ssh } : mockSettings.ssh,
     shell: partial.shell ? { ...mockSettings.shell, ...partial.shell } : mockSettings.shell,
+    experimental: partial.experimental
+      ? { ...mockSettings.experimental, ...partial.experimental }
+      : mockSettings.experimental,
     connections: partial.connections ?? mockSettings.connections,
     builtinConnections: partial.builtinConnections ?? mockSettings.builtinConnections,
   }
@@ -233,6 +238,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       getVersion: async () => '0.1.0',
       getPendingOpenDirectory: async () => null,
       onOpenDirectory: () => () => undefined,
+      relaunch: () => {
+        window.location.reload()
+      },
     },
     update: {
       check: async () => ({

@@ -13,6 +13,7 @@ import {
   Database,
   Keyboard,
   FolderCode,
+  FlaskConical,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -25,6 +26,7 @@ import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
 import { VaultSettings } from './VaultSettings'
 import { ShortcutSettings } from './ShortcutSettings'
+import { ExperimentalSettings } from './ExperimentalSettings'
 
 const SECTION_DEFS = [
   { id: 'appearance', icon: Palette },
@@ -37,6 +39,7 @@ const SECTION_DEFS = [
   { id: 'shortcuts', icon: Keyboard },
   { id: 'system', icon: Settings2 },
   { id: 'advanced', icon: SlidersHorizontal },
+  { id: 'experimental', icon: FlaskConical },
 ] as const satisfies ReadonlyArray<{ id: string; icon: LucideIcon }>
 
 type SectionId = (typeof SECTION_DEFS)[number]['id']
@@ -89,6 +92,7 @@ export function SettingsPanel() {
         {section === 'shortcuts' && <ShortcutSettings />}
         {section === 'system' && <SystemSettings />}
         {section === 'advanced' && <AdvancedSettings />}
+        {section === 'experimental' && <ExperimentalSettings />}
       </div>
     </div>
   )

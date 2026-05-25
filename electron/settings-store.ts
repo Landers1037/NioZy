@@ -40,6 +40,11 @@ import {
   normalizeSavedWindowState,
   type SavedWindowState,
 } from './shared/window-state'
+import {
+  DEFAULT_EXPERIMENTAL_SETTINGS,
+  normalizeExperimentalSettings,
+  normalizeRendererForWterm,
+} from './shared/experimental-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -95,6 +100,7 @@ export interface AppSettings {
   ssh: import('./shared/ssh-settings').SshSettings
   shell: import('./shared/shell-settings').ShellSettings
   filesystem: import('./shared/filesystem-settings').FilesystemSettings
+  experimental: import('./shared/experimental-settings').ExperimentalSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -165,6 +171,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
+  experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }
 
 export class SettingsStore {
@@ -253,6 +260,15 @@ export class SettingsStore {
       defaultTerminal: normalizeDefaultTerminal(
         (stored as Partial<AppSettings>).defaultTerminal,
       ),
+      experimental: normalizeExperimentalSettings(stored.experimental),
+    }
+    const normalizedRenderer = normalizeRendererForWterm(
+      this.settings.experimental.terminalEmulator,
+      this.settings.terminal.renderer,
+    )
+    if (normalizedRenderer !== this.settings.terminal.renderer) {
+      this.settings.terminal.renderer = normalizedRenderer
+      this.persistSettings()
     }
     this.migrateEmbeddedConnections()
     return this.settings

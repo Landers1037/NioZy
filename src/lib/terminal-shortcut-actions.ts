@@ -1,6 +1,7 @@
 import type { Terminal } from '@xterm/xterm'
 import type { AppShortcuts } from '../../electron/shared/shortcuts'
 import { getElectronAPI } from '@/lib/electron-client'
+import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
 import { matchAccelerator } from '@/lib/shortcut-utils'
 import i18n from '@/lib/i18n'
 import { toast } from 'sonner'
@@ -86,16 +87,5 @@ export function handleTerminalRightClick(
   terminalId: string,
   event: MouseEvent,
 ): void {
-  event.preventDefault()
-  event.stopPropagation()
-
-  const selection = term.getSelection()
-  if (selection) {
-    void navigator.clipboard.writeText(selection)
-    return
-  }
-
-  void navigator.clipboard.readText().then((text) => {
-    if (text) getElectronAPI().terminal.write(terminalId, text)
-  })
+  handleTerminalRightClickCopyPaste(terminalId, () => term.getSelection(), event)
 }

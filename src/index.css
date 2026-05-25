@@ -427,6 +427,19 @@ body {
   width: 100%;
 }
 
+/* Wterm：始终允许纵向滚动；写入后由 wterm-scroll 跟随到底部 */
+.niozy-terminal-host .wterm {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 滚到底时多留出 10px，避免最后一行贴边（见 wterm-scroll WTERM_SCROLL_BOTTOM_EXTRA_PX） */
+.niozy-terminal-host .wterm .term-grid {
+  padding-bottom: 10px;
+}
+
 .niozy-terminal-host .xterm-viewport {
   background-color: transparent !important;
 }

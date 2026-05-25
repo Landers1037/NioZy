@@ -90,11 +90,13 @@ export default defineConfig({
             if (!id.includes('node_modules')) return
             if (id.includes('@radix-ui')) return 'radix'
             if (id.includes('@xterm')) return 'xterm'
+            if (id.includes('@wterm')) return 'wterm'
             if (id.includes('lucide-react')) return 'icons'
             if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
             return 'vendor'
           },
           assetFileNames(assetInfo) {
+            if (assetInfo.name?.endsWith('.wasm')) return 'assets/[name][extname]'
             return fontAssetFileNames(assetInfo.name) ?? 'assets/[name]-[hash][extname]'
           },
         },
