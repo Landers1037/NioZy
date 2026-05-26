@@ -196,7 +196,7 @@ export default function App() {
                     'absolute inset-0',
                     !isActive && 'pointer-events-none invisible',
                   )}
-                  aria-hidden={!isActive}
+                  {...(!isActive ? { inert: true } : {})}
                 >
                   <Suspense fallback={null}>
                     <SplitTerminalPanel tab={tab} isTabActive={isActive} />

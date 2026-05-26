@@ -40,6 +40,7 @@ import {
   tryAcquireWebglSlot,
 } from '@/lib/terminal-webgl-registry'
 import i18n from '@/lib/i18n'
+import { observeTerminalInputA11y } from '@/lib/terminal-input-a11y'
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
@@ -164,6 +165,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
     let onRightMouseDown: ((e: MouseEvent) => void) | undefined
     let onContextMenu: ((e: MouseEvent) => void) | undefined
+    let stopInputA11y: (() => void) | undefined
     const captureOpts = { capture: true } as const
 
     void (async () => {
@@ -190,6 +192,10 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       const fit = new FitAddon()
       term.loadAddon(fit)
       term.open(containerRef.current)
+      stopInputA11y = observeTerminalInputA11y(
+        containerRef.current,
+        i18n.t('terminal.inputAriaLabel'),
+      )
       applyInteractiveCliTerminalOptions(term, shellSettings.shiftEnterNewline)
 
       termRef.current = term
@@ -289,6 +295,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
         termElement.removeEventListener('mousedown', onRightMouseDown, captureOpts)
         termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
       }
+      stopInputA11y?.()
       unsubData?.()
       unsubExit?.()
       unsubLayoutFit?.()
