@@ -15,4 +15,8 @@ export function isWtermEmulator(settings: AppSettings | null | undefined): boole
   return getTerminalEmulator(settings) === 'wterm'
 }
 
+export function isGhosttyCoreEnabled(settings: AppSettings | null | undefined): boolean {
+  return isWtermEmulator(settings) && settings?.experimental?.ghosttyCoreEnabled === true
+}
+
 export const normalizeRendererForEmulator = normalizeRendererForWterm
