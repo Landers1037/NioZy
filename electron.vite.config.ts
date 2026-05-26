@@ -7,7 +7,8 @@ function copyMainAssets(): Plugin {
   const shellSrc = resolve('electron/scripts/shell-integration.ps1')
   const elevBridgeSrc = resolve('electron/scripts/elevated-shell-bridge.ps1')
   const elevWorkerSrc = resolve('electron/scripts/elevated-shell-bridge-worker.ps1')
-  const askpassSrc = resolve('electron/scripts/ssh-askpass.mjs')
+  const askpassCmdSrc = resolve('electron/scripts/ssh-askpass.cmd')
+  const askpassShSrc = resolve('electron/scripts/ssh-askpass.sh')
   const traySrc = resolve('electron/assets/tray.png')
   const mainOut = resolve('out/main')
   const scriptsOut = resolve(mainOut, 'scripts')
@@ -22,7 +23,8 @@ function copyMainAssets(): Plugin {
       writePs1(shellSrc, 'shell-integration.ps1')
       writePs1(elevBridgeSrc, 'elevated-shell-bridge.ps1')
       writePs1(elevWorkerSrc, 'elevated-shell-bridge-worker.ps1')
-      writeFileSync(resolve(scriptsOut, 'ssh-askpass.mjs'), readFileSync(askpassSrc))
+      writeFileSync(resolve(scriptsOut, 'ssh-askpass.cmd'), readFileSync(askpassCmdSrc))
+      writeFileSync(resolve(scriptsOut, 'ssh-askpass.sh'), readFileSync(askpassShSrc))
       writeFileSync(resolve(mainOut, 'tray.png'), readFileSync(traySrc))
     },
   }

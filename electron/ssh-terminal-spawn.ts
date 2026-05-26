@@ -5,11 +5,36 @@ import { app } from 'electron'
 import type { CustomConnection, TerminalCreateOptions } from './shared/api-types'
 import { inferSshAuth } from './ssh-auth'
 
+const MAIN_DIR =
+  typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : fileURLToPath(new URL('.', import.meta.url))
+
+/** OpenSSH 只能执行原生可执行文件；Windows 上 .mjs 无效，须用 .cmd / .sh */
+function sshAskpassScriptName(): string {
+  return process.platform === 'win32' ? 'ssh-askpass.cmd' : 'ssh-askpass.sh'
+}
+
 export function resolveSshAskpassScriptPath(): string | null {
+  const name = sshAskpassScriptName()
+
+  if (app.isPackaged) {
+    const unpacked = join(
+      process.resourcesPath,
+      'app.asar.unpacked',
+      'out',
+      'main',
+      'scripts',
+      name,
+    )
+    if (existsSync(unpacked)) return unpacked
+  }
+
   const candidates = [
-    fileURLToPath(new URL('./scripts/ssh-askpass.mjs', import.meta.url)),
-    join(app.getAppPath(), 'out/main/scripts/ssh-askpass.mjs'),
-    join(process.cwd(), 'out/main/scripts/ssh-askpass.mjs'),
+    join(MAIN_DIR, 'scripts', name),
+    join(app.getAppPath(), 'out/main/scripts', name),
+    join(process.cwd(), 'out/main/scripts', name),
+    join(process.cwd(), 'electron/scripts', name),
   ]
   for (const file of candidates) {
     if (existsSync(file)) return file
