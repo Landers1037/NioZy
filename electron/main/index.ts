@@ -15,6 +15,7 @@ import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
 import { applyChromiumPerformanceFlags, getOptimizedWebPreferences } from '../chromium-tuning'
+import { configureSessionPrivacy, disableCrashReporting } from '../session-privacy'
 import {
   flushPendingOpenDirectory,
   parseDirectoryFromArgv,
@@ -60,6 +61,7 @@ if (!isHardwareAccelerationEnabled()) {
   app.disableHardwareAcceleration()
 }
 
+disableCrashReporting()
 applyChromiumPerformanceFlags()
 
 let mainWindow: BrowserWindow | null = null
@@ -265,6 +267,7 @@ if (gotSingleInstanceLock) {
 }
 
 app.whenReady().then(async () => {
+  configureSessionPrivacy()
   await registerLocalFileProtocolHandler()
 
   settingsStore.load()

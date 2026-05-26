@@ -20,7 +20,7 @@ export function TitleBar() {
           <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
         )}
       </div>
-      <div className="min-h-0 min-w-0 flex-1" aria-hidden />
+      <div className="min-h-0 min-w-0 flex-1" />
       <div className="flex shrink-0 items-center gap-0.5 pr-2">
         <TitleBarTerminalControls />
         <Button

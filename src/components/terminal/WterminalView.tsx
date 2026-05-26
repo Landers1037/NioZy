@@ -10,14 +10,20 @@ import { buildWtermThemeStyle } from '@/lib/wterm-theme'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import { attachWtermDomShellFeatures } from '@/lib/wterm-dom-shell'
+import {
+  handleTerminalModifiedEnterKey,
+} from '@/lib/terminal-shortcut-actions'
+import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
 import { DEFAULT_GHOSTTY_SCROLLBACK_LIMIT } from '../../../electron/shared/experimental-settings'
 import { ghosttyWasmUrl, loadWtermGhosttyCore } from '@/lib/wterm-ghostty-core'
 import i18n from '@/lib/i18n'
 import { queueWtermScrollToBottom } from '@/lib/wterm-scroll'
+import { observeTerminalInputA11y } from '@/lib/terminal-input-a11y'
 import type { TerminalViewProps } from './terminal-view-props'
 
 export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
+  const hostRef = useRef<HTMLDivElement>(null)
   const { ref: termRef, write, focus } = useTerminal()
   const settings = useAppStore((s) => s.settings)
   const shellCleanupRef = useRef<(() => void) | null>(null)
@@ -48,12 +54,44 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const attachShellFeatures = useCallback(
     (instance: WTerm) => {
       detachShellFeatures()
-      if (!tab.terminalId || !settings) return
-      shellCleanupRef.current = attachWtermDomShellFeatures(instance, {
-        terminalId: tab.terminalId,
-        rightClickCopyPaste: settings.terminal.rightClickCopyPaste,
-        shell: settings.shell ?? DEFAULT_SHELL_SETTINGS,
-      })
+      const terminalId = tab.terminalId
+      if (!terminalId || !settings) return
+
+      const listeners: Array<() => void> = []
+      const captureOpts = { capture: true } as const
+
+      listeners.push(
+        attachWtermDomShellFeatures(instance, {
+          terminalId,
+          rightClickCopyPaste: settings.terminal.rightClickCopyPaste,
+          shell: settings.shell ?? DEFAULT_SHELL_SETTINGS,
+        }),
+      )
+
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (handleTerminalTabNavigationShortcut(event)) {
+          event.preventDefault()
+          event.stopPropagation()
+          return
+        }
+
+        const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
+        if (
+          handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)
+        ) {
+          event.stopPropagation()
+          return
+        }
+      }
+
+      instance.element.addEventListener('keydown', onKeyDown, captureOpts)
+      listeners.push(() =>
+        instance.element.removeEventListener('keydown', onKeyDown, captureOpts),
+      )
+
+      shellCleanupRef.current = () => {
+        for (const off of listeners) off()
+      }
     },
     [tab.terminalId, settings, detachShellFeatures],
   )
@@ -95,18 +133,27 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     if (instance) attachShellFeatures(instance)
   }, [
     settings?.terminal.rightClickCopyPaste,
-    settings?.shell?.highlightLinks,
     settings?.shell?.clickToOpenLinks,
     settings?.shell?.shiftEnterNewline,
+    settings?.shortcuts,
     attachShellFeatures,
     termRef,
   ])
 
   useEffect(() => {
+    const host = hostRef.current
+    if (!host) return
+    return observeTerminalInputA11y(host, i18n.t('terminal.inputAriaLabel'))
+  }, [])
+
+  useEffect(() => {
     if (isFocused) {
       focus()
+      return
     }
-  }, [isFocused, focus])
+    const root = termRef.current?.instance?.element
+    root?.querySelector('textarea')?.blur()
+  }, [isFocused, focus, termRef])
 
   const handleData = useCallback(
     (data: string) => {
@@ -175,6 +222,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
       style={{ backgroundColor: terminalBackground }}
     >
       <div
+        ref={hostRef}
         className="niozy-terminal-host h-full w-full overflow-hidden [&_.wterm]:!h-full [&_.wterm]:!w-full [&_.wterm]:!rounded-none [&_.wterm]:!p-0 [&_.wterm]:!shadow-none"
         style={wtermStyle}
       >

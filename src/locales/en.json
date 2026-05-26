@@ -463,7 +463,8 @@
   },
   "terminal": {
     "processExited": "[Process exited]",
-    "processExitedWithCode": "[Process exited, code {{code}}]"
+    "processExitedWithCode": "[Process exited, code {{code}}]",
+    "inputAriaLabel": "Terminal input"
   },
   "electron": {
     "preloadMissing": "Electron preload API not found. Run npm run start instead of opening the Vite URL in a browser."

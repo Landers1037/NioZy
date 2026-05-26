@@ -463,7 +463,8 @@
   },
   "terminal": {
     "processExited": "[进程已退出]",
-    "processExitedWithCode": "[进程已退出，代码 {{code}}]"
+    "processExitedWithCode": "[进程已退出，代码 {{code}}]",
+    "inputAriaLabel": "终端输入"
   },
   "electron": {
     "preloadMissing": "未检测到 Electron 预加载 API。请使用 npm run start 启动桌面应用，不要直接在浏览器中打开 Vite 地址。"
