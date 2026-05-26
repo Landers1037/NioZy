@@ -117,6 +117,16 @@ function showMainWindow(): void {
   mainWindow.focus()
 }
 
+function requestNewTerminalFromTray(): void {
+  showMainWindow()
+  sendToRenderer(mainWindow, 'app:newTerminal')
+}
+
+function requestOpenSettingsFromTray(): void {
+  showMainWindow()
+  sendToRenderer(mainWindow, 'app:openSettings')
+}
+
 async function syncShellContextMenuRegistry(enabled: boolean): Promise<void> {
   if (!isWindowsShellContextMenuSupported()) return
   await setWindowsShellContextMenu(enabled)
@@ -227,7 +237,11 @@ function createTray(): void {
   tray = new Tray(loadTrayIcon(__dirname))
   tray.setToolTip('NioZy')
   const contextMenu = Menu.buildFromTemplate([
-    { label: '显示 NioZy', click: () => mainWindow?.show() },
+    { label: '新建终端', click: () => requestNewTerminalFromTray() },
+    { label: '打开设置', click: () => requestOpenSettingsFromTray() },
+    { type: 'separator' },
+    { label: '显示 NioZy', click: () => showMainWindow() },
+    { type: 'separator' },
     {
       label: '退出',
       click: () => {
@@ -237,7 +251,7 @@ function createTray(): void {
     },
   ])
   tray.setContextMenu(contextMenu)
-  tray.on('double-click', () => mainWindow?.show())
+  tray.on('double-click', () => showMainWindow())
 }
 
 if (gotSingleInstanceLock) {

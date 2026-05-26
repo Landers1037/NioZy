@@ -134,10 +134,18 @@ export default function App() {
     const unsubOpenDir = api.app.onOpenDirectory((directory) => {
       void openTerminalInDirectory(directory)
     })
+    const unsubNewTerminal = api.app.onNewTerminal(() => {
+      void createTerminal()
+    })
+    const unsubOpenSettings = api.app.onOpenSettings(() => {
+      useAppStore.getState().addSettingsTab()
+    })
     return () => {
       unsubCwd()
       unsubExit()
       unsubOpenDir()
+      unsubNewTerminal()
+      unsubOpenSettings()
     }
   }, [setTerminalCwd, clearTerminalCwd])
 

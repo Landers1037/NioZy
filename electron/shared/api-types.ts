@@ -250,6 +250,10 @@ export interface ElectronAPI {
     getVersion: () => Promise<string>
     getPendingOpenDirectory: () => Promise<string | null>
     onOpenDirectory: (cb: (directory: string) => void) => () => void
+    /** 托盘菜单：新建终端 Tab */
+    onNewTerminal: (cb: () => void) => () => void
+    /** 托盘菜单：打开设置 Tab */
+    onOpenSettings: (cb: () => void) => () => void
     /** 重启应用（保存设置后使终端模拟器等变更生效） */
     relaunch: () => void
   }

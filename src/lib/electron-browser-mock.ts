@@ -238,6 +238,8 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       getVersion: async () => '0.1.0',
       getPendingOpenDirectory: async () => null,
       onOpenDirectory: () => () => undefined,
+      onNewTerminal: () => () => undefined,
+      onOpenSettings: () => () => undefined,
       relaunch: () => {
         window.location.reload()
       },
