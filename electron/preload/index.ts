@@ -20,6 +20,8 @@ const initialSettings = parseInitialSettingsFromArgv(process.argv)
 const onWindowMaximized = createIpcMultiplex<[boolean]>(ipcRenderer, 'window:maximized')
 const onSystemStats = createIpcMultiplex<[SystemStatsData]>(ipcRenderer, 'system:stats')
 const onAppOpenDirectory = createIpcMultiplex<[string]>(ipcRenderer, 'app:openDirectory')
+const onAppNewTerminal = createIpcMultiplex<[]>(ipcRenderer, 'app:newTerminal')
+const onAppOpenSettings = createIpcMultiplex<[]>(ipcRenderer, 'app:openSettings')
 const onTerminalData = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:data')
 const onTerminalCwd = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:cwd')
 const onTerminalExit = createIpcMultiplex<[string, number]>(ipcRenderer, 'terminal:exit')
@@ -59,6 +61,8 @@ const api: ElectronAPI = {
     getVersion: () => ipcRenderer.invoke('app:getVersion') as Promise<string>,
     getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),
     onOpenDirectory: (cb) => onAppOpenDirectory(cb),
+    onNewTerminal: (cb) => onAppNewTerminal(() => cb()),
+    onOpenSettings: (cb) => onAppOpenSettings(() => cb()),
     relaunch: () => ipcRenderer.send('app:relaunch'),
   },
   terminal: {
