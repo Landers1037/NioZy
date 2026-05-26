@@ -6,7 +6,7 @@ import '@wterm/react/css'
 import wtermWasmUrl from '@wterm/core/wasm?url'
 import { useAppStore } from '@/stores/app-store'
 import { resolveTerminalTheme } from '@/lib/terminal-themes'
-import { buildWtermThemeStyle } from '@/lib/wterm-theme'
+import { buildWtermFontStyle, getWtermThemeId } from '@/lib/wterm-theme'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import { attachWtermDomShellFeatures } from '@/lib/wterm-dom-shell'
@@ -33,12 +33,13 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const [ghosttyCore, setGhosttyCore] = useState<TerminalCore | null>(null)
   const [ghosttyCoreLoading, setGhosttyCoreLoading] = useState(false)
 
+  const colorScheme = settings?.terminal.colorScheme ?? 'atom'
+  const wtermThemeId = getWtermThemeId(colorScheme)
   const terminalBackground =
-    resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'
+    resolveTerminalTheme(colorScheme).background ?? '#101419'
 
-  const wtermStyle = settings
-    ? buildWtermThemeStyle(
-        resolveTerminalTheme(settings.terminal.colorScheme),
+  const wtermFontStyle = settings
+    ? buildWtermFontStyle(
         settings.terminal.fontFamily,
         settings.terminal.fontSize,
       )
@@ -224,13 +225,14 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
       <div
         ref={hostRef}
         className="niozy-terminal-host h-full w-full overflow-hidden [&_.wterm]:!h-full [&_.wterm]:!w-full [&_.wterm]:!rounded-none [&_.wterm]:!p-0 [&_.wterm]:!shadow-none"
-        style={wtermStyle}
       >
         {ghosttyCoreEnabled && ghosttyCoreLoading ? null : (
           <Terminal
             key={terminalKey}
             ref={termRef}
             className="h-full w-full"
+            theme={wtermThemeId}
+            style={wtermFontStyle}
             core={useGhosttyCore ? ghosttyCore ?? undefined : undefined}
             wasmUrl={useGhosttyCore ? undefined : wtermWasmUrl}
             autoResize
