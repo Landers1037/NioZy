@@ -20,6 +20,12 @@ import { ghosttyWasmUrl, loadWtermGhosttyCore } from '@/lib/wterm-ghostty-core'
 import i18n from '@/lib/i18n'
 import { queueWtermScrollToBottom } from '@/lib/wterm-scroll'
 import { observeTerminalInputA11y } from '@/lib/terminal-input-a11y'
+import {
+  formatTerminalExitMessage,
+  markSshTerminalDisconnected,
+  tryHandleSshReconnectEnter,
+} from '@/lib/ssh-reconnect-actions'
+import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import type { TerminalViewProps } from './terminal-view-props'
 
 export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
@@ -76,6 +82,12 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
           return
         }
 
+        if (tryHandleSshReconnectEnter(tab, terminalId, event)) {
+          event.preventDefault()
+          event.stopPropagation()
+          return
+        }
+
         const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
         if (
           handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)
@@ -94,7 +106,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
         for (const off of listeners) off()
       }
     },
-    [tab.terminalId, settings, detachShellFeatures],
+    [tab, settings, detachShellFeatures],
   )
 
   useEffect(() => {
@@ -110,11 +122,8 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
 
     const unsubExit = api.terminal.onExit((id, code) => {
       if (id === tab.terminalId) {
-        const msg =
-          code !== 0
-            ? i18n.t('terminal.processExitedWithCode', { code })
-            : i18n.t('terminal.processExited')
-        write(`\r\n\x1b[33m${msg}\x1b[0m\r\n`)
+        write(formatTerminalExitMessage(code))
+        markSshTerminalDisconnected(id, tab)
         queueWtermScrollToBottom(termRef.current?.instance?.element, { force: true })
       }
     })
@@ -243,6 +252,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
           />
         )}
       </div>
+      <SshReconnectHint terminalId={tab.terminalId} />
     </div>
   )
 }

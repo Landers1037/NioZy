@@ -71,6 +71,7 @@ export function closeSplitPane(tabId: string, terminalId: string): void {
 
   getElectronAPI().terminal.kill(terminalId)
   clearTerminalCwd(terminalId)
+  useAppStore.getState().clearSshTerminalDisconnected(terminalId)
 
   const newPanes = panes.filter((p) => p.terminalId !== terminalId)
   let activeSplitIndex = tab.activeSplitIndex ?? 0

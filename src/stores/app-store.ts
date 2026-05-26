@@ -45,7 +45,11 @@ interface AppState {
   terminalCwds: Record<string, string>
   /** 当前打开 SCP 传输面板的终端 Tab id */
   scpTransferTabId: string | null
+  /** 已断开的 SSH 终端 PTY id（可按 Enter 在同一 Tab 内重连） */
+  sshDisconnectedTerminalIds: Record<string, true>
   setScpTransferTabId: (tabId: string | null) => void
+  markSshTerminalDisconnected: (terminalId: string) => void
+  clearSshTerminalDisconnected: (terminalId: string) => void
   setSidebarCollapsed: (v: boolean) => void
   setActiveTab: (id: string) => void
   addTerminalTab: (tab: AppTab) => void
@@ -79,7 +83,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   windowMaximized: false,
   terminalCwds: {},
   scpTransferTabId: null,
+  sshDisconnectedTerminalIds: {},
   setScpTransferTabId: (tabId) => set({ scpTransferTabId: tabId }),
+  markSshTerminalDisconnected: (terminalId) =>
+    set((s) => ({
+      sshDisconnectedTerminalIds: {
+        ...s.sshDisconnectedTerminalIds,
+        [terminalId]: true,
+      },
+    })),
+  clearSshTerminalDisconnected: (terminalId) =>
+    set((s) => {
+      if (!s.sshDisconnectedTerminalIds[terminalId]) return s
+      const sshDisconnectedTerminalIds = { ...s.sshDisconnectedTerminalIds }
+      delete sshDisconnectedTerminalIds[terminalId]
+      return { sshDisconnectedTerminalIds }
+    }),
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
   setActiveTab: (id) => set({ activeTabId: id }),
   addTerminalTab: (tab) =>
@@ -130,12 +149,14 @@ export const useAppStore = create<AppState>((set, get) => ({
         activeTabId = firstTerminal?.id ?? tabs[0]?.id ?? null
       }
       const terminalCwds = { ...s.terminalCwds }
+      const sshDisconnectedTerminalIds = { ...s.sshDisconnectedTerminalIds }
       for (const tab of removed) {
         for (const terminalId of getAllTerminalIds(tab)) {
           delete terminalCwds[terminalId]
+          delete sshDisconnectedTerminalIds[terminalId]
         }
       }
-      return { tabs, activeTabId, terminalCwds }
+      return { tabs, activeTabId, terminalCwds, sshDisconnectedTerminalIds }
     })
   },
   setTerminalCwd: (terminalId, cwd) =>
