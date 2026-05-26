@@ -41,6 +41,12 @@ import {
 } from '@/lib/terminal-webgl-registry'
 import i18n from '@/lib/i18n'
 import { observeTerminalInputA11y } from '@/lib/terminal-input-a11y'
+import {
+  formatTerminalExitMessage,
+  markSshTerminalDisconnected,
+  tryHandleSshReconnectEnter,
+} from '@/lib/ssh-reconnect-actions'
+import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
@@ -214,6 +220,10 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
         if (!tab.terminalId) return true
         if (handleTerminalTabNavigationShortcut(event)) return false
 
+        if (tryHandleSshReconnectEnter(tab, tab.terminalId, event)) {
+          return false
+        }
+
         const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
         if (handleTerminalModifiedEnterKey(tab.terminalId, event, shell.shiftEnterNewline)) {
           return false
@@ -272,11 +282,8 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === tab.terminalId) {
-          const msg =
-            code !== 0
-              ? i18n.t('terminal.processExitedWithCode', { code })
-              : i18n.t('terminal.processExited')
-          term.write(`\r\n\x1b[33m${msg}\x1b[0m\r\n`)
+          term.write(formatTerminalExitMessage(code))
+          markSshTerminalDisconnected(id, tab)
         }
       })
 
@@ -376,6 +383,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       style={{ backgroundColor: terminalBackground }}
     >
       <div ref={containerRef} className="niozy-terminal-host h-full w-full overflow-hidden" />
+      <SshReconnectHint terminalId={tab.terminalId} />
     </div>
   )
 }
