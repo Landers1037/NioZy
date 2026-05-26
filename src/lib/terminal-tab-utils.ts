@@ -44,24 +44,26 @@ export function tabHasTerminalId(tab: AppTab, terminalId: string): boolean {
 }
 
 export function connectionToTerminalSpawn(custom: CustomConnection): TabTerminalSpawn {
-  const args =
-    custom.type === 'ssh'
-      ? [
-          ...(custom.sshPort && custom.sshPort !== 22 ? ['-p', String(custom.sshPort)] : []),
-          ...(custom.sshAuth === 'publickey' && custom.sshKeyPath ? ['-i', custom.sshKeyPath] : []),
-          `${custom.sshUser ?? 'user'}@${custom.sshHost ?? custom.command}`,
-        ]
-      : custom.args
+  if (custom.type === 'ssh') {
+    return {
+      create: {
+        shell: 'ssh',
+        name: custom.name,
+        sshConnectionId: custom.id,
+        env: custom.env,
+      },
+      sshConnectionId: custom.id,
+    }
+  }
 
   return {
     create: {
-      shell: custom.type === 'ssh' ? 'ssh' : 'custom',
+      shell: 'custom',
       name: custom.name,
-      command: custom.type === 'ssh' ? 'ssh' : custom.command,
-      args,
+      command: custom.command,
+      args: custom.args,
       env: custom.env,
     },
-    sshConnectionId: custom.type === 'ssh' ? custom.id : undefined,
   }
 }
 

@@ -40,7 +40,7 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
       sshUser: c.sshUser ?? '',
       sshHost: c.sshHost ?? c.command,
       sshPort: c.sshPort ?? 22,
-      sshAuth: c.sshAuth ?? 'password',
+      sshAuth: c.sshAuth ?? (c.sshKeyPath?.trim() ? 'publickey' : 'password'),
       sshPassword: c.sshPassword ?? '',
       sshKeyPath: c.sshKeyPath ?? '',
     }

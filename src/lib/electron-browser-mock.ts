@@ -355,6 +355,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         }
       },
       openWithProgram: async () => ({ ok: true }),
+      pickPrivateKey: async () => null,
     },
     terminal: {
       create: async (options) => {

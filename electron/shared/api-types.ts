@@ -219,6 +219,8 @@ export interface TerminalCreateOptions {
   rows?: number
   /** Windows：通过 UAC 以管理员权限启动（应用本身无需已提升） */
   elevated?: boolean
+  /** SSH 连接 id：主进程据此应用认证方式、密钥路径与 SSH_ASKPASS */
+  sshConnectionId?: string
 }
 
 export interface ElectronAPI {
@@ -308,6 +310,8 @@ export interface ElectronAPI {
       programPath: string,
       targetPath: string,
     ) => Promise<import('../fs-service').OpenWithProgramResult>
+    /** 选择 SSH 私钥文件；取消时返回 null */
+    pickPrivateKey: () => Promise<string | null>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

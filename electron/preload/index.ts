@@ -99,6 +99,7 @@ const api: ElectronAPI = {
     detectProgram: (options) => ipcRenderer.invoke('fs:detectProgram', options),
     openWithProgram: (programPath, targetPath) =>
       ipcRenderer.invoke('fs:openWithProgram', programPath, targetPath),
+    pickPrivateKey: () => ipcRenderer.invoke('files:pickPrivateKey') as Promise<string | null>,
   },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),

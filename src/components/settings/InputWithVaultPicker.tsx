@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, FolderOpen } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { VaultVariablePicker } from './VaultVariablePicker'
@@ -13,6 +13,10 @@ interface InputWithVaultPickerProps {
   wrapperClassName?: string
   placeholder?: string
   type?: string
+  /** 在输入框右侧显示「浏览文件」按钮（用于私钥路径等） */
+  showFileBrowse?: boolean
+  onFileBrowse?: () => void
+  fileBrowseAriaLabel?: string
 }
 
 export function InputWithVaultPicker({
@@ -22,6 +26,9 @@ export function InputWithVaultPicker({
   wrapperClassName,
   placeholder,
   type = 'text',
+  showFileBrowse,
+  onFileBrowse,
+  fileBrowseAriaLabel,
 }: InputWithVaultPickerProps) {
   const { t } = useTranslation()
   const [cursor, setCursor] = useState(value.length)
@@ -59,6 +66,18 @@ export function InputWithVaultPicker({
           </Button>
         )}
       </div>
+      {showFileBrowse && onFileBrowse && (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="shrink-0"
+          aria-label={fileBrowseAriaLabel}
+          onClick={onFileBrowse}
+        >
+          <FolderOpen className="size-4" />
+        </Button>
+      )}
       <VaultVariablePicker
         value={value}
         onChange={onChange}

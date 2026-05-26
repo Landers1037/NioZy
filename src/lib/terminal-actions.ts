@@ -34,9 +34,13 @@ async function openTerminalTab(
 ): Promise<void> {
   const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
   const { sshConnectionId, ...createOptions } = options
-  const result = await getElectronAPI().terminal.create(createOptions)
+  const createPayload: TerminalCreateOptions = {
+    ...createOptions,
+    ...(sshConnectionId ? { sshConnectionId } : {}),
+  }
+  const result = await getElectronAPI().terminal.create(createPayload)
   setTerminalCwd(result.id, result.cwd)
-  const terminalSpawn: TabTerminalSpawn = { create: createOptions, sshConnectionId }
+  const terminalSpawn: TabTerminalSpawn = { create: createPayload, sshConnectionId }
   addTerminalTab({
     id: `tab-${result.id}`,
     type: 'terminal',
