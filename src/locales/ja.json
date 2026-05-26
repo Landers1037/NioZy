@@ -73,6 +73,10 @@
     "windowsClassic": {
       "label": "Windows クラシック",
       "description": "Windows XP Luna 風: 青いタイトルバー、3D 境界線、Tahoma サイズ、沈み込みパネル"
+    },
+    "waFu": {
+      "label": "🌸",
+      "description": "和風伝統：和紙の暖かい生成り、桜色のアクセント、藍色・抹茶のプリセット、柔らかな縁取り"
     }
   },
   "settings": {
