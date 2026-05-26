@@ -204,7 +204,11 @@
       "terminalEmulator": "Terminal emulator",
       "terminalEmulatorDesc": "Choose the frontend terminal implementation. Wterm uses WASM/DOM rendering (experimental). Restart open terminals after switching.",
       "terminalEmulatorXterm": "Xterm.js (default)",
-      "terminalEmulatorWterm": "Wterm (experimental)"
+      "terminalEmulatorWterm": "Wterm (experimental)",
+      "ghosttyCoreEnabled": "Ghostty Core",
+      "ghosttyCoreEnabledDesc": "Use the libghostty WASM build as Wterm's VT parser for fuller terminal emulation (grapheme clusters, full SGR, etc.). Restart open terminal tabs after switching.",
+      "ghosttyScrollbackLimit": "Ghostty scrollback lines",
+      "ghosttyScrollbackLimitDesc": "Maximum scrollback buffer lines for Ghostty Core (default 10000). Restart open terminal tabs after changing."
     },
     "advanced": {
       "title": "Advanced",
@@ -443,6 +447,7 @@
     "splitTerminalUnknown": "Cannot split: missing spawn options to reuse",
     "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs",
     "terminalEmulatorRestart": "Terminal emulator changed. Restart the app for it to take effect.",
+    "ghosttyCoreRestart": "Ghostty Core changed. Restart the app for it to take effect.",
     "restartApp": "Restart"
   },
   "terminal": {

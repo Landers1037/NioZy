@@ -204,7 +204,11 @@
       "terminalEmulator": "终端模拟器",
       "terminalEmulatorDesc": "选择前端终端模拟器实现。Wterm 使用 WASM/DOM 渲染（实验性）。切换后请重新打开终端 Tab 生效。",
       "terminalEmulatorXterm": "Xterm.js（默认）",
-      "terminalEmulatorWterm": "Wterm（实验性）"
+      "terminalEmulatorWterm": "Wterm（实验性）",
+      "ghosttyCoreEnabled": "Ghostty Core",
+      "ghosttyCoreEnabledDesc": "使用 libghostty WASM 作为 Wterm 的 VT 解析核心，提供更完整的终端仿真（Unicode 字素簇、完整 SGR 等）。切换后请重新打开终端 Tab 生效。",
+      "ghosttyScrollbackLimit": "Ghostty 回滚行数",
+      "ghosttyScrollbackLimitDesc": "Ghostty Core 的最大回滚缓冲行数（默认 10000）。修改后需重新打开终端 Tab。"
     },
     "advanced": {
       "title": "高级设置",
@@ -443,6 +447,7 @@
     "splitTerminalUnknown": "无法拆分：缺少可复用的启动参数",
     "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启",
     "terminalEmulatorRestart": "终端模拟器已切换，请重启应用后生效",
+    "ghosttyCoreRestart": "Ghostty Core 已修改，请重启应用后生效",
     "restartApp": "重启"
   },
   "terminal": {

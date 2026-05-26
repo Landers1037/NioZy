@@ -1,6 +1,7 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { Terminal, useTerminal } from '@wterm/react'
 import type { WTerm } from '@wterm/dom'
+import type { TerminalCore } from '@wterm/core'
 import '@wterm/react/css'
 import wtermWasmUrl from '@wterm/core/wasm?url'
 import { useAppStore } from '@/stores/app-store'
@@ -10,6 +11,8 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import { attachWtermDomShellFeatures } from '@/lib/wterm-dom-shell'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import { DEFAULT_GHOSTTY_SCROLLBACK_LIMIT } from '../../../electron/shared/experimental-settings'
+import { ghosttyWasmUrl, loadWtermGhosttyCore } from '@/lib/wterm-ghostty-core'
 import i18n from '@/lib/i18n'
 import { queueWtermScrollToBottom } from '@/lib/wterm-scroll'
 import type { TerminalViewProps } from './terminal-view-props'
@@ -18,6 +21,11 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const { ref: termRef, write, focus } = useTerminal()
   const settings = useAppStore((s) => s.settings)
   const shellCleanupRef = useRef<(() => void) | null>(null)
+  const ghosttyCoreEnabled = settings?.experimental?.ghosttyCoreEnabled === true
+  const ghosttyScrollbackLimit =
+    settings?.experimental?.ghosttyScrollbackLimit ?? DEFAULT_GHOSTTY_SCROLLBACK_LIMIT
+  const [ghosttyCore, setGhosttyCore] = useState<TerminalCore | null>(null)
+  const [ghosttyCoreLoading, setGhosttyCoreLoading] = useState(false)
 
   const terminalBackground =
     resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'
@@ -125,6 +133,42 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     [attachShellFeatures, isFocused, focus],
   )
 
+  useEffect(() => {
+    if (!ghosttyCoreEnabled) {
+      setGhosttyCore(null)
+      setGhosttyCoreLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setGhosttyCore(null)
+    setGhosttyCoreLoading(true)
+
+    void loadWtermGhosttyCore({
+      wasmPath: ghosttyWasmUrl,
+      scrollbackLimit: ghosttyScrollbackLimit,
+    })
+      .then((core) => {
+        if (!cancelled) {
+          setGhosttyCore(core)
+          setGhosttyCoreLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setGhosttyCore(null)
+          setGhosttyCoreLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [ghosttyCoreEnabled, ghosttyScrollbackLimit])
+
+  const useGhosttyCore = ghosttyCoreEnabled && ghosttyCore !== null
+  const terminalKey = useGhosttyCore ? 'ghostty' : 'default'
+
   return (
     <div
       className="absolute inset-0 overflow-hidden p-[10px]"
@@ -134,16 +178,20 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
         className="niozy-terminal-host h-full w-full overflow-hidden [&_.wterm]:!h-full [&_.wterm]:!w-full [&_.wterm]:!rounded-none [&_.wterm]:!p-0 [&_.wterm]:!shadow-none"
         style={wtermStyle}
       >
-        <Terminal
-          ref={termRef}
-          className="h-full w-full"
-          wasmUrl={wtermWasmUrl}
-          autoResize
-          cursorBlink={cursor.cursorBlink}
-          onData={handleData}
-          onResize={handleResize}
-          onReady={handleReady}
-        />
+        {ghosttyCoreEnabled && ghosttyCoreLoading ? null : (
+          <Terminal
+            key={terminalKey}
+            ref={termRef}
+            className="h-full w-full"
+            core={useGhosttyCore ? ghosttyCore ?? undefined : undefined}
+            wasmUrl={useGhosttyCore ? undefined : wtermWasmUrl}
+            autoResize
+            cursorBlink={cursor.cursorBlink}
+            onData={handleData}
+            onResize={handleResize}
+            onReady={handleReady}
+          />
+        )}
       </div>
     </div>
   )
