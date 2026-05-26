@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useAppStore } from '@/stores/app-store'
+import { getElectronAPI } from '@/lib/electron-client'
 import { useUiClasses } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 import type { CustomConnection } from '@/stores/app-store'
@@ -136,6 +137,11 @@ export function ConnectionSettings() {
     patchSettings({
       connections: settings.connections.filter((c) => c.id !== id),
     })
+  }
+
+  const browsePrivateKey = async () => {
+    const path = await getElectronAPI().files.pickPrivateKey()
+    if (path) setDraft({ ...draft, sshKeyPath: path })
   }
 
   return (
@@ -333,6 +339,9 @@ export function ConnectionSettings() {
                       value={draft.sshKeyPath}
                       onChange={(sshKeyPath) => setDraft({ ...draft, sshKeyPath })}
                       placeholder={t('settings.connections.privateKeyPlaceholder')}
+                      showFileBrowse
+                      onFileBrowse={() => void browsePrivateKey()}
+                      fileBrowseAriaLabel={t('settings.connections.browsePrivateKey')}
                     />
                   </SettingField>
                 )}

@@ -35,6 +35,8 @@ import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
+import { inferSshAuth } from '../ssh-auth'
+import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import {
   registerLocalFileScheme,
@@ -322,6 +324,22 @@ ipcMain.on('shell:openExternal', (_, url: string) => {
   void shell.openExternal(url)
 })
 
+ipcMain.handle('files:pickPrivateKey', async (): Promise<string | null> => {
+  const openOptions = {
+    title: '选择 SSH 私钥',
+    properties: ['openFile'] as ('openFile')[],
+    filters: [
+      { name: '私钥', extensions: ['pem', 'key', 'ppk'] },
+      { name: '所有文件', extensions: ['*'] },
+    ],
+  }
+  const { canceled, filePaths } = mainWindow
+    ? await dialog.showOpenDialog(mainWindow, openOptions)
+    : await dialog.showOpenDialog(openOptions)
+  if (canceled || !filePaths[0]) return null
+  return filePaths[0]
+})
+
 ipcMain.handle(
   'files:saveText',
   async (_, content: string, defaultFileName: string): Promise<boolean> => {
@@ -400,8 +418,9 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
     return null
   }
   vaultStore.load()
+  const auth = inferSshAuth(conn)
   const password =
-    conn.sshAuth === 'password' && conn.sshPassword?.trim()
+    auth === 'password' && conn.sshPassword?.trim()
       ? vaultStore.resolveText(conn.sshPassword.trim())
       : undefined
   const profile: SshConnectionProfile = {
@@ -409,7 +428,7 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
     user: vaultStore.resolveText(conn.sshUser.trim()),
     port: conn.sshPort ?? 22,
     keyPath:
-      conn.sshAuth === 'publickey' && conn.sshKeyPath?.trim()
+      auth === 'publickey' && conn.sshKeyPath?.trim()
         ? vaultStore.resolveText(conn.sshKeyPath.trim())
         : undefined,
     password: password || undefined,
@@ -485,11 +504,22 @@ ipcMain.handle(
 )
 
 ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
-  const resolved = {
+  vaultStore.load()
+  let resolved: TerminalCreateOptions = {
     ...options,
     command: options.command ? vaultStore.resolveText(options.command) : undefined,
     args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
     env: options.env ? vaultStore.resolveEnv(options.env) : undefined,
+  }
+  if (options.sshConnectionId) {
+    const conn = settingsStore
+      .get()
+      .connections.find((c) => c.id === options.sshConnectionId && c.type === 'ssh')
+    if (conn) {
+      resolved = applySshConnectionToTerminalOptions(resolved, conn, (text) =>
+        vaultStore.resolveText(text),
+      )
+    }
   }
   return terminalService.create(resolved)
 })
