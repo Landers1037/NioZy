@@ -1,14 +1,13 @@
-import { useTranslation } from 'react-i18next'
 import { Minus, Square, X, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { useUiClasses } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
+import { TitleBarTerminalControls } from '@/components/layout/TitleBarTerminalControls'
 import logoUrl from '@/logo.png'
 
 export function TitleBar() {
-  const { t } = useTranslation()
   const maximized = useAppStore((s) => s.windowMaximized)
   const showAppTitle = useAppStore((s) => s.settings?.showAppTitle ?? true)
   const ui = useUiClasses()
@@ -21,10 +20,9 @@ export function TitleBar() {
           <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
         )}
       </div>
-      <div className={cn('drag-region flex flex-1 items-center justify-center', ui.titleTagline)}>
-        {t('app.tagline')}
-      </div>
-      <div className="flex items-center pr-2 no-drag">
+      <div className="drag-region min-h-0 min-w-0 flex-1" aria-hidden />
+      <div className="flex shrink-0 items-center gap-0.5 pr-2 no-drag">
+        <TitleBarTerminalControls />
         <Button
           variant="ghost"
           size="icon"

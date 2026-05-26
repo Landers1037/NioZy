@@ -41,6 +41,16 @@
     "zh": "中文",
     "en": "English"
   },
+  "titleBar": {
+    "renderEngine": "渲染引擎",
+    "renderMode": "渲染模式",
+    "engineXterm": "Xterm",
+    "engineWterm": "Wterm",
+    "modeCanvas": "Canvas",
+    "modeWebgl": "WebGL",
+    "modeWebgpu": "WebGPU",
+    "renderModeWtermHint": "Wterm 仅支持 Canvas 渲染"
+  },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },
     "focus": { "label": "聚集", "description": "左侧边栏默认收起，便于聚焦终端" },

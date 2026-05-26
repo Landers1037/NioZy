@@ -41,6 +41,16 @@
     "zh": "中文",
     "en": "English"
   },
+  "titleBar": {
+    "renderEngine": "Render engine",
+    "renderMode": "Render mode",
+    "engineXterm": "Xterm",
+    "engineWterm": "Wterm",
+    "modeCanvas": "Canvas",
+    "modeWebgl": "WebGL",
+    "modeWebgpu": "WebGPU",
+    "renderModeWtermHint": "Wterm only supports Canvas rendering"
+  },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },
     "focus": { "label": "Focus", "description": "Sidebar collapsed by default for terminal focus" },
