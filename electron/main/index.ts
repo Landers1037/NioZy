@@ -62,6 +62,7 @@ applyChromiumPerformanceFlags()
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
+let isQuitting = false
 
 /** 开发模式：electron-vite dev 或本地未打包运行 */
 const isDev =
@@ -207,6 +208,7 @@ function createWindow(): void {
 
   mainWindow.on('close', (e) => {
     persistWindowBoundsIfEnabled()
+    if (isQuitting) return
     const s = settingsStore.get()
     if (s.system.minimizeToTrayOnClose) {
       e.preventDefault()
@@ -229,9 +231,7 @@ function createTray(): void {
     {
       label: '退出',
       click: () => {
-        settingsStore.update({
-          system: { ...settingsStore.get().system, minimizeToTrayOnClose: false },
-        })
+        isQuitting = true
         app.quit()
       },
     },
