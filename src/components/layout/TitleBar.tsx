@@ -13,15 +13,15 @@ export function TitleBar() {
   const ui = useUiClasses()
 
   return (
-    <header className={cn('flex shrink-0 select-none items-center', ui.titleBar)}>
-      <div className="flex items-center gap-2 px-2 no-drag">
-        <img src={logoUrl} alt="NioZy" className="size-8 object-contain" />
+    <header className={cn('drag-region flex shrink-0 select-none items-center', ui.titleBar)}>
+      <div className="flex items-center gap-2 px-2">
+        <img src={logoUrl} alt="NioZy" className="size-8 object-contain" draggable={false} />
         {showAppTitle && (
           <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
         )}
       </div>
-      <div className="drag-region min-h-0 min-w-0 flex-1" aria-hidden />
-      <div className="flex shrink-0 items-center gap-0.5 pr-2 no-drag">
+      <div className="min-h-0 min-w-0 flex-1" aria-hidden />
+      <div className="flex shrink-0 items-center gap-0.5 pr-2">
         <TitleBarTerminalControls />
         <Button
           variant="ghost"
