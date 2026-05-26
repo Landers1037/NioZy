@@ -19,6 +19,13 @@ export const ACCENT_PRESETS_WINDOWS_CLASSIC = [
   '#808000',
   '#C0C0C0',
 ]
+export const ACCENT_PRESETS_WAFU = [
+  '#C8556D',
+  '#4A6670',
+  '#6B8F71',
+  '#B8860B',
+  '#5D2E46',
+]
 
 export function getUiStyle(settings?: Pick<AppSettings, 'uiStyle'> | null): UiStyle {
   return normalizeUiStyle(settings?.uiStyle)
@@ -27,12 +34,14 @@ export function getUiStyle(settings?: Pick<AppSettings, 'uiStyle'> | null): UiSt
 export function getAccentPresets(style: UiStyle): string[] {
   if (style === 'niozy') return ACCENT_PRESETS_NIOZY
   if (style === 'windowsClassic') return ACCENT_PRESETS_WINDOWS_CLASSIC
+  if (style === 'waFu') return ACCENT_PRESETS_WAFU
   return ACCENT_PRESETS_MINIMAL
 }
 
 export function getTabCornerRadius(style: UiStyle): string {
   if (style === 'niozy') return 'rounded-[10px]'
   if (style === 'windowsClassic') return 'rounded-none'
+  if (style === 'waFu') return 'rounded-md'
   return 'rounded-lg'
 }
 
@@ -89,6 +98,37 @@ export function getUiClasses(style: UiStyle): UiClassSet {
       statusTag: '',
       connectionEditing: 'rounded-lg border border-primary/40 bg-primary/5 px-3 py-2',
       fontPickerSelected: 'bg-accent font-medium',
+    }
+  }
+
+  if (style === 'waFu') {
+    return {
+      segmentActive:
+        'border border-primary/25 bg-card font-medium text-foreground shadow-[0_1px_2px_rgb(200_85_109/0.08)] dark:border-primary/30 dark:bg-primary/12',
+      segmentInactive: 'font-normal text-muted-foreground hover:text-foreground',
+      tabActive:
+        'border border-primary/30 bg-card font-medium text-foreground shadow-[0_1px_3px_rgb(200_85_109/0.1)] dark:border-primary/35 dark:bg-primary/14',
+      tabActiveIcon:
+        'border border-primary/30 bg-card font-medium text-foreground dark:border-primary/35 dark:bg-primary/14',
+      tabInactive: 'font-normal text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+      tabInactiveIcon: 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+      sidebarBg: 'bg-muted/70',
+      tabBarBg: 'bg-muted/70',
+      segmentGroupBg: 'bg-muted/70',
+      mainPanel: 'rounded-lg border border-border bg-card shadow-[0_1px_4px_rgb(61_52_40/0.06)]',
+      mainPanelTerminal:
+        'rounded-lg border border-border bg-transparent shadow-[0_1px_4px_rgb(61_52_40/0.06)]',
+      sidebarResizeHover: 'hover:bg-primary/15',
+      sidebarResizeActive: 'bg-primary/22',
+      titleBar: 'h-10 border-b border-border bg-card/95',
+      titleTagline: 'text-xs text-muted-foreground',
+      titleWeight: 'font-semibold tracking-wide',
+      windowControlBtn: 'rounded-none hover:bg-muted',
+      windowCloseBtn: 'rounded-none hover:bg-destructive hover:text-white',
+      statusBar: 'h-8 border-t border-border bg-card/95 px-3 gap-3',
+      statusTag: '',
+      connectionEditing: 'rounded-md border border-primary/30 bg-primary/5 px-3 py-2',
+      fontPickerSelected: 'border border-primary/25 bg-card font-medium',
     }
   }
 

@@ -73,6 +73,10 @@
     "windowsClassic": {
       "label": "Windows Classic",
       "description": "模拟 Windows XP Luna：蓝色标题栏、3D 边框、Tahoma 字号与内凹面板"
+    },
+    "waFu": {
+      "label": "🌸",
+      "description": "日式传统和风：和纸暖米色底、樱色强调、靛青与抹茶点缀、柔和描边与轻阴影"
     }
   },
   "settings": {

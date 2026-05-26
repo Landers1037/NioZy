@@ -135,6 +135,44 @@ html[data-ui-style='windows-classic'] {
   --xp-3d-dark: #404040;
 }
 
+/* —— 和风（wa-fu）：和纸、樱色、靛青 —— */
+html[data-ui-style='wa-fu'] {
+  --radius: 0.625rem;
+  --background: #f5f0e6;
+  --foreground: #3d3428;
+  --card: #fffbf5;
+  --card-foreground: #3d3428;
+  --popover: #fffbf5;
+  --popover-foreground: #3d3428;
+  --muted: #ede4d6;
+  --muted-foreground: #7a6e62;
+  --border: #d4c4b0;
+  --primary: #c8556d;
+  --primary-foreground: #fffbf5;
+  --accent: #ede4d6;
+  --accent-foreground: #3d3428;
+  --destructive: #9b4d4d;
+  --ring: #c8556d;
+}
+
+html.dark[data-ui-style='wa-fu'] {
+  --background: #1c1814;
+  --foreground: #f0e8dc;
+  --card: #28221c;
+  --card-foreground: #f0e8dc;
+  --popover: #28221c;
+  --popover-foreground: #f0e8dc;
+  --muted: #332c24;
+  --muted-foreground: #a89888;
+  --border: #4a4038;
+  --primary: #e8a0b0;
+  --primary-foreground: #1c1814;
+  --accent: #332c24;
+  --accent-foreground: #f0e8dc;
+  --destructive: #d48282;
+  --ring: #e8a0b0;
+}
+
 html.dark[data-ui-style='windows-classic'] {
   --background: #2a2a2a;
   --foreground: #ffffff;
@@ -178,6 +216,22 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='niozy'] h5,
   html[data-ui-style='niozy'] h6 {
     font-weight: 600;
+  }
+
+  html[data-ui-style='wa-fu'] body {
+    font-family:
+      'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', 'Noto Sans JP', 'Noto Sans SC', var(--font-sans);
+    letter-spacing: 0.01em;
+  }
+
+  html[data-ui-style='wa-fu'] h1,
+  html[data-ui-style='wa-fu'] h2,
+  html[data-ui-style='wa-fu'] h3,
+  html[data-ui-style='wa-fu'] h4,
+  html[data-ui-style='wa-fu'] h5,
+  html[data-ui-style='wa-fu'] h6 {
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   html[data-ui-style='windows-classic'] body {
@@ -383,6 +437,38 @@ html[data-ui-style='niozy'] .ui-setting-heading {
 
 html[data-ui-style='niozy'] .ui-setting-subheading {
   font-weight: 600;
+}
+
+html[data-ui-style='wa-fu'] .ui-card {
+  border-radius: 0.625rem;
+  box-shadow: 0 1px 3px rgb(61 52 40 / 0.06);
+}
+
+html[data-ui-style='wa-fu'] .ui-overlay-panel {
+  box-shadow:
+    0 4px 12px rgb(61 52 40 / 0.08),
+    0 1px 3px rgb(200 85 109 / 0.06);
+}
+
+html[data-ui-style='wa-fu'] .ui-btn {
+  font-weight: 500;
+}
+
+html[data-ui-style='wa-fu'] .ui-label {
+  font-weight: 500;
+}
+
+html[data-ui-style='wa-fu'] .ui-card-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+html[data-ui-style='wa-fu'] .ui-switch-thumb {
+  box-shadow: 0 1px 3px rgb(61 52 40 / 0.1);
+}
+
+html[data-ui-style='wa-fu'] .ui-slider-thumb {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 /* 隐藏滚动条，保留滚轮/触控板滚动 */

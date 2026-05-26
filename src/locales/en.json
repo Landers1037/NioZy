@@ -73,6 +73,10 @@
     "windowsClassic": {
       "label": "Windows Classic",
       "description": "Windows XP Luna nostalgia: blue title bar, 3D borders, Tahoma sizing, sunken panels"
+    },
+    "waFu": {
+      "label": "🌸",
+      "description": "Japanese wa-fu: washi warm ivory, sakura pink accents, indigo and matcha presets, soft borders"
     }
   },
   "settings": {
