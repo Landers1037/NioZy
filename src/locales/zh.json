@@ -39,7 +39,8 @@
   },
   "locale": {
     "zh": "中文",
-    "en": "English"
+    "en": "English",
+    "ja": "日本語"
   },
   "titleBar": {
     "renderEngine": "渲染引擎",
