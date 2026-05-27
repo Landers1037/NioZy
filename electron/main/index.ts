@@ -59,6 +59,12 @@ augmentWindowsPath()
 
 setInitialOpenDirectoryFromArgv(process.argv)
 
+// On Windows, the taskbar pinned icon is tied to the AppUserModelID.
+// Keep it stable across updates to prevent pinned icons from disappearing.
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.niozy.app')
+}
+
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
 if (!gotSingleInstanceLock) {
   app.quit()
