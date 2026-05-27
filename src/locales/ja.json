@@ -157,7 +157,7 @@
       "clickToOpenLinks": "クリックでリンクを開く",
       "clickToOpenLinksDesc": "マウスクリックでデフォルトブラウザでリンクを開く",
       "shiftEnterNewline": "Shift+Enter で改行",
-      "shiftEnterNewlineDesc": "有効時、Shift+Enter または Ctrl+Enter で対話型 CLI（Claude、Cursor agent 等）に改行を挿入。Enter で送信。出力クリックでカーソルが画面末尾に移動しなくなります",
+      "shiftEnterNewlineDesc": "有効時、Shift+Enter または Ctrl+Enter で対話型 CLI（Claude、Cursor agent 等）に改行を挿入。Enter で送信。出力クリックでカーソルが画面末尾に移動しなくなります。TUI では Shift を押しながら左ドラッグで選択し、離すと自動コピー",
       "showTerminalIndex": "ターミナル番号を表示",
       "showTerminalIndexDesc": "有効時、サイドバーの各ターミナルタブ名の左に番号を表示",
       "enableTabDrag": "ドラッグ並べ替えを有効化",

@@ -14,6 +14,7 @@ import {
   handleInteractiveCliMouseDown,
 } from '@/lib/terminal-interactive-cli'
 import {
+  handleTerminalCopyWhenSelection,
   handleTerminalKeyboardShortcut,
   handleTerminalModifiedEnterKey,
   handleTerminalRightClick,
@@ -310,7 +311,7 @@ export function TerminalView({
     let unsubLayoutFit: (() => void) | undefined
     let termElement: HTMLElement | undefined
     let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
-    let onRightMouseDown: ((e: MouseEvent) => void) | undefined
+    let onRightMouseUp: ((e: MouseEvent) => void) | undefined
     let onContextMenu: ((e: MouseEvent) => void) | undefined
     let stopInputA11y: (() => void) | undefined
     const captureOpts = { capture: true } as const
@@ -382,8 +383,9 @@ export function TerminalView({
         }
 
         const shortcuts = useAppStore.getState().settings?.shortcuts.app
+        if (handleTerminalCopyWhenSelection(event, term)) return false
         if (!shortcuts) return true
-        const handled = handleTerminalKeyboardShortcut(term, terminalId, shortcuts, event)
+        const handled = handleTerminalKeyboardShortcut(terminalId, shortcuts, event, term)
         return !handled
       })
 
@@ -403,10 +405,10 @@ export function TerminalView({
         handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
       }
 
-      onRightMouseDown = (e: MouseEvent) => {
+      onRightMouseUp = (e: MouseEvent) => {
         const terminalId = boundTerminalIdRef.current
         if (e.button !== 2 || !terminalId || !isRightClickCopyPasteEnabled()) return
-        handleTerminalRightClick(term, terminalId, e)
+        handleTerminalRightClick(terminalId, e, term)
       }
 
       onContextMenu = (e: MouseEvent) => {
@@ -416,7 +418,7 @@ export function TerminalView({
       }
 
       termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
-      termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
+      termElement?.addEventListener('mouseup', onRightMouseUp, captureOpts)
       termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
 
       ro = new ResizeObserver(() => {
@@ -451,9 +453,9 @@ export function TerminalView({
       lastFitRef.current = { cols: 0, rows: 0, width: 0, height: 0 }
       disposeCanvas()
       disposeWebgl()
-      if (termElement && onLeftMouseDown && onRightMouseDown && onContextMenu) {
+      if (termElement && onLeftMouseDown && onRightMouseUp && onContextMenu) {
         termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
-        termElement.removeEventListener('mousedown', onRightMouseDown, captureOpts)
+        termElement.removeEventListener('mouseup', onRightMouseUp, captureOpts)
         termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
       }
       stopInputA11y?.()
@@ -481,7 +483,7 @@ export function TerminalView({
     let unsubLayoutFit: (() => void) | undefined
     let termElement: HTMLElement | undefined
     let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
-    let onRightMouseDown: ((e: MouseEvent) => void) | undefined
+    let onRightMouseUp: ((e: MouseEvent) => void) | undefined
     let onContextMenu: ((e: MouseEvent) => void) | undefined
     let stopInputA11y: (() => void) | undefined
     const captureOpts = { capture: true } as const
@@ -546,8 +548,9 @@ export function TerminalView({
         }
 
         const shortcuts = useAppStore.getState().settings?.shortcuts.app
+        if (handleTerminalCopyWhenSelection(event, term)) return false
         if (!shortcuts) return true
-        const handled = handleTerminalKeyboardShortcut(term, terminalId, shortcuts, event)
+        const handled = handleTerminalKeyboardShortcut(terminalId, shortcuts, event, term)
         return !handled
       })
 
@@ -567,10 +570,10 @@ export function TerminalView({
         handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
       }
 
-      onRightMouseDown = (e: MouseEvent) => {
+      onRightMouseUp = (e: MouseEvent) => {
         const terminalId = boundTerminalIdRef.current
         if (e.button !== 2 || !terminalId || !isRightClickCopyPasteEnabled()) return
-        handleTerminalRightClick(term, terminalId, e)
+        handleTerminalRightClick(terminalId, e, term)
       }
 
       onContextMenu = (e: MouseEvent) => {
@@ -580,7 +583,7 @@ export function TerminalView({
       }
 
       termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
-      termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
+      termElement?.addEventListener('mouseup', onRightMouseUp, captureOpts)
       termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
 
       ro = new ResizeObserver(() => {
@@ -616,9 +619,9 @@ export function TerminalView({
       lastFitRef.current = { cols: 0, rows: 0, width: 0, height: 0 }
       disposeCanvas()
       disposeWebgl()
-      if (termElement && onLeftMouseDown && onRightMouseDown && onContextMenu) {
+      if (termElement && onLeftMouseDown && onRightMouseUp && onContextMenu) {
         termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
-        termElement.removeEventListener('mousedown', onRightMouseDown, captureOpts)
+        termElement.removeEventListener('mouseup', onRightMouseUp, captureOpts)
         termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
       }
       stopInputA11y?.()

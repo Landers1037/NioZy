@@ -11,6 +11,8 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import { attachWtermDomShellFeatures } from '@/lib/wterm-dom-shell'
 import {
+  handleTerminalCopyWhenSelection,
+  handleTerminalKeyboardShortcut,
   handleTerminalModifiedEnterKey,
 } from '@/lib/terminal-shortcut-actions'
 import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
@@ -95,6 +97,20 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
         ) {
           event.stopPropagation()
           return
+        }
+
+        const shortcuts = settings.shortcuts?.app
+        if (!shortcuts) return
+
+        if (handleTerminalCopyWhenSelection(event)) {
+          event.preventDefault()
+          event.stopPropagation()
+          return
+        }
+
+        if (handleTerminalKeyboardShortcut(terminalId, shortcuts, event)) {
+          event.preventDefault()
+          event.stopPropagation()
         }
       }
 
