@@ -93,6 +93,11 @@ const api: ElectronAPI = {
     close: (tabId) => ipcRenderer.send('preview:close', tabId),
     setOverlaySuppressed: (suppressed) =>
       ipcRenderer.send('preview:setOverlaySuppressed', suppressed),
+    clearWebviewBrowsingData: () =>
+      ipcRenderer.invoke('preview:clearWebviewBrowsingData') as Promise<{
+        ok: boolean
+        error?: string
+      }>,
   },
   update: {
     check: () => ipcRenderer.invoke('update:check') as Promise<UpdateCheckResult>,

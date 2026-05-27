@@ -642,3 +642,28 @@ body {
   content-visibility: hidden;
   contain: strict;
 }
+
+/* 链接预览 webview 顶部加载条 */
+@keyframes link-preview-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.link-preview-progress-bar {
+  width: 28%;
+  height: 100%;
+  background: var(--primary);
+  animation: link-preview-progress 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-preview-progress-bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.55;
+  }
+}

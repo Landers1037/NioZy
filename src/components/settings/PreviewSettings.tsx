@@ -3,7 +3,9 @@ import { Switch } from '@/components/ui/switch'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Eye, Image, BarChart3, Link2, FileText } from 'lucide-react'
+import { Eye, Image, BarChart3, Link2, FileText, Globe, Database } from 'lucide-react'
+import { WebviewCustomHeadersEditor } from './WebviewCustomHeadersEditor'
+import { WebviewBrowsingDataActions } from './WebviewBrowsingDataActions'
 
 export function PreviewSettings() {
   const { t } = useTranslation()
@@ -72,6 +74,27 @@ export function PreviewSettings() {
             checked={preview.anyFilePreview}
             onCheckedChange={(v) => patchPreview({ anyFilePreview: v })}
           />
+        </SettingField>
+
+        <div className="border-t border-border pt-6">
+          <SettingField
+            icon={Globe}
+            label={t('settings.preview.webviewHeaders')}
+            description={t('settings.preview.webviewHeadersDesc')}
+          >
+            <WebviewCustomHeadersEditor
+              headers={preview.webviewCustomHeaders}
+              onChange={(webviewCustomHeaders) => patchPreview({ webviewCustomHeaders })}
+            />
+          </SettingField>
+        </div>
+
+        <SettingField
+          icon={Database}
+          label={t('settings.preview.webviewBrowsingData')}
+          description={t('settings.preview.webviewBrowsingDataDesc')}
+        >
+          <WebviewBrowsingDataActions />
         </SettingField>
       </CardContent>
     </Card>

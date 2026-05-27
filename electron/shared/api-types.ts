@@ -323,6 +323,8 @@ export interface ElectronAPI {
     close: (tabId: string) => void
     /** Dialog 等 HTML 浮层打开时隐藏链接预览原生视图 */
     setOverlaySuppressed: (suppressed: boolean) => void
+    /** 清空链接预览 WebView 分区的缓存、Cookie 与本地存储 */
+    clearWebviewBrowsingData: () => Promise<{ ok: boolean; error?: string }>
   }
   update: {
     check: () => Promise<UpdateCheckResult>

@@ -289,6 +289,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       setVisible: () => {},
       close: () => {},
       setOverlaySuppressed: () => {},
+      clearWebviewBrowsingData: async () => ({ ok: true }),
     },
     ssh: {
       checkScp: async () => ({ found: false }),

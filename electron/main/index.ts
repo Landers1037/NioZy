@@ -50,6 +50,12 @@ import {
 } from '../local-file-protocol'
 import { LinkPreviewManager } from '../link-preview-manager'
 import { applySessionProxy } from '../session-proxy'
+import {
+  clearWebviewPreviewBrowsingData,
+  initWebviewPreviewSession,
+  syncWebviewPreviewCustomHeaders,
+  syncWebviewPreviewProxy,
+} from '../webview-preview-session'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
 import { setDebugLogEnabled } from '../debug-log'
 
@@ -97,6 +103,12 @@ function getLinkPreviewManager(): LinkPreviewManager {
 
 async function syncSessionProxyFromSettings(): Promise<void> {
   await applySessionProxy(settingsStore.get().system.proxy)
+}
+
+async function syncWebviewPreviewFromSettings(): Promise<void> {
+  const settings = settingsStore.get()
+  syncWebviewPreviewCustomHeaders(settings.preview.webviewCustomHeaders)
+  await syncWebviewPreviewProxy(settings.system.proxy)
 }
 
 /** 开发模式：electron-vite dev 或本地未打包运行 */
@@ -308,6 +320,8 @@ app.whenReady().then(async () => {
   vaultStore.load()
   setDebugLogEnabled(settingsStore.get().advanced.debugLog === true)
   await syncSessionProxyFromSettings()
+  initWebviewPreviewSession()
+  await syncWebviewPreviewFromSettings()
   linkPreviewManager = new LinkPreviewManager(
     () => mainWindow,
     settingsStore.get().advanced.disableSandbox,
@@ -437,9 +451,15 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   }
   if (partial.system?.proxy !== undefined) {
     await syncSessionProxyFromSettings()
+    await syncWebviewPreviewProxy(updated.system.proxy)
+  }
+  if (partial.preview?.webviewCustomHeaders !== undefined) {
+    syncWebviewPreviewCustomHeaders(updated.preview.webviewCustomHeaders)
   }
   return updated
 })
+
+ipcMain.handle('preview:clearWebviewBrowsingData', () => clearWebviewPreviewBrowsingData())
 
 ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 ipcMain.handle('app:getVersion', () => app.getVersion())
