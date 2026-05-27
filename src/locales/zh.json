@@ -188,7 +188,10 @@
       "sshNotSupported": "SSH 终端暂不支持文件预览",
       "previewFailed": "无法预览该文件",
       "truncatedNotice": "文件较大，仅显示前 1MB",
-      "linkTabTitle": "网页预览"
+      "linkTabTitle": "网页预览",
+      "pageLoadFailed": "无法打开此网页",
+      "pageLoadFailedHint": "请检查网络连接、代理设置或网址是否正确。",
+      "pageLoadErrorCode": "错误代码"
     },
     "performance": {
       "title": "性能",
