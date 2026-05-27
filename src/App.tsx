@@ -7,6 +7,7 @@ import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
+import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { TerminalTabLayer } from '@/components/terminal/TerminalTabLayer'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
@@ -54,6 +55,7 @@ export default function App() {
   useAppShortcuts()
   useSshDisconnectAlert()
   useTerminalStreamSync(tabs, activeTabId)
+  useSuperPowerSavingPtySync(tabs, activeTabId)
 
   useEffect(() => {
     if (activeTabId) touchTabActivity(activeTabId)

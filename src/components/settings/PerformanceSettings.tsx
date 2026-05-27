@@ -3,7 +3,7 @@ import { Switch } from '@/components/ui/switch'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Gauge, Moon, Sparkles } from 'lucide-react'
+import { BatteryCharging, Gauge, Moon, Sparkles } from 'lucide-react'
 
 export function PerformanceSettings() {
   const { t } = useTranslation()
@@ -47,6 +47,18 @@ export function PerformanceSettings() {
           <Switch
             checked={performance.inactiveTabSleep}
             onCheckedChange={(v) => patchPerformance({ inactiveTabSleep: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={BatteryCharging}
+          label={t('settings.performance.superPowerSaving')}
+          description={t('settings.performance.superPowerSavingDesc')}
+          row
+        >
+          <Switch
+            checked={performance.superPowerSaving}
+            onCheckedChange={(v) => patchPerformance({ superPowerSaving: v })}
           />
         </SettingField>
       </CardContent>

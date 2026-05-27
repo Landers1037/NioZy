@@ -8,11 +8,17 @@ export interface PerformanceSettings {
    * 非活动 Tab 休眠：启用 Chromium 后台节流，并对非活动 Tab 暂停实时推流（保留 PTY）。
    */
   inactiveTabSleep: boolean
+  /**
+   * 超级省电：仅挂载当前 Tab 的终端视图；Xterm 临时使用 DOM；
+   * 非活动 Tab 结束 PTY，切回时按原配置重建。
+   */
+  superPowerSaving: boolean
 }
 
 export const DEFAULT_PERFORMANCE_SETTINGS: PerformanceSettings = {
   inactiveTabOptimization: false,
   inactiveTabSleep: false,
+  superPowerSaving: false,
 }
 
 export function normalizePerformanceSettings(
@@ -39,5 +45,10 @@ export function normalizePerformanceSettings(
         ? legacy.inactiveTabSleep
         : DEFAULT_PERFORMANCE_SETTINGS.inactiveTabSleep
 
-  return { inactiveTabOptimization: optimization, inactiveTabSleep: sleep }
+  const superPowerSaving =
+    typeof v.superPowerSaving === 'boolean'
+      ? v.superPowerSaving
+      : DEFAULT_PERFORMANCE_SETTINGS.superPowerSaving
+
+  return { inactiveTabOptimization: optimization, inactiveTabSleep: sleep, superPowerSaving }
 }

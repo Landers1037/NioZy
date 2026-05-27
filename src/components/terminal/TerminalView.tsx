@@ -75,7 +75,13 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   const [termReady, setTermReady] = useState(false)
   const settings = useAppStore((s) => s.settings)
   const rendererPreference = settings?.terminal.renderer ?? 'webgl'
-  const activeRenderer = effectiveRenderer(rendererPreference, preferDomRenderer)
+  const superPowerSavingDom =
+    settings?.performance.superPowerSaving === true &&
+    settings.experimental?.terminalEmulator !== 'wterm'
+  const activeRenderer = effectiveRenderer(
+    rendererPreference,
+    preferDomRenderer || superPowerSavingDom,
+  )
 
   const safeFit = useCallback(
     (force = false): boolean => {

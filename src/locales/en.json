@@ -169,7 +169,9 @@
       "inactiveTabOptimization": "Inactive tab optimization",
       "inactiveTabOptimizationDesc": "When enabled, inactive tabs with no interaction for 5 minutes unmount the terminal view and free xterm/wterm memory. PTY sessions stay connected; switching back rebuilds the view and replays buffered output",
       "inactiveTabSleep": "Inactive tab sleep",
-      "inactiveTabSleepDesc": "When enabled, turns on Chromium background throttling and pauses live PTY streaming for inactive tabs to reduce usage. Switching back resumes streaming (restart the app for full command-line throttling effect)"
+      "inactiveTabSleepDesc": "When enabled, turns on Chromium background throttling and pauses live PTY streaming for inactive tabs to reduce usage. Switching back resumes streaming (restart the app for full command-line throttling effect)",
+      "superPowerSaving": "Super power saving",
+      "superPowerSavingDesc": "Keeps only the active tab's terminal mounted; Xterm temporarily uses DOM rendering. Inactive tabs end their PTY and unmount the view; switching back respawns from saved options (local shell sessions restart; SSH reconnects)"
     },
     "filesystem": {
       "title": "File system",
@@ -479,6 +481,8 @@
     "processExited": "[Process exited]",
     "processExitedWithCode": "[Process exited, code {{code}}]",
     "inactiveOptimized": "This tab was optimized: no activity for 5+ minutes, the terminal view was unloaded to save memory. Switch back to restore.",
+    "superPowerSavingIdle": "Super power saving: this tab's terminal and PTY are suspended. Switch back to restore.",
+    "superPowerSavingResuming": "Restoring terminal session…",
     "inputAriaLabel": "Terminal input",
     "sshReconnectHint": "Press Enter to reconnect",
     "sshReconnectFailed": "SSH reconnect"
