@@ -713,13 +713,13 @@ export function TerminalView({
   }, [settings])
 
   useEffect(() => {
-    if (!termRef.current || !settings) return
+    if (!termReady || !termRef.current || !settings) return
     const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
     const preview = settings.preview ?? DEFAULT_PREVIEW_SETTINGS
     applyInteractiveCliTerminalOptions(termRef.current, shell.shiftEnterNewline)
     applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shell, preview)
     syncPreviewMouse()
-  }, [settings?.shell, settings?.preview, syncPreviewMouse])
+  }, [termReady, settings?.shell, settings?.preview, syncPreviewMouse])
 
   useEffect(() => {
     if (!termRef.current || !settings) return
