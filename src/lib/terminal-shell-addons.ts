@@ -2,13 +2,17 @@ import type { IDisposable, Terminal } from '@xterm/xterm'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import type { ShellSettings } from '../../electron/shared/shell-settings'
+import type { PreviewSettings } from '../../electron/shared/preview-settings'
+import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
+import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
 import {
   findUrlAtColumn,
   isValidHttpUrl,
-  openTerminalExternalLink,
   TERMINAL_LINK_FOREGROUND,
   TERMINAL_URL_REGEX,
 } from '@/lib/terminal-url'
+import { handleTerminalLinkClick } from '@/lib/terminal-preview-open'
+import { openTerminalExternalLink } from '@/lib/terminal-url'
 
 /** WebGL 下 canvas 盖住 bottom 装饰，用屏幕坐标换算缓冲区列行再匹配 URL */
 function getViewportCellFromMouse(term: Terminal, event: MouseEvent): { col: number; row: number } | null {
@@ -174,6 +178,7 @@ function syncWebLinksAddon(
   term: Terminal,
   state: TerminalShellAddonState,
   shell: ShellSettings,
+  preview: PreviewSettings,
 ): void {
   const enable = shell.highlightLinks || shell.clickToOpenLinks
   /** 高亮 + 点击：由缓冲区坐标处理，避免 WebGL canvas 挡住装饰/WebLinks */
@@ -196,8 +201,10 @@ function syncWebLinksAddon(
   }
 
   const handler = click
-    ? (_event: MouseEvent, uri: string) => {
-        openTerminalExternalLink(uri)
+    ? (event: MouseEvent, uri: string) => {
+        if (!handleTerminalLinkClick(uri, event, preview, true)) {
+          /* WebLinks 无匹配时保持默认 */
+        }
       }
     : () => {}
 
@@ -212,7 +219,10 @@ export function applyTerminalShellAddons(
   term: Terminal,
   state: TerminalShellAddonState,
   shell: ShellSettings,
+  preview: PreviewSettings = DEFAULT_PREVIEW_SETTINGS,
 ): void {
+  const externalPreviewClick =
+    isAnyPreviewEnabled(preview) || shell.clickToOpenLinks
   if (shell.emojiNativeRendering) {
     if (!state.unicode11) {
       ensureUnicodeProposedApi(term)
@@ -228,10 +238,14 @@ export function applyTerminalShellAddons(
     state.unicode11 = null
   }
 
-  syncWebLinksAddon(term, state, shell)
+  syncWebLinksAddon(term, state, shell, preview)
 
   if (shell.highlightLinks) {
-    bindLinkHighlightListeners(term, state, shell.clickToOpenLinks)
+    bindLinkHighlightListeners(
+      term,
+      state,
+      shell.clickToOpenLinks && !externalPreviewClick,
+    )
   } else {
     clearLinkHighlight(term, state)
   }

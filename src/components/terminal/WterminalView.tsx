@@ -17,6 +17,7 @@ import {
 } from '@/lib/terminal-shortcut-actions'
 import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { DEFAULT_GHOSTTY_SCROLLBACK_LIMIT } from '../../../electron/shared/experimental-settings'
 import { ghosttyWasmUrl, loadWtermGhosttyCore } from '@/lib/wterm-ghostty-core'
 import i18n from '@/lib/i18n'
@@ -75,6 +76,9 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
           terminalId,
           rightClickCopyPaste: settings.terminal.rightClickCopyPaste,
           shell: settings.shell ?? DEFAULT_SHELL_SETTINGS,
+          preview: settings.preview ?? DEFAULT_PREVIEW_SETTINGS,
+          isSsh: !!tab.sshConnectionId,
+          getCwd: () => useAppStore.getState().terminalCwds[terminalId],
         }),
       )
 
@@ -161,8 +165,11 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   }, [
     settings?.terminal.rightClickCopyPaste,
     settings?.shell?.clickToOpenLinks,
+    settings?.shell?.highlightLinks,
     settings?.shell?.shiftEnterNewline,
+    settings?.preview,
     settings?.shortcuts,
+    tab.sshConnectionId,
     attachShellFeatures,
     termRef,
   ])

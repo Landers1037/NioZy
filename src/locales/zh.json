@@ -85,6 +85,7 @@
       "terminal": "终端设置",
       "ssh": "SSH",
       "shell": "SHELL",
+      "preview": "预览",
       "performance": "性能",
       "filesystem": "文件系统",
       "connections": "连接设置",
@@ -162,6 +163,23 @@
       "showTerminalIndexDesc": "开启后在左侧边栏终端 Tab 名称左侧显示序号",
       "enableTabDrag": "启用拖拽",
       "enableTabDragDesc": "开启后长按左侧边栏终端 Tab 2 秒进入拖拽模式，可上下拖动调整顺序"
+    },
+    "preview": {
+      "title": "预览",
+      "description": "终端输出中的文件与链接预览（Ctrl+左键）",
+      "imagePreview": "支持终端图片预览",
+      "imagePreviewDesc": "识别常见图片后缀；悬停提示「按住 Ctrl+左键预览」；仅本地 Shell 支持，SSH 暂不支持",
+      "chartPreview": "支持终端图表预览",
+      "chartPreviewDesc": "识别 .docx、.xlsx、.csv、.txt、.md 等；docx/xlsx 用库渲染，其余按文本预览",
+      "linkPreview": "支持终端链接预览",
+      "linkPreviewDesc": "Ctrl+左键在应用内新 Tab 打开网页（走系统设置中的代理）；普通单击仍用系统浏览器",
+      "anyFilePreview": "支持终端任意文件预览",
+      "anyFilePreviewDesc": "除图片与图表后缀外均可按文本预览，最多读取前 1MB",
+      "ctrlClickHint": "按住 Ctrl+左键预览",
+      "sshNotSupported": "SSH 终端暂不支持文件预览",
+      "previewFailed": "无法预览该文件",
+      "truncatedNotice": "文件较大，仅显示前 1MB",
+      "linkTabTitle": "网页预览"
     },
     "performance": {
       "title": "性能",

@@ -85,6 +85,7 @@
       "terminal": "Terminal",
       "ssh": "SSH",
       "shell": "SHELL",
+      "preview": "Preview",
       "performance": "Performance",
       "filesystem": "File system",
       "connections": "Connections",
@@ -162,6 +163,23 @@
       "showTerminalIndexDesc": "When enabled, shows an index number to the left of each terminal tab name in the sidebar",
       "enableTabDrag": "Enable drag reorder",
       "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically"
+    },
+    "preview": {
+      "title": "Preview",
+      "description": "Preview files and links from terminal output (Ctrl+click)",
+      "imagePreview": "Terminal image preview",
+      "imagePreviewDesc": "Detect common image extensions; hover shows Ctrl+click hint; local shell only (not SSH)",
+      "chartPreview": "Terminal chart/document preview",
+      "chartPreviewDesc": "Detect .docx, .xlsx, .csv, .txt, .md; render docx/xlsx with libraries, others as text",
+      "linkPreview": "Terminal link preview",
+      "linkPreviewDesc": "Ctrl+click opens URL in an in-app tab (uses proxy from System settings); normal click still uses the system browser",
+      "anyFilePreview": "Terminal any-file preview",
+      "anyFilePreviewDesc": "Preview other extensions as text, up to the first 1 MB",
+      "ctrlClickHint": "Hold Ctrl and left-click to preview",
+      "sshNotSupported": "File preview is not supported on SSH terminals",
+      "previewFailed": "Could not preview this file",
+      "truncatedNotice": "Large file — showing first 1 MB only",
+      "linkTabTitle": "Web preview"
     },
     "performance": {
       "title": "Performance",

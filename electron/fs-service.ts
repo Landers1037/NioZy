@@ -1,11 +1,15 @@
 import { spawn } from 'child_process'
 import { existsSync } from 'fs'
 import { stat } from 'fs/promises'
-import { buildLocalPreviewUrl } from './local-file-protocol'
+import { buildLocalPreviewUrl, buildLocalTextPreviewUrl } from './shared/local-file-url'
 import { homedir } from 'os'
 import { join, normalize } from 'path'
 import { resolveExecutable } from './resolve-executable'
 import { isImageFilePath } from './shared/filesystem-image'
+import {
+  classifyTerminalPreviewFile,
+  type TerminalPreviewFileKind,
+} from './shared/terminal-preview-files'
 
 const MAX_PREVIEW_BYTES = 20 * 1024 * 1024
 
@@ -219,6 +223,50 @@ export function detectProgram(
 }
 
 /** 校验后返回 niozy-local 协议 URL，避免整文件 base64 经 IPC 传入渲染进程 */
+export async function getTerminalFilePreviewUrl(
+  filePath: string,
+  kind: TerminalPreviewFileKind,
+): Promise<ImagePreviewResult> {
+  try {
+    const resolved = normalize(filePath)
+    if (kind === 'none') {
+      return { ok: false, error: 'Unsupported file type' }
+    }
+    if (!existsSync(resolved)) {
+      return { ok: false, error: 'File not found' }
+    }
+    const st = await stat(resolved)
+    if (!st.isFile()) return { ok: false, error: 'Not a file' }
+
+    const actualKind = classifyTerminalPreviewFile(resolved)
+    if (actualKind === 'none') {
+      return { ok: false, error: 'Unsupported file type' }
+    }
+
+    if (actualKind === 'image') {
+      if (st.size > MAX_PREVIEW_BYTES) {
+        return { ok: false, error: 'Image is too large to preview' }
+      }
+      return { ok: true, url: buildLocalPreviewUrl(resolved) }
+    }
+
+    const ext = resolved.slice(resolved.lastIndexOf('.')).toLowerCase()
+    if (ext === '.docx' || ext === '.xlsx') {
+      if (st.size > MAX_PREVIEW_BYTES * 4) {
+        return { ok: false, error: 'File is too large to preview' }
+      }
+      return { ok: true, url: buildLocalPreviewUrl(resolved) }
+    }
+
+    return { ok: true, url: buildLocalTextPreviewUrl(resolved) }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
+
 export async function getImagePreviewUrl(filePath: string): Promise<ImagePreviewResult> {
   try {
     const resolved = normalize(filePath)
