@@ -188,7 +188,10 @@
       "sshNotSupported": "File preview is not supported on SSH terminals",
       "previewFailed": "Could not preview this file",
       "truncatedNotice": "Large file — showing first 1 MB only",
-      "linkTabTitle": "Web preview"
+      "linkTabTitle": "Web preview",
+      "pageLoadFailed": "Unable to open this page",
+      "pageLoadFailedHint": "Check your network connection, proxy settings, or whether the URL is correct.",
+      "pageLoadErrorCode": "Error code"
     },
     "performance": {
       "title": "Performance",

@@ -18,6 +18,7 @@ declare namespace React {
           disablewebsecurity?: string
           nodeintegration?: string
           webpreferences?: string
+          ref?: React.Ref<HTMLElement & { loadURL: (url: string) => Promise<void> }>
         },
         HTMLElement
       >

@@ -179,7 +179,10 @@
       "sshNotSupported": "SSH ターミナルではファイルプレビューに対応していません",
       "previewFailed": "このファイルをプレビューできません",
       "truncatedNotice": "大きなファイル — 先頭 1MB のみ表示",
-      "linkTabTitle": "Web プレビュー"
+      "linkTabTitle": "Web プレビュー",
+      "pageLoadFailed": "ページを開けませんでした",
+      "pageLoadFailedHint": "ネットワーク、プロキシ設定、または URL を確認してください。",
+      "pageLoadErrorCode": "エラーコード"
     },
     "performance": {
       "title": "パフォーマンス",
