@@ -14,7 +14,12 @@ import { sendToRenderer } from './window-ipc'
 import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
-import { applyChromiumPerformanceFlags, getOptimizedWebPreferences } from '../chromium-tuning'
+import {
+  applyChromiumPerformanceFlags,
+  getOptimizedWebPreferences,
+  syncInactiveTabSleepThrottling,
+} from '../chromium-tuning'
+import { readShellSettingsFromDisk } from '../shell-settings-disk'
 import { configureSessionPrivacy, disableCrashReporting } from '../session-privacy'
 import {
   flushPendingOpenDirectory,
@@ -62,7 +67,10 @@ if (!isHardwareAccelerationEnabled()) {
 }
 
 disableCrashReporting()
-applyChromiumPerformanceFlags()
+const shellSettingsAtLaunch = readShellSettingsFromDisk()
+applyChromiumPerformanceFlags({
+  inactiveTabSleep: shellSettingsAtLaunch.inactiveTabSleep,
+})
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -181,6 +189,7 @@ function createWindow(): void {
     webPreferences: {
       ...getOptimizedWebPreferences(preloadPath, {
         disableSandbox: settings.advanced.disableSandbox,
+        inactiveTabSleep: settings.shell.inactiveTabSleep,
       }),
       additionalArguments: [buildInitialSettingsArgv(settings)],
     },
@@ -189,6 +198,8 @@ function createWindow(): void {
   mainWindow.webContents.on('preload-error', (_, path, error) => {
     console.error('[NioZy] Failed to load preload:', path, error)
   })
+
+  syncInactiveTabSleepThrottling(mainWindow, settings.shell.inactiveTabSleep)
 
   mainWindow.on('ready-to-show', () => {
     syncWindowOpacity()
@@ -391,6 +402,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     mainWindow?.setBackgroundColor(
       getWindowBackgroundColor(updated.theme, updated.uiStyle),
     )
+  }
+  if (partial.shell?.inactiveTabSleep !== undefined) {
+    syncInactiveTabSleepThrottling(mainWindow, updated.shell.inactiveTabSleep)
   }
   return updated
 })

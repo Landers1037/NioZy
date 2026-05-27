@@ -11,6 +11,15 @@ export interface ShellSettings {
   showTerminalIndex: boolean
   /** 长按侧栏终端 Tab 2s 后可拖拽调整顺序 */
   enableTabDrag: boolean
+  /**
+   * 非活动 Tab 优化：超过 5 分钟无操作的非活动 Tab 卸载终端视图（销毁 xterm/wterm），
+   * 切回时重建；PTY 保持连接，输出在主进程缓冲。
+   */
+  inactiveTabOptimization: boolean
+  /**
+   * 非活动 Tab 休眠：启用 Chromium 后台节流，并对非活动 Tab 暂停实时推流（保留 PTY）。
+   */
+  inactiveTabSleep: boolean
 }
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
@@ -20,6 +29,8 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   shiftEnterNewline: false,
   showTerminalIndex: false,
   enableTabDrag: false,
+  inactiveTabOptimization: false,
+  inactiveTabSleep: false,
 }
 
 export function normalizeShellSettings(value: unknown): ShellSettings {
@@ -49,5 +60,13 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.enableTabDrag === 'boolean'
         ? v.enableTabDrag
         : DEFAULT_SHELL_SETTINGS.enableTabDrag,
+    inactiveTabOptimization:
+      typeof v.inactiveTabOptimization === 'boolean'
+        ? v.inactiveTabOptimization
+        : DEFAULT_SHELL_SETTINGS.inactiveTabOptimization,
+    inactiveTabSleep:
+      typeof v.inactiveTabSleep === 'boolean'
+        ? v.inactiveTabSleep
+        : DEFAULT_SHELL_SETTINGS.inactiveTabSleep,
   }
 }

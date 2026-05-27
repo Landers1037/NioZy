@@ -47,6 +47,7 @@ import {
   tryHandleSshReconnectEnter,
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
+import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
@@ -212,6 +213,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
 
       const api = getElectronAPI()
       const onData = (data: string) => {
+        touchTabActivity(tab.id)
         api.terminal.write(tab.terminalId!, data)
       }
       term.onData(onData)
@@ -363,6 +365,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   useEffect(() => {
     if (!termRef.current || !tab.terminalId) return
     if (isFocused) {
+      touchTabActivity(tab.id)
       touchWebglSlot(tab.terminalId)
       safeFit()
       termRef.current.focus()

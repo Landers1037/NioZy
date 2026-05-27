@@ -160,7 +160,11 @@
       "showTerminalIndex": "ターミナル番号を表示",
       "showTerminalIndexDesc": "有効時、サイドバーの各ターミナルタブ名の左に番号を表示",
       "enableTabDrag": "ドラッグ並べ替えを有効化",
-      "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能"
+      "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能",
+      "inactiveTabOptimization": "非アクティブタブの最適化",
+      "inactiveTabOptimizationDesc": "有効時、5 分間操作のない非アクティブタブはターミナルビューをアンマウントし xterm/wterm のメモリを解放します。PTY は接続したまま、戻ると再構築してバッファを再生します",
+      "inactiveTabSleep": "非アクティブタブのスリープ",
+      "inactiveTabSleepDesc": "有効時、Chromium のバックグラウンドスロットルを有効にし、非アクティブタブへのリアルタイム PTY 配信を一時停止して負荷を下げます。タブに戻ると配信を再開します（コマンドラインのスロットルは再起動後に完全反映）"
     },
     "filesystem": {
       "title": "ファイルシステム",
@@ -469,6 +473,7 @@
   "terminal": {
     "processExited": "[プロセス終了]",
     "processExitedWithCode": "[プロセス終了、コード {{code}}]",
+    "inactiveOptimized": "このタブは最適化されました。5 分以上操作がなく、メモリ節約のためビューをアンマウントしています。戻ると自動的に復元します。",
     "inputAriaLabel": "ターミナル入力",
     "sshReconnectHint": "Enter キーで再接続",
     "sshReconnectFailed": "SSH 再接続"

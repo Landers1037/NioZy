@@ -620,3 +620,9 @@ body {
     animation: none !important;
   }
 }
+
+/* 非活动 Tab 休眠：跳过布局/绘制，降低 Chromium 合成开销 */
+.niozy-terminal-tab-sleep {
+  content-visibility: hidden;
+  contain: strict;
+}

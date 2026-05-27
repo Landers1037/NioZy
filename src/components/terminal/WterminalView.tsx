@@ -26,6 +26,7 @@ import {
   tryHandleSshReconnectEnter,
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
+import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import type { TerminalViewProps } from './terminal-view-props'
 
 export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
@@ -158,6 +159,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
 
   useEffect(() => {
     if (isFocused) {
+      touchTabActivity(tab.id)
       focus()
       return
     }
@@ -168,9 +170,10 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const handleData = useCallback(
     (data: string) => {
       if (!tab.terminalId) return
+      touchTabActivity(tab.id)
       getElectronAPI().terminal.write(tab.terminalId, data)
     },
-    [tab.terminalId],
+    [tab.id, tab.terminalId],
   )
 
   const handleResize = useCallback(
