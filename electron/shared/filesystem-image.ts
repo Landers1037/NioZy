@@ -10,14 +10,20 @@ const IMAGE_EXTENSIONS = new Set([
   '.avif',
 ])
 
+function extensionOfPath(filePath: string): string {
+  const slash = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'))
+  const base = slash >= 0 ? filePath.slice(slash + 1) : filePath
+  const dot = base.lastIndexOf('.')
+  if (dot <= 0) return ''
+  return base.slice(dot).toLowerCase()
+}
+
 export function isImageFilePath(filePath: string): boolean {
-  const dot = filePath.lastIndexOf('.')
-  if (dot < 0) return false
-  return IMAGE_EXTENSIONS.has(filePath.slice(dot).toLowerCase())
+  return IMAGE_EXTENSIONS.has(extensionOfPath(filePath))
 }
 
 export function imageMimeFromPath(filePath: string): string {
-  const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase()
+  const ext = extensionOfPath(filePath)
   const map: Record<string, string> = {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',

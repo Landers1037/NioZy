@@ -179,7 +179,7 @@
       "imagePreview": "Terminal image preview",
       "imagePreviewDesc": "Detect common image extensions; hover shows Ctrl+click hint; local shell only (not SSH)",
       "chartPreview": "Terminal chart/document preview",
-      "chartPreviewDesc": "Detect .docx, .xlsx, .csv, .txt, .md; render docx/xlsx with libraries, others as text",
+      "chartPreviewDesc": "Detect .docx, .xlsx, .csv, .txt, .md, .pdf; render docx/xlsx/pdf inline, others as text",
       "linkPreview": "Terminal link preview",
       "linkPreviewDesc": "Ctrl+click opens URL in an in-app tab (uses proxy from System settings); normal click still uses the system browser",
       "anyFilePreview": "Terminal any-file preview",

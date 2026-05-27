@@ -8,7 +8,7 @@ export function previewUrlForFile(
   kind: TerminalPreviewFileKind,
 ): string {
   const ext = fileExtension(filePath)
-  if (kind === 'image' || ext === '.docx' || ext === '.xlsx') {
+  if (kind === 'image' || ext === '.docx' || ext === '.xlsx' || ext === '.pdf') {
     return buildLocalPreviewUrl(filePath)
   }
   return buildLocalTextPreviewUrl(filePath)
