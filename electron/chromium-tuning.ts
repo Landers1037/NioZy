@@ -25,6 +25,7 @@ export function applyChromiumPerformanceFlags(options: ChromiumTuningOptions = {
     'PrivacySandboxAdsAPIs',
     'LensOverlay',
     'HardwareMediaKeyHandling',
+    'CalculateNativeWinOcclusion',
   ]
 
   app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','))
@@ -74,7 +75,7 @@ export function getOptimizedWebPreferences(
     contextIsolation: true,
     nodeIntegration: false,
     nodeIntegrationInSubFrames: false,
-    webviewTag: false,
+    webviewTag: true,
     spellcheck: false,
     backgroundThrottling: inactiveTabSleep,
     navigateOnDragDrop: false,
