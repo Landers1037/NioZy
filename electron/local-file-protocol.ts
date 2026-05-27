@@ -119,6 +119,14 @@ export async function registerLocalFileProtocolHandler(): Promise<void> {
           return net.fetch(pathToFileURL(filePath).href, { headers })
         }
 
+        if (ext === '.pdf') {
+          if (st.size > MAX_IMAGE_PREVIEW_BYTES) {
+            return new Response('Forbidden', { status: 403 })
+          }
+          const headers = { 'Content-Type': 'application/pdf' }
+          return net.fetch(pathToFileURL(filePath).href, { headers })
+        }
+
         if (isChartFilePath(filePath) || ext.length > 0) {
           return serveTextSlice(filePath, MAX_TEXT_PREVIEW_BYTES)
         }

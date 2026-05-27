@@ -6,14 +6,18 @@ const CHART_EXTENSIONS = new Set([
   '.csv',
   '.txt',
   '.md',
+  '.pdf',
 ])
 
 export type TerminalPreviewFileKind = 'image' | 'chart' | 'any' | 'none'
 
+/** 仅取路径最后一段（文件名）的扩展名，避免把 `C:\Users\landers\...` 误判为 `.landers` */
 export function fileExtension(filePath: string): string {
-  const dot = filePath.lastIndexOf('.')
-  if (dot < 0) return ''
-  return filePath.slice(dot).toLowerCase()
+  const slash = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'))
+  const base = slash >= 0 ? filePath.slice(slash + 1) : filePath
+  const dot = base.lastIndexOf('.')
+  if (dot <= 0) return ''
+  return base.slice(dot).toLowerCase()
 }
 
 export function classifyTerminalPreviewFile(filePath: string): TerminalPreviewFileKind {

@@ -179,7 +179,7 @@
       "imagePreview": "支持终端图片预览",
       "imagePreviewDesc": "识别常见图片后缀；悬停提示「按住 Ctrl+左键预览」；仅本地 Shell 支持，SSH 暂不支持",
       "chartPreview": "支持终端图表预览",
-      "chartPreviewDesc": "识别 .docx、.xlsx、.csv、.txt、.md 等；docx/xlsx 用库渲染，其余按文本预览",
+      "chartPreviewDesc": "识别 .docx、.xlsx、.csv、.txt、.md、.pdf 等；docx/xlsx/pdf 内嵌渲染，其余按文本预览",
       "linkPreview": "支持终端链接预览",
       "linkPreviewDesc": "Ctrl+左键在应用内新 Tab 打开网页（走系统设置中的代理）；普通单击仍用系统浏览器",
       "anyFilePreview": "支持终端任意文件预览",

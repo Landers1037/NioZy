@@ -27,6 +27,7 @@ export function FilePreviewDialog() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [textContent, setTextContent] = useState<string | null>(null)
   const [htmlContent, setHtmlContent] = useState<string | null>(null)
   const [tableRows, setTableRows] = useState<string[][] | null>(null)
@@ -56,6 +57,7 @@ export function FilePreviewDialog() {
   useEffect(() => {
     if (!filePath || kind === 'none') {
       setImageUrl(null)
+      setPdfUrl(null)
       setTextContent(null)
       setHtmlContent(null)
       setTableRows(null)
@@ -69,6 +71,7 @@ export function FilePreviewDialog() {
     setLoading(true)
     setError(null)
     setImageUrl(null)
+    setPdfUrl(null)
     setTextContent(null)
     setHtmlContent(null)
     setTableRows(null)
@@ -89,6 +92,12 @@ export function FilePreviewDialog() {
 
       if (kind === 'image') {
         setImageUrl(url)
+        setLoading(false)
+        return
+      }
+
+      if (ext === '.pdf') {
+        setPdfUrl(url)
         setLoading(false)
         return
       }
@@ -233,6 +242,13 @@ export function FilePreviewDialog() {
               }}
             />
           )}
+          {!loading && pdfUrl && (
+            <iframe
+              src={pdfUrl}
+              title={fileName}
+              className="h-[min(70vh,720px)] w-full min-h-[320px] border-0 bg-background"
+            />
+          )}
           {!loading && htmlContent && (
             <div
               className="prose prose-sm dark:prose-invert max-w-none w-full overflow-auto p-2 text-sm"
@@ -256,7 +272,7 @@ export function FilePreviewDialog() {
               </table>
             </div>
           )}
-          {!loading && textContent !== null && !htmlContent && !tableRows && (
+          {!loading && textContent !== null && !htmlContent && !tableRows && !pdfUrl && (
             <pre className="w-full whitespace-pre-wrap break-all font-mono text-xs leading-relaxed">
               {textContent}
             </pre>

@@ -13,6 +13,23 @@ import {
 
 const MAX_PREVIEW_BYTES = 20 * 1024 * 1024
 
+/** 解析并校验本地预览路径（Windows 下兼容正斜杠） */
+function resolveExistingPreviewPath(filePath: string): string | null {
+  const trimmed = filePath.trim()
+  if (!trimmed) return null
+
+  const candidates = new Set<string>()
+  candidates.add(normalize(trimmed))
+  if (process.platform === 'win32') {
+    candidates.add(normalize(trimmed.replace(/\//g, '\\')))
+  }
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate
+  }
+  return null
+}
+
 /** Windows: 不创建控制台窗口（与 windowsHide 一并使用） */
 const CREATE_NO_WINDOW = 0x08000000
 
@@ -228,11 +245,11 @@ export async function getTerminalFilePreviewUrl(
   kind: TerminalPreviewFileKind,
 ): Promise<ImagePreviewResult> {
   try {
-    const resolved = normalize(filePath)
     if (kind === 'none') {
       return { ok: false, error: 'Unsupported file type' }
     }
-    if (!existsSync(resolved)) {
+    const resolved = resolveExistingPreviewPath(filePath)
+    if (!resolved) {
       return { ok: false, error: 'File not found' }
     }
     const st = await stat(resolved)
@@ -253,6 +270,12 @@ export async function getTerminalFilePreviewUrl(
     const ext = resolved.slice(resolved.lastIndexOf('.')).toLowerCase()
     if (ext === '.docx' || ext === '.xlsx') {
       if (st.size > MAX_PREVIEW_BYTES * 4) {
+        return { ok: false, error: 'File is too large to preview' }
+      }
+      return { ok: true, url: buildLocalPreviewUrl(resolved) }
+    }
+    if (ext === '.pdf') {
+      if (st.size > MAX_PREVIEW_BYTES) {
         return { ok: false, error: 'File is too large to preview' }
       }
       return { ok: true, url: buildLocalPreviewUrl(resolved) }

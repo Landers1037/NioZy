@@ -17,6 +17,7 @@ import {
   hideTerminalPreviewTooltip,
   showTerminalPreviewTooltip,
 } from '@/lib/terminal-preview-tooltip'
+import { bufferColToStringIndex } from '@/lib/terminal-buffer'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import i18n from '@/lib/i18n'
 
@@ -297,49 +298,47 @@ export function bindXtermTerminalPreview(
   const el = term.element
   if (!el) return
 
-  const onMouseDown = (event: MouseEvent) => {
-    if (event.button !== 0) return
+  const getLineContext = (event: MouseEvent) => {
     const cell = getViewportCellFromMouse(term, event)
-    if (!cell) return
+    if (!cell) return null
     const bufferLine = term.buffer.active.viewportY + cell.row
     const line = term.buffer.active.getLine(bufferLine)
-    if (!line) return
-    handlePreviewMouseDown(line.translateToString(false), cell.col, event, ctx)
+    if (!line) return null
+    const lineText = line.translateToString(false)
+    const strCol = bufferColToStringIndex(line, cell.col)
+    return { lineText, strCol }
+  }
+
+  const onMouseDown = (event: MouseEvent) => {
+    if (event.button !== 0) return
+    const ctx_line = getLineContext(event)
+    if (!ctx_line) return
+    handlePreviewMouseDown(ctx_line.lineText, ctx_line.strCol, event, ctx)
   }
 
   const onMouseUp = (event: MouseEvent) => {
-    const cell = getViewportCellFromMouse(term, event)
-    if (!cell) return
-    const bufferLine = term.buffer.active.viewportY + cell.row
-    const line = term.buffer.active.getLine(bufferLine)
-    if (!line) return
-    handlePreviewMouseUp(line.translateToString(false), cell.col, event, ctx, term)
+    const ctx_line = getLineContext(event)
+    if (!ctx_line) return
+    handlePreviewMouseUp(ctx_line.lineText, ctx_line.strCol, event, ctx, term)
   }
 
   const onMouseMove = (event: MouseEvent) => {
-    const cell = getViewportCellFromMouse(term, event)
-    if (!cell) {
+    const ctx_line = getLineContext(event)
+    if (!ctx_line) {
       setPreviewCursor(el, false)
       hideTerminalPreviewTooltip()
       return
     }
-    const bufferLine = term.buffer.active.viewportY + cell.row
-    const line = term.buffer.active.getLine(bufferLine)
-    if (!line) {
-      setPreviewCursor(el, false)
-      hideTerminalPreviewTooltip()
-      return
-    }
-    const lineText = line.translateToString(false)
+    const { lineText, strCol } = ctx_line
     if (
       !lineTextHasPreviewableFile(lineText, ctx.preview, ctx.getCwd()) &&
-      !findUrlAtColumn(lineText, cell.col)
+      !findUrlAtColumn(lineText, strCol)
     ) {
       setPreviewCursor(el, false)
       hideTerminalPreviewTooltip()
       return
     }
-    handlePreviewHover(lineText, cell.col, event, ctx, el)
+    handlePreviewHover(lineText, strCol, event, ctx, el)
   }
 
   const onMouseLeave = () => {
