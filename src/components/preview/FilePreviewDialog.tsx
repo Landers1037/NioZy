@@ -12,8 +12,15 @@ import {
 } from '@/components/ui/dialog'
 import { getElectronAPI } from '@/lib/electron-client'
 import { cn } from '@/lib/utils'
+import { useAppStore } from '@/stores/app-store'
 import { useTerminalPreviewStore } from '@/stores/terminal-preview-store'
+import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { fileExtension } from '../../../electron/shared/terminal-preview-files'
+import {
+  jsPreviewKindFromExt,
+  shouldUseJsPreviewDocument,
+} from '@/lib/document-preview'
+import { JsPreviewDocumentView } from '@/components/preview/JsPreviewDocumentView'
 
 const MIN_ZOOM = 0.25
 const MAX_ZOOM = 4
@@ -23,6 +30,9 @@ export function FilePreviewDialog() {
   const { t } = useTranslation()
   const filePreview = useTerminalPreviewStore((s) => s.filePreview)
   const closeFilePreview = useTerminalPreviewStore((s) => s.closeFilePreview)
+  const documentRenderMode =
+    useAppStore((s) => s.settings?.preview.documentRenderMode) ??
+    DEFAULT_PREVIEW_SETTINGS.documentRenderMode
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +41,8 @@ export function FilePreviewDialog() {
   const [textContent, setTextContent] = useState<string | null>(null)
   const [htmlContent, setHtmlContent] = useState<string | null>(null)
   const [tableRows, setTableRows] = useState<string[][] | null>(null)
+  const [jsPreviewBuffer, setJsPreviewBuffer] = useState<ArrayBuffer | null>(null)
+  const [jsPreviewKind, setJsPreviewKind] = useState<'docx' | 'excel' | null>(null)
   const [truncated, setTruncated] = useState(false)
   const [zoom, setZoom] = useState(1)
   const previewRef = useRef<HTMLDivElement>(null)
@@ -61,6 +73,8 @@ export function FilePreviewDialog() {
       setTextContent(null)
       setHtmlContent(null)
       setTableRows(null)
+      setJsPreviewBuffer(null)
+      setJsPreviewKind(null)
       setError(null)
       setTruncated(false)
       setZoom(1)
@@ -75,6 +89,8 @@ export function FilePreviewDialog() {
     setTextContent(null)
     setHtmlContent(null)
     setTableRows(null)
+    setJsPreviewBuffer(null)
+    setJsPreviewKind(null)
     setTruncated(false)
     setZoom(1)
 
@@ -106,6 +122,16 @@ export function FilePreviewDialog() {
         const res = await fetch(url)
         if (!res.ok) throw new Error(String(res.status))
         setTruncated(res.headers.get('X-NioZy-Truncated') === '1')
+
+        if (shouldUseJsPreviewDocument(documentRenderMode, ext)) {
+          const buf = await res.arrayBuffer()
+          const previewKind = jsPreviewKindFromExt(ext)
+          if (cancelled || !previewKind) return
+          setJsPreviewBuffer(buf)
+          setJsPreviewKind(previewKind)
+          setLoading(false)
+          return
+        }
 
         if (ext === '.docx') {
           const buf = await res.arrayBuffer()
@@ -147,7 +173,7 @@ export function FilePreviewDialog() {
     return () => {
       cancelled = true
     }
-  }, [filePath, kind, t])
+  }, [filePath, kind, documentRenderMode, t])
 
   useEffect(() => {
     const el = previewRef.current
@@ -165,6 +191,7 @@ export function FilePreviewDialog() {
 
   const zoomPercent = Math.round(zoom * 100)
   const showImageZoom = !!imageUrl && !loading && !error
+  const showJsPreview = !loading && !error && jsPreviewBuffer && jsPreviewKind
 
   return (
     <Dialog open={filePath !== null} onOpenChange={(open) => !open && closeFilePreview()}>
@@ -249,6 +276,13 @@ export function FilePreviewDialog() {
               className="h-[min(70vh,720px)] w-full min-h-[320px] border-0 bg-background"
             />
           )}
+          {showJsPreview && filePath && (
+            <JsPreviewDocumentView
+              key={`${filePath}:${documentRenderMode}`}
+              kind={jsPreviewKind}
+              data={jsPreviewBuffer}
+            />
+          )}
           {!loading && htmlContent && (
             <div
               className="prose prose-sm dark:prose-invert max-w-none w-full overflow-auto p-2 text-sm"
@@ -272,7 +306,12 @@ export function FilePreviewDialog() {
               </table>
             </div>
           )}
-          {!loading && textContent !== null && !htmlContent && !tableRows && !pdfUrl && (
+          {!loading &&
+            textContent !== null &&
+            !htmlContent &&
+            !tableRows &&
+            !pdfUrl &&
+            !showJsPreview && (
             <pre className="w-full whitespace-pre-wrap break-all font-mono text-xs leading-relaxed">
               {textContent}
             </pre>

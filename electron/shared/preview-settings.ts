@@ -5,6 +5,9 @@ import {
 
 export type { WebviewCustomHeader }
 
+/** 终端文档预览（docx / xlsx / csv）渲染引擎 */
+export type DocumentRenderMode = 'mammoth' | 'js-preview'
+
 export interface PreviewSettings {
   /** 终端中识别图片路径，Ctrl+Click 弹框预览（仅本地 Shell） */
   imagePreview: boolean
@@ -16,6 +19,8 @@ export interface PreviewSettings {
   anyFilePreview: boolean
   /** 链接预览 WebView 附加的 HTTP 请求头 */
   webviewCustomHeaders: WebviewCustomHeader[]
+  /** docx / xlsx / csv 预览渲染方式 */
+  documentRenderMode: DocumentRenderMode
 }
 
 export const DEFAULT_PREVIEW_SETTINGS: PreviewSettings = {
@@ -24,6 +29,11 @@ export const DEFAULT_PREVIEW_SETTINGS: PreviewSettings = {
   linkPreview: false,
   anyFilePreview: false,
   webviewCustomHeaders: [],
+  documentRenderMode: 'mammoth',
+}
+
+function normalizeDocumentRenderMode(value: unknown): DocumentRenderMode {
+  return value === 'js-preview' ? 'js-preview' : 'mammoth'
 }
 
 export function normalizePreviewSettings(value: unknown): PreviewSettings {
@@ -46,5 +56,6 @@ export function normalizePreviewSettings(value: unknown): PreviewSettings {
         ? v.anyFilePreview
         : DEFAULT_PREVIEW_SETTINGS.anyFilePreview,
     webviewCustomHeaders: normalizeWebviewCustomHeaders(v.webviewCustomHeaders),
+    documentRenderMode: normalizeDocumentRenderMode(v.documentRenderMode),
   }
 }
