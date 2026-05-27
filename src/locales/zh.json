@@ -47,10 +47,10 @@
     "renderMode": "渲染模式",
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
+    "modeDom": "DOM",
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
-    "modeWebgpu": "WebGPU",
-    "renderModeWtermHint": "Wterm 仅支持 Canvas 渲染"
+    "renderModeWtermHint": "Wterm 仅支持 DOM 渲染"
   },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },
@@ -120,11 +120,11 @@
       "cursorBlink": "光标闪烁",
       "cursorBlinkDesc": "关闭后光标保持静止显示",
       "renderer": "渲染方式",
-      "rendererDesc": "WebGPU 渲染器在 xterm.js 中仍处于实验阶段，当前版本将回退到 DOM/WebGL。",
-      "rendererDom": "Canvas / DOM（稳定）",
+      "rendererDesc": "xterm 默认使用 DOM；addon-canvas 与 addon-webgl 分别启用 Canvas / WebGL 渲染。",
+      "rendererDom": "DOM（稳定，默认）",
+      "rendererCanvas": "Canvas",
       "rendererWebgl": "WebGL（推荐）",
-      "rendererWebgpu": "WebGPU（实验，可能不可用）",
-      "rendererWtermDesc": "当前使用 Wterm 终端，仅支持 DOM 渲染（Canvas / DOM）。切换回 Xterm 后可选择 WebGL / WebGPU。",
+      "rendererWtermDesc": "当前使用 Wterm 终端，仅支持 DOM 渲染。切换回 Xterm 后可选择 DOM / Canvas / WebGL。",
       "scrollback": "回滚",
       "scrollbackDesc": "保留可向上滚动的历史行数（xterm scrollback）",
       "lines": "行",

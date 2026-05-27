@@ -47,10 +47,10 @@
     "renderMode": "レンダリングモード",
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
+    "modeDom": "DOM",
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
-    "modeWebgpu": "WebGPU",
-    "renderModeWtermHint": "Wterm は Canvas レンダリングのみサポート"
+    "renderModeWtermHint": "Wterm は DOM レンダリングのみサポート"
   },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },
@@ -120,11 +120,11 @@
       "cursorBlink": "カーソル点滅",
       "cursorBlinkDesc": "オフの場合、カーソルは静止",
       "renderer": "レンダラー",
-      "rendererDesc": "xterm.js の WebGPU は実験的です。このビルドでは DOM/WebGL にフォールバックする場合があります。",
-      "rendererDom": "Canvas / DOM（安定）",
+      "rendererDesc": "xterm はデフォルトで DOM。addon-canvas / addon-webgl で Canvas / WebGL を有効化します。",
+      "rendererDom": "DOM（安定、デフォルト）",
+      "rendererCanvas": "Canvas",
       "rendererWebgl": "WebGL（推奨）",
-      "rendererWebgpu": "WebGPU（実験的、利用不可の場合あり）",
-      "rendererWtermDesc": "Wterm が有効です。DOM レンダリング（Canvas / DOM）のみ。WebGL/WebGPU は Xterm に切り替えてください。",
+      "rendererWtermDesc": "Wterm 有効時は DOM のみ。Xterm に戻すと DOM / Canvas / WebGL を選択できます。",
       "scrollback": "スクロールバック",
       "scrollbackDesc": "上にスクロールできる履歴行数（xterm scrollback）",
       "lines": "行",

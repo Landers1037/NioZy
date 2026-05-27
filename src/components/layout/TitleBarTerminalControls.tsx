@@ -46,9 +46,9 @@ export function TitleBarTerminalControls() {
     emulator === 'wterm' ? t('titleBar.engineWterm') : t('titleBar.engineXterm')
   const modeLabel =
     renderer === 'dom'
-      ? t('titleBar.modeCanvas')
-      : renderer === 'webgpu'
-        ? t('titleBar.modeWebgpu')
+      ? t('titleBar.modeDom')
+      : renderer === 'canvas'
+        ? t('titleBar.modeCanvas')
         : t('titleBar.modeWebgl')
 
   const setEmulator = (next: TerminalEmulator) => {
@@ -116,16 +116,16 @@ export function TitleBarTerminalControls() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[9rem]">
           <DropdownMenuItem onSelect={() => setRenderer('dom')}>
-            <span className="flex-1">{t('titleBar.modeCanvas')}</span>
+            <span className="flex-1">{t('titleBar.modeDom')}</span>
             {renderer === 'dom' ? <Check className="size-3.5" /> : null}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setRenderer('canvas')}>
+            <span className="flex-1">{t('titleBar.modeCanvas')}</span>
+            {renderer === 'canvas' ? <Check className="size-3.5" /> : null}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setRenderer('webgl')}>
             <span className="flex-1">{t('titleBar.modeWebgl')}</span>
             {renderer === 'webgl' ? <Check className="size-3.5" /> : null}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setRenderer('webgpu')}>
-            <span className="flex-1">{t('titleBar.modeWebgpu')}</span>
-            {renderer === 'webgpu' ? <Check className="size-3.5" /> : null}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

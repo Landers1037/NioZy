@@ -47,10 +47,10 @@
     "renderMode": "Render mode",
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
+    "modeDom": "DOM",
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
-    "modeWebgpu": "WebGPU",
-    "renderModeWtermHint": "Wterm only supports Canvas rendering"
+    "renderModeWtermHint": "Wterm only supports DOM rendering"
   },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },
@@ -120,11 +120,11 @@
       "cursorBlink": "Cursor blink",
       "cursorBlinkDesc": "When off, the cursor stays still",
       "renderer": "Renderer",
-      "rendererDesc": "WebGPU in xterm.js is experimental; this build may fall back to DOM/WebGL.",
-      "rendererDom": "Canvas / DOM (stable)",
+      "rendererDesc": "xterm uses DOM by default; addon-canvas and addon-webgl enable Canvas and WebGL rendering.",
+      "rendererDom": "DOM (stable, default)",
+      "rendererCanvas": "Canvas",
       "rendererWebgl": "WebGL (recommended)",
-      "rendererWebgpu": "WebGPU (experimental, may be unavailable)",
-      "rendererWtermDesc": "Wterm is active and only supports DOM rendering (Canvas / DOM). Switch back to Xterm to use WebGL or WebGPU.",
+      "rendererWtermDesc": "Wterm is active and only supports DOM rendering. Switch back to Xterm for DOM, Canvas, or WebGL.",
       "scrollback": "Scrollback",
       "scrollbackDesc": "Number of lines kept for scroll-up history (xterm scrollback)",
       "lines": "lines",

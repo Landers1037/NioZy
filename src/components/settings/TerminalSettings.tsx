@@ -236,8 +236,8 @@ export function TerminalSettings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="dom">{t('settings.terminal.rendererDom')}</SelectItem>
+              <SelectItem value="canvas">{t('settings.terminal.rendererCanvas')}</SelectItem>
               <SelectItem value="webgl">{t('settings.terminal.rendererWebgl')}</SelectItem>
-              <SelectItem value="webgpu">{t('settings.terminal.rendererWebgpu')}</SelectItem>
             </SelectContent>
           </Select>
         </SettingField>
