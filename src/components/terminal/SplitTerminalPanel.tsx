@@ -7,6 +7,7 @@ import { useAppStore } from '@/stores/app-store'
 import { getActiveSplitIndex, getSplitPanes } from '@/lib/terminal-tab-utils'
 import { closeSplitPane, setActiveSplitPane } from '@/lib/terminal-split-actions'
 import { cn } from '@/lib/utils'
+import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 
 interface SplitTerminalPanelProps {
   tab: AppTab
@@ -39,6 +40,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
               index > 0 && 'border-l border-border/50',
             )}
             onPointerDown={() => {
+              touchTabActivity(tab.id)
               if (!isPaneActive) setActiveSplitPane(tab.id, index)
             }}
           >

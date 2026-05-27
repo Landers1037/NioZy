@@ -3,7 +3,17 @@ import { Switch } from '@/components/ui/switch'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { TerminalSquare, Smile, Link2, MousePointerClick, CornerDownLeft, Hash, GripVertical } from 'lucide-react'
+import {
+  TerminalSquare,
+  Smile,
+  Link2,
+  MousePointerClick,
+  CornerDownLeft,
+  Hash,
+  GripVertical,
+  Sparkles,
+  Moon,
+} from 'lucide-react'
 
 export function ShellSettings() {
   const { t } = useTranslation()
@@ -95,6 +105,30 @@ export function ShellSettings() {
           <Switch
             checked={shell.enableTabDrag}
             onCheckedChange={(v) => patchShell({ enableTabDrag: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Sparkles}
+          label={t('settings.shell.inactiveTabOptimization')}
+          description={t('settings.shell.inactiveTabOptimizationDesc')}
+          row
+        >
+          <Switch
+            checked={shell.inactiveTabOptimization}
+            onCheckedChange={(v) => patchShell({ inactiveTabOptimization: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Moon}
+          label={t('settings.shell.inactiveTabSleep')}
+          description={t('settings.shell.inactiveTabSleepDesc')}
+          row
+        >
+          <Switch
+            checked={shell.inactiveTabSleep}
+            onCheckedChange={(v) => patchShell({ inactiveTabSleep: v })}
           />
         </SettingField>
       </CardContent>

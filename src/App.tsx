@@ -7,6 +7,8 @@ import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
+import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
+import { TerminalTabLayer } from '@/components/terminal/TerminalTabLayer'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
@@ -17,11 +19,6 @@ import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
 import { cn } from '@/lib/utils'
 
-const SplitTerminalPanel = lazy(() =>
-  import('@/components/terminal/SplitTerminalPanel').then((m) => ({
-    default: m.SplitTerminalPanel,
-  })),
-)
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
     default: m.SettingsPanel,
@@ -56,7 +53,11 @@ export default function App() {
 
   useAppShortcuts()
   useSshDisconnectAlert()
-  useTerminalStreamSync(tabs)
+  useTerminalStreamSync(tabs, activeTabId)
+
+  useEffect(() => {
+    if (activeTabId) touchTabActivity(activeTabId)
+  }, [activeTabId])
 
   useEffect(() => {
     let cancelled = false
@@ -187,23 +188,13 @@ export default function App() {
               terminalActive ? ui.mainPanelTerminal : ui.mainPanel,
             )}
           >
-            {terminalTabs.map((tab) => {
-              const isActive = tab.id === activeTabId
-              return (
-                <div
-                  key={tab.id}
-                  className={cn(
-                    'absolute inset-0',
-                    !isActive && 'pointer-events-none invisible',
-                  )}
-                  {...(!isActive ? { inert: true } : {})}
-                >
-                  <Suspense fallback={null}>
-                    <SplitTerminalPanel tab={tab} isTabActive={isActive} />
-                  </Suspense>
-                </div>
-              )
-            })}
+            {terminalTabs.map((tab) => (
+              <TerminalTabLayer
+                key={tab.id}
+                tab={tab}
+                isTabActive={tab.id === activeTabId}
+              />
+            ))}
             {activeTab?.type === 'settings' && (
               <div className="absolute inset-0">
                 <Suspense fallback={null}>

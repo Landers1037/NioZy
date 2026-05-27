@@ -1,17 +1,41 @@
 import { useEffect } from 'react'
 import type { AppTab } from '@/stores/app-store'
-import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
+import { collectActiveTerminalStreamIds } from '@/lib/inactive-tab-memory'
+import { useInactiveTabOptimizationTick } from '@/hooks/useInactiveTabOptimizationTick'
+import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
+import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI, isElectron } from '@/lib/electron-client'
 
-/** 所有已打开终端 Tab 持续推流，避免切换 Tab 时缓冲回放破坏交互式 CLI 状态。 */
-export function useTerminalStreamSync(tabs: AppTab[]): void {
-  const terminalIdsKey = tabs
-    .flatMap((tab) => (tab.type === 'terminal' ? getAllTerminalIds(tab) : []))
+/**
+ * 向主进程声明需要实时 PTY 推流的终端 id。
+ * 非活动 Tab 休眠 / 优化会缩小该集合以节省内存与 CPU。
+ */
+export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null): void {
+  const shell = useAppStore((s) => s.settings?.shell)
+  const tabLastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt)
+  const optimizationTick = useInactiveTabOptimizationTick()
+
+  const terminalTabsKey = tabs
+    .filter((t) => t.type === 'terminal')
+    .map((t) => t.id)
     .join(',')
 
   useEffect(() => {
     if (!isElectron()) return
-    const ids = terminalIdsKey ? terminalIdsKey.split(',') : []
+    const ids = collectActiveTerminalStreamIds(
+      tabs,
+      activeTabId,
+      shell,
+      tabLastActivityAt,
+      Date.now(),
+    )
     getElectronAPI().terminal.setActiveStreams(ids)
-  }, [terminalIdsKey])
+  }, [
+    tabs,
+    activeTabId,
+    shell,
+    tabLastActivityAt,
+    terminalTabsKey,
+    optimizationTick,
+  ])
 }

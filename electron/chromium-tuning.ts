@@ -1,11 +1,18 @@
-import { app } from 'electron'
+import { app, type BrowserWindow } from 'electron'
 import type { WebPreferences } from 'electron'
+
+export interface ChromiumTuningOptions {
+  /** 为 true 时启用 Chromium 后台节流（非活动 Tab 休眠） */
+  inactiveTabSleep?: boolean
+}
 
 /**
  * 在 app.whenReady() 之前调用：关闭终端应用用不到的 Chromium 子系统，减轻开销。
  * 不修改用户「硬件加速」设置；GPU 路径仍由 disableHardwareAcceleration 控制。
  */
-export function applyChromiumPerformanceFlags(): void {
+export function applyChromiumPerformanceFlags(options: ChromiumTuningOptions = {}): void {
+  const inactiveTabSleep = options.inactiveTabSleep === true
+
   const disabledFeatures = [
     'Translate',
     'TranslateUI',
@@ -21,15 +28,28 @@ export function applyChromiumPerformanceFlags(): void {
   ]
 
   app.commandLine.appendSwitch('disable-features', disabledFeatures.join(','))
-  app.commandLine.appendSwitch('disable-background-timer-throttling')
-  app.commandLine.appendSwitch('disable-renderer-backgrounding')
-  app.commandLine.appendSwitch('disable-backgrounding-occluded-windows')
+
+  if (!inactiveTabSleep) {
+    app.commandLine.appendSwitch('disable-background-timer-throttling')
+    app.commandLine.appendSwitch('disable-renderer-backgrounding')
+    app.commandLine.appendSwitch('disable-backgrounding-occluded-windows')
+  }
+}
+
+/** 运行时同步 WebContents 后台节流（与「非活动 Tab 休眠」开关联动）。 */
+export function syncInactiveTabSleepThrottling(
+  window: BrowserWindow | null | undefined,
+  inactiveTabSleep: boolean,
+): void {
+  if (!window || window.isDestroyed()) return
+  window.webContents.setBackgroundThrottling(inactiveTabSleep)
 }
 
 export function getOptimizedWebPreferences(
   preloadPath: string,
-  options: { disableSandbox: boolean },
+  options: { disableSandbox: boolean; inactiveTabSleep?: boolean },
 ): WebPreferences {
+  const inactiveTabSleep = options.inactiveTabSleep === true
   return {
     preload: preloadPath,
     sandbox: !options.disableSandbox,
@@ -38,7 +58,7 @@ export function getOptimizedWebPreferences(
     nodeIntegrationInSubFrames: false,
     webviewTag: false,
     spellcheck: false,
-    backgroundThrottling: false,
+    backgroundThrottling: inactiveTabSleep,
     navigateOnDragDrop: false,
     autoplayPolicy: 'document-user-activation-required',
     enableWebSQL: false,

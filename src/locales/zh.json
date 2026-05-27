@@ -160,7 +160,11 @@
       "showTerminalIndex": "展示终端编号",
       "showTerminalIndexDesc": "开启后在左侧边栏终端 Tab 名称左侧显示序号",
       "enableTabDrag": "启用拖拽",
-      "enableTabDragDesc": "开启后长按左侧边栏终端 Tab 2 秒进入拖拽模式，可上下拖动调整顺序"
+      "enableTabDragDesc": "开启后长按左侧边栏终端 Tab 2 秒进入拖拽模式，可上下拖动调整顺序",
+      "inactiveTabOptimization": "非活动 Tab 优化",
+      "inactiveTabOptimizationDesc": "开启后，超过 5 分钟未操作的非活动 Tab 将卸载终端视图并释放 xterm/wterm 内存；PTY 保持连接，切回时自动重建并回放缓冲输出",
+      "inactiveTabSleep": "非活动 Tab 休眠",
+      "inactiveTabSleepDesc": "开启后启用 Chromium 后台节流，并对非活动 Tab 暂停实时推流以降低占用；切回当前 Tab 时恢复推流（修改此项后建议重启应用以完全生效命令行级节流）"
     },
     "filesystem": {
       "title": "文件系统",
@@ -469,6 +473,7 @@
   "terminal": {
     "processExited": "[进程已退出]",
     "processExitedWithCode": "[进程已退出，代码 {{code}}]",
+    "inactiveOptimized": "此终端 Tab 已优化：超过 5 分钟无操作，视图已卸载以节省内存。切换回来将自动恢复。",
     "inputAriaLabel": "终端输入",
     "sshReconnectHint": "使用 Enter 键重新尝试连接",
     "sshReconnectFailed": "SSH 重连"

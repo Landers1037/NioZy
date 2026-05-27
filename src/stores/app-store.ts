@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
 import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
+import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import { applyAppLocale, getFilesystemTabTitle, getSettingsTabTitle } from '@/lib/i18n'
@@ -101,11 +102,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     }),
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
   setActiveTab: (id) => set({ activeTabId: id }),
-  addTerminalTab: (tab) =>
+  addTerminalTab: (tab) => {
+    useInactiveTabActivityStore.getState().touchTabActivity(tab.id)
     set((s) => ({
       tabs: [...s.tabs, tab],
       activeTabId: tab.id,
-    })),
+    }))
+  },
   addSettingsTab: () => {
     const existing = get().tabs.find((t) => t.type === 'settings')
     if (existing) {
@@ -151,6 +154,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const terminalCwds = { ...s.terminalCwds }
       const sshDisconnectedTerminalIds = { ...s.sshDisconnectedTerminalIds }
       for (const tab of removed) {
+        useInactiveTabActivityStore.getState().clearTabActivity(tab.id)
         for (const terminalId of getAllTerminalIds(tab)) {
           delete terminalCwds[terminalId]
           delete sshDisconnectedTerminalIds[terminalId]
