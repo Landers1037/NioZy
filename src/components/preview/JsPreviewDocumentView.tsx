@@ -3,7 +3,7 @@ import jsPreviewDocx from '@js-preview/docx'
 import jsPreviewExcel from '@js-preview/excel'
 import '@js-preview/docx/lib/index.css'
 import '@js-preview/excel/lib/index.css'
-import { enqueueJsPreview } from '@/lib/js-preview-session'
+import { enqueueJsPreview, withMutedJsPreviewLibraryLogs } from '@/lib/js-preview-session'
 
 export type JsPreviewDocumentKind = 'docx' | 'excel'
 
@@ -50,7 +50,8 @@ export function JsPreviewDocumentView({ kind, data }: JsPreviewDocumentViewProps
       }
 
       const buffer = data.slice(0)
-      await previewer.preview(buffer)
+      const runPreview = () => previewer!.preview(buffer)
+      await (kind === 'excel' ? withMutedJsPreviewLibraryLogs(runPreview) : runPreview())
     })
 
     void loadPromise.catch(() => {

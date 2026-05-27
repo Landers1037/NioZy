@@ -1,5 +1,6 @@
 import { app, type BrowserWindow } from 'electron'
 import type { WebPreferences } from 'electron'
+import { isElectronDev } from './shared/is-dev'
 
 export interface ChromiumTuningOptions {
   /** 为 true 时启用 Chromium 后台节流（非活动 Tab 休眠） */
@@ -56,6 +57,7 @@ export function getEmbeddedWebPreferences(options: {
     nodeIntegration: false,
     nodeIntegrationInSubFrames: false,
     webviewTag: false,
+    devTools: isElectronDev(),
     spellcheck: false,
     backgroundThrottling: false,
     navigateOnDragDrop: false,
@@ -76,6 +78,7 @@ export function getOptimizedWebPreferences(
     nodeIntegration: false,
     nodeIntegrationInSubFrames: false,
     webviewTag: true,
+    devTools: isElectronDev(),
     spellcheck: false,
     backgroundThrottling: inactiveTabSleep,
     navigateOnDragDrop: false,
