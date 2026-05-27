@@ -18,8 +18,6 @@ interface ManagedView {
   pendingLoad: boolean
 }
 
-const EMBEDDED_VIEW_BG = '#181818'
-
 export class LinkPreviewManager {
   private readonly views = new Map<string, ManagedView>()
   private overlaySuppressCount = 0
@@ -43,38 +41,10 @@ export class LinkPreviewManager {
     })
   }
 
-  private async startLoad(entry: ManagedView): Promise<void> {
-    if (entry.hasLoaded || entry.pendingLoad) return
-    const bounds = entry.view.getBounds()
-    if (bounds.width <= 0 || bounds.height <= 0) return
-    if (!this.isEffectivelyVisible(entry)) return
-
-    entry.pendingLoad = true
-    try {
-      await entry.view.webContents.loadURL(entry.url, {})
-      entry.hasLoaded = true
-    } catch (err) {
-      console.error('[NioZy] link preview load failed:', entry.url, err)
-    } finally {
-      entry.pendingLoad = false
-    }
-  }
-
   private syncViewVisible(entry: ManagedView): void {
     const nowVisible = this.isEffectivelyVisible(entry)
-    const wasVisible = entry.lastEffectivelyVisible
     entry.view.setVisible(nowVisible)
     entry.lastEffectivelyVisible = nowVisible
-
-    if (nowVisible) {
-      void this.startLoad(entry)
-      if (wasVisible === false && entry.hasLoaded) {
-        const currentUrl = entry.view.webContents.getURL()
-        if (currentUrl && currentUrl !== 'about:blank') {
-          entry.view.webContents.reload()
-        }
-      }
-    }
   }
 
   private syncAllVisible(): void {
@@ -103,9 +73,23 @@ export class LinkPreviewManager {
         disableSandbox: this.disableSandbox,
       }),
     })
-    view.setBackgroundColor(EMBEDDED_VIEW_BG)
+    // Use transparent background so a load failure shows the app bg
+    // rather than an opaque black rectangle.
+    view.setBackgroundColor('#00000000')
 
+    // ① Add to window FIRST – on Windows the view needs a valid HWND
+    //    parent before setBounds / setVisible take effect.
     win.contentView.addChildView(view)
+
+    // ② Set bounds AFTER addChildView (Windows DWM requirement).
+    if (initialBounds && initialBounds.width > 0 && initialBounds.height > 0) {
+      view.setBounds({
+        x: Math.round(initialBounds.x),
+        y: Math.round(initialBounds.y),
+        width: Math.round(initialBounds.width),
+        height: Math.round(initialBounds.height),
+      })
+    }
 
     const entry: ManagedView = {
       view,
@@ -118,19 +102,42 @@ export class LinkPreviewManager {
     }
     this.views.set(tabId, entry)
 
-    if (initialBounds) {
-      this.applyBounds(entry, initialBounds)
-    }
-
+    // ③ Make visible.
     this.syncViewVisible(entry)
-    void this.startLoad(entry)
+
+    // Debug listeners – output visible in `npm run start` terminal.
+    view.webContents.on('did-finish-load', () => {
+      entry.hasLoaded = true
+      console.log(`[NioZy] link preview loaded: ${url}`)
+    })
+
+    view.webContents.on('did-fail-load', (_event, code, desc, validatedURL) => {
+      console.error(`[NioZy] link preview did-fail-load: ${validatedURL} code=${code} ${desc}`)
+    })
+
+    view.webContents.on('render-process-gone', (_event, details) => {
+      console.error(
+        `[NioZy] link preview renderer gone: reason=${details.reason} exit=${details.exitCode}`,
+      )
+    })
+
+    // ④ Start loading after the view is wired up.
+    entry.pendingLoad = true
+    console.log(`[NioZy] link preview opening: ${url}`)
+    view.webContents
+      .loadURL(url)
+      .catch((err) => {
+        console.error('[NioZy] link preview loadURL error:', url, err)
+      })
+      .finally(() => {
+        entry.pendingLoad = false
+      })
   }
 
   setBounds(tabId: string, bounds: LinkPreviewBounds): void {
     const entry = this.views.get(tabId)
     if (!entry) return
     this.applyBounds(entry, bounds)
-    void this.startLoad(entry)
   }
 
   setVisible(tabId: string, visible: boolean): void {

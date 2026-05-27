@@ -162,11 +162,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const idSet = new Set(ids)
     set((s) => {
       const removed = s.tabs.filter((t) => idSet.has(t.id))
-      for (const tab of removed) {
-        if (tab.type === 'webview') {
-          void getElectronAPI().preview.close(tab.id)
-        }
-      }
+      // webview tabs clean up automatically when the <webview> element unmounts
       const tabs = s.tabs.filter((t) => !idSet.has(t.id))
       let activeTabId = s.activeTabId
       if (s.activeTabId && idSet.has(s.activeTabId)) {
