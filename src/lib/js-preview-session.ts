@@ -13,3 +13,15 @@ export function enqueueJsPreview<T>(fn: () => Promise<T>): Promise<T> {
   )
   return result
 }
+
+/** @js-preview/excel 包内遗留的 console.log(workbook, "workbook") 调试输出 */
+export function withMutedJsPreviewLibraryLogs<T>(fn: () => Promise<T>): Promise<T> {
+  const originalLog = console.log
+  console.log = (...args: unknown[]) => {
+    if (args.length >= 2 && args[args.length - 1] === 'workbook') return
+    originalLog.apply(console, args as Parameters<typeof console.log>)
+  }
+  return fn().finally(() => {
+    console.log = originalLog
+  })
+}

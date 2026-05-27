@@ -44,6 +44,8 @@ import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
 import { inferSshAuth } from '../ssh-auth'
 import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
 import { getWindowBackgroundColor } from '../shared/ui-style'
+import { isElectronDev } from '../shared/is-dev'
+import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
 import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
@@ -85,6 +87,7 @@ const performanceSettingsAtLaunch = readPerformanceSettingsFromDisk()
 applyChromiumPerformanceFlags({
   inactiveTabSleep: performanceSettingsAtLaunch.inactiveTabSleep,
 })
+installReleaseDevToolsGuard()
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -111,11 +114,7 @@ async function syncWebviewPreviewFromSettings(): Promise<void> {
   await syncWebviewPreviewProxy(settings.system.proxy)
 }
 
-/** 开发模式：electron-vite dev 或本地未打包运行 */
-const isDev =
-  !app.isPackaged ||
-  !!process.env['ELECTRON_RENDERER_URL'] ||
-  process.env['NODE_ENV_ELECTRON_VITE'] === 'development'
+const isDev = isElectronDev()
 
 const terminalService = new TerminalService()
 const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)

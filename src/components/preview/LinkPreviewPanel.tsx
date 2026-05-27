@@ -153,6 +153,7 @@ export function LinkPreviewPanel({ tab }: LinkPreviewPanelProps) {
       <webview
         ref={ref as React.Ref<HTMLElement>}
         partition={WEBVIEW_PREVIEW_PARTITION}
+        webpreferences={import.meta.env.DEV ? undefined : 'devTools=no'}
         src={tab.webviewUrl}
         style={{
           position: 'absolute',

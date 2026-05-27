@@ -39,8 +39,14 @@ function fontAssetFileNames(name: string | undefined): string | undefined {
   return undefined
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => {
+  const electronDev = command === 'serve'
+
+  return {
   main: {
+    define: {
+      __ELECTRON_DEV__: JSON.stringify(electronDev),
+    },
     plugins: [externalizeDepsPlugin()],
     build: {
       minify: 'esbuild',
@@ -58,6 +64,9 @@ export default defineConfig({
     },
   },
   preload: {
+    define: {
+      __ELECTRON_DEV__: JSON.stringify(electronDev),
+    },
     plugins: [externalizeDepsPlugin()],
     build: {
       minify: 'esbuild',
@@ -111,4 +120,5 @@ export default defineConfig({
     },
     plugins: [react(), tailwindcss()],
   },
+}
 })
