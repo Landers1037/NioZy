@@ -9,7 +9,7 @@ import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import { applyAppLocale, getFilesystemTabTitle, getSettingsTabTitle } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
-export type TabType = 'terminal' | 'settings' | 'filesystem'
+export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview'
 
 export interface AppTab {
   id: string
@@ -17,6 +17,8 @@ export interface AppTab {
   title: string
   /** 侧边栏与状态栏展示的自定义标题；为空则使用 title */
   customTitle?: string
+  /** 链接预览 Tab 的 URL */
+  webviewUrl?: string
   terminalId?: string
   shell?: string
   /** 由自定义 SSH 连接打开时关联的连接 id，用于 SCP 与断开告警 */
@@ -57,6 +59,7 @@ interface AppState {
   addTerminalTab: (tab: AppTab) => void
   addSettingsTab: () => void
   addFilesystemTab: () => void
+  addWebviewTab: (url: string, title?: string) => void
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
   setTabCustomTitle: (id: string, customTitle: string | undefined) => void
@@ -138,6 +141,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeTabId: tab.id,
     }))
   },
+  addWebviewTab: (url, title) => {
+    const id = `webview-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const tab: AppTab = {
+      id,
+      type: 'webview',
+      title: title ?? url,
+      webviewUrl: url,
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
   removeTab: (id) => {
     get().removeTabs([id])
   },
@@ -146,6 +162,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     const idSet = new Set(ids)
     set((s) => {
       const removed = s.tabs.filter((t) => idSet.has(t.id))
+      for (const tab of removed) {
+        if (tab.type === 'webview') {
+          void getElectronAPI().preview.close(tab.id)
+        }
+      }
       const tabs = s.tabs.filter((t) => !idSet.has(t.id))
       let activeTabId = s.activeTabId
       if (s.activeTabId && idSet.has(s.activeTabId)) {

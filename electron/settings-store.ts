@@ -10,7 +10,7 @@ export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type { UiStyle } from './shared/ui-style'
 import { normalizeUiStyle } from './shared/ui-style'
 export type { TerminalRenderer } from './shared/terminal-renderer'
-import { normalizeTerminalRenderer } from './shared/terminal-renderer'
+import { normalizeTerminalRenderer, type TerminalRenderer } from './shared/terminal-renderer'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
 import {
@@ -50,6 +50,10 @@ import {
   normalizeExperimentalSettings,
   normalizeRendererForWterm,
 } from './shared/experimental-settings'
+import {
+  DEFAULT_PREVIEW_SETTINGS,
+  normalizePreviewSettings,
+} from './shared/preview-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -106,6 +110,7 @@ export interface AppSettings {
   shell: import('./shared/shell-settings').ShellSettings
   performance: import('./shared/performance-settings').PerformanceSettings
   filesystem: import('./shared/filesystem-settings').FilesystemSettings
+  preview: import('./shared/preview-settings').PreviewSettings
   experimental: import('./shared/experimental-settings').ExperimentalSettings
 }
 
@@ -178,6 +183,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shell: { ...DEFAULT_SHELL_SETTINGS },
   performance: { ...DEFAULT_PERFORMANCE_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
+  preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }
 
@@ -263,6 +269,7 @@ export class SettingsStore {
       ),
       performance: normalizePerformanceSettings(stored.performance, stored.shell),
       filesystem: normalizeFilesystemSettings(stored.filesystem),
+      preview: normalizePreviewSettings(stored.preview),
       builtinConnections: normalizeBuiltinConnections(
         (stored as Partial<AppSettings>).builtinConnections,
       ),

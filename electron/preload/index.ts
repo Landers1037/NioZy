@@ -86,6 +86,14 @@ const api: ElectronAPI = {
   shell: {
     openExternal: (url) => ipcRenderer.send('shell:openExternal', url),
   },
+  preview: {
+    openLink: (tabId, url, bounds) => ipcRenderer.send('preview:openLink', tabId, url, bounds),
+    setBounds: (tabId, bounds) => ipcRenderer.send('preview:setBounds', tabId, bounds),
+    setVisible: (tabId, visible) => ipcRenderer.send('preview:setVisible', tabId, visible),
+    close: (tabId) => ipcRenderer.send('preview:close', tabId),
+    setOverlaySuppressed: (suppressed) =>
+      ipcRenderer.send('preview:setOverlaySuppressed', suppressed),
+  },
   update: {
     check: () => ipcRenderer.invoke('update:check') as Promise<UpdateCheckResult>,
     download: (payload: UpdateDownloadPayload) =>
@@ -96,6 +104,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('files:saveText', content, defaultFileName),
     listRoots: () => ipcRenderer.invoke('fs:listRoots'),
     getImagePreviewUrl: (filePath) => ipcRenderer.invoke('fs:getImagePreviewUrl', filePath),
+    getTerminalFilePreviewUrl: (filePath, kind) =>
+      ipcRenderer.invoke('fs:getTerminalFilePreviewUrl', filePath, kind),
     detectProgram: (options) => ipcRenderer.invoke('fs:detectProgram', options),
     openWithProgram: (programPath, targetPath) =>
       ipcRenderer.invoke('fs:openWithProgram', programPath, targetPath),

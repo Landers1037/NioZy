@@ -12,6 +12,7 @@ import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
 import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-settings'
 import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
 import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
+import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -57,6 +58,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   shell: { ...DEFAULT_SHELL_SETTINGS },
   performance: { ...DEFAULT_PERFORMANCE_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
+  preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }
 
@@ -141,6 +143,9 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
       : mockSettings.shortcuts,
     ssh: partial.ssh ? { ...mockSettings.ssh, ...partial.ssh } : mockSettings.ssh,
     shell: partial.shell ? { ...mockSettings.shell, ...partial.shell } : mockSettings.shell,
+    preview: partial.preview
+      ? { ...mockSettings.preview, ...partial.preview }
+      : mockSettings.preview,
     experimental: partial.experimental
       ? { ...mockSettings.experimental, ...partial.experimental }
       : mockSettings.experimental,
@@ -276,6 +281,15 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         window.open(url, '_blank', 'noopener,noreferrer')
       },
     },
+    preview: {
+      openLink: (_tabId, url) => {
+        window.open(url, '_blank', 'noopener,noreferrer')
+      },
+      setBounds: () => {},
+      setVisible: () => {},
+      close: () => {},
+      setOverlaySuppressed: () => {},
+    },
     ssh: {
       checkScp: async () => ({ found: false }),
       getProfile: async () => null,
@@ -342,6 +356,21 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           ok: true,
           url: `niozy-local://preview?path=${encodeURIComponent(filePath)}`,
         }
+      },
+      getTerminalFilePreviewUrl: async (filePath, kind) => {
+        if (kind === 'image' && /\.(png|jpe?g|gif|webp|svg)$/i.test(filePath)) {
+          return {
+            ok: true,
+            url: `niozy-local://preview?path=${encodeURIComponent(filePath)}`,
+          }
+        }
+        if (kind !== 'none') {
+          return {
+            ok: true,
+            url: `niozy-local://text?path=${encodeURIComponent(filePath)}`,
+          }
+        }
+        return { ok: false, error: 'Unsupported' }
       },
       detectProgram: async ({ kind, path }) => {
         if (kind === 'custom') {

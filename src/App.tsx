@@ -14,6 +14,8 @@ import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { AttachPtyTerminalHost } from '@/components/terminal/AttachPtyTerminalHost'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { TerminalTabLayer } from '@/components/terminal/TerminalTabLayer'
+import { FilePreviewDialog } from '@/components/preview/FilePreviewDialog'
+import { LinkPreviewPanel } from '@/components/preview/LinkPreviewPanel'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
@@ -237,6 +239,11 @@ export default function App() {
                 </Suspense>
               </div>
             )}
+            {activeTab?.type === 'webview' && activeTab.webviewUrl && (
+              <div className="absolute inset-0">
+                <LinkPreviewPanel tab={activeTab} />
+              </div>
+            )}
             {tabs.length === 0 && (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 {t('app.emptyHint')}
@@ -246,6 +253,7 @@ export default function App() {
         </main>
       </div>
       <StatusBar />
+      <FilePreviewDialog />
       <Toaster position="bottom-right" richColors closeButton />
       {scpTransferTab && isSshTerminalTab(scpTransferTab) && (
         <Suspense fallback={null}>

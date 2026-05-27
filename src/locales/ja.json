@@ -85,6 +85,7 @@
       "terminal": "ターミナル",
       "ssh": "SSH",
       "shell": "SHELL",
+      "preview": "プレビュー",
       "performance": "パフォーマンス",
       "filesystem": "ファイルシステム",
       "connections": "接続",
@@ -162,6 +163,23 @@
       "showTerminalIndexDesc": "有効時、サイドバーの各ターミナルタブ名の左に番号を表示",
       "enableTabDrag": "ドラッグ並べ替えを有効化",
       "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能"
+    },
+    "preview": {
+      "title": "プレビュー",
+      "description": "ターミナル出力からファイルとリンクをプレビュー（Ctrl+クリック）",
+      "imagePreview": "ターミナル画像プレビュー",
+      "imagePreviewDesc": "一般的な画像拡張子を検出；ホバーで Ctrl+クリックのヒント；ローカル Shell のみ（SSH 非対応）",
+      "chartPreview": "ターミナルチャート/文書プレビュー",
+      "chartPreviewDesc": ".docx、.xlsx、.csv、.txt、.md を検出；docx/xlsx はライブラリで描画、その他はテキスト",
+      "linkPreview": "ターミナルリンクプレビュー",
+      "linkPreviewDesc": "Ctrl+クリックでアプリ内タブで開く（システム設定のプロキシを使用）；通常クリックはシステムブラウザ",
+      "anyFilePreview": "ターミナル任意ファイルプレビュー",
+      "anyFilePreviewDesc": "画像・チャート以外をテキストとして最大 1MB までプレビュー",
+      "ctrlClickHint": "Ctrl を押しながら左クリックでプレビュー",
+      "sshNotSupported": "SSH ターミナルではファイルプレビューに対応していません",
+      "previewFailed": "このファイルをプレビューできません",
+      "truncatedNotice": "大きなファイル — 先頭 1MB のみ表示",
+      "linkTabTitle": "Web プレビュー"
     },
     "performance": {
       "title": "パフォーマンス",

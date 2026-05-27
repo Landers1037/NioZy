@@ -1,11 +1,11 @@
 import type { WTerm } from '@wterm/dom'
 import type { ShellSettings } from '../../electron/shared/shell-settings'
+import type { PreviewSettings } from '../../electron/shared/preview-settings'
+import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { normalizeRightClickCopyPaste } from '../../electron/shared/terminal-xterm'
 import {
   escapeHtml,
-  findUrlAtColumn,
   lineTextHasUrl,
-  openTerminalExternalLink,
   TERMINAL_LINK_FOREGROUND,
   TERMINAL_URL_REGEX,
 } from '@/lib/terminal-url'
@@ -15,6 +15,8 @@ import {
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
 import { isWtermNearBottom, queueWtermScrollToBottom } from '@/lib/wterm-scroll'
+import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
+import { bindDomTerminalPreview } from '@/lib/terminal-preview-mouse'
 
 const WTERM_LINK_CLASS = 'niozy-wterm-link'
 const PROCESSED_ATTR = 'data-niozy-links'
@@ -23,6 +25,9 @@ export interface WtermDomShellOptions {
   terminalId: string
   rightClickCopyPaste: boolean
   shell: ShellSettings
+  preview?: PreviewSettings
+  isSsh?: boolean
+  getCwd?: () => string | undefined
 }
 
 function getColFromMouseEvent(rowEl: HTMLElement, event: MouseEvent): number | null {
@@ -113,48 +118,6 @@ function refreshLinkHighlights(
   }
 }
 
-function bindLinkClick(
-  root: HTMLElement,
-  clickToOpenLinks: boolean,
-  highlightLinks: boolean,
-  listeners: Array<() => void>,
-): void {
-  if (!clickToOpenLinks) return
-
-  const onMouseUp = (event: MouseEvent) => {
-    if (event.button !== 0) return
-    const selection = readTerminalSelectionText()
-    if (selection.length > 0) return
-
-    const target = event.target as HTMLElement
-    if (highlightLinks && target.closest(`.${WTERM_LINK_CLASS}`)) {
-      const url = target.closest(`.${WTERM_LINK_CLASS}`)?.textContent?.trim()
-      if (url) {
-        event.preventDefault()
-        event.stopPropagation()
-        openTerminalExternalLink(url)
-      }
-      return
-    }
-
-    const rowEl = target.closest('.term-row') as HTMLElement | null
-    if (!rowEl || !root.contains(rowEl)) return
-
-    const col = getColFromMouseEvent(rowEl, event)
-    if (col === null) return
-
-    const url = findUrlAtColumn(rowEl.textContent ?? '', col)
-    if (!url) return
-
-    event.preventDefault()
-    event.stopPropagation()
-    openTerminalExternalLink(url)
-  }
-
-  root.addEventListener('mouseup', onMouseUp, true)
-  listeners.push(() => root.removeEventListener('mouseup', onMouseUp, true))
-}
-
 function bindRightClickCopyPaste(
   root: HTMLElement,
   terminalId: string,
@@ -229,9 +192,22 @@ export function attachWtermDomShellFeatures(
 
   const rightClickEnabled = normalizeRightClickCopyPaste(options.rightClickCopyPaste)
   const { highlightLinks, clickToOpenLinks, shiftEnterNewline } = options.shell
+  const preview = options.preview ?? DEFAULT_PREVIEW_SETTINGS
 
   bindRightClickCopyPaste(root, options.terminalId, rightClickEnabled, listeners)
-  bindLinkClick(root, clickToOpenLinks, highlightLinks, listeners)
+  if (clickToOpenLinks || isAnyPreviewEnabled(preview)) {
+    bindDomTerminalPreview(
+      root,
+      {
+        preview,
+        shell: options.shell,
+        isSsh: options.isSsh === true,
+        getCwd: options.getCwd ?? (() => undefined),
+      },
+      getColFromMouseEvent,
+      listeners,
+    )
+  }
   bindInteractiveCliMouse(instance, shiftEnterNewline, listeners)
 
   const scheduleHighlight = () => {

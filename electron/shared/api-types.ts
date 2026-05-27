@@ -20,6 +20,7 @@ export {
 } from './ui-style'
 export type { TerminalRenderer } from './terminal-renderer'
 export { normalizeTerminalRenderer, TERMINAL_RENDERER_VALUES } from './terminal-renderer'
+import type { TerminalRenderer } from './terminal-renderer'
 import type { TerminalCursorStyle } from './terminal-cursor'
 export type { TerminalCursorStyle } from './terminal-cursor'
 export { normalizeTerminalCursorStyle } from './terminal-cursor'
@@ -157,6 +158,7 @@ export interface AppSettings {
   shell: import('./shell-settings').ShellSettings
   performance: import('./performance-settings').PerformanceSettings
   filesystem: import('./filesystem-settings').FilesystemSettings
+  preview: import('./preview-settings').PreviewSettings
   experimental: import('./experimental-settings').ExperimentalSettings
 }
 
@@ -299,6 +301,21 @@ export interface ElectronAPI {
   shell: {
     openExternal: (url: string) => void
   }
+  preview: {
+    openLink: (
+      tabId: string,
+      url: string,
+      bounds?: { x: number; y: number; width: number; height: number },
+    ) => void
+    setBounds: (
+      tabId: string,
+      bounds: { x: number; y: number; width: number; height: number },
+    ) => void
+    setVisible: (tabId: string, visible: boolean) => void
+    close: (tabId: string) => void
+    /** Dialog 等 HTML 浮层打开时隐藏链接预览原生视图 */
+    setOverlaySuppressed: (suppressed: boolean) => void
+  }
   update: {
     check: () => Promise<UpdateCheckResult>
     download: (payload: UpdateDownloadPayload) => Promise<UpdateDownloadResult>
@@ -309,6 +326,10 @@ export interface ElectronAPI {
     /** 本机文件系统树根（盘符或 /） */
     listRoots: () => Promise<import('./ssh-types').ScpListResult>
     getImagePreviewUrl: (filePath: string) => Promise<import('../fs-service').ImagePreviewResult>
+    getTerminalFilePreviewUrl: (
+      filePath: string,
+      kind: import('./terminal-preview-files').TerminalPreviewFileKind,
+    ) => Promise<import('../fs-service').ImagePreviewResult>
     detectProgram: (options: {
       kind: 'vscode' | 'cursor' | 'custom'
       path?: string

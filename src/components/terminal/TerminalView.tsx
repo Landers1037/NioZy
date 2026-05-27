@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import type { Terminal } from '@xterm/xterm'
+import type { Terminal, IDisposable } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
 import type { CanvasAddon } from '@xterm/addon-canvas'
 import type { WebglAddon } from '@xterm/addon-webgl'
@@ -29,6 +29,9 @@ import {
   createTerminalShellAddonState,
 } from '@/lib/terminal-shell-addons'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
+import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
+import { bindXtermTerminalPreview } from '@/lib/terminal-preview-mouse'
 import { normalizeRightClickCopyPaste } from '../../../electron/shared/terminal-xterm'
 import type { TerminalRenderer } from '../../../electron/shared/api-types'
 import {
@@ -88,6 +91,7 @@ export function TerminalView({
   const canvasRef = useRef<CanvasAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
   const shellAddonsRef = useRef(createTerminalShellAddonState())
+  const previewMouseRef = useRef<IDisposable[]>([])
   /** WebGL 上下文丢失或加载失败后，本会话内不再尝试 WebGL */
   const webglBlockedRef = useRef(false)
   const lastFitRef = useRef({ cols: 0, rows: 0, width: 0, height: 0 })
@@ -201,9 +205,15 @@ export function TerminalView({
       const canvas = new CanvasAddon()
       canvasRef.current = canvas
       termRef.current.loadAddon(canvas)
-      const shellAfterCanvas =
-        useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-      applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shellAfterCanvas)
+      const appSettings = useAppStore.getState().settings
+      const shellAfterCanvas = appSettings?.shell ?? DEFAULT_SHELL_SETTINGS
+      const previewAfterCanvas = appSettings?.preview ?? DEFAULT_PREVIEW_SETTINGS
+      applyTerminalShellAddons(
+        termRef.current,
+        shellAddonsRef.current,
+        shellAfterCanvas,
+        previewAfterCanvas,
+      )
       scheduleFit(true)
     } catch {
       disposeCanvas()
@@ -235,9 +245,15 @@ export function TerminalView({
         disposeWebgl()
         scheduleFit(true)
       })
-      const shellAfterWebgl =
-        useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-      applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shellAfterWebgl)
+      const appSettings = useAppStore.getState().settings
+      const shellAfterWebgl = appSettings?.shell ?? DEFAULT_SHELL_SETTINGS
+      const previewAfterWebgl = appSettings?.preview ?? DEFAULT_PREVIEW_SETTINGS
+      applyTerminalShellAddons(
+        termRef.current,
+        shellAddonsRef.current,
+        shellAfterWebgl,
+        previewAfterWebgl,
+      )
       scheduleFit(true)
     } catch {
       webglBlockedRef.current = true
@@ -328,6 +344,7 @@ export function TerminalView({
       const s = useAppStore.getState().settings
       const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
+      const previewSettings = s?.preview ?? DEFAULT_PREVIEW_SETTINGS
       const term = new Terminal(
         buildTerminalOptions(
           s?.terminal,
@@ -356,7 +373,7 @@ export function TerminalView({
         term.write(snap.bufferText)
       }
 
-      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
+      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
 
       const api = getElectronAPI()
       const onData = (data: string) => {
@@ -500,6 +517,7 @@ export function TerminalView({
       const s = useAppStore.getState().settings
       const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
+      const previewSettings = s?.preview ?? DEFAULT_PREVIEW_SETTINGS
       const term = new Terminal(
         buildTerminalOptions(
           s?.terminal,
@@ -521,7 +539,7 @@ export function TerminalView({
       termRef.current = term
       fitRef.current = fit
 
-      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
+      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
 
       const api = getElectronAPI()
       const onData = (data: string) => {
@@ -669,12 +687,39 @@ export function TerminalView({
     }
   }, [termReady, effectiveTerminalId, activeRenderer, loadWebgl, disposeWebgl])
 
+  const syncPreviewMouse = useCallback(() => {
+    for (const d of previewMouseRef.current) d.dispose()
+    previewMouseRef.current = []
+    const term = termRef.current
+    if (!term || !settings) return
+    const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
+    const preview = settings.preview ?? DEFAULT_PREVIEW_SETTINGS
+    const needPreviewMouse =
+      isAnyPreviewEnabled(preview) || (shell.clickToOpenLinks && shell.highlightLinks)
+    if (!needPreviewMouse) return
+    bindXtermTerminalPreview(
+      term,
+      {
+        preview,
+        shell,
+        isSsh: !!tabRef.current.sshConnectionId,
+        getCwd: () => {
+          const tid = boundTerminalIdRef.current
+          return tid ? useAppStore.getState().terminalCwds[tid] : undefined
+        },
+      },
+      previewMouseRef.current,
+    )
+  }, [settings])
+
   useEffect(() => {
     if (!termRef.current || !settings) return
     const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
+    const preview = settings.preview ?? DEFAULT_PREVIEW_SETTINGS
     applyInteractiveCliTerminalOptions(termRef.current, shell.shiftEnterNewline)
-    applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shell)
-  }, [settings?.shell])
+    applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shell, preview)
+    syncPreviewMouse()
+  }, [settings?.shell, settings?.preview, syncPreviewMouse])
 
   useEffect(() => {
     if (!termRef.current || !settings) return

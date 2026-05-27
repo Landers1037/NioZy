@@ -1,5 +1,7 @@
 import * as React from 'react'
+import { useEffect } from 'react'
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog'
+import { acquireLinkPreviewOverlaySuppression } from '@/lib/link-preview-overlay'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import {
@@ -36,6 +38,9 @@ const AlertDialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, ...props }, ref) => {
   const animate = useDialogAnimationEnabled()
+
+  useEffect(() => acquireLinkPreviewOverlaySuppression(), [])
+
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />

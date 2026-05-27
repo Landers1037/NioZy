@@ -45,6 +45,24 @@ export function syncInactiveTabSleepThrottling(
   window.webContents.setBackgroundThrottling(inactiveTabSleep)
 }
 
+/** 内嵌 WebContentsView（链接预览）无需 preload */
+export function getEmbeddedWebPreferences(options: {
+  disableSandbox: boolean
+}): WebPreferences {
+  return {
+    sandbox: !options.disableSandbox,
+    contextIsolation: true,
+    nodeIntegration: false,
+    nodeIntegrationInSubFrames: false,
+    webviewTag: false,
+    spellcheck: false,
+    backgroundThrottling: false,
+    navigateOnDragDrop: false,
+    autoplayPolicy: 'document-user-activation-required',
+    enableWebSQL: false,
+  }
+}
+
 export function getOptimizedWebPreferences(
   preloadPath: string,
   options: { disableSandbox: boolean; inactiveTabSleep?: boolean },

@@ -48,6 +48,8 @@ import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
 } from '../local-file-protocol'
+import { LinkPreviewManager } from '../link-preview-manager'
+import { applySessionProxy } from '../session-proxy'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
 import { setDebugLogEnabled } from '../debug-log'
 
@@ -75,6 +77,21 @@ applyChromiumPerformanceFlags({
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
+let linkPreviewManager: LinkPreviewManager | null = null
+
+function getLinkPreviewManager(): LinkPreviewManager {
+  if (!linkPreviewManager) {
+    linkPreviewManager = new LinkPreviewManager(
+      () => mainWindow,
+      settingsStore.get().advanced.disableSandbox,
+    )
+  }
+  return linkPreviewManager
+}
+
+async function syncSessionProxyFromSettings(): Promise<void> {
+  await applySessionProxy(settingsStore.get().system.proxy)
+}
 
 /** 开发模式：electron-vite dev 或本地未打包运行 */
 const isDev =
@@ -284,6 +301,11 @@ app.whenReady().then(async () => {
   settingsStore.load()
   vaultStore.load()
   setDebugLogEnabled(settingsStore.get().advanced.debugLog === true)
+  await syncSessionProxyFromSettings()
+  linkPreviewManager = new LinkPreviewManager(
+    () => mainWindow,
+    settingsStore.get().advanced.disableSandbox,
+  )
 
   if (isDev) {
     console.log('[NioZy] app path:', app.getAppPath())
@@ -316,6 +338,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   persistWindowBoundsIfEnabled()
+  linkPreviewManager?.closeAll()
   terminalOutputFlusher.dispose()
   terminalService.disposeAll()
   unregisterGlobalShortcuts()
@@ -406,6 +429,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.performance?.inactiveTabSleep !== undefined) {
     syncInactiveTabSleepThrottling(mainWindow, updated.performance.inactiveTabSleep)
   }
+  if (partial.system?.proxy !== undefined) {
+    await syncSessionProxyFromSettings()
+  }
   return updated
 })
 
@@ -466,6 +492,33 @@ ipcMain.handle('fs:listRoots', () => sshService.listFilesystemRoots())
 ipcMain.handle('fs:getImagePreviewUrl', (_, filePath: string) =>
   fsService.getImagePreviewUrl(filePath),
 )
+ipcMain.handle(
+  'fs:getTerminalFilePreviewUrl',
+  (_, filePath: string, kind: import('../shared/terminal-preview-files').TerminalPreviewFileKind) =>
+    fsService.getTerminalFilePreviewUrl(filePath, kind),
+)
+
+ipcMain.on(
+  'preview:openLink',
+  (_, tabId: string, url: string, bounds?: import('../link-preview-manager').LinkPreviewBounds) => {
+    getLinkPreviewManager().open(tabId, url, bounds)
+  },
+)
+ipcMain.on(
+  'preview:setBounds',
+  (_, tabId: string, bounds: import('../link-preview-manager').LinkPreviewBounds) => {
+    getLinkPreviewManager().setBounds(tabId, bounds)
+  },
+)
+ipcMain.on('preview:setVisible', (_, tabId: string, visible: boolean) => {
+  getLinkPreviewManager().setVisible(tabId, visible)
+})
+ipcMain.on('preview:close', (_, tabId: string) => {
+  getLinkPreviewManager().close(tabId)
+})
+ipcMain.on('preview:setOverlaySuppressed', (_, suppressed: boolean) => {
+  getLinkPreviewManager().setOverlaySuppressed(suppressed === true)
+})
 ipcMain.handle(
   'fs:detectProgram',
   (_, options: { kind: 'vscode' | 'cursor' | 'custom'; path?: string }) =>

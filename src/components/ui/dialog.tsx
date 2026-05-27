@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useEffect } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -8,6 +9,7 @@ import {
   dialogOverlayClass,
   useDialogAnimationEnabled,
 } from '@/lib/dialog-animations'
+import { acquireLinkPreviewOverlaySuppression } from '@/lib/link-preview-overlay'
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -38,6 +40,9 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   const animate = useDialogAnimationEnabled()
+
+  useEffect(() => acquireLinkPreviewOverlaySuppression(), [])
+
   return (
     <DialogPortal>
       <DialogOverlay />
