@@ -4,7 +4,9 @@ import { useAppStore } from '@/stores/app-store'
 import { resolveInactiveTabPolicy } from '@/lib/inactive-tab-memory'
 import { useInactiveTabOptimizationTick } from '@/hooks/useInactiveTabOptimizationTick'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
+import { useSuperPowerSavingStore } from '@/stores/super-power-saving-store'
 import { InactiveTerminalPlaceholder } from '@/components/terminal/InactiveTerminalPlaceholder'
+import { SuperPowerSavingPlaceholder } from '@/components/terminal/SuperPowerSavingPlaceholder'
 import { cn } from '@/lib/utils'
 
 const SplitTerminalPanel = lazy(() =>
@@ -20,6 +22,8 @@ interface TerminalTabLayerProps {
 
 export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
   const performance = useAppStore((s) => s.settings?.performance)
+  const ptySuspended = useSuperPowerSavingStore((s) => !!s.suspendedTabIds[tab.id])
+  const ptyResuming = useSuperPowerSavingStore((s) => !!s.resumingTabIds[tab.id])
   const lastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt[tab.id])
   const optimizationTick = useInactiveTabOptimizationTick()
   const policy = useMemo(
@@ -27,6 +31,10 @@ export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
       resolveInactiveTabPolicy(performance, isTabActive, lastActivityAt, Date.now()),
     [performance, isTabActive, lastActivityAt, optimizationTick],
   )
+
+  const superPowerSaving = performance?.superPowerSaving === true
+  const waitForPtyResume = superPowerSaving && isTabActive && (ptySuspended || ptyResuming)
+  const mountTerminal = policy.mountTerminal && !waitForPtyResume
 
   return (
     <div
@@ -37,10 +45,14 @@ export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
       )}
       {...(!isTabActive ? { inert: true } : {})}
     >
-      {policy.mountTerminal ? (
+      {mountTerminal ? (
         <Suspense fallback={null}>
           <SplitTerminalPanel tab={tab} isTabActive={isTabActive} />
         </Suspense>
+      ) : waitForPtyResume ? (
+        <SuperPowerSavingPlaceholder tabId={tab.id} resuming />
+      ) : superPowerSaving ? (
+        <SuperPowerSavingPlaceholder tabId={tab.id} />
       ) : (
         <InactiveTerminalPlaceholder tabId={tab.id} />
       )}

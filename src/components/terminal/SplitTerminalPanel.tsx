@@ -20,6 +20,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
     (s) => s.settings?.experimental?.terminalEmulator ?? 'xterm',
   )
   const useWterm = terminalEmulator === 'wterm'
+  const superPowerSaving = useAppStore((s) => s.settings?.performance.superPowerSaving === true)
   const TerminalComponent = useWterm ? WterminalView : TerminalView
   const panes = getSplitPanes(tab)
   const activeIndex = getActiveSplitIndex(tab)
@@ -57,7 +58,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
             )}
             <TerminalComponent
               tab={{ ...tab, terminalId: pane.terminalId }}
-              preferDomRenderer={!useWterm && panes.length > 1}
+              preferDomRenderer={!useWterm && (panes.length > 1 || superPowerSaving)}
               isFocused={isTabActive && isPaneActive}
             />
           </div>

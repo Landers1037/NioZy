@@ -169,7 +169,9 @@
       "inactiveTabOptimization": "非アクティブタブの最適化",
       "inactiveTabOptimizationDesc": "有効時、5 分間操作のない非アクティブタブはターミナルビューをアンマウントし xterm/wterm のメモリを解放します。PTY は接続したまま、戻ると再構築してバッファを再生します",
       "inactiveTabSleep": "非アクティブタブのスリープ",
-      "inactiveTabSleepDesc": "有効時、Chromium のバックグラウンドスロットルを有効にし、非アクティブタブへのリアルタイム PTY 配信を一時停止して負荷を下げます。タブに戻ると配信を再開します（コマンドラインのスロットルは再起動後に完全反映）"
+      "inactiveTabSleepDesc": "有効時、Chromium のバックグラウンドスロットルを有効にし、非アクティブタブへのリアルタイム PTY 配信を一時停止して負荷を下げます。タブに戻ると配信を再開します（コマンドラインのスロットルは再起動後に完全反映）",
+      "superPowerSaving": "スーパー省電力",
+      "superPowerSavingDesc": "アクティブなタブのターミナルのみマウント。Xterm は一時的に DOM レンダリング。非アクティブタブは PTY を終了してビューをアンマウントし、戻ると保存した設定で再生成（ローカルシェルは新規セッション、SSH は再接続）"
     },
     "filesystem": {
       "title": "ファイルシステム",
@@ -479,6 +481,8 @@
     "processExited": "[プロセス終了]",
     "processExitedWithCode": "[プロセス終了、コード {{code}}]",
     "inactiveOptimized": "このタブは最適化されました。5 分以上操作がなく、メモリ節約のためビューをアンマウントしています。戻ると自動的に復元します。",
+    "superPowerSavingIdle": "スーパー省電力：このタブのターミナルと PTY は停止中です。戻ると自動的に復元します。",
+    "superPowerSavingResuming": "ターミナルセッションを復元しています…",
     "inputAriaLabel": "ターミナル入力",
     "sshReconnectHint": "Enter キーで再接続",
     "sshReconnectFailed": "SSH 再接続"

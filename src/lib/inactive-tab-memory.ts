@@ -23,6 +23,13 @@ export function resolveInactiveTabPolicy(
 ): InactiveTabPolicy {
   const s = performance ?? DEFAULT_PERFORMANCE_SETTINGS
 
+  if (s.superPowerSaving) {
+    if (isTabActive) {
+      return { mountTerminal: true, streamActive: true, sleepStyle: false }
+    }
+    return { mountTerminal: false, streamActive: false, sleepStyle: false }
+  }
+
   if (isTabActive) {
     return { mountTerminal: true, streamActive: true, sleepStyle: false }
   }

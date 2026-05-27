@@ -169,7 +169,9 @@
       "inactiveTabOptimization": "非活动 Tab 优化",
       "inactiveTabOptimizationDesc": "开启后，超过 5 分钟未操作的非活动 Tab 将卸载终端视图并释放 xterm/wterm 内存；PTY 保持连接，切回时自动重建并回放缓冲输出",
       "inactiveTabSleep": "非活动 Tab 休眠",
-      "inactiveTabSleepDesc": "开启后启用 Chromium 后台节流，并对非活动 Tab 暂停实时推流以降低占用；切回当前 Tab 时恢复推流（修改此项后建议重启应用以完全生效命令行级节流）"
+      "inactiveTabSleepDesc": "开启后启用 Chromium 后台节流，并对非活动 Tab 暂停实时推流以降低占用；切回当前 Tab 时恢复推流（修改此项后建议重启应用以完全生效命令行级节流）",
+      "superPowerSaving": "超级省电",
+      "superPowerSavingDesc": "仅保留当前 Tab 的终端实例；Xterm 临时使用 DOM 渲染。非活动 Tab 将结束 PTY 并卸载视图，切回时按原配置重建（本地 Shell 会话会重新开始，SSH 需重新连接）"
     },
     "filesystem": {
       "title": "文件系统",
@@ -479,6 +481,8 @@
     "processExited": "[进程已退出]",
     "processExitedWithCode": "[进程已退出，代码 {{code}}]",
     "inactiveOptimized": "此终端 Tab 已优化：超过 5 分钟无操作，视图已卸载以节省内存。切换回来将自动恢复。",
+    "superPowerSavingIdle": "超级省电：此 Tab 的终端与 PTY 已挂起。切换回来将自动恢复。",
+    "superPowerSavingResuming": "正在恢复终端会话…",
     "inputAriaLabel": "终端输入",
     "sshReconnectHint": "使用 Enter 键重新尝试连接",
     "sshReconnectFailed": "SSH 重连"
