@@ -111,6 +111,10 @@ export interface AppSettings {
   sidebarWidth: number
   accentColor: string
   fontSize: number
+  /** UI 常规字重；未设置时使用主题默认 */
+  fontWeight?: number
+  /** UI 加粗字重；未设置时使用主题默认 */
+  fontWeightBold?: number
   /** 顶栏是否显示程序名 NioZy（关闭后仅显示图标） */
   showAppTitle: boolean
   /** 弹框打开/关闭过渡动画 */
@@ -119,6 +123,10 @@ export interface AppSettings {
     colorScheme: TerminalColorScheme
     fontFamily: string
     fontSize: number
+    /** 终端常规字重；未设置时使用终端默认 */
+    fontWeight?: number
+    /** 终端加粗字重；未设置时使用终端默认 */
+    fontWeightBold?: number
     renderer: TerminalRenderer
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean

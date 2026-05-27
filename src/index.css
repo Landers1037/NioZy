@@ -197,7 +197,7 @@ html.dark[data-ui-style='windows-classic'] {
 
 @layer base {
   body {
-    font-weight: 400;
+    font-weight: var(--app-font-weight, 400);
   }
 
   h1,
@@ -206,7 +206,7 @@ html.dark[data-ui-style='windows-classic'] {
   h4,
   h5,
   h6 {
-    font-weight: 700;
+    font-weight: var(--app-font-weight-bold, 700);
   }
 
   html[data-ui-style='niozy'] h1,
@@ -215,7 +215,7 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='niozy'] h4,
   html[data-ui-style='niozy'] h5,
   html[data-ui-style='niozy'] h6 {
-    font-weight: 600;
+    font-weight: var(--app-font-weight-bold, 600);
   }
 
   html[data-ui-style='wa-fu'] body {
@@ -230,7 +230,7 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='wa-fu'] h4,
   html[data-ui-style='wa-fu'] h5,
   html[data-ui-style='wa-fu'] h6 {
-    font-weight: 600;
+    font-weight: var(--app-font-weight-bold, 600);
     letter-spacing: 0.02em;
   }
 
@@ -245,7 +245,7 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='windows-classic'] h4,
   html[data-ui-style='windows-classic'] h5,
   html[data-ui-style='windows-classic'] h6 {
-    font-weight: 700;
+    font-weight: var(--app-font-weight-bold, 700);
   }
 }
 
@@ -364,7 +364,7 @@ html[data-ui-style='windows-classic'] .ui-overlay-panel {
 
 html[data-ui-style='windows-classic'] .ui-label,
 html[data-ui-style='windows-classic'] .ui-card-title {
-  font-weight: 700;
+  font-weight: var(--app-font-weight-bold, 700);
   font-size: 11px;
 }
 
@@ -420,23 +420,23 @@ html[data-ui-style='niozy'] .ui-slider-thumb {
 }
 
 html[data-ui-style='niozy'] .ui-btn {
-  font-weight: 500;
+  font-weight: var(--app-font-weight, 500);
 }
 
 html[data-ui-style='niozy'] .ui-label {
-  font-weight: 500;
+  font-weight: var(--app-font-weight, 500);
 }
 
 html[data-ui-style='niozy'] .ui-card-title {
-  font-weight: 600;
+  font-weight: var(--app-font-weight-bold, 600);
 }
 
 html[data-ui-style='niozy'] .ui-setting-heading {
-  font-weight: 500;
+  font-weight: var(--app-font-weight, 500);
 }
 
 html[data-ui-style='niozy'] .ui-setting-subheading {
-  font-weight: 600;
+  font-weight: var(--app-font-weight-bold, 600);
 }
 
 html[data-ui-style='wa-fu'] .ui-card {
@@ -451,15 +451,15 @@ html[data-ui-style='wa-fu'] .ui-overlay-panel {
 }
 
 html[data-ui-style='wa-fu'] .ui-btn {
-  font-weight: 500;
+  font-weight: var(--app-font-weight, 500);
 }
 
 html[data-ui-style='wa-fu'] .ui-label {
-  font-weight: 500;
+  font-weight: var(--app-font-weight, 500);
 }
 
 html[data-ui-style='wa-fu'] .ui-card-title {
-  font-weight: 600;
+  font-weight: var(--app-font-weight-bold, 600);
   letter-spacing: 0.02em;
 }
 
@@ -469,6 +469,16 @@ html[data-ui-style='wa-fu'] .ui-switch-thumb {
 
 html[data-ui-style='wa-fu'] .ui-slider-thumb {
   border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+@layer utilities {
+  .font-app-regular {
+    font-weight: var(--app-font-weight, 400);
+  }
+
+  .font-app-bold {
+    font-weight: var(--app-font-weight-bold, 700);
+  }
 }
 
 /* 隐藏滚动条，保留滚轮/触控板滚动 */
@@ -519,6 +529,12 @@ body {
   width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  font-weight: var(--term-font-weight, 400);
+}
+
+.niozy-terminal-host .wterm b,
+.niozy-terminal-host .wterm strong {
+  font-weight: var(--term-font-weight-bold, 700);
 }
 
 /* 滚到底时多留出 10px，避免最后一行贴边（见 wterm-scroll WTERM_SCROLL_BOTTOM_EXTRA_PX） */

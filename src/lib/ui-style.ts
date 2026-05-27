@@ -74,12 +74,12 @@ export function getUiClasses(style: UiStyle): UiClassSet {
   if (style === 'niozy') {
     return {
       segmentActive:
-        'bg-background font-medium text-foreground shadow-sm dark:bg-primary/18 dark:ring-1 dark:ring-primary/35',
+        'bg-background text-foreground shadow-sm dark:bg-primary/18 dark:ring-1 dark:ring-primary/35',
       segmentInactive: 'text-muted-foreground hover:text-foreground',
       tabActive:
-        'bg-card font-medium text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35',
+        'bg-card text-foreground shadow-sm dark:bg-primary/18 dark:text-foreground dark:shadow-none dark:ring-1 dark:ring-primary/35',
       tabActiveIcon:
-        'bg-card text-foreground ring-1 ring-inset ring-border dark:bg-primary/18 dark:text-foreground dark:ring-primary/35 dark:font-medium',
+        'bg-card text-foreground ring-1 ring-inset ring-border dark:bg-primary/18 dark:text-foreground dark:ring-primary/35',
       tabInactive: 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
       tabInactiveIcon: 'text-muted-foreground hover:bg-card/60 dark:hover:bg-primary/10',
       sidebarBg: 'bg-muted/50',
@@ -91,26 +91,26 @@ export function getUiClasses(style: UiStyle): UiClassSet {
       sidebarResizeActive: 'bg-primary/30',
       titleBar: 'h-10 border-b border-border bg-card',
       titleTagline: 'text-xs text-muted-foreground',
-      titleWeight: 'font-semibold',
+      titleWeight: 'font-app-bold',
       windowControlBtn: 'rounded-none hover:bg-muted',
       windowCloseBtn: 'rounded-none hover:bg-destructive hover:text-white',
       statusBar: 'h-8 border-t border-border bg-card px-3 gap-3',
       statusTag: '',
       connectionEditing: 'rounded-lg border border-primary/40 bg-primary/5 px-3 py-2',
-      fontPickerSelected: 'bg-accent font-medium',
+      fontPickerSelected: 'bg-accent font-app-bold',
     }
   }
 
   if (style === 'waFu') {
     return {
       segmentActive:
-        'border border-primary/25 bg-card font-medium text-foreground shadow-[0_1px_2px_rgb(200_85_109/0.08)] dark:border-primary/30 dark:bg-primary/12',
-      segmentInactive: 'font-normal text-muted-foreground hover:text-foreground',
+        'border border-primary/25 bg-card text-foreground shadow-[0_1px_2px_rgb(200_85_109/0.08)] dark:border-primary/30 dark:bg-primary/12',
+      segmentInactive: 'text-muted-foreground hover:text-foreground',
       tabActive:
-        'border border-primary/30 bg-card font-medium text-foreground shadow-[0_1px_3px_rgb(200_85_109/0.1)] dark:border-primary/35 dark:bg-primary/14',
+        'border border-primary/30 bg-card text-foreground shadow-[0_1px_3px_rgb(200_85_109/0.1)] dark:border-primary/35 dark:bg-primary/14',
       tabActiveIcon:
-        'border border-primary/30 bg-card font-medium text-foreground dark:border-primary/35 dark:bg-primary/14',
-      tabInactive: 'font-normal text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+        'border border-primary/30 bg-card text-foreground dark:border-primary/35 dark:bg-primary/14',
+      tabInactive: 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
       tabInactiveIcon: 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
       sidebarBg: 'bg-muted/70',
       tabBarBg: 'bg-muted/70',
@@ -122,25 +122,25 @@ export function getUiClasses(style: UiStyle): UiClassSet {
       sidebarResizeActive: 'bg-primary/22',
       titleBar: 'h-10 border-b border-border bg-card/95',
       titleTagline: 'text-xs text-muted-foreground',
-      titleWeight: 'font-semibold tracking-wide',
+      titleWeight: 'font-app-bold tracking-wide',
       windowControlBtn: 'rounded-none hover:bg-muted',
       windowCloseBtn: 'rounded-none hover:bg-destructive hover:text-white',
       statusBar: 'h-8 border-t border-border bg-card/95 px-3 gap-3',
       statusTag: '',
       connectionEditing: 'rounded-md border border-primary/30 bg-primary/5 px-3 py-2',
-      fontPickerSelected: 'border border-primary/25 bg-card font-medium',
+      fontPickerSelected: 'border border-primary/25 bg-card font-app-bold',
     }
   }
 
   if (style === 'windowsClassic') {
     return {
-      segmentActive: 'ui-xp-inset rounded-none px-3 py-1 text-[11px] font-bold text-foreground',
+      segmentActive: 'ui-xp-inset rounded-none px-3 py-1 text-[11px] text-foreground',
       segmentInactive:
-        'rounded-none px-3 py-1 text-[11px] font-normal text-foreground hover:bg-[#d4d0c8]',
-      tabActive: 'ui-xp-tab-active rounded-none px-2 py-1 text-[11px] font-bold text-foreground',
+        'rounded-none px-3 py-1 text-[11px] text-foreground hover:bg-[#d4d0c8]',
+      tabActive: 'ui-xp-tab-active rounded-none px-2 py-1 text-[11px] text-foreground',
       tabActiveIcon: 'ui-xp-tab-active size-6 shrink-0 justify-center rounded-none',
       tabInactive:
-        'rounded-none text-[11px] font-normal text-foreground hover:bg-[#d4d0c8] dark:hover:bg-[#4a4a4a]',
+        'rounded-none text-[11px] text-foreground hover:bg-[#d4d0c8] dark:hover:bg-[#4a4a4a]',
       tabInactiveIcon:
         'rounded-none text-foreground hover:bg-[#d4d0c8] dark:hover:bg-[#4a4a4a]',
       sidebarBg: 'bg-[#d4d0c8] dark:bg-[#3a3a3a]',
@@ -152,22 +152,22 @@ export function getUiClasses(style: UiStyle): UiClassSet {
       sidebarResizeActive: 'bg-[#0054e3]/35',
       titleBar: 'ui-xp-titlebar h-[30px] shrink-0 border-0',
       titleTagline: 'text-[11px] text-white/90',
-      titleWeight: 'font-bold text-sm text-white drop-shadow-sm',
+      titleWeight: 'font-app-bold text-sm text-white drop-shadow-sm',
       windowControlBtn: 'ui-xp-caption-btn rounded-none hover:bg-[#3c8ef0]',
       windowCloseBtn: 'ui-xp-caption-btn ui-xp-caption-btn-close rounded-none',
       statusBar: 'ui-xp-statusbar h-[22px] shrink-0 gap-1 px-1 border-0',
       statusTag: 'ui-xp-status-field',
       connectionEditing: 'ui-xp-inset rounded-none bg-card px-3 py-2',
-      fontPickerSelected: 'ui-xp-inset rounded-none font-bold bg-card',
+      fontPickerSelected: 'ui-xp-inset rounded-none font-app-bold bg-card',
     }
   }
 
   return {
-    segmentActive: 'border border-border bg-card font-semibold text-foreground',
-    segmentInactive: 'font-normal text-muted-foreground hover:text-foreground',
-    tabActive: 'border border-border bg-card font-semibold text-foreground',
-    tabActiveIcon: 'border border-border bg-card font-semibold text-foreground',
-    tabInactive: 'font-normal text-muted-foreground hover:bg-muted hover:text-foreground',
+    segmentActive: 'border border-border bg-card text-foreground',
+    segmentInactive: 'text-muted-foreground hover:text-foreground',
+    tabActive: 'border border-border bg-card text-foreground',
+    tabActiveIcon: 'border border-border bg-card text-foreground',
+    tabInactive: 'text-muted-foreground hover:bg-muted hover:text-foreground',
     tabInactiveIcon: 'text-muted-foreground hover:bg-muted hover:text-foreground',
     sidebarBg: 'bg-muted',
     tabBarBg: 'bg-muted',
@@ -178,13 +178,13 @@ export function getUiClasses(style: UiStyle): UiClassSet {
     sidebarResizeActive: 'bg-muted-foreground/15',
     titleBar: 'h-10 border-b border-border bg-card',
     titleTagline: 'text-xs text-muted-foreground',
-    titleWeight: 'font-bold',
+    titleWeight: 'font-app-bold',
     windowControlBtn: 'rounded-none hover:bg-muted',
     windowCloseBtn: 'rounded-none hover:bg-destructive hover:text-white',
     statusBar: 'h-8 border-t border-border bg-card px-3 gap-3',
     statusTag: '',
     connectionEditing: 'rounded-lg border border-border bg-muted px-3 py-2',
-    fontPickerSelected: 'border border-border bg-card font-semibold',
+    fontPickerSelected: 'border border-border bg-card font-app-bold',
   }
 }
 
