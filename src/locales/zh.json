@@ -207,7 +207,13 @@
       "webviewClearConfirmAction": "清空",
       "webviewClearSuccess": "WebView 浏览数据已清空",
       "webviewClearFailed": "清空 WebView 浏览数据失败",
-      "webviewClearBrowserOnly": "仅在桌面应用中可清空 WebView 数据"
+      "webviewClearBrowserOnly": "仅在桌面应用中可清空 WebView 数据",
+      "tabGeneral": "常规",
+      "tabDocument": "文档",
+      "documentRenderMode": "文档渲染模式",
+      "documentRenderModeDesc": "预览 docx、xlsx、csv 时使用的渲染引擎；mammoth 为轻量 HTML 转换，js-preview 保留更多版式",
+      "documentRenderMammoth": "Mammoth（默认）",
+      "documentRenderJsPreview": "js-preview"
     },
     "performance": {
       "title": "性能",

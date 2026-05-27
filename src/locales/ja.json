@@ -198,7 +198,13 @@
       "webviewClearConfirmAction": "消去",
       "webviewClearSuccess": "WebView の閲覧データを消去しました",
       "webviewClearFailed": "WebView の閲覧データの消去に失敗しました",
-      "webviewClearBrowserOnly": "WebView データの消去はデスクトップアプリでのみ利用できます"
+      "webviewClearBrowserOnly": "WebView データの消去はデスクトップアプリでのみ利用できます",
+      "tabGeneral": "一般",
+      "tabDocument": "文書",
+      "documentRenderMode": "文書レンダリングモード",
+      "documentRenderModeDesc": "docx / xlsx / csv プレビューのエンジン。Mammoth は HTML 変換、js-preview はレイアウトをより忠実に表示します。",
+      "documentRenderMammoth": "Mammoth（既定）",
+      "documentRenderJsPreview": "js-preview"
     },
     "performance": {
       "title": "パフォーマンス",

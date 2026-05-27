@@ -207,7 +207,13 @@
       "webviewClearConfirmAction": "Clear",
       "webviewClearSuccess": "WebView browsing data cleared",
       "webviewClearFailed": "Failed to clear WebView browsing data",
-      "webviewClearBrowserOnly": "Clearing WebView data is only available in the desktop app"
+      "webviewClearBrowserOnly": "Clearing WebView data is only available in the desktop app",
+      "tabGeneral": "General",
+      "tabDocument": "Documents",
+      "documentRenderMode": "Document render mode",
+      "documentRenderModeDesc": "Engine for docx, xlsx, and csv previews. Mammoth converts to HTML; js-preview keeps richer layout.",
+      "documentRenderMammoth": "Mammoth (default)",
+      "documentRenderJsPreview": "js-preview"
     },
     "performance": {
       "title": "Performance",
