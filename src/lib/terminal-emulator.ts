@@ -19,4 +19,6 @@ export function isGhosttyCoreEnabled(settings: AppSettings | null | undefined): 
   return isWtermEmulator(settings) && settings?.experimental?.ghosttyCoreEnabled === true
 }
 
+export { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
+
 export const normalizeRendererForEmulator = normalizeRendererForWterm

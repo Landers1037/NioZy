@@ -234,7 +234,11 @@
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "使用 libghostty WASM 作为 Wterm 的 VT 解析核心，提供更完整的终端仿真（Unicode 字素簇、完整 SGR 等）。切换后请重新打开终端 Tab 生效。",
       "ghosttyScrollbackLimit": "Ghostty 回滚行数",
-      "ghosttyScrollbackLimitDesc": "Ghostty Core 的最大回滚缓冲行数（默认 10000）。修改后需重新打开终端 Tab。"
+      "ghosttyScrollbackLimitDesc": "Ghostty Core 的最大回滚缓冲行数（默认 10000）。修改后需重新打开终端 Tab。",
+      "attachPtyRenderMode": "Attach-PTY 渲染模式",
+      "attachPtyRenderModeDesc": "单 Tab 共用一个 Xterm 实例，切换 Tab 时 attach 不同 PTY。分屏仍使用多个终端实例。仅支持 Xterm.js。",
+      "attachPtyTabSwitchDwellMs": "Attach-PTY Tab 切换延迟",
+      "attachPtyTabSwitchDwellMsDesc": "切换到某 Tab 后需停留该时长（毫秒）才恢复终端内容；快速划过不会 attach。范围 0–5000，默认 300。"
     },
     "advanced": {
       "title": "高级设置",
@@ -475,12 +479,14 @@
     "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启",
     "terminalEmulatorRestart": "终端模拟器已切换，请重启应用后生效",
     "ghosttyCoreRestart": "Ghostty Core 已修改，请重启应用后生效",
+    "attachPtyRenderRestart": "Attach-PTY 渲染模式已修改，请重启应用后生效",
     "restartApp": "重启"
   },
   "terminal": {
     "processExited": "[进程已退出]",
     "processExitedWithCode": "[进程已退出，代码 {{code}}]",
     "inactiveOptimized": "此终端 Tab 已优化：超过 5 分钟无操作，视图已卸载以节省内存。切换回来将自动恢复。",
+    "attachPtyPending": "正在连接终端…",
     "superPowerSavingIdle": "超级省电：此 Tab 的终端与 PTY 已挂起。切换回来将自动恢复。",
     "superPowerSavingResuming": "正在恢复终端会话…",
     "inputAriaLabel": "终端输入",

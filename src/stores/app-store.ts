@@ -3,6 +3,7 @@ import type { AppSettings, CustomConnection } from '../../electron/shared/api-ty
 import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
+import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import { applyAppLocale, getFilesystemTabTitle, getSettingsTabTitle } from '@/lib/i18n'
@@ -158,6 +159,15 @@ export const useAppStore = create<AppState>((set, get) => ({
         for (const terminalId of getAllTerminalIds(tab)) {
           delete terminalCwds[terminalId]
           delete sshDisconnectedTerminalIds[terminalId]
+        }
+      }
+      const removedTabIds = removed.map((t) => t.id)
+      if (removedTabIds.length > 0) {
+        const attachStore = useAttachPtySessionStore.getState()
+        attachStore.clearSnapshots(removedTabIds)
+        if (attachStore.committed && removedTabIds.includes(attachStore.committed.tabId)) {
+          attachStore.setCommitted(null)
+          attachStore.setPendingTabId(null)
         }
       }
       return { tabs, activeTabId, terminalCwds, sshDisconnectedTerminalIds }

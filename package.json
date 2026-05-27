@@ -1,7 +1,7 @@
 {
   "name": "niozy",
-  "version": "0.1.6",
-  "description": "Multi-terminal manager for Windows",
+  "version": "0.1.7",
+  "description": "NioZy - Multi-terminal manager",
   "main": "out/main/index.mjs",
   "type": "module",
   "scripts": {

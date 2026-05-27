@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -24,7 +24,10 @@ import { openTerminalInDirectory } from '@/lib/terminal-actions'
 import { openPathWithCustom, openPathWithEditor } from '@/lib/filesystem-open'
 import { parentDirectory } from '@/lib/path-utils'
 import { useAppStore } from '@/stores/app-store'
-import type { FilesystemSettings } from '../../../electron/shared/filesystem-settings'
+import type {
+  FilesystemCustomOpener,
+  FilesystemSettings,
+} from '../../../electron/shared/filesystem-settings'
 import { isImageFilePath } from '../../../electron/shared/filesystem-image'
 import type { ScpFileEntry } from '../../../electron/shared/ssh-types'
 import { FilesystemImagePreviewDialog } from '@/components/filesystem/FilesystemImagePreviewDialog'
@@ -47,6 +50,7 @@ function TreeRow({
   depth,
   selectedPath,
   filesystem,
+  customOpeners,
   onToggle,
   onSelect,
   onPreviewImage,
@@ -55,6 +59,7 @@ function TreeRow({
   depth: number
   selectedPath: string | null
   filesystem: FilesystemSettings
+  customOpeners: FilesystemCustomOpener[]
   onToggle: (path: string) => void
   onSelect: (entry: ScpFileEntry) => void
   onPreviewImage: (entry: ScpFileEntry) => void
@@ -67,10 +72,6 @@ function TreeRow({
 
   const terminalCwd = isDir ? entry.path : parentDirectory(entry.path)
   const targetPath = entry.path
-
-  const customOpeners = filesystem.customOpeners.filter(
-    (o) => o.label.trim() && o.path.trim(),
-  )
 
   const handleRowClick = () => {
     onSelect(entry)
@@ -196,6 +197,7 @@ function TreeRow({
             depth={depth + 1}
             selectedPath={selectedPath}
             filesystem={filesystem}
+            customOpeners={customOpeners}
             onToggle={onToggle}
             onSelect={onSelect}
             onPreviewImage={onPreviewImage}
@@ -250,6 +252,12 @@ export function FilesystemPanel() {
   } | null>(null)
 
   const filesystem = settings?.filesystem
+
+  const customOpeners = useMemo(
+    () =>
+      filesystem?.customOpeners.filter((o) => o.label.trim() && o.path.trim()) ?? [],
+    [filesystem?.customOpeners],
+  )
 
   const loadChildren = useCallback(
     async (dirPath: string) => {
@@ -346,6 +354,7 @@ export function FilesystemPanel() {
               depth={0}
               selectedPath={selectedPath}
               filesystem={filesystem}
+              customOpeners={customOpeners}
               onToggle={handleToggle}
               onSelect={(entry) => setSelectedPath(entry.path)}
               onPreviewImage={(entry) =>

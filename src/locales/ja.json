@@ -234,7 +234,11 @@
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "libghostty WASM ビルドを Wterm の VT パーサーとして使用（書記素クラスタ、完全 SGR 等）。切り替え後は開いているターミナルタブを再起動してください。",
       "ghosttyScrollbackLimit": "Ghostty スクロールバック行数",
-      "ghosttyScrollbackLimitDesc": "Ghostty Core の最大スクロールバック行数（デフォルト 10000）。変更後は開いているターミナルタブを再起動してください。"
+      "ghosttyScrollbackLimitDesc": "Ghostty Core の最大スクロールバック行数（デフォルト 10000）。変更後は開いているターミナルタブを再起動してください。",
+      "attachPtyRenderMode": "Attach-PTY レンダーモード",
+      "attachPtyRenderModeDesc": "単一 Tab で Xterm を 1 つ共有し、Tab 切替で PTY を attach。分割ペインは複数インスタンスのまま。Xterm.js のみ。",
+      "attachPtyTabSwitchDwellMs": "Attach-PTY Tab 切替遅延",
+      "attachPtyTabSwitchDwellMsDesc": "Tab に切り替えてからこの時間（ミリ秒）留まった後にターミナルを復元。素早く通過しただけでは attach しません。0–5000、既定 300。"
     },
     "advanced": {
       "title": "詳細",
@@ -475,12 +479,14 @@
     "restartAsAdminUnsupported": "管理者として再起動はローカルの PowerShell、CMD、pwsh タブのみ",
     "terminalEmulatorRestart": "ターミナルエミュレータを変更しました。反映にはアプリを再起動してください。",
     "ghosttyCoreRestart": "Ghostty Core を変更しました。反映にはアプリを再起動してください。",
+    "attachPtyRenderRestart": "Attach-PTY レンダーモードを変更しました。反映にはアプリを再起動してください。",
     "restartApp": "再起動"
   },
   "terminal": {
     "processExited": "[プロセス終了]",
     "processExitedWithCode": "[プロセス終了、コード {{code}}]",
     "inactiveOptimized": "このタブは最適化されました。5 分以上操作がなく、メモリ節約のためビューをアンマウントしています。戻ると自動的に復元します。",
+    "attachPtyPending": "ターミナルに接続しています…",
     "superPowerSavingIdle": "スーパー省電力：このタブのターミナルと PTY は停止中です。戻ると自動的に復元します。",
     "superPowerSavingResuming": "ターミナルセッションを復元しています…",
     "inputAriaLabel": "ターミナル入力",

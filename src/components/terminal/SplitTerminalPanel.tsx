@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import type { AppTab } from '@/stores/app-store'
@@ -24,6 +25,11 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
   const TerminalComponent = useWterm ? WterminalView : TerminalView
   const panes = getSplitPanes(tab)
   const activeIndex = getActiveSplitIndex(tab)
+  const paneTerminalIdsKey = panes.map((p) => p.terminalId).join('\0')
+  const paneTabs = useMemo(
+    () => panes.map((pane) => ({ ...tab, terminalId: pane.terminalId })),
+    [tab, paneTerminalIdsKey],
+  )
 
   if (panes.length === 0) return null
 
@@ -57,7 +63,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
               </button>
             )}
             <TerminalComponent
-              tab={{ ...tab, terminalId: pane.terminalId }}
+              tab={paneTabs[index]}
               preferDomRenderer={!useWterm && (panes.length > 1 || superPowerSaving)}
               isFocused={isTabActive && isPaneActive}
             />
