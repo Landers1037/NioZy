@@ -234,7 +234,11 @@
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "Use the libghostty WASM build as Wterm's VT parser for fuller terminal emulation (grapheme clusters, full SGR, etc.). Restart open terminal tabs after switching.",
       "ghosttyScrollbackLimit": "Ghostty scrollback lines",
-      "ghosttyScrollbackLimitDesc": "Maximum scrollback buffer lines for Ghostty Core (default 10000). Restart open terminal tabs after changing."
+      "ghosttyScrollbackLimitDesc": "Maximum scrollback buffer lines for Ghostty Core (default 10000). Restart open terminal tabs after changing.",
+      "attachPtyRenderMode": "Attach-PTY render mode",
+      "attachPtyRenderModeDesc": "Use one shared Xterm instance per tab; switch tabs to attach different PTYs. Split panes still use multiple instances. Xterm.js only.",
+      "attachPtyTabSwitchDwellMs": "Attach-PTY tab switch delay",
+      "attachPtyTabSwitchDwellMsDesc": "Milliseconds to stay on a tab before restoring its terminal; quick passes do not attach. Range 0–5000, default 300."
     },
     "advanced": {
       "title": "Advanced",
@@ -475,12 +479,14 @@
     "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs",
     "terminalEmulatorRestart": "Terminal emulator changed. Restart the app for it to take effect.",
     "ghosttyCoreRestart": "Ghostty Core changed. Restart the app for it to take effect.",
+    "attachPtyRenderRestart": "Attach-PTY render mode changed. Restart the app for it to take effect.",
     "restartApp": "Restart"
   },
   "terminal": {
     "processExited": "[Process exited]",
     "processExitedWithCode": "[Process exited, code {{code}}]",
     "inactiveOptimized": "This tab was optimized: no activity for 5+ minutes, the terminal view was unloaded to save memory. Switch back to restore.",
+    "attachPtyPending": "Connecting terminal…",
     "superPowerSavingIdle": "Super power saving: this tab's terminal and PTY are suspended. Switch back to restore.",
     "superPowerSavingResuming": "Restoring terminal session…",
     "inputAriaLabel": "Terminal input",

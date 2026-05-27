@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense } from 'react'
+import { useEffect, useMemo, useRef, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { TitleBar } from '@/components/layout/TitleBar'
@@ -8,6 +8,10 @@ import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
+import { useAttachPtyTabSwitch } from '@/hooks/useAttachPtyTabSwitch'
+import { isAttachPtyRenderMode, resolveAttachPtyTargetTab } from '@/lib/attach-pty-render'
+import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
+import { AttachPtyTerminalHost } from '@/components/terminal/AttachPtyTerminalHost'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { TerminalTabLayer } from '@/components/terminal/TerminalTabLayer'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
@@ -56,6 +60,7 @@ export default function App() {
   useSshDisconnectAlert()
   useTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
+  useAttachPtyTabSwitch(tabs, activeTabId)
 
   useEffect(() => {
     if (activeTabId) touchTabActivity(activeTabId)
@@ -152,6 +157,11 @@ export default function App() {
     }
   }, [setTerminalCwd, clearTerminalCwd])
 
+  const terminalTabs = useMemo(
+    () => tabs.filter((t) => t.type === 'terminal' && getAllTerminalIds(t).length > 0),
+    [tabs],
+  )
+
   if (!isElectron()) {
     return null
   }
@@ -164,9 +174,18 @@ export default function App() {
     : undefined
   const browserDevPreview = isBrowserDevPreview()
   const terminalActive = activeTab?.type === 'terminal'
-  const terminalTabs = tabs.filter(
-    (t) => t.type === 'terminal' && getAllTerminalIds(t).length > 0,
-  )
+  const hasFilesystemTab = tabs.some((t) => t.type === 'filesystem')
+  const filesystemTabActive = activeTab?.type === 'filesystem'
+  const attachPtyMode = isAttachPtyRenderMode(settings)
+  const attachCommitted = useAttachPtySessionStore((s) => s.committed)
+  const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
+  const attachTargetTab = resolveAttachPtyTargetTab(activeTabId, tabs)
+  const showAttachPtyHost =
+    attachPtyMode &&
+    !!attachCommitted &&
+    !attachPendingTabId &&
+    !!attachTargetTab &&
+    attachCommitted.tabId === attachTargetTab.id
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -197,6 +216,7 @@ export default function App() {
                 isTabActive={tab.id === activeTabId}
               />
             ))}
+            {showAttachPtyHost && <AttachPtyTerminalHost />}
             {activeTab?.type === 'settings' && (
               <div className="absolute inset-0">
                 <Suspense fallback={null}>
@@ -204,8 +224,14 @@ export default function App() {
                 </Suspense>
               </div>
             )}
-            {activeTab?.type === 'filesystem' && (
-              <div className="absolute inset-0">
+            {hasFilesystemTab && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !filesystemTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!filesystemTabActive ? { inert: true } : {})}
+              >
                 <Suspense fallback={null}>
                   <FilesystemPanel />
                 </Suspense>

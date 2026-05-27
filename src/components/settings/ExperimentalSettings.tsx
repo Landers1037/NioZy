@@ -14,18 +14,25 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { Cpu, ScrollText, Terminal } from 'lucide-react'
+import { Cpu, Link2, ScrollText, Terminal } from 'lucide-react'
+import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import {
+  MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   MAX_GHOSTTY_SCROLLBACK_LIMIT,
+  MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   MIN_GHOSTTY_SCROLLBACK_LIMIT,
+  normalizeAttachPtyTabSwitchDwellMs,
   normalizeGhosttyScrollbackLimit,
 } from '../../../electron/shared/experimental-settings'
 import { normalizeRendererForEmulator } from '@/lib/terminal-emulator'
 
 function notifyRestartRequired(
   t: (key: string) => string,
-  messageKey: 'toast.terminalEmulatorRestart' | 'toast.ghosttyCoreRestart',
+  messageKey:
+    | 'toast.terminalEmulatorRestart'
+    | 'toast.ghosttyCoreRestart'
+    | 'toast.attachPtyRenderRestart',
 ) {
   toast.info(t(messageKey), {
     duration: 10_000,
@@ -44,7 +51,10 @@ export function ExperimentalSettings() {
 
   const emulator = settings.experimental.terminalEmulator
   const ghosttyEnabled = settings.experimental.ghosttyCoreEnabled
+  const attachPtyEnabled = settings.experimental.attachPtyRenderMode
+  const attachPtyActive = isAttachPtyRenderMode(settings)
   const ghosttyScrollbackFocusRef = useRef(settings.experimental.ghosttyScrollbackLimit)
+  const attachDwellFocusRef = useRef(settings.experimental.attachPtyTabSwitchDwellMs)
 
   return (
     <Card>
@@ -87,6 +97,74 @@ export function ExperimentalSettings() {
             </SelectContent>
           </Select>
         </SettingField>
+
+        <SettingField
+          icon={Link2}
+          label={t('settings.experimental.attachPtyRenderMode')}
+          description={t('settings.experimental.attachPtyRenderModeDesc')}
+          row
+        >
+          <Switch
+            checked={attachPtyActive}
+            disabled={emulator === 'wterm'}
+            onCheckedChange={(enabled) => {
+              if (enabled === attachPtyEnabled) return
+              void patchSettings({
+                experimental: {
+                  ...settings.experimental,
+                  attachPtyRenderMode: enabled,
+                },
+              }).then(() => notifyRestartRequired(t, 'toast.attachPtyRenderRestart'))
+            }}
+          />
+        </SettingField>
+
+        {attachPtyActive && (
+          <SettingField
+            icon={Link2}
+            label={t('settings.experimental.attachPtyTabSwitchDwellMs')}
+            description={t('settings.experimental.attachPtyTabSwitchDwellMsDesc')}
+          >
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS}
+                max={MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS}
+                step={50}
+                className="max-w-[120px]"
+                value={settings.experimental.attachPtyTabSwitchDwellMs}
+                onFocus={() => {
+                  attachDwellFocusRef.current =
+                    settings.experimental.attachPtyTabSwitchDwellMs
+                }}
+                onChange={(e) => {
+                  const n = Number.parseInt(e.target.value, 10)
+                  if (!Number.isNaN(n)) {
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(n),
+                      },
+                    })
+                  }
+                }}
+                onBlur={(e) => {
+                  const n = normalizeAttachPtyTabSwitchDwellMs(
+                    Number.parseInt(e.target.value, 10),
+                  )
+                  if (n === attachDwellFocusRef.current) return
+                  void patchSettings({
+                    experimental: {
+                      ...settings.experimental,
+                      attachPtyTabSwitchDwellMs: n,
+                    },
+                  })
+                }}
+              />
+              <span className="text-sm text-muted-foreground">ms</span>
+            </div>
+          </SettingField>
+        )}
 
         {emulator === 'wterm' && (
           <>

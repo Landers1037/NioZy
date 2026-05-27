@@ -50,6 +50,11 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
+import { getTerminalBufferText } from '@/lib/terminal-buffer'
+import {
+  useAttachPtySessionStore,
+  type AttachPtyCommittedSession,
+} from '@/stores/attach-pty-session-store'
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
@@ -62,9 +67,22 @@ function effectiveRenderer(
   return preferDomRenderer ? 'dom' : preference
 }
 
-export function TerminalView({ tab, preferDomRenderer = false, isFocused = false }: TerminalViewProps) {
+export function TerminalView({
+  tab,
+  preferDomRenderer = false,
+  isFocused = false,
+  attachSession = undefined,
+}: TerminalViewProps) {
+  const isAttachHost = attachSession !== undefined
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
+  const tabRef = useRef(tab)
+  const boundTerminalIdRef = useRef<string | null>(
+    isAttachHost ? (attachSession?.terminalId ?? null) : (tab.terminalId ?? null),
+  )
+  const prevAttachSessionRef = useRef<AttachPtyCommittedSession | null>(
+    attachSession ?? null,
+  )
   const fitRef = useRef<FitAddon | null>(null)
   const canvasRef = useRef<CanvasAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
@@ -74,6 +92,22 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   const lastFitRef = useRef({ cols: 0, rows: 0, width: 0, height: 0 })
   const [termReady, setTermReady] = useState(false)
   const settings = useAppStore((s) => s.settings)
+
+  useEffect(() => {
+    tabRef.current = tab
+  }, [tab])
+
+  useEffect(() => {
+    if (isAttachHost) {
+      boundTerminalIdRef.current = attachSession?.terminalId ?? null
+    } else {
+      boundTerminalIdRef.current = tab.terminalId ?? null
+    }
+  }, [isAttachHost, attachSession?.terminalId, tab.terminalId])
+
+  const effectiveTerminalId = isAttachHost
+    ? (attachSession?.terminalId ?? null)
+    : (tab.terminalId ?? null)
   const rendererPreference = settings?.terminal.renderer ?? 'webgl'
   const superPowerSavingDom =
     settings?.performance.superPowerSaving === true &&
@@ -103,9 +137,10 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
         fit.fit()
         const { cols, rows } = term
         lastFitRef.current = { cols, rows, width, height }
-        if (cols > 0 && rows > 0 && tab.terminalId) {
+        const terminalId = boundTerminalIdRef.current
+        if (cols > 0 && rows > 0 && terminalId) {
           if (force || cols !== prev.cols || rows !== prev.rows) {
-            getElectronAPI().terminal.resize(tab.terminalId, cols, rows)
+            getElectronAPI().terminal.resize(terminalId, cols, rows)
           }
         }
         return cols > 0 && rows > 0
@@ -113,7 +148,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
         return false
       }
     },
-    [tab.terminalId],
+    [],
   )
 
   const scheduleFit = useCallback(
@@ -149,10 +184,11 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     } catch {
       /* WebGL 上下文已丢失时 dispose 可能报错 */
     }
-    if (tab.terminalId && hasWebglSlot(tab.terminalId)) {
-      releaseWebglSlot(tab.terminalId)
+    const terminalId = boundTerminalIdRef.current
+    if (terminalId && hasWebglSlot(terminalId)) {
+      releaseWebglSlot(terminalId)
     }
-  }, [tab.terminalId])
+  }, [])
 
   const loadCanvas = useCallback(async () => {
     if (!termRef.current || canvasRef.current || activeRenderer !== 'canvas') return
@@ -174,16 +210,17 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   }, [activeRenderer, disposeCanvas, scheduleFit])
 
   const loadWebgl = useCallback(async () => {
-    if (!termRef.current || !tab.terminalId || webglRef.current) return
+    const terminalId = boundTerminalIdRef.current
+    if (!termRef.current || !terminalId || webglRef.current) return
     if (webglBlockedRef.current || activeRenderer !== 'webgl') return
 
-    if (!tryAcquireWebglSlot(tab.terminalId)) return
+    if (!tryAcquireWebglSlot(terminalId)) return
 
     try {
       const { WebglAddon } = await import('@xterm/addon-webgl')
       if (!termRef.current || webglRef.current) {
-        if (tab.terminalId && hasWebglSlot(tab.terminalId)) {
-          releaseWebglSlot(tab.terminalId)
+        if (terminalId && hasWebglSlot(terminalId)) {
+          releaseWebglSlot(terminalId)
         }
         return
       }
@@ -191,7 +228,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       const webgl = new WebglAddon()
       webglRef.current = webgl
       termRef.current.loadAddon(webgl)
-      touchWebglSlot(tab.terminalId)
+      touchWebglSlot(terminalId)
       webgl.onContextLoss(() => {
         webglBlockedRef.current = true
         disposeWebgl()
@@ -205,7 +242,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       webglBlockedRef.current = true
       disposeWebgl()
     }
-  }, [tab.terminalId, activeRenderer, disposeWebgl, scheduleFit])
+  }, [activeRenderer, disposeWebgl, scheduleFit])
 
   const applyRenderer = useCallback(() => {
     if (!termRef.current || !termReady) return
@@ -226,7 +263,44 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     }
   }, [activeRenderer, termReady, disposeCanvas, disposeWebgl, loadCanvas, loadWebgl])
 
+  const detachAttachSession = useCallback(() => {
+    const term = termRef.current
+    const prev = prevAttachSessionRef.current
+    if (!term || !prev) return
+    useAttachPtySessionStore.getState().saveSnapshot(prev.tabId, getTerminalBufferText(term))
+    unregisterTerminal(prev.terminalId)
+    prevAttachSessionRef.current = null
+    boundTerminalIdRef.current = null
+  }, [])
+
+  const applyAttachSession = useCallback(
+    (session: AttachPtyCommittedSession | null) => {
+      const term = termRef.current
+      if (!term) return
+
+      detachAttachSession()
+
+      if (!session) {
+        term.clear()
+        return
+      }
+
+      prevAttachSessionRef.current = session
+      boundTerminalIdRef.current = session.terminalId
+      registerTerminal(session.terminalId, term)
+      term.clear()
+      const snap = useAttachPtySessionStore.getState().takeSnapshot(session.tabId)
+      if (snap?.bufferText) {
+        term.write(snap.bufferText)
+      }
+      scheduleFit(true)
+      term.focus()
+    },
+    [detachAttachSession, scheduleFit],
+  )
+
   useEffect(() => {
+    if (isAttachHost) return
     if (!tab.terminalId || termRef.current || !containerRef.current) return
 
     let disposed = false
@@ -274,32 +348,42 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       termRef.current = term
       fitRef.current = fit
       registerTerminal(tab.terminalId!, term)
+      boundTerminalIdRef.current = tab.terminalId!
+
+      const snap = useAttachPtySessionStore.getState().takeSnapshot(tab.id)
+      if (snap?.bufferText) {
+        term.write(snap.bufferText)
+      }
 
       applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
 
       const api = getElectronAPI()
       const onData = (data: string) => {
-        touchTabActivity(tab.id)
-        api.terminal.write(tab.terminalId!, data)
+        const terminalId = boundTerminalIdRef.current
+        if (!terminalId) return
+        touchTabActivity(tabRef.current.id)
+        api.terminal.write(terminalId, data)
       }
       term.onData(onData)
 
       term.attachCustomKeyEventHandler((event) => {
-        if (!tab.terminalId) return true
+        const currentTab = tabRef.current
+        const terminalId = boundTerminalIdRef.current
+        if (!terminalId) return true
         if (handleTerminalTabNavigationShortcut(event)) return false
 
-        if (tryHandleSshReconnectEnter(tab, tab.terminalId, event)) {
+        if (tryHandleSshReconnectEnter(currentTab, terminalId, event)) {
           return false
         }
 
         const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-        if (handleTerminalModifiedEnterKey(tab.terminalId, event, shell.shiftEnterNewline)) {
+        if (handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)) {
           return false
         }
 
         const shortcuts = useAppStore.getState().settings?.shortcuts.app
         if (!shortcuts) return true
-        const handled = handleTerminalKeyboardShortcut(term, tab.terminalId, shortcuts, event)
+        const handled = handleTerminalKeyboardShortcut(term, terminalId, shortcuts, event)
         return !handled
       })
 
@@ -308,7 +392,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       const isRightClickCopyPasteEnabled = () => {
         const terminalSettings = useAppStore.getState().settings?.terminal
         return (
-          !!tab.terminalId &&
+          !!boundTerminalIdRef.current &&
           !!terminalSettings &&
           normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
         )
@@ -320,8 +404,9 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       }
 
       onRightMouseDown = (e: MouseEvent) => {
-        if (e.button !== 2 || !isRightClickCopyPasteEnabled()) return
-        handleTerminalRightClick(term, tab.terminalId!, e)
+        const terminalId = boundTerminalIdRef.current
+        if (e.button !== 2 || !terminalId || !isRightClickCopyPasteEnabled()) return
+        handleTerminalRightClick(term, terminalId, e)
       }
 
       onContextMenu = (e: MouseEvent) => {
@@ -345,13 +430,13 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       })
 
       unsubData = api.terminal.onData((id, data) => {
-        if (id === tab.terminalId) term.write(data)
+        if (id === boundTerminalIdRef.current) term.write(data)
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
-        if (id === tab.terminalId) {
+        if (id === boundTerminalIdRef.current) {
           term.write(formatTerminalExitMessage(code))
-          markSshTerminalDisconnected(id, tab)
+          markSshTerminalDisconnected(id, tabRef.current)
         }
       })
 
@@ -384,12 +469,193 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       termRef.current = null
       fitRef.current = null
     }
-  }, [tab.terminalId, scheduleFit, disposeCanvas, disposeWebgl])
+  }, [tab.terminalId, scheduleFit, disposeCanvas, disposeWebgl, isAttachHost])
 
   useEffect(() => {
-    if (!termReady || !tab.terminalId || activeRenderer !== 'webgl') return
+    if (!isAttachHost || termRef.current || !containerRef.current) return
 
-    const unregisterEvict = registerWebglEvictHandler(tab.terminalId, () => {
+    let disposed = false
+    let ro: ResizeObserver | null = null
+    let unsubData: (() => void) | undefined
+    let unsubExit: (() => void) | undefined
+    let unsubLayoutFit: (() => void) | undefined
+    let termElement: HTMLElement | undefined
+    let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
+    let onRightMouseDown: ((e: MouseEvent) => void) | undefined
+    let onContextMenu: ((e: MouseEvent) => void) | undefined
+    let stopInputA11y: (() => void) | undefined
+    const captureOpts = { capture: true } as const
+
+    void (async () => {
+      await import('@xterm/xterm/css/xterm.css')
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+        import('@xterm/xterm'),
+        import('@xterm/addon-fit'),
+      ])
+
+      if (disposed || !containerRef.current) return
+
+      const s = useAppStore.getState().settings
+      const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
+      const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
+      const term = new Terminal(
+        buildTerminalOptions(
+          s?.terminal,
+          theme,
+          getTerminalCursorOptions(s?.terminal),
+          shellSettings.emojiNativeRendering,
+        ),
+      )
+
+      const fit = new FitAddon()
+      term.loadAddon(fit)
+      term.open(containerRef.current)
+      stopInputA11y = observeTerminalInputA11y(
+        containerRef.current,
+        i18n.t('terminal.inputAriaLabel'),
+      )
+      applyInteractiveCliTerminalOptions(term, shellSettings.shiftEnterNewline)
+
+      termRef.current = term
+      fitRef.current = fit
+
+      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings)
+
+      const api = getElectronAPI()
+      const onData = (data: string) => {
+        const terminalId = boundTerminalIdRef.current
+        if (!terminalId) return
+        touchTabActivity(tabRef.current.id)
+        api.terminal.write(terminalId, data)
+      }
+      term.onData(onData)
+
+      term.attachCustomKeyEventHandler((event) => {
+        const currentTab = tabRef.current
+        const terminalId = boundTerminalIdRef.current
+        if (!terminalId) return true
+        if (handleTerminalTabNavigationShortcut(event)) return false
+
+        if (tryHandleSshReconnectEnter(currentTab, terminalId, event)) {
+          return false
+        }
+
+        const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+        if (handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)) {
+          return false
+        }
+
+        const shortcuts = useAppStore.getState().settings?.shortcuts.app
+        if (!shortcuts) return true
+        const handled = handleTerminalKeyboardShortcut(term, terminalId, shortcuts, event)
+        return !handled
+      })
+
+      termElement = term.element ?? undefined
+
+      const isRightClickCopyPasteEnabled = () => {
+        const terminalSettings = useAppStore.getState().settings?.terminal
+        return (
+          !!boundTerminalIdRef.current &&
+          !!terminalSettings &&
+          normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
+        )
+      }
+
+      onLeftMouseDown = (e: MouseEvent) => {
+        const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
+        handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
+      }
+
+      onRightMouseDown = (e: MouseEvent) => {
+        const terminalId = boundTerminalIdRef.current
+        if (e.button !== 2 || !terminalId || !isRightClickCopyPasteEnabled()) return
+        handleTerminalRightClick(term, terminalId, e)
+      }
+
+      onContextMenu = (e: MouseEvent) => {
+        if (!isRightClickCopyPasteEnabled()) return
+        e.preventDefault()
+        e.stopPropagation()
+      }
+
+      termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
+      termElement?.addEventListener('mousedown', onRightMouseDown, captureOpts)
+      termElement?.addEventListener('contextmenu', onContextMenu, captureOpts)
+
+      ro = new ResizeObserver(() => {
+        if (isLayoutResizing()) return
+        scheduleFit()
+      })
+      ro.observe(containerRef.current)
+
+      unsubLayoutFit = registerLayoutFitOnResizeEnd(() => {
+        scheduleFit()
+      })
+
+      unsubData = api.terminal.onData((id, data) => {
+        if (id === boundTerminalIdRef.current) term.write(data)
+      })
+
+      unsubExit = api.terminal.onExit((id, code) => {
+        if (id === boundTerminalIdRef.current) {
+          term.write(formatTerminalExitMessage(code))
+          markSshTerminalDisconnected(id, tabRef.current)
+        }
+      })
+
+      scheduleFit(true)
+      setTermReady(true)
+    })()
+
+    return () => {
+      disposed = true
+      setTermReady(false)
+      detachAttachSession()
+      webglBlockedRef.current = false
+      lastFitRef.current = { cols: 0, rows: 0, width: 0, height: 0 }
+      disposeCanvas()
+      disposeWebgl()
+      if (termElement && onLeftMouseDown && onRightMouseDown && onContextMenu) {
+        termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
+        termElement.removeEventListener('mousedown', onRightMouseDown, captureOpts)
+        termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
+      }
+      stopInputA11y?.()
+      unsubData?.()
+      unsubExit?.()
+      unsubLayoutFit?.()
+      ro?.disconnect()
+      shellAddonsRef.current = createTerminalShellAddonState()
+      termRef.current?.dispose()
+      termRef.current = null
+      fitRef.current = null
+    }
+  }, [isAttachHost, scheduleFit, disposeCanvas, disposeWebgl, detachAttachSession])
+
+  useEffect(() => {
+    if (!isAttachHost || !termReady) return
+    const session = attachSession ?? null
+    const prev = prevAttachSessionRef.current
+    if (
+      session?.terminalId === prev?.terminalId &&
+      session?.tabId === prev?.tabId
+    ) {
+      return
+    }
+    applyAttachSession(session)
+  }, [
+    isAttachHost,
+    termReady,
+    attachSession?.tabId,
+    attachSession?.terminalId,
+    applyAttachSession,
+  ])
+
+  useEffect(() => {
+    if (!termReady || !effectiveTerminalId || activeRenderer !== 'webgl') return
+
+    const unregisterEvict = registerWebglEvictHandler(effectiveTerminalId, () => {
       disposeWebgl()
     })
 
@@ -398,7 +664,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
     return () => {
       unregisterEvict()
     }
-  }, [termReady, tab.terminalId, activeRenderer, loadWebgl, disposeWebgl])
+  }, [termReady, effectiveTerminalId, activeRenderer, loadWebgl, disposeWebgl])
 
   useEffect(() => {
     if (!termRef.current || !settings) return
@@ -428,11 +694,11 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
   }, [activeRenderer, termReady, applyRenderer])
 
   useEffect(() => {
-    if (!termRef.current || !tab.terminalId) return
+    if (!termRef.current || !effectiveTerminalId) return
     if (isFocused) {
       touchTabActivity(tab.id)
       if (activeRenderer === 'webgl') {
-        touchWebglSlot(tab.terminalId)
+        touchWebglSlot(effectiveTerminalId)
       }
       safeFit()
       termRef.current.focus()
@@ -448,7 +714,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       return
     }
     termRef.current.blur()
-  }, [isFocused, safeFit, tab.terminalId, loadWebgl, loadCanvas, activeRenderer])
+  }, [isFocused, safeFit, effectiveTerminalId, loadWebgl, loadCanvas, activeRenderer, tab.id])
 
   const terminalBackground =
     resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'
@@ -459,7 +725,7 @@ export function TerminalView({ tab, preferDomRenderer = false, isFocused = false
       style={{ backgroundColor: terminalBackground }}
     >
       <div ref={containerRef} className="niozy-terminal-host h-full w-full overflow-hidden" />
-      <SshReconnectHint terminalId={tab.terminalId} />
+      <SshReconnectHint terminalId={effectiveTerminalId ?? undefined} />
     </div>
   )
 }
