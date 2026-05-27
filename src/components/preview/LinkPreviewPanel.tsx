@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AppTab } from '@/stores/app-store'
 import {
@@ -6,6 +6,8 @@ import {
   isWebviewErrorPageUrl,
   WEBVIEW_ERR_ABORTED,
 } from '@/lib/webview-error-page'
+import { cn } from '@/lib/utils'
+import { WEBVIEW_PREVIEW_PARTITION } from '../../../electron/shared/webview-preview'
 
 interface LinkPreviewPanelProps {
   tab: AppTab
@@ -36,14 +38,24 @@ type PendingError = {
 export function LinkPreviewPanel({ tab }: LinkPreviewPanelProps) {
   const ref = useRef<WebviewElement>(null)
   const guestReadyRef = useRef(false)
+  const [loading, setLoading] = useState(true)
   const { t } = useTranslation()
   const tRef = useRef(t)
   tRef.current = t
 
   useEffect(() => {
+    setLoading(true)
+  }, [tab.webviewUrl])
+
+  useEffect(() => {
     const el = ref.current
     const targetUrl = tab.webviewUrl
     if (!el || !targetUrl) return
+
+    let cancelled = false
+    const setLoadingSafe = (value: boolean): void => {
+      if (!cancelled) setLoading(value)
+    }
 
     el.setAttribute('allowpopups', 'true')
 
@@ -74,10 +86,20 @@ export function LinkPreviewPanel({ tab }: LinkPreviewPanelProps) {
       })
     }
 
+    const handleStartLoading = (): void => {
+      setLoadingSafe(true)
+    }
+
+    const handleStopLoading = (): void => {
+      setLoadingSafe(false)
+    }
+
     const handleFailLoad = (event: Event): void => {
       const e = event as WebviewFailLoadEvent
       if (e.isMainFrame !== true) return
       if (e.errorCode === WEBVIEW_ERR_ABORTED) return
+
+      setLoadingSafe(false)
 
       const failedUrl = e.validatedURL || targetUrl
       if (isWebviewErrorPageUrl(failedUrl)) return
@@ -94,10 +116,15 @@ export function LinkPreviewPanel({ tab }: LinkPreviewPanelProps) {
       }
     }
 
+    el.addEventListener('did-start-loading', handleStartLoading)
+    el.addEventListener('did-stop-loading', handleStopLoading)
     el.addEventListener('did-fail-load', handleFailLoad)
     el.addEventListener('dom-ready', onDomReady)
 
     return () => {
+      cancelled = true
+      el.removeEventListener('did-start-loading', handleStartLoading)
+      el.removeEventListener('did-stop-loading', handleStopLoading)
       el.removeEventListener('did-fail-load', handleFailLoad)
       el.removeEventListener('dom-ready', onDomReady)
       pendingError = null
@@ -113,17 +140,29 @@ export function LinkPreviewPanel({ tab }: LinkPreviewPanelProps) {
   if (!tab.webviewUrl) return null
 
   return (
-    <webview
-      ref={ref as React.Ref<HTMLElement>}
-      src={tab.webviewUrl}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        display: 'flex',
-      }}
-    />
+    <div className="absolute inset-0">
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-border/50 transition-opacity duration-150',
+          loading ? 'opacity-100' : 'opacity-0',
+        )}
+        aria-hidden={!loading}
+      >
+        <div className="link-preview-progress-bar" />
+      </div>
+      <webview
+        ref={ref as React.Ref<HTMLElement>}
+        partition={WEBVIEW_PREVIEW_PARTITION}
+        src={tab.webviewUrl}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          display: 'flex',
+        }}
+      />
+    </div>
   )
 }
