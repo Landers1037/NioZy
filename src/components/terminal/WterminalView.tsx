@@ -52,6 +52,8 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     ? buildWtermFontStyle(
         settings.terminal.fontFamily,
         settings.terminal.fontSize,
+        settings.terminal.fontWeight,
+        settings.terminal.fontWeightBold,
       )
     : undefined
 

@@ -1,6 +1,7 @@
 import type { AppTab } from '@/stores/app-store'
 import type { UiStyle } from '../../electron/shared/ui-style'
 import { getUiClasses } from '@/lib/ui-style'
+import { cn } from '@/lib/utils'
 
 export function getTabDisplayTitle(tab: AppTab): string {
   return tab.customTitle?.trim() || tab.title
@@ -13,7 +14,7 @@ export function getTabHighlightClasses(
 ): string {
   const ui = getUiClasses(uiStyle)
   if (!isActive) {
-    return iconOnly ? ui.tabInactiveIcon : ui.tabInactive
+    return cn(iconOnly ? ui.tabInactiveIcon : ui.tabInactive, 'font-app-regular')
   }
-  return iconOnly ? `${ui.tabActiveIcon} rounded-md` : ui.tabActive
+  return cn(iconOnly ? `${ui.tabActiveIcon} rounded-md` : ui.tabActive, 'font-app-bold')
 }

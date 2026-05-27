@@ -80,6 +80,11 @@
     }
   },
   "settings": {
+    "fontWeight": {
+      "title": "字重",
+      "defaultPlaceholder": "默认",
+      "unit": "wght"
+    },
     "sections": {
       "appearance": "外观设置",
       "terminal": "终端设置",
@@ -106,6 +111,8 @@
       "language": "界面语言",
       "accentColor": "强调色",
       "globalFontSize": "全局字号",
+      "fontWeight": "常规字重",
+      "fontWeightBold": "加粗字重",
       "showAppTitle": "显示程序标题",
       "showAppTitleDesc": "关闭后顶栏仅显示图标，不显示 NioZy 名称",
       "enableDialogAnimations": "动画效果",
@@ -116,6 +123,8 @@
       "description": "配色、字体、光标与渲染方式",
       "colorScheme": "配色方案",
       "fontFamily": "终端字体",
+      "fontWeight": "常规字重",
+      "fontWeightBold": "加粗字重",
       "fontSize": "终端字号",
       "cursorStyle": "光标样式",
       "cursorStyleAria": "光标样式",

@@ -17,6 +17,8 @@ export function buildTerminalOptions(
   return {
     fontFamily: terminal?.fontFamily ?? 'Consolas',
     fontSize: terminal?.fontSize ?? 13,
+    fontWeight: terminal?.fontWeight,
+    fontWeightBold: terminal?.fontWeightBold,
     theme,
     scrollback: normalizeTerminalScrollback(terminal?.scrollback ?? DEFAULT_TERMINAL_SCROLLBACK),
     drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
@@ -39,4 +41,6 @@ export function applyTerminalRuntimeOptions(
   )
   term.options.rightClickSelectsWord = !normalizeRightClickCopyPaste(terminal.rightClickCopyPaste)
   term.options.macOptionClickForcesSelection = true
+  term.options.fontWeight = terminal.fontWeight
+  term.options.fontWeightBold = terminal.fontWeightBold
 }

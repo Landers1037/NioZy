@@ -261,6 +261,17 @@ export function applyThemeToDocument(settings: AppSettings): void {
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)
   root.style.fontSize = `${settings.fontSize}px`
+
+  if (typeof settings.fontWeight === 'number') {
+    root.style.setProperty('--app-font-weight', `${settings.fontWeight}`)
+  } else {
+    root.style.removeProperty('--app-font-weight')
+  }
+  if (typeof settings.fontWeightBold === 'number') {
+    root.style.setProperty('--app-font-weight-bold', `${settings.fontWeightBold}`)
+  } else {
+    root.style.removeProperty('--app-font-weight-bold')
+  }
 }
 
 export type { CustomConnection }

@@ -80,6 +80,11 @@
     }
   },
   "settings": {
+    "fontWeight": {
+      "title": "Font weight",
+      "defaultPlaceholder": "Default",
+      "unit": "wght"
+    },
     "sections": {
       "appearance": "Appearance",
       "terminal": "Terminal",
@@ -106,6 +111,8 @@
       "language": "Language",
       "accentColor": "Accent color",
       "globalFontSize": "Global font size",
+      "fontWeight": "Regular weight",
+      "fontWeightBold": "Bold weight",
       "showAppTitle": "Show app title",
       "showAppTitleDesc": "When off, the title bar shows only the icon, not the NioZy name",
       "enableDialogAnimations": "Animations",
@@ -116,6 +123,8 @@
       "description": "Color scheme, font, cursor, and renderer",
       "colorScheme": "Color scheme",
       "fontFamily": "Terminal font",
+      "fontWeight": "Regular weight",
+      "fontWeightBold": "Bold weight",
       "fontSize": "Terminal font size",
       "cursorStyle": "Cursor style",
       "cursorStyleAria": "Cursor style",

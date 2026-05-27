@@ -57,7 +57,7 @@ export function Sidebar() {
       >
         <div className="flex items-center justify-between border-b border-border p-2 no-drag">
           {!collapsed && (
-            <span className="px-1 text-xs font-semibold text-muted-foreground">
+            <span className="px-1 text-xs font-app-bold text-muted-foreground">
               {t('sidebar.terminals')}
             </span>
           )}

@@ -727,6 +727,8 @@ export function TerminalView({
     termRef.current.options.theme = resolveTerminalTheme(settings.terminal.colorScheme)
     termRef.current.options.fontFamily = settings.terminal.fontFamily
     termRef.current.options.fontSize = settings.terminal.fontSize
+    termRef.current.options.fontWeight = settings.terminal.fontWeight
+    termRef.current.options.fontWeightBold = settings.terminal.fontWeightBold
     termRef.current.options.cursorBlink = cursor.cursorBlink
     termRef.current.options.cursorStyle = cursor.cursorStyle
     applyTerminalRuntimeOptions(termRef.current, settings.terminal)

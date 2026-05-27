@@ -36,10 +36,14 @@ export function buildWtermThemeCssVariables(theme: ITheme): string {
 export function buildWtermFontStyle(
   fontFamily: string,
   fontSize: number,
+  fontWeight?: number,
+  fontWeightBold?: number,
 ): CSSProperties {
   return {
     '--term-font-family': fontFamily,
     '--term-font-size': `${fontSize}px`,
+    ...(typeof fontWeight === 'number' ? { '--term-font-weight': `${fontWeight}` } : {}),
+    ...(typeof fontWeightBold === 'number' ? { '--term-font-weight-bold': `${fontWeightBold}` } : {}),
   } as CSSProperties
 }
 

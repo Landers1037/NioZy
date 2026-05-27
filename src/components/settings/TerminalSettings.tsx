@@ -14,6 +14,7 @@ import { COLOR_SCHEME_OPTIONS } from '@/lib/terminal-themes'
 import { getCursorStyleOptions } from '@/lib/terminal-cursor'
 import { ColorSchemePreview } from '@/components/settings/ColorSchemePreview'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
+import { FontWeightFields } from '@/components/settings/FontWeightInput'
 import { SettingField } from './SettingField'
 import { cn } from '@/lib/utils'
 import { useUiClasses } from '@/lib/ui-style'
@@ -81,6 +82,20 @@ export function TerminalSettings() {
           />
         </SettingField>
 
+        <FontWeightFields
+          icon={Type}
+          regularLabel={t('settings.terminal.fontWeight')}
+          boldLabel={t('settings.terminal.fontWeightBold')}
+          regularValue={settings.terminal.fontWeight}
+          boldValue={settings.terminal.fontWeightBold}
+          onRegularChange={(fontWeight) =>
+            patchSettings({ terminal: { ...settings.terminal, fontWeight } })
+          }
+          onBoldChange={(fontWeightBold) =>
+            patchSettings({ terminal: { ...settings.terminal, fontWeightBold } })
+          }
+        />
+
         <FontSizeInput
           icon={Type}
           label={t('settings.terminal.fontSize')}
@@ -110,8 +125,8 @@ export function TerminalSettings() {
                 className={cn(
                   'rounded-md px-3 py-1.5 text-sm transition-colors',
                   settings.terminal.cursorStyle === opt.value
-                    ? ui.segmentActive
-                    : ui.segmentInactive,
+                    ? cn(ui.segmentActive, 'font-app-bold')
+                    : cn(ui.segmentInactive, 'font-app-regular'),
                 )}
                 onClick={() =>
                   patchSettings({

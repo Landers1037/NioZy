@@ -75,10 +75,10 @@ export function SettingsPanel() {
               type="button"
               onClick={() => setSection(s.id)}
               className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors',
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-app-regular transition-colors',
                 section === s.id
                   ? ui.segmentActive
-                  : cn(ui.segmentInactive, 'font-normal hover:bg-muted'),
+                  : cn(ui.segmentInactive, 'hover:bg-muted'),
               )}
             >
               <Icon className="size-4 shrink-0" />

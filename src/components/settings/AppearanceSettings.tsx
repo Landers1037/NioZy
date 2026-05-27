@@ -21,6 +21,7 @@ import {
   Sparkles,
   AppWindow,
   Wand2,
+  Bold,
 } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
@@ -28,6 +29,7 @@ import { cn } from '@/lib/utils'
 import { getAccentPresets, getUiStyle, useUiClasses } from '@/lib/ui-style'
 import type { AppLocale, LayoutMode, UiStyle } from '../../../electron/shared/api-types'
 import { APP_LOCALES } from '../../../electron/shared/locale'
+import { FontWeightFields } from '@/components/settings/FontWeightInput'
 
 export function AppearanceSettings() {
   const { t } = useTranslation()
@@ -66,8 +68,8 @@ export function AppearanceSettings() {
                   className={cn(
                     'rounded-md px-3 py-1.5 text-sm transition-colors',
                     settings.uiStyle === opt.value
-                      ? ui.segmentActive
-                      : ui.segmentInactive,
+                      ? cn(ui.segmentActive, 'font-app-bold')
+                      : cn(ui.segmentInactive, 'font-app-regular'),
                   )}
                   onClick={() => patchSettings({ uiStyle: opt.value as UiStyle })}
                 >
@@ -100,8 +102,8 @@ export function AppearanceSettings() {
                   className={cn(
                     'rounded-md px-3 py-1.5 text-sm transition-colors',
                     settings.layoutMode === opt.value
-                      ? ui.segmentActive
-                      : ui.segmentInactive,
+                      ? cn(ui.segmentActive, 'font-app-bold')
+                      : cn(ui.segmentInactive, 'font-app-regular'),
                   )}
                   onClick={() => patchSettings({ layoutMode: opt.value as LayoutMode })}
                 >
@@ -204,6 +206,16 @@ export function AppearanceSettings() {
           max={18}
           value={settings.fontSize}
           onChange={(fontSize) => patchSettings({ fontSize })}
+        />
+
+        <FontWeightFields
+          icon={Bold}
+          regularLabel={t('settings.appearance.fontWeight')}
+          boldLabel={t('settings.appearance.fontWeightBold')}
+          regularValue={settings.fontWeight}
+          boldValue={settings.fontWeightBold}
+          onRegularChange={(fontWeight) => patchSettings({ fontWeight })}
+          onBoldChange={(fontWeightBold) => patchSettings({ fontWeightBold })}
         />
       </CardContent>
     </Card>

@@ -69,12 +69,16 @@ export interface AppSettings {
   sidebarWidth: number
   accentColor: string
   fontSize: number
+  fontWeight?: number
+  fontWeightBold?: number
   showAppTitle: boolean
   enableDialogAnimations: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
     fontSize: number
+    fontWeight?: number
+    fontWeightBold?: number
     renderer: TerminalRenderer
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean
@@ -206,6 +210,8 @@ export class SettingsStore {
       uiStyle: normalizeUiStyle(stored.uiStyle),
       layoutMode: normalizeLayoutMode(stored.layoutMode),
       sidebarWidth: normalizeSidebarWidth(stored.sidebarWidth),
+      fontWeight: normalizeFontWeight((stored as Partial<AppSettings>).fontWeight),
+      fontWeightBold: normalizeFontWeight((stored as Partial<AppSettings>).fontWeightBold),
       showAppTitle:
         typeof stored.showAppTitle === 'boolean'
           ? stored.showAppTitle
@@ -220,6 +226,10 @@ export class SettingsStore {
         ...stored.terminal,
         colorScheme: normalizeTerminalColorScheme(
           stored.terminal?.colorScheme ?? DEFAULT_SETTINGS.terminal.colorScheme,
+        ),
+        fontWeight: normalizeFontWeight((stored.terminal as { fontWeight?: unknown } | undefined)?.fontWeight),
+        fontWeightBold: normalizeFontWeight(
+          (stored.terminal as { fontWeightBold?: unknown } | undefined)?.fontWeightBold,
         ),
         cursorStyle: normalizeTerminalCursorStyle(stored.terminal?.cursorStyle),
         cursorBlink:
@@ -372,6 +382,15 @@ export class SettingsStore {
     const { connections: _c, ...stored } = this.settings
     writeFileSync(this.settingsPath, JSON.stringify(stored, null, 2), 'utf-8')
   }
+}
+
+function normalizeFontWeight(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return undefined
+  const rounded = Math.round(n)
+  if (rounded < 100 || rounded > 900) return undefined
+  return rounded
 }
 
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {

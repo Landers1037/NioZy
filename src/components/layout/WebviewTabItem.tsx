@@ -38,7 +38,9 @@ export function WebviewTabItem({
       onClick={() => setActiveTab(tab.id)}
       className={cn(
         'group flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors',
-        isActive ? ui.segmentActive : cn(ui.segmentInactive, 'font-normal hover:bg-muted'),
+        isActive
+          ? cn(ui.segmentActive, 'font-app-bold')
+          : cn(ui.segmentInactive, 'font-app-regular hover:bg-muted'),
         collapsed && 'justify-center px-2',
       )}
     >
