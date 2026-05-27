@@ -9,6 +9,10 @@ import {
   TERMINAL_LINK_FOREGROUND,
   TERMINAL_URL_REGEX,
 } from '@/lib/terminal-url'
+import {
+  attachAlternateScreenShiftDomSelect,
+} from '@/lib/terminal-interactive-cli'
+import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
 import { isWtermNearBottom, queueWtermScrollToBottom } from '@/lib/wterm-scroll'
 
@@ -19,10 +23,6 @@ export interface WtermDomShellOptions {
   terminalId: string
   rightClickCopyPaste: boolean
   shell: ShellSettings
-}
-
-function getSelectionText(): string {
-  return window.getSelection()?.toString() ?? ''
 }
 
 function getColFromMouseEvent(rowEl: HTMLElement, event: MouseEvent): number | null {
@@ -123,7 +123,7 @@ function bindLinkClick(
 
   const onMouseUp = (event: MouseEvent) => {
     if (event.button !== 0) return
-    const selection = getSelectionText()
+    const selection = readTerminalSelectionText()
     if (selection.length > 0) return
 
     const target = event.target as HTMLElement
@@ -164,9 +164,13 @@ function bindRightClickCopyPaste(
   if (!enabled) return
   const captureOpts = { capture: true } as const
 
-  const onRightMouseDown = (e: MouseEvent) => {
+  const onRightMouseUp = (e: MouseEvent) => {
     if (e.button !== 2) return
-    handleTerminalRightClickCopyPaste(terminalId, getSelectionText, e)
+    handleTerminalRightClickCopyPaste(
+      terminalId,
+      () => readTerminalSelectionText(),
+      e,
+    )
   }
 
   const onContextMenu = (e: MouseEvent) => {
@@ -174,10 +178,10 @@ function bindRightClickCopyPaste(
     e.stopPropagation()
   }
 
-  root.addEventListener('mousedown', onRightMouseDown, captureOpts)
+  root.addEventListener('mouseup', onRightMouseUp, captureOpts)
   root.addEventListener('contextmenu', onContextMenu, captureOpts)
   listeners.push(() => {
-    root.removeEventListener('mousedown', onRightMouseDown, captureOpts)
+    root.removeEventListener('mouseup', onRightMouseUp, captureOpts)
     root.removeEventListener('contextmenu', onContextMenu, captureOpts)
   })
 }
@@ -187,12 +191,22 @@ function bindInteractiveCliMouse(
   shiftEnterNewline: boolean,
   listeners: Array<() => void>,
 ): void {
-  if (!shiftEnterNewline) return
-
   const onMouseDown = (event: MouseEvent) => {
     if (event.type !== 'mousedown' || event.button !== 0) return
     if (!instance.bridge?.usingAltScreen()) return
-    if (event.shiftKey || event.altKey) return
+    if (event.altKey) return
+
+    if (event.shiftKey) {
+      attachAlternateScreenShiftDomSelect(instance.element, event, () => {
+        queueMicrotask(() => {
+          const text = readTerminalSelectionText()
+          if (text) void navigator.clipboard.writeText(text)
+        })
+      })
+      return
+    }
+
+    if (!shiftEnterNewline) return
 
     event.preventDefault()
     event.stopImmediatePropagation()

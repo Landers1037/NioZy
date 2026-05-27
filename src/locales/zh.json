@@ -157,7 +157,7 @@
       "clickToOpenLinks": "点击打开链接",
       "clickToOpenLinksDesc": "开启后可用鼠标单击链接，使用系统默认浏览器打开",
       "shiftEnterNewline": "使用 Shift+Enter 进行换行",
-      "shiftEnterNewlineDesc": "开启后在交互式 CLI（如 Claude、Cursor agent）中，Shift+Enter 或 Ctrl+Enter 可换行，Enter 发送消息；点击输出区不会把光标移到页面末尾",
+      "shiftEnterNewlineDesc": "开启后在交互式 CLI（如 Claude、Cursor agent）中，Shift+Enter 或 Ctrl+Enter 可换行，Enter 发送消息；点击输出区不会把光标移到页面末尾。在 TUI 界面按住 Shift 左键拖选，松开后自动复制",
       "showTerminalIndex": "展示终端编号",
       "showTerminalIndexDesc": "开启后在左侧边栏终端 Tab 名称左侧显示序号",
       "enableTabDrag": "启用拖拽",

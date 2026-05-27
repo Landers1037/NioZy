@@ -2,6 +2,7 @@ import type { Terminal } from '@xterm/xterm'
 import type { AppShortcuts } from '../../electron/shared/shortcuts'
 import { getElectronAPI } from '@/lib/electron-client'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
+import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import { matchAccelerator } from '@/lib/shortcut-utils'
 import i18n from '@/lib/i18n'
 import { toast } from 'sonner'
@@ -35,18 +36,38 @@ export function handleTerminalModifiedEnterKey(
   return true
 }
 
-/** 在 xterm 获得焦点时处理终端快捷键；返回 true 表示已处理。 */
+/**
+ * 有选区时 Ctrl+C 复制到剪贴板（不发送 SIGINT）。
+ * 无选区时不拦截，交由 shell 处理。
+ */
+export function handleTerminalCopyWhenSelection(
+  event: KeyboardEvent,
+  term?: Terminal | null,
+): boolean {
+  if (event.type !== 'keydown') return false
+  if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey) return false
+  if (event.key.toLowerCase() !== 'c') return false
+
+  const text = readTerminalSelectionText(term)
+  if (!text) return false
+
+  event.preventDefault()
+  void navigator.clipboard.writeText(text)
+  return true
+}
+
+/** 在终端获得焦点时处理终端快捷键；返回 true 表示已处理。 */
 export function handleTerminalKeyboardShortcut(
-  term: Terminal,
   terminalId: string,
   app: AppShortcuts['app'],
   event: KeyboardEvent,
+  term?: Terminal | null,
 ): boolean {
   if (event.type !== 'keydown') return false
 
   if (matchAccelerator(app.copyToClipboard, event)) {
     event.preventDefault()
-    const text = term.getSelection()
+    const text = readTerminalSelectionText(term)
     if (text) void navigator.clipboard.writeText(text)
     else toast.message(i18n.t('toast.selectTerminalFirst'))
     return true
@@ -73,6 +94,7 @@ export function handleTerminalKeyboardShortcut(
   }
 
   if (matchAccelerator(app.clearTerminal, event)) {
+    if (!term) return false
     event.preventDefault()
     term.clear()
     return true
@@ -81,11 +103,15 @@ export function handleTerminalKeyboardShortcut(
   return false
 }
 
-/** 右键：有选区则复制，无选区则粘贴。须在捕获阶段调用以阻止 xterm 默认右键行为。 */
+/** 右键：有选区则复制，无选区则粘贴。须在 mouseup（右键）或 contextmenu 时调用，避免 mousedown 清空选区。 */
 export function handleTerminalRightClick(
-  term: Terminal,
   terminalId: string,
   event: MouseEvent,
+  term?: Terminal | null,
 ): void {
-  handleTerminalRightClickCopyPaste(terminalId, () => term.getSelection(), event)
+  handleTerminalRightClickCopyPaste(
+    terminalId,
+    () => readTerminalSelectionText(term),
+    event,
+  )
 }

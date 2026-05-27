@@ -23,6 +23,7 @@ export function buildTerminalOptions(
       terminal?.drawBoldTextInBrightColors,
     ),
     rightClickSelectsWord: !normalizeRightClickCopyPaste(terminal?.rightClickCopyPaste),
+    macOptionClickForcesSelection: true,
     allowProposedApi,
     ...cursor,
   }
@@ -37,4 +38,5 @@ export function applyTerminalRuntimeOptions(
     terminal.drawBoldTextInBrightColors,
   )
   term.options.rightClickSelectsWord = !normalizeRightClickCopyPaste(terminal.rightClickCopyPaste)
+  term.options.macOptionClickForcesSelection = true
 }

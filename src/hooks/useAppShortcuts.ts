@@ -3,7 +3,10 @@ import { useAppStore } from '@/stores/app-store'
 import { matchAccelerator } from '@/lib/shortcut-utils'
 import { getTerminal } from '@/lib/terminal-registry'
 import { createTerminal } from '@/lib/terminal-actions'
-import { handleTerminalKeyboardShortcut } from '@/lib/terminal-shortcut-actions'
+import {
+  handleTerminalCopyWhenSelection,
+  handleTerminalKeyboardShortcut,
+} from '@/lib/terminal-shortcut-actions'
 import {
   handleTerminalTabNavigationShortcut,
   isFormTypingTarget,
@@ -45,9 +48,13 @@ export function useAppShortcuts(): void {
       if (!activeTerminalId) return
 
       const term = getTerminal(activeTerminalId)
-      if (!term) return
 
-      if (handleTerminalKeyboardShortcut(term, activeTerminalId, app, e)) {
+      if (handleTerminalCopyWhenSelection(e, term)) {
+        e.stopPropagation()
+        return
+      }
+
+      if (handleTerminalKeyboardShortcut(activeTerminalId, app, e, term)) {
         e.stopPropagation()
       }
     }
