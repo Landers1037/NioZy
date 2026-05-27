@@ -31,6 +31,11 @@ export type { SshSettings } from './ssh-settings'
 export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
 export type { ShellSettings } from './shell-settings'
 export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
+export type { PerformanceSettings } from './performance-settings'
+export {
+  DEFAULT_PERFORMANCE_SETTINGS,
+  normalizePerformanceSettings,
+} from './performance-settings'
 export type {
   FilesystemSettings,
   FilesystemCustomOpener,
@@ -150,6 +155,7 @@ export interface AppSettings {
   shortcuts: AppShortcuts
   ssh: import('./ssh-settings').SshSettings
   shell: import('./shell-settings').ShellSettings
+  performance: import('./performance-settings').PerformanceSettings
   filesystem: import('./filesystem-settings').FilesystemSettings
   experimental: import('./experimental-settings').ExperimentalSettings
 }

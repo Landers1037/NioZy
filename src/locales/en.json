@@ -85,6 +85,7 @@
       "terminal": "Terminal",
       "ssh": "SSH",
       "shell": "SHELL",
+      "performance": "Performance",
       "filesystem": "File system",
       "connections": "Connections",
       "vault": "Vault",
@@ -160,7 +161,11 @@
       "showTerminalIndex": "Show terminal index",
       "showTerminalIndexDesc": "When enabled, shows an index number to the left of each terminal tab name in the sidebar",
       "enableTabDrag": "Enable drag reorder",
-      "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically",
+      "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically"
+    },
+    "performance": {
+      "title": "Performance",
+      "description": "Memory and background resource tuning for inactive terminal tabs",
       "inactiveTabOptimization": "Inactive tab optimization",
       "inactiveTabOptimizationDesc": "When enabled, inactive tabs with no interaction for 5 minutes unmount the terminal view and free xterm/wterm memory. PTY sessions stay connected; switching back rebuilds the view and replays buffered output",
       "inactiveTabSleep": "Inactive tab sleep",

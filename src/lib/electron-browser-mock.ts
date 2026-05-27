@@ -9,8 +9,10 @@ import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
+import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-settings'
 import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
 import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
+import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
@@ -29,7 +31,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     renderer: 'webgl',
     cursorStyle: 'block',
     cursorBlink: true,
-    scrollback: 10_000,
+    scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
   },
@@ -53,6 +55,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
+  performance: { ...DEFAULT_PERFORMANCE_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }

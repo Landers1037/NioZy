@@ -1,7 +1,7 @@
 import type { AppTab } from '@/stores/app-store'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
-import type { ShellSettings } from '../../electron/shared/shell-settings'
-import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
+import type { PerformanceSettings } from '../../electron/shared/performance-settings'
+import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-settings'
 
 /** 非活动 Tab 优化：无操作多久后卸载终端视图 */
 export const INACTIVE_TAB_OPTIMIZATION_IDLE_MS = 5 * 60 * 1000
@@ -16,12 +16,12 @@ export interface InactiveTabPolicy {
 }
 
 export function resolveInactiveTabPolicy(
-  shell: ShellSettings | undefined,
+  performance: PerformanceSettings | undefined,
   isTabActive: boolean,
   lastActivityAt: number | undefined,
   now = Date.now(),
 ): InactiveTabPolicy {
-  const s = shell ?? DEFAULT_SHELL_SETTINGS
+  const s = performance ?? DEFAULT_PERFORMANCE_SETTINGS
 
   if (isTabActive) {
     return { mountTerminal: true, streamActive: true, sleepStyle: false }
@@ -44,7 +44,7 @@ export function resolveInactiveTabPolicy(
 export function collectActiveTerminalStreamIds(
   tabs: AppTab[],
   activeTabId: string | null,
-  shell: ShellSettings | undefined,
+  performance: PerformanceSettings | undefined,
   tabLastActivityAt: Record<string, number>,
   now = Date.now(),
 ): string[] {
@@ -55,7 +55,7 @@ export function collectActiveTerminalStreamIds(
     if (termIds.length === 0) continue
     const isActive = tab.id === activeTabId
     const policy = resolveInactiveTabPolicy(
-      shell,
+      performance,
       isActive,
       tabLastActivityAt[tab.id],
       now,

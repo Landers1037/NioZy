@@ -14,12 +14,14 @@ import {
   Keyboard,
   FolderCode,
   FlaskConical,
+  Gauge,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
 import { TerminalSettings } from './TerminalSettings'
 import { SshSettings } from './SshSettings'
 import { ShellSettings } from './ShellSettings'
+import { PerformanceSettings } from './PerformanceSettings'
 import { FilesystemSettings } from './FilesystemSettings'
 import { ConnectionSettings } from './ConnectionSettings'
 import { SystemSettings } from './SystemSettings'
@@ -33,6 +35,7 @@ const SECTION_DEFS = [
   { id: 'terminal', icon: Terminal },
   { id: 'ssh', icon: Server },
   { id: 'shell', icon: TerminalSquare },
+  { id: 'performance', icon: Gauge },
   { id: 'filesystem', icon: FolderCode },
   { id: 'connections', icon: Plug },
   { id: 'vault', icon: Database },
@@ -86,6 +89,7 @@ export function SettingsPanel() {
         {section === 'terminal' && <TerminalSettings />}
         {section === 'ssh' && <SshSettings />}
         {section === 'shell' && <ShellSettings />}
+        {section === 'performance' && <PerformanceSettings />}
         {section === 'filesystem' && <FilesystemSettings />}
         {section === 'connections' && <ConnectionSettings />}
         {section === 'vault' && <VaultSettings />}

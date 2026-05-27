@@ -85,6 +85,7 @@
       "terminal": "ターミナル",
       "ssh": "SSH",
       "shell": "SHELL",
+      "performance": "パフォーマンス",
       "filesystem": "ファイルシステム",
       "connections": "接続",
       "vault": "保管庫",
@@ -160,7 +161,11 @@
       "showTerminalIndex": "ターミナル番号を表示",
       "showTerminalIndexDesc": "有効時、サイドバーの各ターミナルタブ名の左に番号を表示",
       "enableTabDrag": "ドラッグ並べ替えを有効化",
-      "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能",
+      "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能"
+    },
+    "performance": {
+      "title": "パフォーマンス",
+      "description": "非アクティブなターミナルタブのメモリとバックグラウンド負荷の最適化",
       "inactiveTabOptimization": "非アクティブタブの最適化",
       "inactiveTabOptimizationDesc": "有効時、5 分間操作のない非アクティブタブはターミナルビューをアンマウントし xterm/wterm のメモリを解放します。PTY は接続したまま、戻ると再構築してバッファを再生します",
       "inactiveTabSleep": "非アクティブタブのスリープ",

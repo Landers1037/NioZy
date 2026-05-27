@@ -3,7 +3,7 @@ import { useAppStore } from '@/stores/app-store'
 
 /** 非活动 Tab 优化开启时定期刷新，以便在 5 分钟空闲后触发卸载。 */
 export function useInactiveTabOptimizationTick(): number {
-  const enabled = useAppStore((s) => s.settings?.shell.inactiveTabOptimization === true)
+  const enabled = useAppStore((s) => s.settings?.performance.inactiveTabOptimization === true)
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
