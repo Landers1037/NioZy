@@ -18,7 +18,8 @@ export {
   uiStyleToDataAttribute,
   getWindowBackgroundColor,
 } from './ui-style'
-export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
+export type { TerminalRenderer } from './terminal-renderer'
+export { normalizeTerminalRenderer, TERMINAL_RENDERER_VALUES } from './terminal-renderer'
 import type { TerminalCursorStyle } from './terminal-cursor'
 export type { TerminalCursorStyle } from './terminal-cursor'
 export { normalizeTerminalCursorStyle } from './terminal-cursor'

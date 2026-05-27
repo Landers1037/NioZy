@@ -9,7 +9,8 @@ export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type { UiStyle } from './shared/ui-style'
 import { normalizeUiStyle } from './shared/ui-style'
-export type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
+export type { TerminalRenderer } from './shared/terminal-renderer'
+import { normalizeTerminalRenderer } from './shared/terminal-renderer'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
 import {
@@ -218,6 +219,7 @@ export class SettingsStore {
           stored.terminal?.drawBoldTextInBrightColors,
         ),
         rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
+        renderer: normalizeTerminalRenderer(stored.terminal?.renderer),
       },
       advanced: {
         ...DEFAULT_SETTINGS.advanced,
@@ -289,6 +291,11 @@ export class SettingsStore {
     }
     if (Object.keys(rest).length > 0) {
       this.settings = deepMerge(this.settings, rest) as AppSettings
+      if (rest.terminal?.renderer !== undefined) {
+        this.settings.terminal.renderer = normalizeTerminalRenderer(
+          this.settings.terminal.renderer,
+        )
+      }
       this.persistSettings()
     }
     return this.settings

@@ -1,6 +1,6 @@
 export type TerminalEmulator = 'xterm' | 'wterm'
 
-type TerminalRenderer = 'dom' | 'webgl' | 'webgpu'
+import type { TerminalRenderer } from './terminal-renderer'
 
 /** Wterm 仅支持 DOM 渲染，对应 terminal.renderer = dom */
 export const WTERM_RENDERER: TerminalRenderer = 'dom'
@@ -46,7 +46,7 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
   }
 }
 
-/** 使用 Wterm 时将渲染方式规范为 dom（不支持 Canvas/WebGL/WebGPU） */
+/** 使用 Wterm 时将渲染方式规范为 dom（不支持 Canvas/WebGL） */
 export function normalizeRendererForWterm(
   emulator: TerminalEmulator,
   renderer: TerminalRenderer,
