@@ -19,13 +19,13 @@ interface TerminalTabLayerProps {
 }
 
 export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
-  const shell = useAppStore((s) => s.settings?.shell)
+  const performance = useAppStore((s) => s.settings?.performance)
   const lastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt[tab.id])
   const optimizationTick = useInactiveTabOptimizationTick()
   const policy = useMemo(
     () =>
-      resolveInactiveTabPolicy(shell, isTabActive, lastActivityAt, Date.now()),
-    [shell, isTabActive, lastActivityAt, optimizationTick],
+      resolveInactiveTabPolicy(performance, isTabActive, lastActivityAt, Date.now()),
+    [performance, isTabActive, lastActivityAt, optimizationTick],
   )
 
   return (

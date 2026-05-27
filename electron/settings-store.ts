@@ -21,6 +21,10 @@ import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
 import { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shared/shell-settings'
 import {
+  DEFAULT_PERFORMANCE_SETTINGS,
+  normalizePerformanceSettings,
+} from './shared/performance-settings'
+import {
   DEFAULT_FILESYSTEM_SETTINGS,
   normalizeFilesystemSettings,
 } from './shared/filesystem-settings'
@@ -100,6 +104,7 @@ export interface AppSettings {
   shortcuts: AppShortcuts
   ssh: import('./shared/ssh-settings').SshSettings
   shell: import('./shared/shell-settings').ShellSettings
+  performance: import('./shared/performance-settings').PerformanceSettings
   filesystem: import('./shared/filesystem-settings').FilesystemSettings
   experimental: import('./shared/experimental-settings').ExperimentalSettings
 }
@@ -171,6 +176,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
+  performance: { ...DEFAULT_PERFORMANCE_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }
@@ -255,6 +261,7 @@ export class SettingsStore {
             ? (stored.ssh as { shell?: unknown }).shell
             : undefined),
       ),
+      performance: normalizePerformanceSettings(stored.performance, stored.shell),
       filesystem: normalizeFilesystemSettings(stored.filesystem),
       builtinConnections: normalizeBuiltinConnections(
         (stored as Partial<AppSettings>).builtinConnections,

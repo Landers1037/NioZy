@@ -11,7 +11,7 @@ import { getElectronAPI, isElectron } from '@/lib/electron-client'
  * 非活动 Tab 休眠 / 优化会缩小该集合以节省内存与 CPU。
  */
 export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null): void {
-  const shell = useAppStore((s) => s.settings?.shell)
+  const performance = useAppStore((s) => s.settings?.performance)
   const tabLastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt)
   const optimizationTick = useInactiveTabOptimizationTick()
 
@@ -25,7 +25,7 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
     const ids = collectActiveTerminalStreamIds(
       tabs,
       activeTabId,
-      shell,
+      performance,
       tabLastActivityAt,
       Date.now(),
     )
@@ -33,7 +33,7 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
   }, [
     tabs,
     activeTabId,
-    shell,
+    performance,
     tabLastActivityAt,
     terminalTabsKey,
     optimizationTick,
