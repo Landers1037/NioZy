@@ -101,6 +101,18 @@ export class TerminalService extends EventEmitter {
       }
     }
 
+    // cmd.exe has no native OSC cwd reporting. Inject a PROMPT that emits OSC 7 using %CD%.
+    // Only do this when the caller didn't already specify a command via /C or /K.
+    if (options.shell === 'cmd' && process.platform === 'win32') {
+      const lower = args.map((a) => a.toLowerCase())
+      const hasCmdToRun = lower.includes('/c') || lower.includes('/k')
+      if (!hasCmdToRun) {
+        const promptOsc7 =
+          'prompt $E]7;file://%COMPUTERNAME%/%CD:\\=/%$A$P$G'
+        args = [...args, '/K', promptOsc7]
+      }
+    }
+
     const baseName =
       options.name ??
       (options.shell === 'custom' ? file : options.shell.charAt(0).toUpperCase() + options.shell.slice(1))
