@@ -192,14 +192,14 @@ export function TitleBarTerminalControls() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    className="h-12 rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-16 rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('left')}
                     aria-label={t('titleBar.snapLayout.left')}
                     title={t('titleBar.snapLayout.left')}
                   />
                   <button
                     type="button"
-                    className="h-12 rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-16 rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('right')}
                     aria-label={t('titleBar.snapLayout.right')}
                     title={t('titleBar.snapLayout.right')}
