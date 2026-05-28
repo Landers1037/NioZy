@@ -60,10 +60,22 @@ export function mergeShellIntegrationArgs(
   args: string[],
 ): string[] {
   if (shell !== 'powershell' && shell !== 'pwsh') return args
-  if (args.length > 0) return args
   const scriptPath = getShellIntegrationScriptPath()
   if (!scriptPath) return args
 
   const escaped = scriptPath.replace(/'/g, "''")
-  return ['-NoLogo', '-NoExit', '-Command', `& { . '${escaped}' }`]
+  // If caller already provides a command/file to execute, don't override.
+  const lower = args.map((a) => a.toLowerCase())
+  if (lower.includes('-command') || lower.includes('-c') || lower.includes('-file')) return args
+
+  // Preserve user-provided args (e.g. -NoLogo/-NoProfile) and append our integration bootstrap.
+  // -NoExit keeps the interactive shell alive after running the bootstrap command.
+  return [
+    ...args,
+    '-NoExit',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-Command',
+    `& { . '${escaped}' }`,
+  ]
 }
