@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
+import type { SettingsFileError } from '../../../electron/shared/api-types'
 import { toast } from 'sonner'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
@@ -26,6 +27,8 @@ import {
   Power,
   Globe,
   RefreshCw,
+  Upload,
+  FileDown,
 } from 'lucide-react'
 import { GITHUB_RELEASES_URL } from '@/constants/urls'
 import { getElectronAPI } from '@/lib/electron-client'
@@ -36,7 +39,10 @@ export function SystemSettings() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
+  const setSettings = useAppStore((s) => s.setSettings)
   const [reloadingEnv, setReloadingEnv] = useState(false)
+  const [importingSettings, setImportingSettings] = useState(false)
+  const [exportingSettings, setExportingSettings] = useState(false)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [downloadingUpdate, setDownloadingUpdate] = useState(false)
   const [updateAvailableOpen, setUpdateAvailableOpen] = useState(false)
@@ -101,6 +107,47 @@ export function SystemSettings() {
       toast.error(t('toast.updateCheckFailed'))
     } finally {
       setCheckingUpdate(false)
+    }
+  }
+
+  const settingsImportErrorMessage = (error?: SettingsFileError) => {
+    if (error === 'INVALID_JSON') return t('toast.settingsImportInvalidJson')
+    if (error === 'INVALID_FORMAT') return t('toast.settingsImportInvalidFormat')
+    return t('toast.settingsImportFailed')
+  }
+
+  const handleImportSettings = async () => {
+    setImportingSettings(true)
+    try {
+      const result = await getElectronAPI().settings.importFromFile()
+      if (result.canceled) return
+      if (result.ok && result.settings) {
+        setSettings(result.settings)
+        toast.success(t('toast.settingsImportSuccess'))
+      } else {
+        toast.error(settingsImportErrorMessage(result.error))
+      }
+    } catch {
+      toast.error(t('toast.settingsImportFailed'))
+    } finally {
+      setImportingSettings(false)
+    }
+  }
+
+  const handleExportSettings = async () => {
+    setExportingSettings(true)
+    try {
+      const result = await getElectronAPI().settings.exportToFile()
+      if (result.canceled) return
+      if (result.ok) {
+        toast.success(t('toast.settingsExportSuccess'))
+      } else {
+        toast.error(t('toast.settingsExportFailed'))
+      }
+    } catch {
+      toast.error(t('toast.settingsExportFailed'))
+    } finally {
+      setExportingSettings(false)
     }
   }
 
@@ -182,6 +229,39 @@ export function SystemSettings() {
             <RefreshCw className={reloadingEnv ? 'size-4 animate-spin' : 'size-4'} />
             {t('settings.system.reloadEnvironment')}
           </Button>
+        </SettingField>
+
+        <SettingField
+          icon={FileDown}
+          label={t('settings.system.settingsBackup')}
+          description={t('settings.system.settingsBackupDesc')}
+        >
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              disabled={importingSettings || exportingSettings}
+              onClick={() => void handleImportSettings()}
+            >
+              {importingSettings ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}
+              {t('settings.system.importSettings')}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={importingSettings || exportingSettings}
+              onClick={() => void handleExportSettings()}
+            >
+              {exportingSettings ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <FileDown className="size-4" />
+              )}
+              {t('settings.system.exportSettings')}
+            </Button>
+          </div>
         </SettingField>
 
         <SettingField icon={Download} label={t('settings.system.updates')}>

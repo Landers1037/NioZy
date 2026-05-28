@@ -191,6 +191,114 @@ export const DEFAULT_SETTINGS: AppSettings = {
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
 }
 
+function buildAppSettingsFromStored(
+  stored: Partial<StoredAppSettings>,
+  connections: CustomConnection[],
+): AppSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...stored,
+    locale: normalizeLocale(stored.locale),
+    uiStyle: normalizeUiStyle(stored.uiStyle),
+    layoutMode: normalizeLayoutMode(stored.layoutMode),
+    sidebarWidth: normalizeSidebarWidth(stored.sidebarWidth),
+    fontWeight: normalizeFontWeight((stored as Partial<AppSettings>).fontWeight),
+    fontWeightBold: normalizeFontWeight((stored as Partial<AppSettings>).fontWeightBold),
+    showAppTitle:
+      typeof stored.showAppTitle === 'boolean'
+        ? stored.showAppTitle
+        : DEFAULT_SETTINGS.showAppTitle,
+    enableDialogAnimations:
+      typeof stored.enableDialogAnimations === 'boolean'
+        ? stored.enableDialogAnimations
+        : DEFAULT_SETTINGS.enableDialogAnimations,
+    connections,
+    terminal: {
+      ...DEFAULT_SETTINGS.terminal,
+      ...stored.terminal,
+      colorScheme: normalizeTerminalColorScheme(
+        stored.terminal?.colorScheme ?? DEFAULT_SETTINGS.terminal.colorScheme,
+      ),
+      fontWeight: normalizeFontWeight(
+        (stored.terminal as { fontWeight?: unknown } | undefined)?.fontWeight,
+      ),
+      fontWeightBold: normalizeFontWeight(
+        (stored.terminal as { fontWeightBold?: unknown } | undefined)?.fontWeightBold,
+      ),
+      cursorStyle: normalizeTerminalCursorStyle(stored.terminal?.cursorStyle),
+      cursorBlink:
+        typeof stored.terminal?.cursorBlink === 'boolean'
+          ? stored.terminal.cursorBlink
+          : DEFAULT_SETTINGS.terminal.cursorBlink,
+      scrollback: normalizeTerminalScrollback(stored.terminal?.scrollback),
+      drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
+        stored.terminal?.drawBoldTextInBrightColors,
+      ),
+      rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
+      renderer: normalizeTerminalRenderer(stored.terminal?.renderer),
+    },
+    advanced: {
+      ...DEFAULT_SETTINGS.advanced,
+      ...stored.advanced,
+      disableSandbox:
+        typeof stored.advanced?.disableSandbox === 'boolean'
+          ? stored.advanced.disableSandbox
+          : DEFAULT_SETTINGS.advanced.disableSandbox,
+      shellContextMenu:
+        typeof stored.advanced?.shellContextMenu === 'boolean'
+          ? stored.advanced.shellContextMenu
+          : DEFAULT_SETTINGS.advanced.shellContextMenu,
+      preserveWindowBounds:
+        typeof stored.advanced?.preserveWindowBounds === 'boolean'
+          ? stored.advanced.preserveWindowBounds
+          : DEFAULT_SETTINGS.advanced.preserveWindowBounds,
+      debugLog:
+        typeof stored.advanced?.debugLog === 'boolean'
+          ? stored.advanced.debugLog
+          : DEFAULT_SETTINGS.advanced.debugLog,
+      lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
+    },
+    shortcuts: {
+      ...DEFAULT_SETTINGS.shortcuts,
+      ...stored.shortcuts,
+      global: { ...DEFAULT_SETTINGS.shortcuts.global, ...stored.shortcuts?.global },
+      app: { ...DEFAULT_SETTINGS.shortcuts.app, ...stored.shortcuts?.app },
+    },
+    ssh: normalizeSshSettings(stored.ssh),
+    shell: normalizeShellSettings(
+      stored.shell ??
+        (stored.ssh && typeof stored.ssh === 'object'
+          ? (stored.ssh as { shell?: unknown }).shell
+          : undefined),
+    ),
+    performance: normalizePerformanceSettings(stored.performance, stored.shell),
+    filesystem: normalizeFilesystemSettings(stored.filesystem),
+    preview: normalizePreviewSettings(stored.preview),
+    builtinConnections: normalizeBuiltinConnections(
+      (stored as Partial<AppSettings>).builtinConnections,
+    ),
+    defaultTerminal: normalizeDefaultTerminal(
+      (stored as Partial<AppSettings>).defaultTerminal,
+    ),
+    experimental: normalizeExperimentalSettings(stored.experimental),
+  }
+}
+
+function parseSettingsExportBody(data: unknown): Record<string, unknown> {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    throw new Error('INVALID_FORMAT')
+  }
+  const raw = data as Record<string, unknown>
+  if (
+    raw.settings &&
+    typeof raw.settings === 'object' &&
+    !Array.isArray(raw.settings)
+  ) {
+    return raw.settings as Record<string, unknown>
+  }
+  return raw
+}
+
 export class SettingsStore {
   private settings: AppSettings = { ...DEFAULT_SETTINGS }
   private settingsPath = getSettingsFilePath()
@@ -203,91 +311,24 @@ export class SettingsStore {
 
     const connections = this.connectionsStore.load()
     const stored = this.readStoredSettings()
-    this.settings = {
-      ...DEFAULT_SETTINGS,
-      ...stored,
-      locale: normalizeLocale(stored.locale),
-      uiStyle: normalizeUiStyle(stored.uiStyle),
-      layoutMode: normalizeLayoutMode(stored.layoutMode),
-      sidebarWidth: normalizeSidebarWidth(stored.sidebarWidth),
-      fontWeight: normalizeFontWeight((stored as Partial<AppSettings>).fontWeight),
-      fontWeightBold: normalizeFontWeight((stored as Partial<AppSettings>).fontWeightBold),
-      showAppTitle:
-        typeof stored.showAppTitle === 'boolean'
-          ? stored.showAppTitle
-          : DEFAULT_SETTINGS.showAppTitle,
-      enableDialogAnimations:
-        typeof stored.enableDialogAnimations === 'boolean'
-          ? stored.enableDialogAnimations
-          : DEFAULT_SETTINGS.enableDialogAnimations,
-      connections,
-      terminal: {
-        ...DEFAULT_SETTINGS.terminal,
-        ...stored.terminal,
-        colorScheme: normalizeTerminalColorScheme(
-          stored.terminal?.colorScheme ?? DEFAULT_SETTINGS.terminal.colorScheme,
-        ),
-        fontWeight: normalizeFontWeight((stored.terminal as { fontWeight?: unknown } | undefined)?.fontWeight),
-        fontWeightBold: normalizeFontWeight(
-          (stored.terminal as { fontWeightBold?: unknown } | undefined)?.fontWeightBold,
-        ),
-        cursorStyle: normalizeTerminalCursorStyle(stored.terminal?.cursorStyle),
-        cursorBlink:
-          typeof stored.terminal?.cursorBlink === 'boolean'
-            ? stored.terminal.cursorBlink
-            : DEFAULT_SETTINGS.terminal.cursorBlink,
-        scrollback: normalizeTerminalScrollback(stored.terminal?.scrollback),
-        drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
-          stored.terminal?.drawBoldTextInBrightColors,
-        ),
-        rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
-        renderer: normalizeTerminalRenderer(stored.terminal?.renderer),
-      },
-      advanced: {
-        ...DEFAULT_SETTINGS.advanced,
-        ...stored.advanced,
-        disableSandbox:
-          typeof stored.advanced?.disableSandbox === 'boolean'
-            ? stored.advanced.disableSandbox
-            : DEFAULT_SETTINGS.advanced.disableSandbox,
-        shellContextMenu:
-          typeof stored.advanced?.shellContextMenu === 'boolean'
-            ? stored.advanced.shellContextMenu
-            : DEFAULT_SETTINGS.advanced.shellContextMenu,
-        preserveWindowBounds:
-          typeof stored.advanced?.preserveWindowBounds === 'boolean'
-            ? stored.advanced.preserveWindowBounds
-            : DEFAULT_SETTINGS.advanced.preserveWindowBounds,
-        debugLog:
-          typeof stored.advanced?.debugLog === 'boolean'
-            ? stored.advanced.debugLog
-            : DEFAULT_SETTINGS.advanced.debugLog,
-        lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
-      },
-      shortcuts: {
-        ...DEFAULT_SETTINGS.shortcuts,
-        ...stored.shortcuts,
-        global: { ...DEFAULT_SETTINGS.shortcuts.global, ...stored.shortcuts?.global },
-        app: { ...DEFAULT_SETTINGS.shortcuts.app, ...stored.shortcuts?.app },
-      },
-      ssh: normalizeSshSettings(stored.ssh),
-      shell: normalizeShellSettings(
-        stored.shell ??
-          (stored.ssh && typeof stored.ssh === 'object'
-            ? (stored.ssh as { shell?: unknown }).shell
-            : undefined),
-      ),
-      performance: normalizePerformanceSettings(stored.performance, stored.shell),
-      filesystem: normalizeFilesystemSettings(stored.filesystem),
-      preview: normalizePreviewSettings(stored.preview),
-      builtinConnections: normalizeBuiltinConnections(
-        (stored as Partial<AppSettings>).builtinConnections,
-      ),
-      defaultTerminal: normalizeDefaultTerminal(
-        (stored as Partial<AppSettings>).defaultTerminal,
-      ),
-      experimental: normalizeExperimentalSettings(stored.experimental),
-    }
+    this.settings = buildAppSettingsFromStored(stored, connections)
+    this.normalizeTerminalRendererIfNeeded()
+    this.migrateEmbeddedConnections()
+    return this.settings
+  }
+
+  /** 从导出的 JSON 对象导入并覆盖当前配置（含自定义连接） */
+  importFromExport(data: unknown): AppSettings {
+    const body = parseSettingsExportBody(data)
+    const connections = this.connectionsStore.save(parseConnectionsFromUnknown(body))
+    const { connections: _drop, ...rest } = body
+    this.settings = buildAppSettingsFromStored(rest as Partial<StoredAppSettings>, connections)
+    this.normalizeTerminalRendererIfNeeded()
+    this.persistSettings()
+    return this.settings
+  }
+
+  private normalizeTerminalRendererIfNeeded(): void {
     const normalizedRenderer = normalizeRendererForWterm(
       this.settings.experimental.terminalEmulator,
       this.settings.terminal.renderer,
@@ -296,8 +337,6 @@ export class SettingsStore {
       this.settings.terminal.renderer = normalizedRenderer
       this.persistSettings()
     }
-    this.migrateEmbeddedConnections()
-    return this.settings
   }
 
   get(): AppSettings {

@@ -177,6 +177,15 @@ export interface ReloadEnvironmentResult {
   error?: string
 }
 
+export type SettingsFileError = 'INVALID_JSON' | 'INVALID_FORMAT' | 'READ_FAILED'
+
+export interface SettingsFileResult {
+  ok: boolean
+  canceled?: boolean
+  error?: SettingsFileError
+  settings?: AppSettings
+}
+
 export interface UpdateCheckResult {
   ok: boolean
   hasUpdate: boolean
@@ -252,6 +261,8 @@ export interface ElectronAPI {
     getInitial: () => AppSettings | null
     get: () => Promise<AppSettings>
     save: (partial: Partial<AppSettings>) => Promise<AppSettings>
+    exportToFile: () => Promise<SettingsFileResult>
+    importFromFile: () => Promise<SettingsFileResult>
   }
   fonts: {
     list: () => Promise<string[]>

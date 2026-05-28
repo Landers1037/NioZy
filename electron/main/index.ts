@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, Tray, Menu, dialog } from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
-import { writeFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled } from '../settings-store'
@@ -112,6 +112,22 @@ async function syncWebviewPreviewFromSettings(): Promise<void> {
   const settings = settingsStore.get()
   syncWebviewPreviewCustomHeaders(settings.preview.webviewCustomHeaders)
   await syncWebviewPreviewProxy(settings.system.proxy)
+}
+
+async function syncAllSettingsSideEffects(): Promise<void> {
+  const updated = settingsStore.get()
+  await syncShellContextMenuRegistry(updated.advanced.shellContextMenu)
+  app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
+  syncGlobalShortcuts(settingsStore, () => mainWindow)
+  syncWindowOpacity()
+  setDebugLogEnabled(updated.advanced.debugLog === true)
+  mainWindow?.setBackgroundColor(
+    getWindowBackgroundColor(updated.theme, updated.uiStyle),
+  )
+  syncInactiveTabSleepThrottling(mainWindow, updated.performance.inactiveTabSleep)
+  await syncSessionProxyFromSettings()
+  await syncWebviewPreviewFromSettings()
+  syncSystemStatsPolling()
 }
 
 const isDev = isElectronDev()
@@ -414,6 +430,54 @@ ipcMain.handle(
 )
 
 ipcMain.handle('settings:get', () => settingsStore.get())
+
+ipcMain.handle('settings:exportToFile', async () => {
+  const date = new Date().toISOString().slice(0, 10)
+  const saveOptions = {
+    title: '导出设置',
+    defaultPath: `niozy-settings-${date}.json`,
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  }
+  const { canceled, filePath } = mainWindow
+    ? await dialog.showSaveDialog(mainWindow, saveOptions)
+    : await dialog.showSaveDialog(saveOptions)
+  if (canceled || !filePath) return { ok: false, canceled: true }
+  try {
+    const content = JSON.stringify(settingsStore.get(), null, 2)
+    await writeFile(filePath, content, 'utf8')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'READ_FAILED' as const }
+  }
+})
+
+ipcMain.handle('settings:importFromFile', async () => {
+  const openOptions = {
+    title: '导入设置',
+    properties: ['openFile'] as ('openFile')[],
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+  }
+  const { canceled, filePaths } = mainWindow
+    ? await dialog.showOpenDialog(mainWindow, openOptions)
+    : await dialog.showOpenDialog(openOptions)
+  if (canceled || !filePaths[0]) return { ok: false, canceled: true }
+  let parsed: unknown
+  try {
+    const content = await readFile(filePaths[0], 'utf8')
+    parsed = JSON.parse(content) as unknown
+  } catch (err) {
+    if (err instanceof SyntaxError) return { ok: false, error: 'INVALID_JSON' as const }
+    return { ok: false, error: 'READ_FAILED' as const }
+  }
+  try {
+    const updated = settingsStore.importFromExport(parsed)
+    await syncAllSettingsSideEffects()
+    return { ok: true, settings: updated }
+  } catch {
+    return { ok: false, error: 'INVALID_FORMAT' as const }
+  }
+})
+
 ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['update']>[0]) => {
   const liveBefore = isStatusBarLiveStatsEnabled()
   const shortcutBefore = settingsStore.get().shortcuts.global.showApp

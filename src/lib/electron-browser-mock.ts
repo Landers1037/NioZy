@@ -2,6 +2,7 @@ import type {
   AppMetricsData,
   AppSettings,
   ElectronAPI,
+  SettingsFileResult,
   SystemStatsData,
   VaultVariablePublic,
 } from '../../electron/shared/api-types'
@@ -190,6 +191,57 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       save: async (partial) => {
         mockSettings = mergeSettings(partial)
         return structuredClone(mockSettings)
+      },
+      exportToFile: async (): Promise<SettingsFileResult> => {
+        const blob = new Blob([JSON.stringify(mockSettings, null, 2)], {
+          type: 'application/json',
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `niozy-settings-${new Date().toISOString().slice(0, 10)}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+        return { ok: true }
+      },
+      importFromFile: async (): Promise<SettingsFileResult> => {
+        return new Promise((resolve) => {
+          const input = document.createElement('input')
+          input.type = 'file'
+          input.accept = '.json,application/json'
+          input.onchange = () => {
+            const file = input.files?.[0]
+            if (!file) {
+              resolve({ ok: false, canceled: true })
+              return
+            }
+            const reader = new FileReader()
+            reader.onload = () => {
+              try {
+                const parsed = JSON.parse(String(reader.result)) as unknown
+                const body =
+                  parsed &&
+                  typeof parsed === 'object' &&
+                  !Array.isArray(parsed) &&
+                  'settings' in parsed &&
+                  (parsed as { settings?: unknown }).settings &&
+                  typeof (parsed as { settings: unknown }).settings === 'object'
+                    ? (parsed as { settings: AppSettings }).settings
+                    : (parsed as AppSettings)
+                mockSettings = mergeSettings(body)
+                resolve({ ok: true, settings: structuredClone(mockSettings) })
+              } catch (err) {
+                resolve({
+                  ok: false,
+                  error: err instanceof SyntaxError ? 'INVALID_JSON' : 'INVALID_FORMAT',
+                })
+              }
+            }
+            reader.onerror = () => resolve({ ok: false, error: 'READ_FAILED' })
+            reader.readAsText(file)
+          }
+          input.click()
+        })
       },
     },
     system: {
