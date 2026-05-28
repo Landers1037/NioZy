@@ -30,7 +30,7 @@ import {
   Upload,
   FileDown,
 } from 'lucide-react'
-import { GITHUB_RELEASES_URL } from '@/constants/urls'
+import { GITHUB_RELEASES_URL, GITHUB_REPO_URL } from '@/constants/urls'
 import { getElectronAPI } from '@/lib/electron-client'
 import type { UpdateCheckResult } from '../../../electron/shared/api-types'
 import logoUrl from '@/logo.png'
@@ -297,10 +297,21 @@ export function SystemSettings() {
               alt="NioZy"
               className="mb-4 size-20 rounded-xl object-contain"
             />
-            <p className="flex items-center gap-2 font-bold">
-              <Info className="size-4 text-muted-foreground" />
-              {t('settings.system.about')}
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 font-bold">
+              <p className="flex items-center gap-2">
+                <Info className="size-4 text-muted-foreground" />
+                {t('settings.system.about')}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-app-regular text-muted-foreground hover:text-foreground"
+                onClick={() => getElectronAPI().shell.openExternal(GITHUB_REPO_URL)}
+              >
+                <ExternalLink className="size-3.5" />
+                github.com/Landers1037/NioZy
+              </Button>
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">
               {t('settings.system.version', { version: appVersion })}
             </p>
