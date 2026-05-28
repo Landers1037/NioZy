@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, Shell } from 'lucide-react'
+import { Check, ChevronDown, Shell, Crop } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { isWtermEmulator, normalizeRendererForEmulator } from '@/lib/terminal-emulator'
 import { cn } from '@/lib/utils'
+import { getElectronAPI } from '@/lib/electron-client'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import type { TerminalRenderer } from '../../../electron/shared/api-types'
 
@@ -74,6 +75,17 @@ export function TitleBarTerminalControls() {
 
   return (
     <div className="flex items-center gap-1.5 border-r border-border pr-2 mr-0.5">
+      <Button
+        variant="outline"
+        size="icon"
+        className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+        aria-label={t('titleBar.screenshot')}
+        title={t('titleBar.screenshot')}
+        onClick={() => getElectronAPI().screenshot.open()}
+      >
+        <Crop className={titleBarMenuIconClass} aria-hidden />
+      </Button>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -98,7 +110,6 @@ export function TitleBarTerminalControls() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

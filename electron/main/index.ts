@@ -1,4 +1,15 @@
-import { app, BrowserWindow, ipcMain, shell, Tray, Menu, dialog } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  Tray,
+  Menu,
+  dialog,
+  clipboard,
+  nativeImage,
+  screen,
+} from 'electron'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { readFile, writeFile } from 'fs/promises'
@@ -90,6 +101,7 @@ applyChromiumPerformanceFlags({
 installReleaseDevToolsGuard()
 
 let mainWindow: BrowserWindow | null = null
+let screenshotWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
 let linkPreviewManager: LinkPreviewManager | null = null
@@ -295,6 +307,105 @@ function createWindow(): void {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+  }
+}
+
+function getRendererUrlForHash(hash: string): string {
+  const baseUrl = process.env['ELECTRON_RENDERER_URL']
+  if (baseUrl) {
+    const h = hash.startsWith('#') ? hash : `#${hash}`
+    return `${baseUrl}${h}`
+  }
+  // production: loadFile -> pass hash via URL when calling loadURL, else it is lost
+  return `file://${join(__dirname, '../renderer/index.html')}${hash.startsWith('#') ? hash : `#${hash}`}`
+}
+
+function resolveRendererIndexHtmlPath(): string {
+  return join(__dirname, '../renderer/index.html')
+}
+
+function createScreenshotWindow(): void {
+  if (screenshotWindow && !screenshotWindow.isDestroyed()) {
+    screenshotWindow.show()
+    screenshotWindow.focus()
+    return
+  }
+
+  const preloadPath = resolvePreloadPath()
+  const display = screen.getPrimaryDisplay()
+  const bounds = display.bounds
+
+  screenshotWindow = new BrowserWindow({
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: true,
+    skipTaskbar: true,
+    title: '截图',
+    backgroundColor: '#00000000',
+    alwaysOnTop: true,
+    webPreferences: {
+      preload: preloadPath,
+      // 截图依赖 desktopCapturer；在 renderer sandbox 下可能不可用
+      sandbox: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      nodeIntegrationInSubFrames: false,
+      webviewTag: false,
+      devTools: isDev,
+      spellcheck: false,
+      backgroundThrottling: false,
+      navigateOnDragDrop: false,
+      autoplayPolicy: 'document-user-activation-required',
+      enableWebSQL: false,
+    },
+  })
+
+  screenshotWindow.webContents.on('console-message', (_event, level, message) => {
+    // 方便定位截图窗口白屏/加载中问题
+    const levels = ['log', 'warn', 'error']
+    const tag = levels[level] ?? String(level)
+    console.log(`[screenshot-window:${tag}]`, message)
+  })
+
+  screenshotWindow.on('ready-to-show', () => {
+    try {
+      screenshotWindow?.setAlwaysOnTop(true, 'screen-saver')
+    } catch {
+      // ignore
+    }
+    screenshotWindow?.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
+    screenshotWindow?.setFullScreen(true)
+    screenshotWindow?.show()
+    screenshotWindow?.focus()
+  })
+
+  screenshotWindow.on('closed', () => {
+    screenshotWindow = null
+  })
+
+  if (process.env['ELECTRON_RENDERER_URL']) {
+    screenshotWindow.loadURL(getRendererUrlForHash('#/screenshot'))
+  } else {
+    // For file:// we need to load the index.html first, hash is embedded in URL
+    screenshotWindow.loadURL(getRendererUrlForHash('#/screenshot'))
+    // Fallback: if loadURL fails for file protocol, try loadFile without hash
+    // (hash-less will just show main app)
+    screenshotWindow.webContents.on('did-fail-load', () => {
+      try {
+        void screenshotWindow?.loadFile(resolveRendererIndexHtmlPath())
+      } catch {
+        /* ignore */
+      }
+    })
   }
 }
 
@@ -542,6 +653,145 @@ ipcMain.handle('update:download', (_, payload: { version: string; downloadUrl: s
 )
 
 ipcMain.handle('fonts:list', () => listSystemFonts())
+
+ipcMain.on('screenshot:open', () => {
+  createScreenshotWindow()
+})
+
+ipcMain.on('screenshot:close', () => {
+  if (!screenshotWindow || screenshotWindow.isDestroyed()) return
+  screenshotWindow.close()
+})
+
+ipcMain.on('screenshot:enterEditMode', () => {
+  const win = screenshotWindow && !screenshotWindow.isDestroyed() ? screenshotWindow : null
+  if (!win) return
+  try {
+    if (win.isFullScreen()) win.setFullScreen(false)
+  } catch {
+    // ignore
+  }
+  try {
+    win.setResizable(true)
+    win.setMovable(true)
+    win.setMinimumSize(900, 600)
+  } catch {
+    // ignore
+  }
+  try {
+    const area = screen.getPrimaryDisplay().workArea
+    const width = Math.min(980, area.width)
+    const height = Math.min(720, area.height)
+    const x = Math.round(area.x + (area.width - width) / 2)
+    const y = Math.round(area.y + (area.height - height) / 2)
+    win.setBounds({ x, y, width, height })
+  } catch {
+    // ignore
+  }
+})
+
+ipcMain.handle('screenshot:captureScreen', async () => {
+  // 使用主进程抓屏，避免 renderer desktopCapturer 不可用的问题
+  const mod = (await import('screenshot-desktop')) as unknown as {
+    default?: (options?: { format?: 'png' | 'jpg'; screen?: number }) => Promise<Buffer> | Promise<Buffer[]>
+  }
+  const screenshotDesktop = mod.default
+  if (!screenshotDesktop) {
+    return { ok: false as const, error: 'SCREENSHOT_DESKTOP_UNAVAILABLE' }
+  }
+
+  try {
+    // 关键：抓屏前隐藏截图窗口，避免把自身（白屏遮罩）截进去
+    const win = screenshotWindow && !screenshotWindow.isDestroyed() ? screenshotWindow : null
+    const wasVisible = win?.isVisible() ?? false
+    if (win && wasVisible) {
+      try {
+        win.setOpacity(0)
+        win.hide()
+      } catch {
+        // ignore
+      }
+      // 给系统一点时间完成窗口隐藏/合成
+      await new Promise((r) => setTimeout(r, 120))
+    }
+
+    const result = await screenshotDesktop({ format: 'png' })
+    const buf = Array.isArray(result) ? result[0] : result
+    if (!buf) return { ok: false as const, error: 'NO_SCREENSHOT_BUFFER' }
+    const img = nativeImage.createFromBuffer(buf)
+    const size = img.getSize()
+
+    if (win && wasVisible) {
+      try {
+        win.showInactive()
+        win.setOpacity(1)
+        win.focus()
+      } catch {
+        // ignore
+      }
+    }
+
+    return {
+      ok: true as const,
+      dataUrl: `data:image/png;base64,${buf.toString('base64')}`,
+      width: size.width,
+      height: size.height,
+    }
+  } catch (err) {
+    // 尝试恢复窗口显示，避免“截屏失败后窗口消失”
+    try {
+      if (screenshotWindow && !screenshotWindow.isDestroyed()) {
+        screenshotWindow.show()
+        screenshotWindow.setOpacity(1)
+      }
+    } catch {
+      // ignore
+    }
+    return { ok: false as const, error: err instanceof Error ? err.message : 'CAPTURE_FAILED' }
+  }
+})
+
+ipcMain.handle(
+  'screenshot:savePng',
+  async (_, payload: { dataUrl: string; defaultFileName?: string }) => {
+    const date = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const stamp = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(
+      date.getHours(),
+    )}${pad(date.getMinutes())}${pad(date.getSeconds())}`
+    const defaultName = payload.defaultFileName?.trim() || `screenshot-${stamp}.png`
+
+    const saveOptions = {
+      title: '保存截图',
+      defaultPath: defaultName,
+      filters: [{ name: 'PNG', extensions: ['png'] }],
+    }
+
+    const { canceled, filePath } = mainWindow
+      ? await dialog.showSaveDialog(mainWindow, saveOptions)
+      : await dialog.showSaveDialog(saveOptions)
+    if (canceled || !filePath) return { ok: false, canceled: true }
+
+    try {
+      const img = nativeImage.createFromDataURL(payload.dataUrl)
+      const buf = img.toPNG()
+      await writeFile(filePath, buf)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : 'WRITE_FAILED' }
+    }
+  },
+)
+
+ipcMain.handle('screenshot:copyToClipboard', async (_, payload: { dataUrl: string }) => {
+  try {
+    const img = nativeImage.createFromDataURL(payload.dataUrl)
+    clipboard.writeImage(img)
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'COPY_FAILED' }
+  }
+})
 
 function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
   const conn = settingsStore.get().connections.find((c) => c.id === connectionId)

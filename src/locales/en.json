@@ -45,6 +45,7 @@
   "titleBar": {
     "renderEngine": "Render engine",
     "renderMode": "Render mode",
+    "screenshot": "Screenshot",
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
     "modeDom": "DOM",
