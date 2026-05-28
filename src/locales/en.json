@@ -53,6 +53,13 @@
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm only supports DOM rendering"
   },
+  "screenshot": {
+    "selectHint": "Click and drag to start capture (Esc to close)",
+    "editTitle": "Edit screenshot",
+    "errorPrefix": "Capture failed: ",
+    "retry": "Retry",
+    "copy": "Copy"
+  },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },
     "focus": { "label": "Focus", "description": "Sidebar collapsed by default for terminal focus" },

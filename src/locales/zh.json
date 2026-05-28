@@ -53,6 +53,13 @@
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm 仅支持 DOM 渲染"
   },
+  "screenshot": {
+    "selectHint": "点击并拖拽开始截屏（Esc 关闭）",
+    "editTitle": "编辑截图",
+    "errorPrefix": "截图失败：",
+    "retry": "重试",
+    "copy": "复制"
+  },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },
     "focus": { "label": "聚集", "description": "左侧边栏默认收起，便于聚焦终端" },

@@ -151,11 +151,13 @@ export function ScreenshotApp() {
   const api = useMemo(() => getElectronAPI(), [])
 
   const [capture, setCapture] = useState<Capture | null>(null)
-  const [phase, setPhase] = useState<'loading' | 'select' | 'edit'>('loading')
+  const [phase, setPhase] = useState<'loading' | 'select' | 'edit'>('select')
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selection, setSelection] = useState<Rect | null>(null)
   const [dragging, setDragging] = useState(false)
   const [croppedDataUrl, setCroppedDataUrl] = useState<string | null>(null)
+  const pendingStartRef = useRef<{ x: number; y: number } | null>(null)
+  const captureInFlightRef = useRef(false)
 
   const viewRef = useRef<HTMLDivElement | null>(null)
   const [editorHost, setEditorHost] = useState<HTMLDivElement | null>(null)
@@ -164,28 +166,36 @@ export function ScreenshotApp() {
   const markEditorReady = useCallback(() => setEditorReady(true), [])
   useTuiEditor(editorHost, croppedDataUrl, editorRef, markEditorReady)
 
-  const refresh = async () => {
-    setPhase('loading')
+  // 截图选择框阶段：强制窗口背景透明，避免出现“全屏白屏闪一下”
+  useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+    const root = document.getElementById('root')
+
+    if (phase === 'select' || phase === 'loading') {
+      html.style.background = 'transparent'
+      body.style.background = 'transparent'
+      if (root) root.style.background = 'transparent'
+      return
+    }
+
+    // edit 阶段恢复默认（让编辑窗口按主题显示）
+    html.style.background = ''
+    body.style.background = ''
+    if (root) root.style.background = ''
+  }, [phase])
+
+  const resetToSelect = () => {
     setLoadError(null)
     setSelection(null)
     setDragging(false)
     setCroppedDataUrl(null)
     setEditorReady(false)
-    try {
-      const c = await api.screenshot.captureScreen()
-      setCapture(c)
-      setPhase('select')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      setLoadError(msg || 'CAPTURE_FAILED')
-      setPhase('select')
-    }
+    setCapture(null)
+    pendingStartRef.current = null
+    captureInFlightRef.current = false
+    setPhase('select')
   }
-
-  useEffect(() => {
-    void refresh()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -217,6 +227,36 @@ export function ScreenshotApp() {
     const box = viewRef.current.getBoundingClientRect()
     const x = e.clientX - box.left
     const y = e.clientY - box.top
+
+    // 关键：只有当用户开始框选（鼠标按下）时才抓屏，避免桌面动态变化时“提前截屏”
+    if (!capture && !captureInFlightRef.current) {
+      captureInFlightRef.current = true
+      pendingStartRef.current = { x, y }
+      setLoadError(null)
+      setSelection(null)
+      setDragging(false)
+      setPhase('loading')
+      void (async () => {
+        try {
+          const c = await api.screenshot.captureScreen()
+          setCapture(c)
+          const start = pendingStartRef.current
+          if (start) {
+            setSelection({ x: start.x, y: start.y, w: 0, h: 0 })
+            setDragging(true)
+          }
+          setPhase('select')
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          setLoadError(msg || 'CAPTURE_FAILED')
+          captureInFlightRef.current = false
+          setPhase('select')
+        }
+      })()
+      return
+    }
+
+    if (!capture) return
     setSelection({ x, y, w: 0, h: 0 })
     setDragging(true)
   }
@@ -318,16 +358,25 @@ export function ScreenshotApp() {
 
   if (phase === 'loading') {
     return (
-      <div className="h-full w-full bg-background text-foreground flex items-center justify-center">
-        {t('common.loading')}
+      <div className="h-full w-full bg-black/40 text-foreground flex items-center justify-center">
+        <div className="rounded-lg bg-background/90 px-4 py-2 text-sm text-foreground shadow">
+          {t('common.loading')}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="screenshot-editor-window h-full w-full border border-border bg-background text-foreground shadow-2xl">
-      {phase === 'select' && capture ? (
-        <div className="relative h-full w-full bg-black">
+    <div
+      className={
+        phase === 'select'
+          ? 'h-full w-full bg-transparent text-foreground'
+          : 'screenshot-editor-window h-full w-full border border-border bg-background text-foreground shadow-2xl'
+      }
+    >
+      {phase === 'select' ? (
+        // 未抓屏前保持透明，只显示十字选择框（避免“全屏黑屏”）
+        <div className="relative h-full w-full bg-transparent">
           <div
             ref={viewRef}
             className="absolute inset-0 cursor-crosshair select-none"
@@ -335,15 +384,19 @@ export function ScreenshotApp() {
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
           >
-            <img
-              src={capture.dataUrl}
-              alt="screenshot"
-              className="absolute inset-0 h-full w-full object-fill"
-              draggable={false}
-            />
+            {capture ? (
+              <img
+                src={capture.dataUrl}
+                alt="screenshot"
+                className="absolute inset-0 h-full w-full object-fill"
+                draggable={false}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-transparent" />
+            )}
 
-            {/* 整体暗色遮罩 */}
-            <div className="absolute inset-0 bg-black/15" />
+            {/* 只有抓到背景图后才暗化桌面 */}
+            {capture ? <div className="absolute inset-0 bg-black/15" /> : null}
 
             {selection ? (
               <div
@@ -366,50 +419,44 @@ export function ScreenshotApp() {
               </div>
             ) : null}
 
-            {/* 右上角快捷按钮（Esc 也可关闭） */}
-            <div className="absolute right-3 top-3 flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => void refresh()}>
-                <RefreshCw className="mr-2 size-4" />
-                重新截图
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => api.screenshot.close()}
-                aria-label={t('common.close')}
-              >
-                <X className="mr-2 size-4" />
-                关闭
-              </Button>
-            </div>
+            {!capture ? (
+              <div className="absolute left-1/2 top-8 -translate-x-1/2 rounded-full bg-black/55 px-3 py-1 text-xs text-white">
+                {t('screenshot.selectHint')}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : (
         <div className="h-full w-full">
           {loadError ? (
             <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-6">
-              <div className="text-sm text-muted-foreground">截图失败：{loadError}</div>
+              <div className="text-sm text-muted-foreground">
+                {t('screenshot.errorPrefix')}
+                {loadError}
+              </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => void refresh()}>
+                <Button variant="outline" onClick={resetToSelect}>
                   <RefreshCw className="mr-2 size-4" />
-                  重试
+                  {t('screenshot.retry')}
                 </Button>
                 <Button variant="default" onClick={() => api.screenshot.close()}>
-                  关闭
+                  {t('common.close')}
                 </Button>
               </div>
             </div>
           ) : (
             <>
               <div className="drag-region flex items-center gap-2 border-b border-border px-3 py-2">
-                <div className="flex-1 text-sm font-medium text-foreground">编辑截图</div>
+                <div className="flex-1 text-sm font-medium text-foreground">
+                  {t('screenshot.editTitle')}
+                </div>
                 <Button variant="outline" size="sm" className="no-drag" onClick={() => void copy()}>
                   <Copy className="mr-2 size-4" />
-                  复制
+                  {t('screenshot.copy')}
                 </Button>
                 <Button variant="default" size="sm" className="no-drag" onClick={() => void save()}>
                   <Save className="mr-2 size-4" />
-                  保存
+                  {t('common.save')}
                 </Button>
                 <Button
                   variant="ghost"
