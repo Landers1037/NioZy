@@ -184,6 +184,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       close: () => undefined,
       isMaximized: async () => false,
       onMaximized: () => () => undefined,
+      snap: () => undefined,
     },
     settings: {
       getInitial: () => structuredClone(mockSettings),

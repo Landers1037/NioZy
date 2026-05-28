@@ -256,6 +256,18 @@ export interface ElectronAPI {
     close: () => void
     isMaximized: () => Promise<boolean>
     onMaximized: (cb: (maximized: boolean) => void) => () => void
+    /** Windows Snap：将窗口贴到当前屏幕指定分屏布局（类似 Win+←/→） */
+    snap: (
+      layout:
+        | 'left'
+        | 'right'
+        | 'top'
+        | 'bottom'
+        | 'topLeft'
+        | 'topRight'
+        | 'bottomLeft'
+        | 'bottomRight',
+    ) => void
   }
   settings: {
     getInitial: () => AppSettings | null

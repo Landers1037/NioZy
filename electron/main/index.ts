@@ -505,6 +505,64 @@ ipcMain.on('window:maximize', () => {
 })
 ipcMain.on('window:close', () => mainWindow?.close())
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
+ipcMain.on(
+  'window:snap',
+  (
+    _e,
+    layout:
+      | 'left'
+      | 'right'
+      | 'top'
+      | 'bottom'
+      | 'topLeft'
+      | 'topRight'
+      | 'bottomLeft'
+      | 'bottomRight',
+  ) => {
+  const win = mainWindow
+  if (!win || win.isDestroyed()) return
+  try {
+    if (win.isMaximized()) win.unmaximize()
+  } catch {
+    // ignore
+  }
+
+  const bounds = win.getBounds()
+  const display = screen.getDisplayMatching(bounds)
+  const area = display.workArea
+  const halfW = Math.floor(area.width / 2)
+  const halfH = Math.floor(area.height / 2)
+  const leftW = halfW
+  const rightW = area.width - halfW
+  const topH = halfH
+  const bottomH = area.height - halfH
+
+  const next =
+    layout === 'right'
+      ? { x: area.x + leftW, y: area.y, width: rightW, height: area.height }
+      : layout === 'top'
+        ? { x: area.x, y: area.y, width: area.width, height: topH }
+        : layout === 'bottom'
+          ? { x: area.x, y: area.y + topH, width: area.width, height: bottomH }
+          : layout === 'topLeft'
+            ? { x: area.x, y: area.y, width: leftW, height: topH }
+            : layout === 'topRight'
+              ? { x: area.x + leftW, y: area.y, width: rightW, height: topH }
+              : layout === 'bottomLeft'
+                ? { x: area.x, y: area.y + topH, width: leftW, height: bottomH }
+                : layout === 'bottomRight'
+                  ? { x: area.x + leftW, y: area.y + topH, width: rightW, height: bottomH }
+                  : { x: area.x, y: area.y, width: leftW, height: area.height } // left
+
+  try {
+    win.setBounds(next)
+    win.show()
+    win.focus()
+  } catch {
+    // ignore
+  }
+  },
+)
 
 ipcMain.on('shell:openExternal', (_, url: string) => {
   void shell.openExternal(url)
