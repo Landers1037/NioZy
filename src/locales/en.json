@@ -46,6 +46,7 @@
     "renderEngine": "Render engine",
     "renderMode": "Render mode",
     "screenshot": "Screenshot",
+    "aiSidebar": "AI chat",
     "search": "Search",
     "searchHint": "Search within the active terminal output. Enter: next, Shift+Enter: previous.",
     "searchPlaceholder": "Search text…",
@@ -77,6 +78,12 @@
     "errorPrefix": "Capture failed: ",
     "retry": "Retry",
     "copy": "Copy"
+  },
+  "aiSidebar": {
+    "title": "AI Assistant",
+    "welcome": "How can I help you today?",
+    "welcomeNoKey": "Configure the API key and Base URL under Settings → Experimental → AI features to start chatting.",
+    "configureKey": "Configure your OpenAI API key in Settings → Experimental first"
   },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },
@@ -313,6 +320,31 @@
       "terminalEmulatorDesc": "Choose the frontend terminal implementation. Wterm uses WASM/DOM rendering (experimental). Restart open terminals after switching.",
       "terminalEmulatorXterm": "Xterm.js (default)",
       "terminalEmulatorWterm": "Wterm (experimental)",
+      "ai": {
+        "title": "AI features",
+        "description": "Configure the AI chat sidebar and model provider. Runtime listens on 127.0.0.1 only; API keys are stored in settings.json as plain text.",
+        "sidebarEnabled": "Enable AI chat sidebar",
+        "sidebarEnabledDesc": "Show the AI chat sidebar on the right. Sending messages requires an API key for the selected provider (optional for local Ollama).",
+        "runtimePort": "Runtime port",
+        "runtimePortDesc": "Local Copilot Runtime listen port on 127.0.0.1 (default 6173). Reconnect the AI sidebar after changing.",
+        "provider": "AI provider",
+        "providerDesc": "Choose which AI service to connect to.",
+        "providers": {
+          "openai": "OpenAI",
+          "anthropic": "Claude (Anthropic)",
+          "deepseek": "DeepSeek",
+          "ollama": "Ollama (local)"
+        },
+        "model": "Model",
+        "modelDesc": "Select a model for the current provider.",
+        "baseUrl": "Base URL",
+        "baseUrlDesc": "API base URL. Defaults are filled when switching providers; edit if needed.",
+        "apiKey": "API key",
+        "apiKeyDesc": "API key for the selected provider, used by the local Copilot Runtime.",
+        "apiKeyOptionalDesc": "Local Ollama usually does not need an API key.",
+        "apiKeyPlaceholder": "sk-...",
+        "apiKeyOptionalPlaceholder": "Optional for Ollama"
+      },
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "Use the libghostty WASM build as Wterm's VT parser for fuller terminal emulation (grapheme clusters, full SGR, etc.). Restart open terminal tabs after switching.",
       "ghosttyScrollbackLimit": "Ghostty scrollback lines",

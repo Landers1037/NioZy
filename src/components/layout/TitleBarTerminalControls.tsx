@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, Shell, Crop, Search, SquareSplitHorizontal } from 'lucide-react'
+import { Check, ChevronDown, Shell, Crop, Search, SquareSplitHorizontal, Brain } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { relaunchApp } from '@/lib/app-relaunch'
 import { isWtermEmulator, normalizeRendererForEmulator } from '@/lib/terminal-emulator'
 import { cn } from '@/lib/utils'
 import { getElectronAPI } from '@/lib/electron-client'
+import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import type { TerminalRenderer } from '../../../electron/shared/api-types'
 import { TerminalSearchDialog } from '@/components/layout/TerminalSearchDialog'
@@ -48,6 +49,11 @@ export function TitleBarTerminalControls() {
   const emulator = settings.experimental.terminalEmulator
   const useWterm = isWtermEmulator(settings)
   const renderer = settings.terminal.renderer
+  const aiSidebarEnabled = settings.experimental.aiSidebarEnabled === true
+
+  const handleAiSidebarToggle = () => {
+    useAiSidebarStore.getState().toggle()
+  }
 
   const engineLabel =
     emulator === 'wterm' ? t('titleBar.engineWterm') : t('titleBar.engineXterm')
@@ -275,6 +281,19 @@ export function TitleBarTerminalControls() {
       >
         <Crop className={titleBarMenuIconClass} aria-hidden />
       </Button>
+
+      {aiSidebarEnabled && (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('titleBar.aiSidebar')}
+          title={t('titleBar.aiSidebar')}
+          onClick={handleAiSidebarToggle}
+        >
+          <Brain className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      )}
 
       <TerminalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
 

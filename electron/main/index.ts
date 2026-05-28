@@ -1,3 +1,4 @@
+import '../copilot-telemetry-env'
 import {
   app,
   BrowserWindow,
@@ -25,6 +26,8 @@ import { sendToRenderer } from './window-ipc'
 import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
+import { CopilotRuntimeServer } from '../copilot-runtime-server'
+import { buildAiRuntimeConfig } from '../shared/experimental-settings'
 import {
   applyChromiumPerformanceFlags,
   getOptimizedWebPreferences,
@@ -196,6 +199,19 @@ const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
 const settingsStore = new SettingsStore()
 const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
+const copilotRuntimeServer = new CopilotRuntimeServer()
+
+function syncCopilotRuntimeFromSettings(experimental = settingsStore.get().experimental): void {
+  void copilotRuntimeServer
+    .sync(buildAiRuntimeConfig(experimental))
+    .catch((err) => console.error('[NioZy] Failed to sync copilot runtime:', err))
+}
+
+function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update']>[0]): boolean {
+  if (!partial.experimental) return false
+  const keys = ['aiSidebarEnabled', 'aiRuntimePort', 'aiProvider', 'aiModel', 'aiBaseUrl', 'aiApiKey', 'openAiApiKey'] as const
+  return keys.some((key) => partial.experimental![key] !== undefined)
+}
 
 function isStatusBarLiveStatsEnabled(): boolean {
   return settingsStore.get().advanced.statusBarLiveStats !== false
@@ -493,6 +509,7 @@ app.whenReady().then(async () => {
 
   settingsStore.load()
   vaultStore.load()
+  void syncCopilotRuntimeFromSettings()
   setDebugLogEnabled(settingsStore.get().advanced.debugLog === true)
   await syncSessionProxyFromSettings()
   initWebviewPreviewSession()
@@ -538,6 +555,9 @@ app.on('before-quit', () => {
   terminalService.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()
+  void copilotRuntimeServer
+    .stop(true)
+    .catch((err) => console.error('[NioZy] Failed to stop copilot runtime:', err))
 })
 
 app.on('will-quit', () => {
@@ -647,6 +667,7 @@ ipcMain.handle(
 )
 
 ipcMain.handle('settings:get', () => settingsStore.get())
+ipcMain.handle('copilot:getRuntimeUrl', () => copilotRuntimeServer.getRuntimeUrl())
 
 ipcMain.handle('settings:exportToFile', async () => {
   const date = new Date().toISOString().slice(0, 10)
@@ -703,6 +724,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   }
 
   const updated = settingsStore.update(partial)
+  if (experimentalAiSettingsChanged(partial)) {
+    syncCopilotRuntimeFromSettings(updated.experimental)
+  }
   if (partial.advanced?.statusBarLiveStats !== undefined && liveBefore !== isStatusBarLiveStatsEnabled()) {
     syncSystemStatsPolling()
   }

@@ -103,6 +103,7 @@ export default defineConfig(({ command }) => {
             if (id.includes('@xterm')) return 'xterm'
             if (id.includes('@wterm')) return 'wterm'
             if (id.includes('lucide-react')) return 'icons'
+            if (id.includes('@copilotkit')) return 'copilotkit'
             if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
             return 'vendor'
           },

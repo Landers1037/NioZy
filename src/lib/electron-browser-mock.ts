@@ -246,6 +246,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         })
       },
     },
+    copilot: {
+      getRuntimeUrl: async () => null,
+    },
     system: {
       platform: 'win32',
       isProcessElevated: async () => false,
