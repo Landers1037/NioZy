@@ -268,6 +268,8 @@ export interface ElectronAPI {
         | 'bottomLeft'
         | 'bottomRight',
     ) => void
+    /** 若窗口当前处于 Snap 分屏尺寸，则恢复到分屏前的 bounds；返回是否已恢复 */
+    toggleSnapRestore: () => Promise<boolean>
   }
   settings: {
     getInitial: () => AppSettings | null

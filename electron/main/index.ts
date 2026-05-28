@@ -107,6 +107,52 @@ let tray: Tray | null = null
 let isQuitting = false
 let linkPreviewManager: LinkPreviewManager | null = null
 
+/** 由“点击布局面板分屏”触发的可还原状态 */
+let mainWindowSnapRestoreBounds: Electron.Rectangle | null = null
+
+type SnapLayout =
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottomLeft'
+  | 'bottomRight'
+
+function computeSnapBounds(area: Electron.Rectangle, layout: SnapLayout): Electron.Rectangle {
+  const halfW = Math.floor(area.width / 2)
+  const halfH = Math.floor(area.height / 2)
+  const leftW = halfW
+  const rightW = area.width - halfW
+  const topH = halfH
+  const bottomH = area.height - halfH
+
+  if (layout === 'right') return { x: area.x + leftW, y: area.y, width: rightW, height: area.height }
+  if (layout === 'top') return { x: area.x, y: area.y, width: area.width, height: topH }
+  if (layout === 'bottom') return { x: area.x, y: area.y + topH, width: area.width, height: bottomH }
+  if (layout === 'topLeft') return { x: area.x, y: area.y, width: leftW, height: topH }
+  if (layout === 'topRight') return { x: area.x + leftW, y: area.y, width: rightW, height: topH }
+  if (layout === 'bottomLeft') return { x: area.x, y: area.y + topH, width: leftW, height: bottomH }
+  if (layout === 'bottomRight') return { x: area.x + leftW, y: area.y + topH, width: rightW, height: bottomH }
+  // left
+  return { x: area.x, y: area.y, width: leftW, height: area.height }
+}
+
+function computeDefaultCenteredBoundsForWindow(
+  win: BrowserWindow,
+): Electron.Rectangle {
+  const defaults = getInitialWindowOptions(undefined)
+  const bounds = win.getBounds()
+  const display = screen.getDisplayMatching(bounds)
+  const area = display.workArea
+  const width = Math.min(defaults.width, area.width)
+  const height = Math.min(defaults.height, area.height)
+  const x = Math.round(area.x + (area.width - width) / 2)
+  const y = Math.round(area.y + (area.height - height) / 2)
+  return { x, y, width, height }
+}
+
 function getLinkPreviewManager(): LinkPreviewManager {
   if (!linkPreviewManager) {
     linkPreviewManager = new LinkPreviewManager(
@@ -505,6 +551,23 @@ ipcMain.on('window:maximize', () => {
 })
 ipcMain.on('window:close', () => mainWindow?.close())
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized() ?? false)
+ipcMain.handle('window:toggleSnapRestore', () => {
+  const win = mainWindow
+  if (!win || win.isDestroyed()) return false
+  const restore = mainWindowSnapRestoreBounds
+  if (!restore) return false
+
+  try {
+    win.setBounds(restore)
+    win.show()
+    win.focus()
+    return true
+  } catch {
+    return false
+  } finally {
+    mainWindowSnapRestoreBounds = null
+  }
+})
 ipcMain.on(
   'window:snap',
   (
@@ -527,32 +590,14 @@ ipcMain.on(
     // ignore
   }
 
+  // 只要用户从面板点击了分屏布局，就记录一次“可还原状态”
+  // 还原时不回到上一次尺寸，而回到默认窗口大小并居中（按你的需求）
+  mainWindowSnapRestoreBounds = computeDefaultCenteredBoundsForWindow(win)
+
   const bounds = win.getBounds()
   const display = screen.getDisplayMatching(bounds)
   const area = display.workArea
-  const halfW = Math.floor(area.width / 2)
-  const halfH = Math.floor(area.height / 2)
-  const leftW = halfW
-  const rightW = area.width - halfW
-  const topH = halfH
-  const bottomH = area.height - halfH
-
-  const next =
-    layout === 'right'
-      ? { x: area.x + leftW, y: area.y, width: rightW, height: area.height }
-      : layout === 'top'
-        ? { x: area.x, y: area.y, width: area.width, height: topH }
-        : layout === 'bottom'
-          ? { x: area.x, y: area.y + topH, width: area.width, height: bottomH }
-          : layout === 'topLeft'
-            ? { x: area.x, y: area.y, width: leftW, height: topH }
-            : layout === 'topRight'
-              ? { x: area.x + leftW, y: area.y, width: rightW, height: topH }
-              : layout === 'bottomLeft'
-                ? { x: area.x, y: area.y + topH, width: leftW, height: bottomH }
-                : layout === 'bottomRight'
-                  ? { x: area.x + leftW, y: area.y + topH, width: rightW, height: bottomH }
-                  : { x: area.x, y: area.y, width: leftW, height: area.height } // left
+  const next = computeSnapBounds(area, layout)
 
   try {
     win.setBounds(next)
