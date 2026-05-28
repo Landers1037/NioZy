@@ -8,6 +8,7 @@ import type {
   UpdateDownloadPayload,
   UpdateDownloadResult,
   AppSettings,
+  SettingsFileResult,
 } from '../shared/api-types'
 import { parseInitialSettingsFromArgv } from '../shared/initial-settings'
 import { createIpcMultiplex } from './ipc-multiplex'
@@ -42,6 +43,10 @@ const api: ElectronAPI = {
     getInitial: (): AppSettings | null => initialSettings,
     get: () => ipcRenderer.invoke('settings:get'),
     save: (partial) => ipcRenderer.invoke('settings:save', partial),
+    exportToFile: () =>
+      ipcRenderer.invoke('settings:exportToFile') as Promise<SettingsFileResult>,
+    importFromFile: () =>
+      ipcRenderer.invoke('settings:importFromFile') as Promise<SettingsFileResult>,
   },
   fonts: {
     list: () => ipcRenderer.invoke('fonts:list'),
