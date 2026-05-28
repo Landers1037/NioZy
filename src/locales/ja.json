@@ -53,6 +53,13 @@
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm は DOM レンダリングのみサポート"
   },
+  "screenshot": {
+    "selectHint": "クリックしてドラッグでキャプチャ（Esc で閉じる）",
+    "editTitle": "スクリーンショットを編集",
+    "errorPrefix": "キャプチャに失敗しました: ",
+    "retry": "再試行",
+    "copy": "コピー"
+  },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },
     "focus": { "label": "フォーカス", "description": "ターミナル集中のためサイドバーをデフォルトで折りたたみ" },

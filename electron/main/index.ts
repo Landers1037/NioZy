@@ -71,6 +71,7 @@ import {
 } from '../webview-preview-session'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
 import { setDebugLogEnabled } from '../debug-log'
+import { isDebugLogEnabled } from '../debug-log'
 
 registerLocalFileScheme()
 
@@ -373,7 +374,9 @@ function createScreenshotWindow(): void {
     // 方便定位截图窗口白屏/加载中问题
     const levels = ['log', 'warn', 'error']
     const tag = levels[level] ?? String(level)
-    console.log(`[screenshot-window:${tag}]`, message)
+    if (isDev || isDebugLogEnabled()) {
+      console.log(`[screenshot-window:${tag}]`, message)
+    }
   })
 
   screenshotWindow.on('ready-to-show', () => {
