@@ -1,0 +1,95 @@
+export type AiProvider = 'openai' | 'anthropic' | 'deepseek' | 'ollama'
+
+export interface AiRuntimeConfig {
+  enabled: boolean
+  port: number
+  provider: AiProvider
+  model: string
+  baseUrl: string
+  apiKey: string
+}
+
+export const DEFAULT_AI_RUNTIME_PORT = 6173
+export const MIN_AI_RUNTIME_PORT = 1024
+export const MAX_AI_RUNTIME_PORT = 65535
+
+export const AI_PROVIDERS: AiProvider[] = ['openai', 'anthropic', 'deepseek', 'ollama']
+
+export const AI_PROVIDER_DEFAULT_BASE_URL: Record<AiProvider, string> = {
+  openai: 'https://api.openai.com/v1',
+  anthropic: 'https://api.anthropic.com',
+  deepseek: 'https://api.deepseek.com/v1',
+  ollama: 'http://127.0.0.1:11434/v1',
+}
+
+export const AI_PROVIDER_MODELS: Record<AiProvider, string[]> = {
+  openai: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'o4-mini'],
+  anthropic: ['claude-sonnet-4-5', 'claude-3-5-haiku', 'claude-opus-4'],
+  deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+  ollama: ['llama3.2', 'qwen2.5', 'mistral', 'deepseek-r1'],
+}
+
+export const DEFAULT_AI_PROVIDER: AiProvider = 'openai'
+export const DEFAULT_AI_MODEL = AI_PROVIDER_MODELS[DEFAULT_AI_PROVIDER][0]
+
+export function normalizeAiProvider(value: unknown): AiProvider {
+  return AI_PROVIDERS.includes(value as AiProvider) ? (value as AiProvider) : DEFAULT_AI_PROVIDER
+}
+
+export function normalizeAiModel(provider: AiProvider, value: unknown): string {
+  const models = AI_PROVIDER_MODELS[provider]
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed && models.includes(trimmed)) return trimmed
+  }
+  return models[0]
+}
+
+export function normalizeAiBaseUrl(provider: AiProvider, value: unknown): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed) return trimmed.replace(/\/+$/, '')
+  }
+  return AI_PROVIDER_DEFAULT_BASE_URL[provider]
+}
+
+export function normalizeAiApiKey(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+export function normalizeAiRuntimePort(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return DEFAULT_AI_RUNTIME_PORT
+  return Math.min(MAX_AI_RUNTIME_PORT, Math.max(MIN_AI_RUNTIME_PORT, Math.round(n)))
+}
+
+export function aiProviderNeedsApiKey(provider: AiProvider): boolean {
+  return provider !== 'ollama'
+}
+
+export function isAiRuntimeConfigured(config: Pick<AiRuntimeConfig, 'provider' | 'apiKey'>): boolean {
+  if (!aiProviderNeedsApiKey(config.provider)) return true
+  return config.apiKey.length > 0
+}
+
+export function buildAiRuntimeConfig(experimental: {
+  aiSidebarEnabled?: boolean
+  aiRuntimePort?: unknown
+  aiProvider?: unknown
+  aiModel?: unknown
+  aiBaseUrl?: unknown
+  aiApiKey?: unknown
+  openAiApiKey?: unknown
+}): AiRuntimeConfig {
+  const provider = normalizeAiProvider(experimental.aiProvider)
+  const legacyKey = normalizeAiApiKey(experimental.openAiApiKey)
+  const apiKey = normalizeAiApiKey(experimental.aiApiKey) || legacyKey
+  return {
+    enabled: experimental.aiSidebarEnabled === true,
+    port: normalizeAiRuntimePort(experimental.aiRuntimePort),
+    provider,
+    model: normalizeAiModel(provider, experimental.aiModel),
+    baseUrl: normalizeAiBaseUrl(provider, experimental.aiBaseUrl),
+    apiKey,
+  }
+}

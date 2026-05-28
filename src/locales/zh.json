@@ -46,6 +46,7 @@
     "renderEngine": "渲染引擎",
     "renderMode": "渲染模式",
     "screenshot": "截图",
+    "aiSidebar": "AI 对话",
     "search": "搜索",
     "searchHint": "搜索当前终端输出；Enter 查找下一个，Shift+Enter 查找上一个",
     "searchPlaceholder": "输入要搜索的文本…",
@@ -77,6 +78,12 @@
     "errorPrefix": "截图失败：",
     "retry": "重试",
     "copy": "复制"
+  },
+  "aiSidebar": {
+    "title": "AI 助手",
+    "welcome": "有什么可以帮你的？",
+    "welcomeNoKey": "请先在设置 → 实验特性 → AI 特性中配置 API Key 与 Base URL，然后即可开始对话。",
+    "configureKey": "请先在设置 → 实验特性中配置 OpenAI API Key"
   },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },
@@ -313,6 +320,31 @@
       "terminalEmulatorDesc": "选择前端终端模拟器实现。Wterm 使用 WASM/DOM 渲染（实验性）。切换后请重新打开终端 Tab 生效。",
       "terminalEmulatorXterm": "Xterm.js（默认）",
       "terminalEmulatorWterm": "Wterm（实验性）",
+      "ai": {
+        "title": "AI 特性",
+        "description": "配置 AI 对话边栏与模型提供商。Runtime 仅在本机 127.0.0.1 监听，API Key 明文写入 settings.json。",
+        "sidebarEnabled": "开启 AI 对话边栏",
+        "sidebarEnabledDesc": "在右侧显示 AI 对话边栏。发送消息需配置对应提供商的 API Key（Ollama 本地可留空）。",
+        "runtimePort": "Runtime 端口",
+        "runtimePortDesc": "本机 Copilot Runtime 监听端口（127.0.0.1），默认 6173。修改后需重新连接 AI 边栏。",
+        "provider": "AI 提供商",
+        "providerDesc": "选择对接的 AI 服务提供商。",
+        "providers": {
+          "openai": "OpenAI",
+          "anthropic": "Claude (Anthropic)",
+          "deepseek": "DeepSeek",
+          "ollama": "Ollama 本地"
+        },
+        "model": "模型",
+        "modelDesc": "选择当前提供商下的模型。",
+        "baseUrl": "Base URL",
+        "baseUrlDesc": "API 基础地址，切换提供商时会填入默认值，可按需修改。",
+        "apiKey": "API Key",
+        "apiKeyDesc": "当前提供商的 API Key，用于本机 Copilot Runtime 调用远端模型。",
+        "apiKeyOptionalDesc": "Ollama 本地通常无需 API Key，可留空。",
+        "apiKeyPlaceholder": "sk-...",
+        "apiKeyOptionalPlaceholder": "可选，Ollama 可留空"
+      },
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "使用 libghostty WASM 作为 Wterm 的 VT 解析核心，提供更完整的终端仿真（Unicode 字素簇、完整 SGR 等）。切换后请重新打开终端 Tab 生效。",
       "ghosttyScrollbackLimit": "Ghostty 回滚行数",

@@ -46,6 +46,7 @@
     "renderEngine": "レンダリングエンジン",
     "renderMode": "レンダリングモード",
     "screenshot": "スクリーンショット",
+    "aiSidebar": "AI チャット",
     "search": "検索",
     "searchHint": "アクティブなターミナル出力を検索します。Enter: 次、Shift+Enter: 前。",
     "searchPlaceholder": "検索文字…",
@@ -77,6 +78,12 @@
     "errorPrefix": "キャプチャに失敗しました: ",
     "retry": "再試行",
     "copy": "コピー"
+  },
+  "aiSidebar": {
+    "title": "AI アシスタント",
+    "welcome": "何かお手伝いできることはありますか？",
+    "welcomeNoKey": "設定 → 実験的 → AI 機能で API キーと Base URL を設定すると、会話を開始できます。",
+    "configureKey": "先に設定 → 実験的で OpenAI API キーを設定してください"
   },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },
@@ -304,6 +311,31 @@
       "terminalEmulatorDesc": "フロントエンドのターミナル実装を選択。Wterm は WASM/DOM レンダリング（実験的）。切り替え後は開いているターミナルを再起動してください。",
       "terminalEmulatorXterm": "Xterm.js（デフォルト）",
       "terminalEmulatorWterm": "Wterm（実験的）",
+      "ai": {
+        "title": "AI 機能",
+        "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは settings.json に平文保存されます。",
+        "sidebarEnabled": "AI チャットサイドバーを有効化",
+        "sidebarEnabledDesc": "右側に AI チャットサイドバーを表示。メッセージ送信には選択したプロバイダーの API キーが必要（ローカル Ollama は任意）。",
+        "runtimePort": "Runtime ポート",
+        "runtimePortDesc": "127.0.0.1 上のローカル Copilot Runtime 待受ポート（既定 6173）。変更後は AI サイドバーを再接続してください。",
+        "provider": "AI プロバイダ",
+        "providerDesc": "接続する AI サービスを選択します。",
+        "providers": {
+          "openai": "OpenAI",
+          "anthropic": "Claude (Anthropic)",
+          "deepseek": "DeepSeek",
+          "ollama": "Ollama（ローカル）"
+        },
+        "model": "モデル",
+        "modelDesc": "現在のプロバイダーのモデルを選択します。",
+        "baseUrl": "Base URL",
+        "baseUrlDesc": "API のベース URL。プロバイダ切替時に既定値が入ります。必要に応じて変更してください。",
+        "apiKey": "API キー",
+        "apiKeyDesc": "選択したプロバイダーの API キー。ローカル Copilot Runtime が使用します。",
+        "apiKeyOptionalDesc": "ローカル Ollama では通常 API キーは不要です。",
+        "apiKeyPlaceholder": "sk-...",
+        "apiKeyOptionalPlaceholder": "任意（Ollama は空欄可）"
+      },
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "libghostty WASM ビルドを Wterm の VT パーサーとして使用（書記素クラスタ、完全 SGR 等）。切り替え後は開いているターミナルタブを再起動してください。",
       "ghosttyScrollbackLimit": "Ghostty スクロールバック行数",

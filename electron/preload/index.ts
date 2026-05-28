@@ -50,6 +50,9 @@ const api: ElectronAPI = {
     importFromFile: () =>
       ipcRenderer.invoke('settings:importFromFile') as Promise<SettingsFileResult>,
   },
+  copilot: {
+    getRuntimeUrl: () => ipcRenderer.invoke('copilot:getRuntimeUrl') as Promise<string | null>,
+  },
   fonts: {
     list: () => ipcRenderer.invoke('fonts:list'),
   },

@@ -41,6 +41,11 @@ const ScpTransferDialog = lazy(() =>
     default: m.ScpTransferDialog,
   })),
 )
+const AiCopilotRoot = lazy(() =>
+  import('@/components/ai/AiCopilotRoot').then((m) => ({
+    default: m.AiCopilotRoot,
+  })),
+)
 
 export default function App() {
   const { t } = useTranslation()
@@ -188,6 +193,7 @@ export default function App() {
     !attachPendingTabId &&
     !!attachTargetTab &&
     attachCommitted.tabId === attachTargetTab.id
+  const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -255,6 +261,11 @@ export default function App() {
       <StatusBar />
       <FilePreviewDialog />
       <Toaster position="bottom-right" richColors closeButton />
+      {aiSidebarEnabled && (
+        <Suspense fallback={null}>
+          <AiCopilotRoot />
+        </Suspense>
+      )}
       {scpTransferTab && isSshTerminalTab(scpTransferTab) && (
         <Suspense fallback={null}>
           <ScpTransferDialog

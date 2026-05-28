@@ -278,6 +278,9 @@ export interface ElectronAPI {
     exportToFile: () => Promise<SettingsFileResult>
     importFromFile: () => Promise<SettingsFileResult>
   }
+  copilot: {
+    getRuntimeUrl: () => Promise<string | null>
+  }
   fonts: {
     list: () => Promise<string[]>
   }
