@@ -22,7 +22,10 @@ export function extractCwdFromTerminalData(data: string): string | null {
     if (decoded) latest = decoded
   }
 
-  return latest ? normalizeWindowsPath(latest) : null
+  if (!latest) return null
+  const normalized = normalizeWindowsPath(latest)
+  // Defensive: ignore relative cwd (e.g. "."), which some prompts/plugins may emit.
+  return isAbsoluteWindowsPath(normalized) ? normalized : null
 }
 
 function decodeVSCodeEscaped(value: string): string {
@@ -56,4 +59,15 @@ function normalizeWindowsPath(path: string): string {
     }
   }
   return trimmed.replace(/\//g, '\\')
+}
+
+function isAbsoluteWindowsPath(path: string): boolean {
+  const p = path.trim()
+  if (!p) return false
+  if (p === '.' || p === '..') return false
+  // Drive path: C:\...
+  if (/^[a-zA-Z]:\\/.test(p)) return true
+  // UNC: \\server\share\...
+  if (/^\\\\[^\\]+\\[^\\]+/.test(p)) return true
+  return false
 }
