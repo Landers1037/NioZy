@@ -39,6 +39,7 @@ const api: ElectronAPI = {
     isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
     onMaximized: (cb) => onWindowMaximized(cb),
     snap: (layout) => ipcRenderer.send('window:snap', layout),
+    toggleSnapRestore: () => ipcRenderer.invoke('window:toggleSnapRestore') as Promise<boolean>,
   },
   settings: {
     getInitial: (): AppSettings | null => initialSettings,

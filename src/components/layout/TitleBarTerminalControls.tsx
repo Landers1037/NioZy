@@ -157,7 +157,20 @@ export function TitleBarTerminalControls() {
           className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
           aria-label={t('titleBar.snap')}
           title={t('titleBar.snap')}
-          onClick={() => setSnapOpen(true)}
+          onClick={() => {
+            void (async () => {
+              try {
+                const restored = await getElectronAPI().window.toggleSnapRestore()
+                if (restored) {
+                  setSnapOpen(false)
+                  return
+                }
+              } catch {
+                // ignore
+              }
+              setSnapOpen(true)
+            })()
+          }}
         >
           <SquareSplitHorizontal className={titleBarMenuIconClass} aria-hidden />
         </Button>
