@@ -190,10 +190,24 @@ export function bindDomTerminalPreview(
   if (!shouldShowPreviewHint(ctx) && !ctx.shell.clickToOpenLinks) return
 
   let cursorRow: HTMLElement | null = null
+  let pendingMoveEvent: MouseEvent | null = null
+  let moveRaf: number | null = null
+  let lastHoverRow: HTMLElement | null = null
+  let lastHoverCol: number | null = null
+  let lastHoverCtrl: boolean | null = null
+  let lastHoverLineText: string | null = null
 
   const resetCursor = () => {
     setPreviewCursor(cursorRow, false)
     cursorRow = null
+  }
+
+  const cancelMoveRaf = () => {
+    if (moveRaf !== null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMoveEvent = null
   }
 
   const onMouseDown = (event: MouseEvent) => {
@@ -240,30 +254,70 @@ export function bindDomTerminalPreview(
     }
   }
 
-  const onMouseMove = (event: MouseEvent) => {
+  const flushMouseMove = () => {
+    moveRaf = null
+    const event = pendingMoveEvent
+    pendingMoveEvent = null
+    if (!event) return
+
     const target = event.target as HTMLElement
     const rowEl = target.closest('.term-row') as HTMLElement | null
     if (!rowEl || !root.contains(rowEl)) {
       resetCursor()
       hideTerminalPreviewTooltip()
+      lastHoverRow = null
+      lastHoverCol = null
+      lastHoverCtrl = null
+      lastHoverLineText = null
       return
     }
     const col = getColFromMouseEvent(rowEl, event)
     if (col === null) {
       resetCursor()
       hideTerminalPreviewTooltip()
+      lastHoverRow = null
+      lastHoverCol = null
+      lastHoverCtrl = null
+      lastHoverLineText = null
       return
     }
+
     if (cursorRow !== rowEl) {
       setPreviewCursor(cursorRow, false)
       cursorRow = rowEl
     }
-    handlePreviewHover(rowEl.textContent ?? '', col, event, ctx, rowEl)
+
+    const lineText = rowEl.textContent ?? ''
+    if (
+      lastHoverRow === rowEl &&
+      lastHoverCol === col &&
+      lastHoverCtrl === event.ctrlKey &&
+      lastHoverLineText === lineText
+    ) {
+      return
+    }
+    lastHoverRow = rowEl
+    lastHoverCol = col
+    lastHoverCtrl = event.ctrlKey
+    lastHoverLineText = lineText
+
+    handlePreviewHover(lineText, col, event, ctx, rowEl)
+  }
+
+  const onMouseMove = (event: MouseEvent) => {
+    pendingMoveEvent = event
+    if (moveRaf !== null) return
+    moveRaf = requestAnimationFrame(flushMouseMove)
   }
 
   const onMouseLeave = () => {
+    cancelMoveRaf()
     resetCursor()
     hideTerminalPreviewTooltip()
+    lastHoverRow = null
+    lastHoverCol = null
+    lastHoverCtrl = null
+    lastHoverLineText = null
   }
 
   const onKeyUp = (event: KeyboardEvent) => {
@@ -284,6 +338,7 @@ export function bindDomTerminalPreview(
     root.removeEventListener('mousemove', onMouseMove, captureOpts)
     root.removeEventListener('mouseleave', onMouseLeave, captureOpts)
     window.removeEventListener('keyup', onKeyUp)
+    cancelMoveRaf()
     resetCursor()
     hideTerminalPreviewTooltip()
   })
@@ -297,6 +352,13 @@ export function bindXtermTerminalPreview(
   if (!shouldShowPreviewHint(ctx) && !ctx.shell.clickToOpenLinks) return
   const el = term.element
   if (!el) return
+
+  let pendingMoveEvent: MouseEvent | null = null
+  let moveRaf: number | null = null
+  let lastHoverBufferLine: number | null = null
+  let lastHoverStrCol: number | null = null
+  let lastHoverCtrl: boolean | null = null
+  let lastHoverLineText: string | null = null
 
   const getLineContext = (event: MouseEvent) => {
     const cell = getViewportCellFromMouse(term, event)
@@ -322,28 +384,91 @@ export function bindXtermTerminalPreview(
     handlePreviewMouseUp(ctx_line.lineText, ctx_line.strCol, event, ctx, term)
   }
 
-  const onMouseMove = (event: MouseEvent) => {
-    const ctx_line = getLineContext(event)
-    if (!ctx_line) {
+  const cancelMoveRaf = () => {
+    if (moveRaf !== null) {
+      cancelAnimationFrame(moveRaf)
+      moveRaf = null
+    }
+    pendingMoveEvent = null
+  }
+
+  const flushMouseMove = () => {
+    moveRaf = null
+    const event = pendingMoveEvent
+    pendingMoveEvent = null
+    if (!event) return
+
+    const cell = getViewportCellFromMouse(term, event)
+    if (!cell) {
       setPreviewCursor(el, false)
       hideTerminalPreviewTooltip()
+      lastHoverBufferLine = null
+      lastHoverStrCol = null
+      lastHoverCtrl = null
+      lastHoverLineText = null
       return
     }
-    const { lineText, strCol } = ctx_line
+
+    const bufferLine = term.buffer.active.viewportY + cell.row
+    const line = term.buffer.active.getLine(bufferLine)
+    if (!line) {
+      setPreviewCursor(el, false)
+      hideTerminalPreviewTooltip()
+      lastHoverBufferLine = null
+      lastHoverStrCol = null
+      lastHoverCtrl = null
+      lastHoverLineText = null
+      return
+    }
+
+    const strCol = bufferColToStringIndex(line, cell.col)
+    const lineText = line.translateToString(false)
+
+    if (
+      lastHoverBufferLine === bufferLine &&
+      lastHoverStrCol === strCol &&
+      lastHoverCtrl === event.ctrlKey &&
+      lastHoverLineText === lineText
+    ) {
+      return
+    }
+
+    // 快速过滤：当前行完全不可能命中文件/URL 时直接收起
     if (
       !lineTextHasPreviewableFile(lineText, ctx.preview, ctx.getCwd()) &&
       !findUrlAtColumn(lineText, strCol)
     ) {
       setPreviewCursor(el, false)
       hideTerminalPreviewTooltip()
+      lastHoverBufferLine = bufferLine
+      lastHoverStrCol = strCol
+      lastHoverCtrl = event.ctrlKey
+      lastHoverLineText = lineText
       return
     }
+
+    lastHoverBufferLine = bufferLine
+    lastHoverStrCol = strCol
+    lastHoverCtrl = event.ctrlKey
+    lastHoverLineText = lineText
+
     handlePreviewHover(lineText, strCol, event, ctx, el)
   }
 
+  const onMouseMove = (event: MouseEvent) => {
+    pendingMoveEvent = event
+    if (moveRaf !== null) return
+    moveRaf = requestAnimationFrame(flushMouseMove)
+  }
+
   const onMouseLeave = () => {
+    cancelMoveRaf()
     setPreviewCursor(el, false)
     hideTerminalPreviewTooltip()
+    lastHoverBufferLine = null
+    lastHoverStrCol = null
+    lastHoverCtrl = null
+    lastHoverLineText = null
   }
 
   const onKeyUp = (event: KeyboardEvent) => {
@@ -370,6 +495,7 @@ export function bindXtermTerminalPreview(
       el.removeEventListener('mouseleave', onMouseLeave, opts)
       el.removeEventListener('selectstart', onSelectStart, opts)
       window.removeEventListener('keyup', onKeyUp)
+      cancelMoveRaf()
       setPreviewCursor(el, false)
       hideTerminalPreviewTooltip()
     },
