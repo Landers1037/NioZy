@@ -45,6 +45,7 @@
   "titleBar": {
     "renderEngine": "渲染引擎",
     "renderMode": "渲染模式",
+    "screenshot": "截图",
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
     "modeDom": "DOM",

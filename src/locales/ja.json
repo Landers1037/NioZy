@@ -45,6 +45,7 @@
   "titleBar": {
     "renderEngine": "レンダリングエンジン",
     "renderMode": "レンダリングモード",
+    "screenshot": "スクリーンショット",
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
     "modeDom": "DOM",

@@ -384,4 +384,19 @@ export interface ElectronAPI {
       onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
     ) => Promise<import('./ssh-types').ScpTransferResult>
   }
+
+  screenshot: {
+    /** 打开截图窗口 */
+    open: () => void
+    /** 关闭截图窗口（如存在） */
+    close: () => void
+    /** 从全屏遮罩切换到编辑窗口尺寸 */
+    enterEditMode: () => void
+    /** 捕获主屏截图（dataUrl 为 PNG base64） */
+    captureScreen: () => Promise<{ dataUrl: string; width: number; height: number }>
+    /** 保存 PNG 到本地文件（弹出保存对话框） */
+    savePng: (dataUrl: string, defaultFileName?: string) => Promise<{ ok: boolean; canceled?: boolean; error?: string }>
+    /** 复制 PNG 到剪贴板 */
+    copyToClipboard: (dataUrl: string) => Promise<{ ok: boolean; error?: string }>
+  }
 }

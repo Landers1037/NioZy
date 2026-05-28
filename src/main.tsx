@@ -6,14 +6,17 @@ import { bootstrapAppFromPreload } from '@/lib/bootstrap-app'
 import App from './App'
 import './index.css'
 import { ensureWtermTerminalThemes } from '@/lib/wterm-theme'
+import { ScreenshotApp } from '@/screens/screenshot/ScreenshotApp'
 
 ensureWtermTerminalThemes()
 
 installBrowserDevMockIfNeeded()
 bootstrapAppFromPreload()
 
+const isScreenshotWindow = window.location.hash.startsWith('#/screenshot')
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {isScreenshotWindow ? <ScreenshotApp /> : <App />}
   </StrictMode>,
 )
