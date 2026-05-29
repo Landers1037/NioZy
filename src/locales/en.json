@@ -83,7 +83,8 @@
     "title": "AI Assistant",
     "welcome": "How can I help you today?",
     "welcomeNoKey": "Configure an API key under Settings → Experimental → AI features.",
-    "configureKey": "Configure your OpenAI API key in Settings → Experimental first"
+    "configureKey": "Configure your OpenAI API key in Settings → Experimental first",
+    "inputPlaceholder": "Type a message…"
   },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },

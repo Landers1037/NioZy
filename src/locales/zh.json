@@ -83,7 +83,8 @@
     "title": "AI 助手",
     "welcome": "有什么可以帮你的？",
     "welcomeNoKey": "请先在设置 → 实验特性 → AI 特性中配置 API Key。",
-    "configureKey": "请先在设置 → 实验特性中配置 OpenAI API Key"
+    "configureKey": "请先在设置 → 实验特性中配置 OpenAI API Key",
+    "inputPlaceholder": "输入消息…"
   },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },

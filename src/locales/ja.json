@@ -83,7 +83,8 @@
     "title": "AI アシスタント",
     "welcome": "何かお手伝いできることはありますか？",
     "welcomeNoKey": "設定 → 実験的 → AI 機能で API キーを設定してください。",
-    "configureKey": "先に設定 → 実験的で OpenAI API キーを設定してください"
+    "configureKey": "先に設定 → 実験的で OpenAI API キーを設定してください",
+    "inputPlaceholder": "メッセージを入力…"
   },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },

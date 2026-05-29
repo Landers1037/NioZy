@@ -32,6 +32,13 @@ function copyMainAssets(): Plugin {
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+/** 打进 out/main/copilot-runtime.mjs，避免 asar 内整包 node_modules/@copilotkit/runtime */
+const MAIN_BUNDLE_DEPS = [
+  '@copilotkit/runtime',
+  '@ai-sdk/anthropic',
+  '@ai-sdk/openai',
+] as const
+
 const FONT_ASSET_PATTERN = /\.(ttf|otf|woff2?)$/i
 
 function fontAssetFileNames(name: string | undefined): string | undefined {
@@ -47,7 +54,7 @@ export default defineConfig(({ command }) => {
     define: {
       __ELECTRON_DEV__: JSON.stringify(electronDev),
     },
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: [...MAIN_BUNDLE_DEPS] })],
     build: {
       minify: 'esbuild',
       lib: {
@@ -59,6 +66,8 @@ export default defineConfig(({ command }) => {
         plugins: [copyMainAssets()],
         output: {
           entryFileNames: '[name].mjs',
+          chunkFileNames: 'copilot-[hash].mjs',
+          inlineDynamicImports: false,
         },
       },
     },

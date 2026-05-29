@@ -84,13 +84,13 @@ export function AiCopilotRoot() {
   }, [aiRuntime, runtimeConfigKey, aiSidebarOpen])
 
   useEffect(() => {
-    useAiSidebarStore.getState().setOpen(false)
-
     if (!aiSidebarEnabled) {
       setRuntimeUrl(null)
+      setConfigured(false)
       return
     }
 
+    useAiSidebarStore.getState().setOpen(false)
     setRuntimeUrl(null)
     let cancelled = false
     let attempts = 0
@@ -126,12 +126,14 @@ export function AiCopilotRoot() {
     }
   }, [aiSidebarEnabled, runtimeConfigKey])
 
-  // CopilotKit may set body marginInlineEnd from a mis-measured sidebar width; always clear on exit.
   useEffect(() => {
     return () => {
+      useAiSidebarStore.getState().reset()
       document.body.style.marginInlineEnd = ''
       document.body.style.marginInlineStart = ''
       document.body.style.transition = ''
+      setRuntimeUrl(null)
+      setConfigured(false)
     }
   }, [])
 
@@ -154,6 +156,7 @@ export function AiCopilotRoot() {
           welcomeMessageText: configured
             ? t('aiSidebar.welcome')
             : t('aiSidebar.welcomeNoKey'),
+          chatInputPlaceholder: t('aiSidebar.inputPlaceholder'),
         }}
       />
     </CopilotKit>
