@@ -27,7 +27,8 @@ import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
 import { CopilotRuntimeServer } from '../copilot-runtime-server'
-import { buildAiRuntimeConfig } from '../shared/experimental-settings'
+import { buildAiRuntimeConfig, resolveAiRuntimeConfig } from '../shared/experimental-settings'
+import { containsVaultReference } from '../shared/vault-reference'
 import {
   applyChromiumPerformanceFlags,
   getOptimizedWebPreferences,
@@ -202,14 +203,32 @@ const systemStats = new SystemStats()
 const copilotRuntimeServer = new CopilotRuntimeServer()
 
 function syncCopilotRuntimeFromSettings(experimental = settingsStore.get().experimental): void {
+  vaultStore.load()
+  const built = buildAiRuntimeConfig(experimental)
+  const resolved = resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text))
   void copilotRuntimeServer
-    .sync(buildAiRuntimeConfig(experimental))
+    .sync(resolved)
     .catch((err) => console.error('[NioZy] Failed to sync copilot runtime:', err))
+}
+
+function syncCopilotRuntimeIfAiApiKeyUsesVault(): void {
+  const key = settingsStore.get().experimental.aiApiKey
+  if (!containsVaultReference(key)) return
+  syncCopilotRuntimeFromSettings()
 }
 
 function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update']>[0]): boolean {
   if (!partial.experimental) return false
-  const keys = ['aiSidebarEnabled', 'aiRuntimePort', 'aiProvider', 'aiModel', 'aiBaseUrl', 'aiApiKey', 'openAiApiKey'] as const
+  const keys = [
+    'aiSidebarEnabled',
+    'aiSidebarWidth',
+    'aiRuntimePort',
+    'aiProvider',
+    'aiModel',
+    'aiBaseUrl',
+    'aiApiKey',
+    'openAiApiKey',
+  ] as const
   return keys.some((key) => partial.experimental![key] !== undefined)
 }
 
@@ -1067,11 +1086,14 @@ ipcMain.handle('vault:list', () => vaultStore.load())
 ipcMain.handle('vault:getKeys', () => vaultStore.getKeys())
 ipcMain.handle('vault:save', (_, input) => {
   vaultStore.load()
-  return vaultStore.save(input)
+  const saved = vaultStore.save(input)
+  syncCopilotRuntimeIfAiApiKeyUsesVault()
+  return saved
 })
 ipcMain.handle('vault:remove', (_, id: string) => {
   vaultStore.load()
   vaultStore.remove(id)
+  syncCopilotRuntimeIfAiApiKeyUsesVault()
 })
 ipcMain.handle('vault:resolve', (_, text: string) => {
   vaultStore.load()

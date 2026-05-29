@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { randomUUID } from 'crypto'
 import { ensureConfigDir, getVaultFilePath } from './config-paths'
+import { VAULT_REF_PATTERN } from './shared/vault-reference'
 import { decryptSecret, encryptSecret } from './vault-crypto'
 
 export type VaultVariableType = 'plain' | 'secret'
@@ -23,8 +24,6 @@ export interface VaultVariablePublic {
 interface VaultFile {
   variables: VaultVariableStored[]
 }
-
-const VAULT_REF_PATTERN = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g
 
 export class VaultStore {
   private variables: VaultVariableStored[] = []

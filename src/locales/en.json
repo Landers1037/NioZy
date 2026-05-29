@@ -82,7 +82,7 @@
   "aiSidebar": {
     "title": "AI Assistant",
     "welcome": "How can I help you today?",
-    "welcomeNoKey": "Configure the API key and Base URL under Settings → Experimental → AI features to start chatting.",
+    "welcomeNoKey": "Configure an API key under Settings → Experimental → AI features.",
     "configureKey": "Configure your OpenAI API key in Settings → Experimental first"
   },
   "layout": {
@@ -322,9 +322,16 @@
       "terminalEmulatorWterm": "Wterm (experimental)",
       "ai": {
         "title": "AI features",
-        "description": "Configure the AI chat sidebar and model provider. Runtime listens on 127.0.0.1 only; API keys are stored in settings.json as plain text.",
+        "description": "Configure the AI chat sidebar and model provider. Runtime listens on 127.0.0.1 only. API keys may be plain text or vault references like ${OPENAI_API_KEY} (secret variables recommended).",
         "sidebarEnabled": "Enable AI chat sidebar",
         "sidebarEnabledDesc": "Show the AI chat sidebar on the right. Sending messages requires an API key for the selected provider (optional for local Ollama).",
+        "sidebarWidth": "Sidebar width",
+        "sidebarWidthDesc": "Width of the AI chat sidebar. Takes effect immediately.",
+        "sidebarWidths": {
+          "narrow": "Narrow ({{px}}px)",
+          "default": "Default ({{px}}px)",
+          "wide": "Wide ({{px}}px)"
+        },
         "runtimePort": "Runtime port",
         "runtimePortDesc": "Local Copilot Runtime listen port on 127.0.0.1 (default 6173). Reconnect the AI sidebar after changing.",
         "provider": "AI provider",
@@ -333,14 +340,18 @@
           "openai": "OpenAI",
           "anthropic": "Claude (Anthropic)",
           "deepseek": "DeepSeek",
-          "ollama": "Ollama (local)"
+          "ollama": "Ollama (local)",
+          "openai-compatible": "OpenAI compatible"
         },
         "model": "Model",
-        "modelDesc": "Select a model for the current provider.",
+        "modelDesc": "Pick a common model or enter a custom model name below (must match your API).",
+        "modelPresetPlaceholder": "Common models (optional)",
+        "modelCustomPlaceholder": "Custom model name, e.g. qwen-plus or endpoint id",
         "baseUrl": "Base URL",
         "baseUrlDesc": "API base URL. Defaults are filled when switching providers; edit if needed.",
+        "baseUrlOpenAiCompatiblePlaceholder": "https://your-gateway.example.com/v1",
         "apiKey": "API key",
-        "apiKeyDesc": "API key for the selected provider, used by the local Copilot Runtime.",
+        "apiKeyDesc": "API key for the provider, or ${VAR} from Settings → Vault (use the database icon to insert). Resolved when Copilot Runtime starts.",
         "apiKeyOptionalDesc": "Local Ollama usually does not need an API key.",
         "apiKeyPlaceholder": "sk-...",
         "apiKeyOptionalPlaceholder": "Optional for Ollama"

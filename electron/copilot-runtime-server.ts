@@ -5,6 +5,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { CopilotRuntime, BuiltInAgent } from '@copilotkit/runtime/v2'
 import { createCopilotNodeListener } from '@copilotkit/runtime/v2/node'
 import {
+  aiProviderUsesOpenAiApi,
   type AiRuntimeConfig,
 } from './shared/ai-provider-settings'
 
@@ -19,7 +20,7 @@ function clearProviderEnvKeys(): void {
 function createBuiltInAgent(config: AiRuntimeConfig): BuiltInAgent {
   const { provider, model, baseUrl, apiKey } = config
 
-  if (provider === 'anthropic') {
+  if (!aiProviderUsesOpenAiApi(provider)) {
     const anthropic = createAnthropic({
       apiKey: apiKey || 'missing-api-key',
       baseURL: baseUrl,

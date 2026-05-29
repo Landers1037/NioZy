@@ -2,6 +2,11 @@ export type TerminalEmulator = 'xterm' | 'wterm'
 
 import type { TerminalRenderer } from './terminal-renderer'
 import {
+  DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
+  normalizeAiSidebarWidthPreset,
+  type AiSidebarWidthPreset,
+} from './ai-sidebar-width'
+import {
   DEFAULT_AI_MODEL,
   DEFAULT_AI_PROVIDER,
   DEFAULT_AI_RUNTIME_PORT,
@@ -40,6 +45,8 @@ export interface ExperimentalSettings {
   attachPtyTabSwitchDwellMs: number
   /** 开启 AI 对话边栏 */
   aiSidebarEnabled: boolean
+  /** AI 边栏宽度预设 */
+  aiSidebarWidth: AiSidebarWidthPreset
   /** 本机 Copilot Runtime 监听端口 */
   aiRuntimePort: number
   /** AI 提供商 */
@@ -48,7 +55,7 @@ export interface ExperimentalSettings {
   aiModel: string
   /** AI API Base URL */
   aiBaseUrl: string
-  /** AI API Key（明文存于 settings.json） */
+  /** AI API Key；可为明文或存储库引用如 ${OPENAI_API_KEY} */
   aiApiKey: string
   /** @deprecated 迁移至 aiApiKey */
   openAiApiKey?: string
@@ -61,6 +68,7 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   attachPtyRenderMode: false,
   attachPtyTabSwitchDwellMs: DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   aiSidebarEnabled: false,
+  aiSidebarWidth: DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
   aiRuntimePort: DEFAULT_AI_RUNTIME_PORT,
   aiProvider: DEFAULT_AI_PROVIDER,
   aiModel: DEFAULT_AI_MODEL,
@@ -102,6 +110,7 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     attachPtyRenderMode: o.attachPtyRenderMode === true,
     attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(o.attachPtyTabSwitchDwellMs),
     aiSidebarEnabled: o.aiSidebarEnabled === true,
+    aiSidebarWidth: normalizeAiSidebarWidthPreset(o.aiSidebarWidth),
     aiRuntimePort: normalizeAiRuntimePort(o.aiRuntimePort),
     aiProvider: provider,
     aiModel: normalizeAiModel(provider, o.aiModel),
@@ -110,7 +119,20 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
   }
 }
 
-export { buildAiRuntimeConfig, type AiProvider } from './ai-provider-settings'
+export {
+  buildAiRuntimeConfig,
+  resolveAiRuntimeConfig,
+  type AiProvider,
+} from './ai-provider-settings'
+
+export {
+  AI_SIDEBAR_WIDTH_PRESETS,
+  AI_SIDEBAR_WIDTH_PX,
+  DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
+  normalizeAiSidebarWidthPreset,
+  resolveAiSidebarWidthPx,
+  type AiSidebarWidthPreset,
+} from './ai-sidebar-width'
 
 /** 使用 Wterm 时将渲染方式规范为 dom（不支持 Canvas/WebGL） */
 export function normalizeRendererForWterm(
