@@ -49,6 +49,7 @@ export function AiCopilotRoot() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
+  const aiAttachmentsEnabled = settings?.experimental.aiAttachmentsEnabled === true
   const aiSidebarWidthPx = resolveAiSidebarWidthPx(
     settings?.experimental.aiSidebarWidth ?? 'default',
   )
@@ -141,7 +142,7 @@ export function AiCopilotRoot() {
 
   return (
     <CopilotKit
-      key={runtimeUrl}
+      key={`${runtimeUrl}:${aiAttachmentsEnabled}`}
       runtimeUrl={runtimeUrl}
       useSingleEndpoint={false}
       enableInspector={false}
@@ -157,7 +158,9 @@ export function AiCopilotRoot() {
             ? t('aiSidebar.welcome')
             : t('aiSidebar.welcomeNoKey'),
           chatInputPlaceholder: t('aiSidebar.inputPlaceholder'),
+          chatInputToolbarAddButtonLabel: t('aiSidebar.addAttachment'),
         }}
+        attachments={aiAttachmentsEnabled ? { enabled: true } : undefined}
       />
     </CopilotKit>
   )

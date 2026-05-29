@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
-import { Brain, Network } from 'lucide-react'
+import { Brain, Network, Paperclip } from 'lucide-react'
 import type { AiProvider } from '../../../electron/shared/ai-provider-settings'
 import type { AiSidebarWidthPreset } from '@/lib/ai-sidebar-width'
 import { AI_SIDEBAR_WIDTH_PRESETS, AI_SIDEBAR_WIDTH_PX } from '@/lib/ai-sidebar-width'
@@ -119,6 +119,21 @@ export function ExperimentalAiSettings() {
 
       {ai.aiSidebarEnabled === true && (
         <>
+          <SettingField
+            icon={Paperclip}
+            label={t('settings.experimental.ai.attachmentsEnabled')}
+            description={t('settings.experimental.ai.attachmentsEnabledDesc')}
+            row
+          >
+            <Switch
+              checked={ai.aiAttachmentsEnabled === true}
+              onCheckedChange={(enabled) => {
+                if (enabled === ai.aiAttachmentsEnabled) return
+                patchAi({ aiAttachmentsEnabled: enabled })
+              }}
+            />
+          </SettingField>
+
           <SettingField
             icon={Brain}
             label={t('settings.experimental.ai.sidebarWidth')}
