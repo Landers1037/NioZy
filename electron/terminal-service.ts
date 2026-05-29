@@ -6,6 +6,7 @@ import { extractCwdFromTerminalData } from './terminal-cwd-parser'
 import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integration'
 import { buildElevatedPtySpawn } from './elevated-terminal-spawn'
 import { canSpawnElevatedTerminal } from './windows-admin'
+import { logErrorPayload, terminalLog } from './app-log'
 
 export type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
 
@@ -107,6 +108,13 @@ export class TerminalService extends EventEmitter {
     const name = options.elevated ? `${baseName} (Admin)` : baseName
 
     const spawnFile = resolveSpawnFile(file, env as NodeJS.ProcessEnv)
+    terminalLog.debug('Spawning PTY', {
+      shell: options.shell,
+      file: spawnFile,
+      args,
+      cwd: initialCwd,
+      elevated: options.elevated === true,
+    })
     let ptyFile = spawnFile
     let ptyArgs = args
 
@@ -131,6 +139,11 @@ export class TerminalService extends EventEmitter {
         useConpty: true,
       })
     } catch (err) {
+      terminalLog.error('PTY spawn failed', {
+        shell: options.shell,
+        file: spawnFile,
+        ...logErrorPayload(err),
+      })
       throw new Error(formatSpawnError(err, spawnFile, options.shell, name))
     }
 
@@ -147,6 +160,7 @@ export class TerminalService extends EventEmitter {
 
     ptyProcess.onExit(({ exitCode }) => {
       if (!this.sessions.has(id)) return
+      terminalLog.debug('PTY process exit', { id, exitCode, name })
       this.sessions.delete(id)
       this.emit('exit', id, exitCode)
     })

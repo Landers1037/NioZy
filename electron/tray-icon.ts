@@ -2,6 +2,7 @@ import { app, nativeImage, type NativeImage } from 'electron'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { fileURLToPath } from 'node:url'
+import { mainLog } from './app-log'
 
 /** 预生成托盘图尺寸（electron/assets/tray.png） */
 const TRAY_ICON_SIZE = 64
@@ -24,6 +25,6 @@ export function loadTrayIcon(mainDir: string): NativeImage {
     return image.resize({ width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE, quality: 'best' })
   }
 
-  console.warn('[NioZy] Tray icon not found; tray may be invisible.')
+  mainLog.warn('Tray icon not found; tray may be invisible')
   return nativeImage.createEmpty()
 }

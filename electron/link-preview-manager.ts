@@ -1,5 +1,6 @@
 import { BrowserWindow, WebContentsView } from 'electron'
 import { getEmbeddedWebPreferences } from './chromium-tuning'
+import { logErrorPayload, previewLog } from './app-log'
 
 export interface LinkPreviewBounds {
   x: number
@@ -108,26 +109,27 @@ export class LinkPreviewManager {
     // Debug listeners – output visible in `npm run start` terminal.
     view.webContents.on('did-finish-load', () => {
       entry.hasLoaded = true
-      console.log(`[NioZy] link preview loaded: ${url}`)
+      previewLog.debug('Link preview loaded', { url })
     })
 
     view.webContents.on('did-fail-load', (_event, code, desc, validatedURL) => {
-      console.error(`[NioZy] link preview did-fail-load: ${validatedURL} code=${code} ${desc}`)
+      previewLog.warn('Link preview did-fail-load', { url: validatedURL, code, desc })
     })
 
     view.webContents.on('render-process-gone', (_event, details) => {
-      console.error(
-        `[NioZy] link preview renderer gone: reason=${details.reason} exit=${details.exitCode}`,
-      )
+      previewLog.error('Link preview renderer gone', {
+        reason: details.reason,
+        exitCode: details.exitCode,
+      })
     })
 
     // ④ Start loading after the view is wired up.
     entry.pendingLoad = true
-    console.log(`[NioZy] link preview opening: ${url}`)
+    previewLog.info('Link preview opening', { url })
     view.webContents
       .loadURL(url)
       .catch((err) => {
-        console.error('[NioZy] link preview loadURL error:', url, err)
+        previewLog.error('Link preview loadURL error', { url, ...logErrorPayload(err) })
       })
       .finally(() => {
         entry.pendingLoad = false

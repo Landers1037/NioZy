@@ -127,6 +127,7 @@
       "vault": "保管庫",
       "shortcuts": "ショートカット",
       "system": "システム",
+      "logging": "ログ",
       "advanced": "詳細",
       "experimental": "実験的"
     },
@@ -373,9 +374,19 @@
       "shellContextMenuDesc": "フォルダーとフォルダー背景のコンテキストメニューに「NioZy で開く」を追加。そのディレクトリで新しい PowerShell タブを開く",
       "preserveWindowBounds": "ウィンドウサイズを記憶",
       "preserveWindowBoundsDesc": "閉じるときにサイズと位置を保存。最大化で閉じた場合は次回も最大化",
-      "debugLog": "デバッグログを有効化",
-      "debugLogDesc": "メインプロセスのコンソール出力をカレントディレクトリの NioZy.log に追記",
       "transparency": "ウィンドウ不透明度: {{value}}%"
+    },
+    "logging": {
+      "title": "ログ",
+      "description": "メインプロセスのログ、レベル、保存先",
+      "enabled": "ログを有効化",
+      "enabledDesc": "オフのときはログファイルに書き込みません",
+      "level": "ログレベル",
+      "levelDesc": "選択したレベル以上のみ記録（DEBUG、INFO、WARN、ERROR）",
+      "filePath": "ログファイルのパス",
+      "filePathDesc": "空のときは作業ディレクトリの NioZy.log を使用",
+      "filePathPlaceholder": "既定：作業ディレクトリ/NioZy.log",
+      "openLogDirectory": "フォルダを開く"
     },
     "shortcuts": {
       "title": "ショートカット",
@@ -587,7 +598,8 @@
     "exportNoTerminal": "エクスポート失敗: ターミナルが見つかりません",
     "exportNotReady": "エクスポート失敗: ターミナルの準備ができていません",
     "exportSuccess": "ターミナルをエクスポートしました",
-    "debugLogEnabled": "デバッグログを有効にしました。メインプロセス出力はカレントディレクトリの NioZy.log に追記されます。",
+    "loggingEnabled": "ログを有効にしました。メインプロセス出力が選択したレベルで記録されます。",
+    "openLogDirectoryFailed": "ログフォルダを開けませんでした",
     "hardwareAccelerationRestart": "ハードウェアアクセラレーションを保存しました。完全に終了して再起動してください。",
     "disableSandboxRestart": "サンドボックス設定を保存しました。完全に終了して再起動してください。",
     "shellContextMenuFailed": "エクスプローラーのコンテキストメニューを更新できませんでした。レジストリ書き込み権限を確認してください。",

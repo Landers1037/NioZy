@@ -12,6 +12,7 @@ import {
   githubReleasesApiUrl,
   parseGithubRepoFromReleasesUrl,
 } from './shared/github-repo'
+import { updateLog } from './app-log'
 import {
   INSTALLER_FILENAME_PATTERN,
   isNewerVersion,
@@ -107,7 +108,7 @@ async function fetchReleaseInstallers(): Promise<InstallerRelease[]> {
   }
 
   const apiUrl = githubReleasesApiUrl(repo.owner, repo.repo)
-  console.log('apiUrl', apiUrl)
+  updateLog.debug('Checking GitHub releases', { apiUrl })
   const res = await githubFetch(apiUrl)
   if (!res.ok) {
     throw new Error(`GitHub API ${res.status}: ${res.statusText}`)

@@ -1,5 +1,7 @@
 import { containsVaultReference, listVaultReferenceNames } from './vault-reference'
 
+/** 本文件会被渲染进程打包，勿导入 `electron/app-log` 等 Node 专用模块 */
+
 export type AiProvider = 'openai' | 'anthropic' | 'deepseek' | 'ollama' | 'openai-compatible'
 
 export interface AiRuntimeConfig {
@@ -123,13 +125,13 @@ export function warnIfAiApiKeyUnresolved(
   const refs = listVaultReferenceNames(storedApiKey)
   if (refs.length > 0) {
     console.error(
-      `[NioZy] AI API Key vault reference could not be resolved: ${refs.map((r) => `\${${r}}`).join(', ')}. ` +
-        'Check variable names in Settings → Vault and that secret variables decrypt correctly.',
+      '[NioZy][Copilot] AI API Key vault reference could not be resolved:',
+      refs,
     )
     return
   }
   if (!key) {
-    console.error('[NioZy] AI API Key is empty after resolving vault references.')
+    console.error('[NioZy][Copilot] AI API Key is empty after resolving vault references')
   }
 }
 

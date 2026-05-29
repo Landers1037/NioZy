@@ -10,7 +10,7 @@ import {
   nativeImage,
   screen,
 } from 'electron'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import { existsSync } from 'fs'
 import { readFile, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
@@ -81,8 +81,18 @@ import {
   syncWebviewPreviewProxy,
 } from '../webview-preview-session'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
-import { setDebugLogEnabled } from '../debug-log'
-import { isDebugLogEnabled } from '../debug-log'
+import { summarizeSettingsPatch } from '../settings-patch-log'
+import {
+  applyLoggingSettings,
+  logErrorPayload,
+  mainLog,
+  copilotLog,
+  settingsLog,
+  terminalLog,
+  vaultLog,
+  resolveLogFilePath,
+  shouldLogAtLevel,
+} from '../app-log'
 
 registerLocalFileScheme()
 
@@ -98,6 +108,7 @@ if (process.platform === 'win32') {
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock()
 if (!gotSingleInstanceLock) {
+  mainLog.warn('Second instance blocked; quitting')
   app.quit()
 }
 
@@ -190,7 +201,7 @@ async function syncAllSettingsSideEffects(): Promise<void> {
   app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
   syncGlobalShortcuts(settingsStore, () => mainWindow)
   syncWindowOpacity()
-  setDebugLogEnabled(updated.advanced.debugLog === true)
+  applyLoggingSettings(updated.logging)
   mainWindow?.setBackgroundColor(
     getWindowBackgroundColor(updated.theme, updated.uiStyle),
   )
@@ -223,7 +234,7 @@ function syncCopilotRuntimeFromSettingsSafe(
   experimental = settingsStore.get().experimental,
 ): void {
   void syncCopilotRuntimeFromSettings(experimental).catch((err) =>
-    console.error('[NioZy] Failed to sync copilot runtime:', err),
+    copilotLog.error('Failed to sync runtime', logErrorPayload(err)),
   )
 }
 
@@ -329,9 +340,11 @@ function createWindow(): void {
     : undefined
   const initialBounds = getInitialWindowOptions(savedState)
 
-  if (isDev) {
-    console.log('[NioZy] preload script:', preloadPath, existsSync(preloadPath))
-  }
+  mainLog.debug('Creating main window', {
+    preloadPath,
+    preloadExists: existsSync(preloadPath),
+    preserveBounds: Boolean(savedState),
+  })
 
   mainWindow = new BrowserWindow({
     width: initialBounds.width,
@@ -356,7 +369,7 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.on('preload-error', (_, path, error) => {
-    console.error('[NioZy] Failed to load preload:', path, error)
+    mainLog.error('Failed to load preload', { path, error: logErrorPayload(error) })
   })
 
   syncInactiveTabSleepThrottling(mainWindow, settings.performance.inactiveTabSleep)
@@ -366,6 +379,7 @@ function createWindow(): void {
     if (initialBounds.startMaximized) {
       mainWindow?.maximize()
     }
+    mainLog.info('Main window ready')
     mainWindow?.show()
     if (isDev) {
       mainWindow?.webContents.openDevTools({ mode: 'detach' })
@@ -388,6 +402,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('closed', () => {
+    mainLog.info('Main window closed')
     mainWindow = null
   })
 
@@ -471,8 +486,8 @@ function createScreenshotWindow(): void {
     // 方便定位截图窗口白屏/加载中问题
     const levels = ['log', 'warn', 'error']
     const tag = levels[level] ?? String(level)
-    if (isDev || isDebugLogEnabled()) {
-      console.log(`[screenshot-window:${tag}]`, message)
+    if (isDev || shouldLogAtLevel('DEBUG')) {
+      mainLog.debug(`[screenshot-window:${tag}]`, message)
     }
   })
 
@@ -533,19 +548,32 @@ function createTray(): void {
 if (gotSingleInstanceLock) {
   app.on('second-instance', (_event, argv) => {
     const directory = parseDirectoryFromArgv(argv)
+    mainLog.info('Second instance', { directory: directory ?? null })
     if (directory) handleOpenDirectoryRequest(directory)
     else showMainWindow()
   })
 }
 
 app.whenReady().then(async () => {
+  mainLog.info('Application ready', {
+    version: app.getVersion(),
+    platform: process.platform,
+    isDev,
+  })
   configureSessionPrivacy()
   await registerLocalFileProtocolHandler()
 
   settingsStore.load()
   vaultStore.load()
+  const logging = settingsStore.get().logging
+  applyLoggingSettings(logging)
+  settingsLog.info('Settings loaded', {
+    configDir: settingsStore.getConfigDir(),
+    connectionCount: settingsStore.get().connections.length,
+    loggingEnabled: logging.enabled,
+    loggingLevel: logging.level,
+  })
   syncCopilotRuntimeFromSettingsSafe()
-  setDebugLogEnabled(settingsStore.get().advanced.debugLog === true)
   await syncSessionProxyFromSettings()
   initWebviewPreviewSession()
   await syncWebviewPreviewFromSettings()
@@ -554,10 +582,7 @@ app.whenReady().then(async () => {
     settingsStore.get().advanced.disableSandbox,
   )
 
-  if (isDev) {
-    console.log('[NioZy] app path:', app.getAppPath())
-    console.log('[NioZy] main dir:', __dirname)
-  }
+  mainLog.debug('Paths', { appPath: app.getAppPath(), mainDir: __dirname })
 
   createWindow()
   createTray()
@@ -566,7 +591,7 @@ app.whenReady().then(async () => {
 
   if (settingsStore.get().advanced.shellContextMenu) {
     void syncShellContextMenuRegistry(true).catch((err) => {
-      console.error('[NioZy] Failed to sync shell context menu registry:', err)
+      mainLog.error('Failed to sync shell context menu registry', logErrorPayload(err))
     })
   }
 
@@ -584,6 +609,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  mainLog.info('Application quitting')
   persistWindowBoundsIfEnabled()
   linkPreviewManager?.closeAll()
   terminalOutputFlusher.dispose()
@@ -591,7 +617,7 @@ app.on('before-quit', () => {
   unregisterGlobalShortcuts()
   systemStats.stop()
   void disposeCopilotRuntime(true).catch((err) =>
-    console.error('[NioZy] Failed to stop copilot runtime:', err),
+    copilotLog.error('Failed to stop runtime', logErrorPayload(err)),
   )
 })
 
@@ -668,6 +694,15 @@ ipcMain.on('shell:openExternal', (_, url: string) => {
   void shell.openExternal(url)
 })
 
+ipcMain.handle('logging:openLogDirectory', async (): Promise<void> => {
+  const logPath = resolveLogFilePath(settingsStore.get().logging.filePath)
+  const dir = dirname(logPath)
+  const result = await shell.openPath(dir)
+  if (result) {
+    throw new Error(result)
+  }
+})
+
 ipcMain.handle('files:pickPrivateKey', async (): Promise<string | null> => {
   const openOptions = {
     title: '选择 SSH 私钥',
@@ -718,6 +753,7 @@ ipcMain.handle('settings:exportToFile', async () => {
   try {
     const content = JSON.stringify(settingsStore.get(), null, 2)
     await writeFile(filePath, content, 'utf8')
+    settingsLog.info('Settings exported to file', { filePath })
     return { ok: true }
   } catch {
     return { ok: false, error: 'READ_FAILED' as const }
@@ -744,6 +780,7 @@ ipcMain.handle('settings:importFromFile', async () => {
   }
   try {
     const updated = settingsStore.importFromExport(parsed)
+    settingsLog.info('Settings imported from file')
     await syncAllSettingsSideEffects()
     return { ok: true, settings: updated }
   } catch {
@@ -752,6 +789,10 @@ ipcMain.handle('settings:importFromFile', async () => {
 })
 
 ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['update']>[0]) => {
+  const changes = summarizeSettingsPatch(partial)
+  if (Object.keys(changes).length > 0) {
+    settingsLog.info('Settings updated', changes)
+  }
   const liveBefore = isStatusBarLiveStatsEnabled()
   const shortcutBefore = settingsStore.get().shortcuts.global.showApp
   if (partial.advanced?.shellContextMenu !== undefined) {
@@ -763,7 +804,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     try {
       await syncCopilotRuntimeFromSettings(updated.experimental)
     } catch (err) {
-      console.error('[NioZy] Failed to sync copilot runtime:', err)
+      copilotLog.error('Failed to sync runtime after settings save', logErrorPayload(err))
     }
   }
   if (partial.advanced?.statusBarLiveStats !== undefined && liveBefore !== isStatusBarLiveStatsEnabled()) {
@@ -781,8 +822,8 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.advanced?.transparency !== undefined) {
     syncWindowOpacity()
   }
-  if (partial.advanced?.debugLog !== undefined) {
-    setDebugLogEnabled(updated.advanced.debugLog === true)
+  if (partial.logging !== undefined) {
+    applyLoggingSettings(updated.logging)
   }
   if (partial.theme !== undefined || partial.uiStyle !== undefined) {
     mainWindow?.setBackgroundColor(
@@ -1083,6 +1124,12 @@ ipcMain.handle(
 
 ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
   vaultStore.load()
+  terminalLog.info('Create terminal requested', {
+    shell: options.shell,
+    name: options.name,
+    sshConnectionId: options.sshConnectionId,
+    elevated: options.elevated === true,
+  })
   let resolved: TerminalCreateOptions = {
     ...options,
     command: options.command ? vaultStore.resolveText(options.command) : undefined,
@@ -1099,7 +1146,19 @@ ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
       )
     }
   }
-  return terminalService.create(resolved)
+  try {
+    const session = terminalService.create(resolved)
+    terminalLog.info('Terminal created', {
+      id: session.id,
+      shell: session.shell,
+      name: session.name,
+      cwd: session.cwd,
+    })
+    return session
+  } catch (err) {
+    terminalLog.error('Terminal create failed', logErrorPayload(err))
+    throw err
+  }
 })
 
 ipcMain.handle('vault:list', () => vaultStore.load())
@@ -1110,17 +1169,19 @@ ipcMain.handle('vault:save', async (_, input) => {
   try {
     await syncCopilotRuntimeIfAiApiKeyUsesVault()
   } catch (err) {
-    console.error('[NioZy] Failed to sync copilot runtime after vault save:', err)
+    copilotLog.error('Failed to sync runtime after vault save', logErrorPayload(err))
   }
+  vaultLog.info('Vault variable saved', { id: saved.id, key: saved.key })
   return saved
 })
 ipcMain.handle('vault:remove', async (_, id: string) => {
   vaultStore.load()
   vaultStore.remove(id)
+  vaultLog.info('Vault variable removed', { id })
   try {
     await syncCopilotRuntimeIfAiApiKeyUsesVault()
   } catch (err) {
-    console.error('[NioZy] Failed to sync copilot runtime after vault remove:', err)
+    copilotLog.error('Failed to sync runtime after vault remove', logErrorPayload(err))
   }
 })
 ipcMain.handle('vault:resolve', (_, text: string) => {
@@ -1143,6 +1204,7 @@ terminalService.on('data', (id, data) => {
   terminalOutputFlusher.queue(id, data)
 })
 terminalService.on('exit', (id, code) => {
+  terminalLog.info('Terminal exited', { id, code })
   sendToRenderer(mainWindow, 'terminal:exit', id, code)
 })
 terminalService.on('cwd', (id, cwd) => {

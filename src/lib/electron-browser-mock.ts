@@ -52,7 +52,11 @@ const DEFAULT_SETTINGS: AppSettings = {
     statusBarLiveStats: true,
     shellContextMenu: false,
     preserveWindowBounds: false,
-    debugLog: false,
+  },
+  logging: {
+    enabled: false,
+    level: 'INFO',
+    filePath: '',
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
@@ -134,6 +138,9 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
     terminal: { ...mockSettings.terminal, ...partial.terminal },
     system: { ...mockSettings.system, ...partial.system },
     advanced: { ...mockSettings.advanced, ...partial.advanced },
+    logging: partial.logging
+      ? { ...mockSettings.logging, ...partial.logging }
+      : mockSettings.logging,
     shortcuts: partial.shortcuts
       ? {
           ...mockSettings.shortcuts,
@@ -459,6 +466,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
       openWithProgram: async () => ({ ok: true }),
       pickPrivateKey: async () => null,
+    },
+    logging: {
+      openLogDirectory: async () => undefined,
     },
     terminal: {
       create: async (options) => {

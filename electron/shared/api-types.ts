@@ -160,9 +160,8 @@ export interface AppSettings {
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
     preserveWindowBounds: boolean
     lastWindowState?: import('./window-state').SavedWindowState
-    /** 为 true 时将主进程 console 追加写入当前工作目录 NioZy.log */
-    debugLog: boolean
   }
+  logging: import('./logging-settings').LoggingSettings
   shortcuts: AppShortcuts
   ssh: import('./ssh-settings').SshSettings
   shell: import('./shell-settings').ShellSettings
@@ -380,6 +379,10 @@ export interface ElectronAPI {
     ) => Promise<import('../fs-service').OpenWithProgramResult>
     /** 选择 SSH 私钥文件；取消时返回 null */
     pickPrivateKey: () => Promise<string | null>
+  }
+  logging: {
+    /** 在资源管理器中打开日志文件所在目录 */
+    openLogDirectory: () => Promise<void>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

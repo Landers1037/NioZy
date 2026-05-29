@@ -132,6 +132,7 @@
       "vault": "存储库",
       "shortcuts": "快捷键",
       "system": "系统设置",
+      "logging": "日志设置",
       "advanced": "高级设置",
       "experimental": "实验特性"
     },
@@ -382,9 +383,19 @@
       "shellContextMenuDesc": "在资源管理器的文件夹与空白处右键菜单中注册「使用 NioZy 打开」，并在该目录下新建 PowerShell 终端 Tab",
       "preserveWindowBounds": "保留当前设置的窗口大小",
       "preserveWindowBoundsDesc": "关闭窗口时记住大小与位置；若关闭时为最大化，下次启动将直接最大化",
-      "debugLog": "开启 Debug 日志",
-      "debugLogDesc": "开启后将主进程 console 输出追加写入当前工作目录下的 NioZy.log",
       "transparency": "窗口透明度: {{value}}%"
+    },
+    "logging": {
+      "title": "日志设置",
+      "description": "主进程日志开关、级别与存储路径",
+      "enabled": "开启日志",
+      "enabledDesc": "关闭时不写入日志文件",
+      "level": "日志级别",
+      "levelDesc": "仅写入不低于所选级别的日志（DEBUG、INFO、WARN、ERROR）",
+      "filePath": "日志存储路径",
+      "filePathDesc": "留空时使用程序运行目录下的 NioZy.log",
+      "filePathPlaceholder": "默认：运行目录/NioZy.log",
+      "openLogDirectory": "打开目录"
     },
     "shortcuts": {
       "title": "快捷键",
@@ -596,7 +607,8 @@
     "exportNoTerminal": "无法导出：未找到终端",
     "exportNotReady": "无法导出：终端尚未就绪",
     "exportSuccess": "终端内容已导出",
-    "debugLogEnabled": "Debug 日志已开启，主进程输出将追加写入当前目录下的 NioZy.log",
+    "loggingEnabled": "日志已开启，主进程输出将按所选级别写入日志文件",
+    "openLogDirectoryFailed": "无法打开日志目录",
     "hardwareAccelerationRestart": "硬件加速已保存，请完全退出并重启应用后生效",
     "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效",
     "shellContextMenuFailed": "无法更新资源管理器右键菜单，请确认具有当前用户注册表写入权限",

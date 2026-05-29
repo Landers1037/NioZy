@@ -1,4 +1,5 @@
 import { spawn } from 'child_process'
+import { fsLog } from './app-log'
 import { existsSync } from 'fs'
 import { stat } from 'fs/promises'
 import { buildLocalPreviewUrl, buildLocalTextPreviewUrl } from './shared/local-file-url'
@@ -347,7 +348,7 @@ export function openWithProgram(
       ? formatPowerShellOpenCommand(exe, args)
       : undefined
 
-  console.log('[NioZy] openWithProgram:', {
+  fsLog.debug('openWithProgram', {
     program: exe,
     args,
     targetPath,
@@ -376,13 +377,13 @@ export function openWithProgram(
       })
 
       child.on('error', (err) => {
-        console.error('[NioZy] openWithProgram spawn error:', err.message)
+        fsLog.error('openWithProgram spawn error', { message: err.message })
         finish({ ok: false, error: err.message })
       })
 
       child.on('exit', (code, signal) => {
         if (code !== 0 && code !== null) {
-          console.warn('[NioZy] openWithProgram child exit:', { code, signal, commandLine })
+          fsLog.warn('openWithProgram child exit', { code, signal, commandLine })
         }
       })
     } catch (err) {
