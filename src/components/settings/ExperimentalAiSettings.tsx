@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -12,8 +12,11 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
+import { InputWithVaultPicker } from './InputWithVaultPicker'
 import { Brain, Network } from 'lucide-react'
 import type { AiProvider } from '../../../electron/shared/ai-provider-settings'
+import type { AiSidebarWidthPreset } from '@/lib/ai-sidebar-width'
+import { AI_SIDEBAR_WIDTH_PRESETS, AI_SIDEBAR_WIDTH_PX } from '@/lib/ai-sidebar-width'
 import {
   AI_PROVIDERS,
   AI_PROVIDER_DEFAULT_BASE_URL,
@@ -22,6 +25,8 @@ import {
   MAX_AI_RUNTIME_PORT,
   MIN_AI_RUNTIME_PORT,
   aiProviderNeedsApiKey,
+  isAiPresetModel,
+  normalizeAiModel,
   normalizeAiRuntimePort,
 } from '@/lib/ai-provider-options'
 
@@ -34,10 +39,14 @@ export function ExperimentalAiSettings() {
   const ai = settings.experimental
   const apiKeyFocusRef = useRef(ai.aiApiKey)
   const baseUrlFocusRef = useRef(ai.aiBaseUrl)
+  const modelFocusRef = useRef(ai.aiModel)
   const runtimePortFocusRef = useRef(ai.aiRuntimePort)
   const [apiKeyDraft, setApiKeyDraft] = useState(ai.aiApiKey)
   const [baseUrlDraft, setBaseUrlDraft] = useState(ai.aiBaseUrl)
+  const [modelDraft, setModelDraft] = useState(ai.aiModel)
   const [runtimePortDraft, setRuntimePortDraft] = useState(String(ai.aiRuntimePort))
+  const presetModels = AI_PROVIDER_MODELS[ai.aiProvider]
+  const modelSelectValue = isAiPresetModel(ai.aiProvider, ai.aiModel) ? ai.aiModel : ''
 
   useEffect(() => {
     setApiKeyDraft(ai.aiApiKey)
@@ -51,6 +60,10 @@ export function ExperimentalAiSettings() {
     setRuntimePortDraft(String(ai.aiRuntimePort))
   }, [ai.aiRuntimePort])
 
+  useEffect(() => {
+    setModelDraft(ai.aiModel)
+  }, [ai.aiModel])
+
   const patchAi = (partial: Partial<typeof ai>) =>
     patchSettings({
       experimental: {
@@ -58,6 +71,18 @@ export function ExperimentalAiSettings() {
         ...partial,
       },
     })
+
+  const commitApiKey = useCallback(
+    (raw: string) => {
+      const next = raw.trim()
+      setApiKeyDraft(next)
+      if (next === ai.aiApiKey) return
+      void patchAi({ aiApiKey: next }).catch(() =>
+        toast.error(t('settings.vault.saveFailed')),
+      )
+    },
+    [ai, patchAi, t],
+  )
 
   const handleProviderChange = (provider: AiProvider) => {
     if (provider === ai.aiProvider) return
@@ -94,6 +119,34 @@ export function ExperimentalAiSettings() {
 
       {ai.aiSidebarEnabled === true && (
         <>
+          <SettingField
+            icon={Brain}
+            label={t('settings.experimental.ai.sidebarWidth')}
+            description={t('settings.experimental.ai.sidebarWidthDesc')}
+          >
+            <Select
+              value={ai.aiSidebarWidth}
+              onValueChange={(v) => {
+                const preset = v as AiSidebarWidthPreset
+                if (preset === ai.aiSidebarWidth) return
+                patchAi({ aiSidebarWidth: preset })
+              }}
+            >
+              <SelectTrigger className="max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AI_SIDEBAR_WIDTH_PRESETS.map((preset) => (
+                  <SelectItem key={preset} value={preset}>
+                    {t(`settings.experimental.ai.sidebarWidths.${preset}`, {
+                      px: AI_SIDEBAR_WIDTH_PX[preset],
+                    })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingField>
+
           <SettingField
             icon={Network}
             label={t('settings.experimental.ai.runtimePort')}
@@ -145,24 +198,44 @@ export function ExperimentalAiSettings() {
             label={t('settings.experimental.ai.model')}
             description={t('settings.experimental.ai.modelDesc')}
           >
-            <Select
-              value={ai.aiModel}
-              onValueChange={(model) => {
-                if (model === ai.aiModel) return
-                patchAi({ aiModel: model })
-              }}
-            >
-              <SelectTrigger className="max-w-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {AI_PROVIDER_MODELS[ai.aiProvider].map((model) => (
-                  <SelectItem key={model} value={model}>
-                    {model}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex max-w-xl flex-col gap-2">
+              <Select
+                value={modelSelectValue}
+                onValueChange={(model) => {
+                  if (!model || model === ai.aiModel) return
+                  setModelDraft(model)
+                  patchAi({ aiModel: model })
+                }}
+              >
+                <SelectTrigger className="max-w-xs">
+                  <SelectValue placeholder={t('settings.experimental.ai.modelPresetPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {presetModels.map((model) => (
+                    <SelectItem key={model} value={model}>
+                      {model}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                className="font-mono text-sm"
+                value={modelDraft}
+                placeholder={t('settings.experimental.ai.modelCustomPlaceholder')}
+                onFocus={() => {
+                  modelFocusRef.current = ai.aiModel
+                }}
+                onChange={(e) => setModelDraft(e.target.value)}
+                onBlur={(e) => {
+                  const next = normalizeAiModel(ai.aiProvider, e.target.value)
+                  setModelDraft(next)
+                  if (next === modelFocusRef.current) return
+                  patchAi({ aiModel: next }).catch(() =>
+                    toast.error(t('settings.vault.saveFailed')),
+                  )
+                }}
+              />
+            </div>
           </SettingField>
 
           <SettingField
@@ -174,14 +247,19 @@ export function ExperimentalAiSettings() {
               type="url"
               className="max-w-xl font-mono text-sm"
               value={baseUrlDraft}
-              placeholder={AI_PROVIDER_DEFAULT_BASE_URL[ai.aiProvider]}
+              placeholder={
+                ai.aiProvider === 'openai-compatible'
+                  ? t('settings.experimental.ai.baseUrlOpenAiCompatiblePlaceholder')
+                  : AI_PROVIDER_DEFAULT_BASE_URL[ai.aiProvider]
+              }
               onFocus={() => {
                 baseUrlFocusRef.current = ai.aiBaseUrl
               }}
               onChange={(e) => setBaseUrlDraft(e.target.value)}
               onBlur={(e) => {
-                const next = e.target.value.trim() || AI_PROVIDER_DEFAULT_BASE_URL[ai.aiProvider]
-                setBaseUrlDraft(next)
+                const fallback = AI_PROVIDER_DEFAULT_BASE_URL[ai.aiProvider]
+                const next = e.target.value.trim() || fallback
+                setBaseUrlDraft(next || fallback)
                 if (next === baseUrlFocusRef.current) return
                 patchAi({ aiBaseUrl: next }).catch(() =>
                   toast.error(t('settings.vault.saveFailed')),
@@ -199,9 +277,10 @@ export function ExperimentalAiSettings() {
                 : t('settings.experimental.ai.apiKeyOptionalDesc')
             }
           >
-            <Input
+            <InputWithVaultPicker
               type="password"
-              className="max-w-xl font-mono text-sm"
+              wrapperClassName="w-full max-w-xl"
+              className="min-w-0 flex-1 font-mono text-sm"
               value={apiKeyDraft}
               placeholder={
                 aiProviderNeedsApiKey(ai.aiProvider)
@@ -211,14 +290,12 @@ export function ExperimentalAiSettings() {
               onFocus={() => {
                 apiKeyFocusRef.current = ai.aiApiKey
               }}
-              onChange={(e) => setApiKeyDraft(e.target.value)}
+              onChange={setApiKeyDraft}
+              onAfterVaultInsert={commitApiKey}
               onBlur={(e) => {
                 const next = e.target.value.trim()
-                setApiKeyDraft(next)
                 if (next === apiKeyFocusRef.current) return
-                patchAi({ aiApiKey: next }).catch(() =>
-                  toast.error(t('settings.vault.saveFailed')),
-                )
+                commitApiKey(next)
               }}
             />
           </SettingField>

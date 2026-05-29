@@ -1,4 +1,6 @@
-export type AiProvider = 'openai' | 'anthropic' | 'deepseek' | 'ollama'
+import { containsVaultReference } from './vault-reference'
+
+export type AiProvider = 'openai' | 'anthropic' | 'deepseek' | 'ollama' | 'openai-compatible'
 
 export interface AiRuntimeConfig {
   enabled: boolean
@@ -13,13 +15,20 @@ export const DEFAULT_AI_RUNTIME_PORT = 6173
 export const MIN_AI_RUNTIME_PORT = 1024
 export const MAX_AI_RUNTIME_PORT = 65535
 
-export const AI_PROVIDERS: AiProvider[] = ['openai', 'anthropic', 'deepseek', 'ollama']
+export const AI_PROVIDERS: AiProvider[] = [
+  'openai',
+  'anthropic',
+  'deepseek',
+  'ollama',
+  'openai-compatible',
+]
 
 export const AI_PROVIDER_DEFAULT_BASE_URL: Record<AiProvider, string> = {
   openai: 'https://api.openai.com/v1',
   anthropic: 'https://api.anthropic.com',
   deepseek: 'https://api.deepseek.com/v1',
   ollama: 'http://127.0.0.1:11434/v1',
+  'openai-compatible': '',
 }
 
 export const AI_PROVIDER_MODELS: Record<AiProvider, string[]> = {
@@ -27,6 +36,7 @@ export const AI_PROVIDER_MODELS: Record<AiProvider, string[]> = {
   anthropic: ['claude-sonnet-4-5', 'claude-3-5-haiku', 'claude-opus-4'],
   deepseek: ['deepseek-chat', 'deepseek-reasoner'],
   ollama: ['llama3.2', 'qwen2.5', 'mistral', 'deepseek-r1'],
+  'openai-compatible': ['gpt-4o', 'gpt-4o-mini', 'qwen-plus', 'qwen-max', 'deepseek-chat'],
 }
 
 export const DEFAULT_AI_PROVIDER: AiProvider = 'openai'
@@ -36,11 +46,15 @@ export function normalizeAiProvider(value: unknown): AiProvider {
   return AI_PROVIDERS.includes(value as AiProvider) ? (value as AiProvider) : DEFAULT_AI_PROVIDER
 }
 
+export function isAiPresetModel(provider: AiProvider, model: string): boolean {
+  return AI_PROVIDER_MODELS[provider].includes(model)
+}
+
 export function normalizeAiModel(provider: AiProvider, value: unknown): string {
   const models = AI_PROVIDER_MODELS[provider]
   if (typeof value === 'string') {
     const trimmed = value.trim()
-    if (trimmed && models.includes(trimmed)) return trimmed
+    if (trimmed) return trimmed
   }
   return models[0]
 }
@@ -67,9 +81,35 @@ export function aiProviderNeedsApiKey(provider: AiProvider): boolean {
   return provider !== 'ollama'
 }
 
-export function isAiRuntimeConfigured(config: Pick<AiRuntimeConfig, 'provider' | 'apiKey'>): boolean {
+export function aiProviderUsesOpenAiApi(provider: AiProvider): boolean {
+  return provider !== 'anthropic'
+}
+
+/** 解析 Vault 引用后的 API Key 是否可用（明文或 ${VAR} 解析结果均可） */
+export function isAiApiKeyConfigured(
+  config: Pick<AiRuntimeConfig, 'provider' | 'apiKey'>,
+): boolean {
   if (!aiProviderNeedsApiKey(config.provider)) return true
-  return config.apiKey.length > 0
+  const key = config.apiKey.trim()
+  if (!key || containsVaultReference(key)) return false
+  return true
+}
+
+export function isAiRuntimeConfigured(
+  config: Pick<AiRuntimeConfig, 'provider' | 'apiKey' | 'baseUrl'>,
+): boolean {
+  if (!config.baseUrl.trim()) return false
+  return isAiApiKeyConfigured(config)
+}
+
+export function resolveAiRuntimeConfig(
+  config: AiRuntimeConfig,
+  resolveText: (text: string) => string,
+): AiRuntimeConfig {
+  return {
+    ...config,
+    apiKey: resolveText(config.apiKey).trim(),
+  }
 }
 
 export function buildAiRuntimeConfig(experimental: {

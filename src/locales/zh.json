@@ -82,7 +82,7 @@
   "aiSidebar": {
     "title": "AI 助手",
     "welcome": "有什么可以帮你的？",
-    "welcomeNoKey": "请先在设置 → 实验特性 → AI 特性中配置 API Key 与 Base URL，然后即可开始对话。",
+    "welcomeNoKey": "请先在设置 → 实验特性 → AI 特性中配置 API Key。",
     "configureKey": "请先在设置 → 实验特性中配置 OpenAI API Key"
   },
   "layout": {
@@ -322,9 +322,16 @@
       "terminalEmulatorWterm": "Wterm（实验性）",
       "ai": {
         "title": "AI 特性",
-        "description": "配置 AI 对话边栏与模型提供商。Runtime 仅在本机 127.0.0.1 监听，API Key 明文写入 settings.json。",
+        "description": "配置 AI 对话边栏与模型提供商。Runtime 仅在本机 127.0.0.1 监听。API Key 可填明文，或使用存储库变量如 ${OPENAI_API_KEY}（推荐密文变量）。",
         "sidebarEnabled": "开启 AI 对话边栏",
         "sidebarEnabledDesc": "在右侧显示 AI 对话边栏。发送消息需配置对应提供商的 API Key（Ollama 本地可留空）。",
+        "sidebarWidth": "边栏宽度",
+        "sidebarWidthDesc": "AI 对话边栏宽度，修改后立即生效。",
+        "sidebarWidths": {
+          "narrow": "更窄（{{px}}px）",
+          "default": "默认（{{px}}px）",
+          "wide": "更宽（{{px}}px）"
+        },
         "runtimePort": "Runtime 端口",
         "runtimePortDesc": "本机 Copilot Runtime 监听端口（127.0.0.1），默认 6173。修改后需重新连接 AI 边栏。",
         "provider": "AI 提供商",
@@ -333,14 +340,18 @@
           "openai": "OpenAI",
           "anthropic": "Claude (Anthropic)",
           "deepseek": "DeepSeek",
-          "ollama": "Ollama 本地"
+          "ollama": "Ollama 本地",
+          "openai-compatible": "OpenAI 兼容"
         },
         "model": "模型",
-        "modelDesc": "选择当前提供商下的模型。",
+        "modelDesc": "可从常用模型快速选择，或在下方输入自定义模型名称（以 API 文档为准）。",
+        "modelPresetPlaceholder": "选择常用模型（可选）",
+        "modelCustomPlaceholder": "自定义模型名称，例如 qwen-plus 或 endpoint id",
         "baseUrl": "Base URL",
         "baseUrlDesc": "API 基础地址，切换提供商时会填入默认值，可按需修改。",
+        "baseUrlOpenAiCompatiblePlaceholder": "https://your-gateway.example.com/v1",
         "apiKey": "API Key",
-        "apiKeyDesc": "当前提供商的 API Key，用于本机 Copilot Runtime 调用远端模型。",
+        "apiKeyDesc": "当前提供商的 API Key；可填 sk-...，或 ${变量名} 引用设置 → 存储库中的密文变量（点击右侧数据库图标插入）。",
         "apiKeyOptionalDesc": "Ollama 本地通常无需 API Key，可留空。",
         "apiKeyPlaceholder": "sk-...",
         "apiKeyOptionalPlaceholder": "可选，Ollama 可留空"

@@ -25,7 +25,8 @@ import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
 import { cn } from '@/lib/utils'
-import { AI_SIDEBAR_WIDTH_PX, useAiSidebarStore } from '@/stores/ai-sidebar-store'
+import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
+import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -196,6 +197,9 @@ export default function App() {
     attachCommitted.tabId === attachTargetTab.id
   const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
   const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
+  const aiSidebarWidthPx = resolveAiSidebarWidthPx(
+    settings?.experimental.aiSidebarWidth ?? 'default',
+  )
 
   return (
     <div
@@ -207,7 +211,7 @@ export default function App() {
       )}
       style={
         aiSidebarEnabled && aiSidebarOpen
-          ? { paddingInlineEnd: AI_SIDEBAR_WIDTH_PX }
+          ? { paddingInlineEnd: aiSidebarWidthPx }
           : undefined
       }
     >

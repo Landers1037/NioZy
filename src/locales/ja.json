@@ -82,7 +82,7 @@
   "aiSidebar": {
     "title": "AI アシスタント",
     "welcome": "何かお手伝いできることはありますか？",
-    "welcomeNoKey": "設定 → 実験的 → AI 機能で API キーと Base URL を設定すると、会話を開始できます。",
+    "welcomeNoKey": "設定 → 実験的 → AI 機能で API キーを設定してください。",
     "configureKey": "先に設定 → 実験的で OpenAI API キーを設定してください"
   },
   "layout": {
@@ -313,9 +313,16 @@
       "terminalEmulatorWterm": "Wterm（実験的）",
       "ai": {
         "title": "AI 機能",
-        "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは settings.json に平文保存されます。",
+        "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは平文または ${OPENAI_API_KEY} などのストア変数参照（密文推奨）。",
         "sidebarEnabled": "AI チャットサイドバーを有効化",
         "sidebarEnabledDesc": "右側に AI チャットサイドバーを表示。メッセージ送信には選択したプロバイダーの API キーが必要（ローカル Ollama は任意）。",
+        "sidebarWidth": "サイドバー幅",
+        "sidebarWidthDesc": "AI チャットサイドバーの幅。変更後すぐに反映されます。",
+        "sidebarWidths": {
+          "narrow": "狭い（{{px}}px）",
+          "default": "標準（{{px}}px）",
+          "wide": "広い（{{px}}px）"
+        },
         "runtimePort": "Runtime ポート",
         "runtimePortDesc": "127.0.0.1 上のローカル Copilot Runtime 待受ポート（既定 6173）。変更後は AI サイドバーを再接続してください。",
         "provider": "AI プロバイダ",
@@ -324,14 +331,18 @@
           "openai": "OpenAI",
           "anthropic": "Claude (Anthropic)",
           "deepseek": "DeepSeek",
-          "ollama": "Ollama（ローカル）"
+          "ollama": "Ollama（ローカル）",
+          "openai-compatible": "OpenAI 互換"
         },
         "model": "モデル",
-        "modelDesc": "現在のプロバイダーのモデルを選択します。",
+        "modelDesc": "よく使うモデルを選ぶか、下の欄にカスタムモデル名を入力してください（API ドキュメントに合わせる）。",
+        "modelPresetPlaceholder": "よく使うモデル（任意）",
+        "modelCustomPlaceholder": "カスタムモデル名（例: qwen-plus）",
         "baseUrl": "Base URL",
         "baseUrlDesc": "API のベース URL。プロバイダ切替時に既定値が入ります。必要に応じて変更してください。",
+        "baseUrlOpenAiCompatiblePlaceholder": "https://your-gateway.example.com/v1",
         "apiKey": "API キー",
-        "apiKeyDesc": "選択したプロバイダーの API キー。ローカル Copilot Runtime が使用します。",
+        "apiKeyDesc": "API キー、または 設定 → ストア の ${変数}（右の DB アイコンで挿入）。Runtime 起動時に解決されます。",
         "apiKeyOptionalDesc": "ローカル Ollama では通常 API キーは不要です。",
         "apiKeyPlaceholder": "sk-...",
         "apiKeyOptionalPlaceholder": "任意（Ollama は空欄可）"

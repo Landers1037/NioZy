@@ -4,9 +4,10 @@ import { CopilotKit } from '@copilotkit/react-core'
 import { CopilotSidebar, useCopilotChatConfiguration } from '@copilotkit/react-core/v2'
 import '@copilotkit/react-core/v2/styles.css'
 import { useAppStore } from '@/stores/app-store'
-import { AI_SIDEBAR_WIDTH_PX, useAiSidebarStore } from '@/stores/ai-sidebar-store'
+import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
+import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import { buildAiRuntimeConfig } from '../../../electron/shared/experimental-settings'
-import { isAiRuntimeConfigured } from '@/lib/ai-provider-options'
+import { aiProviderNeedsApiKey, isAiApiKeyConfigured } from '@/lib/ai-provider-options'
 import { getElectronAPI } from '@/lib/electron-client'
 
 function AiSidebarModalBridge() {
@@ -48,11 +49,39 @@ export function AiCopilotRoot() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
+  const aiSidebarWidthPx = resolveAiSidebarWidthPx(
+    settings?.experimental.aiSidebarWidth ?? 'default',
+  )
   const aiRuntime = settings ? buildAiRuntimeConfig(settings.experimental) : null
   const runtimeConfigKey = aiRuntime
     ? `${aiRuntime.port}:${aiRuntime.provider}:${aiRuntime.model}:${aiRuntime.baseUrl}:${aiRuntime.apiKey}`
     : ''
   const [runtimeUrl, setRuntimeUrl] = useState<string | null>(null)
+  const [configured, setConfigured] = useState(false)
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
+
+  useEffect(() => {
+    if (!aiRuntime) {
+      setConfigured(false)
+      return
+    }
+    let cancelled = false
+    void (async () => {
+      const resolvedKey = aiProviderNeedsApiKey(aiRuntime.provider)
+        ? (await getElectronAPI().vault.resolve(aiRuntime.apiKey)).trim()
+        : ''
+      if (cancelled) return
+      setConfigured(
+        isAiApiKeyConfigured({
+          provider: aiRuntime.provider,
+          apiKey: resolvedKey,
+        }),
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [aiRuntime, runtimeConfigKey, aiSidebarOpen])
 
   useEffect(() => {
     useAiSidebarStore.getState().setOpen(false)
@@ -107,7 +136,6 @@ export function AiCopilotRoot() {
   }, [])
 
   if (!aiSidebarEnabled || !runtimeUrl) return null
-  const configured = aiRuntime ? isAiRuntimeConfigured(aiRuntime) : false
 
   return (
     <CopilotKit
@@ -119,7 +147,7 @@ export function AiCopilotRoot() {
       <CopilotSidebar
         defaultOpen={false}
         position="right"
-        width={AI_SIDEBAR_WIDTH_PX}
+        width={aiSidebarWidthPx}
         toggleButton={HiddenAiSidebarToggle}
         labels={{
           modalHeaderTitle: t('aiSidebar.title'),

@@ -18,6 +18,8 @@ interface VaultVariablePickerProps {
   /** 可选：受控光标位置；未提供时在末尾插入 */
   selectionStart?: number
   onSelectionChange?: (start: number) => void
+  /** 插入变量引用后触发（用于立即持久化，避免仅 blur 保存） */
+  onAfterInsert?: (value: string) => void
 }
 
 export function VaultVariablePicker({
@@ -25,6 +27,7 @@ export function VaultVariablePicker({
   onChange,
   selectionStart,
   onSelectionChange,
+  onAfterInsert,
 }: VaultVariablePickerProps) {
   const { t } = useTranslation()
   const [keys, setKeys] = useState<string[]>([])
@@ -47,6 +50,7 @@ export function VaultVariablePicker({
     const pos = selectionStart ?? value.length
     const next = insertVaultReference(value, key, pos)
     onChange(next)
+    onAfterInsert?.(next)
     const newPos = pos + key.length + 3
     onSelectionChange?.(newPos)
   }
