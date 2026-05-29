@@ -156,7 +156,7 @@
     },
     "terminal": {
       "title": "终端设置",
-      "description": "配色、字体、光标与渲染方式",
+      "description": "配色、背景、字体、光标与渲染方式",
       "colorScheme": "配色方案",
       "fontFamily": "终端字体",
       "fontWeight": "常规字重",
@@ -178,7 +178,16 @@
       "drawBoldBright": "以亮色显示粗体",
       "drawBoldBrightDesc": "对应 xterm drawBoldTextInBrightColors",
       "rightClickCopyPaste": "右键复制/粘贴",
-      "rightClickCopyPasteDesc": "有选区时复制到剪贴板，无选区时从剪贴板粘贴"
+      "rightClickCopyPasteDesc": "有选区时复制到剪贴板，无选区时从剪贴板粘贴",
+      "background": "背景设置",
+      "backgroundDesc": "为终端设置本地背景图；图片保存在配置目录 background 下，文件名为 bg.扩展名",
+      "backgroundPick": "选择图片",
+      "backgroundClear": "清除背景",
+      "backgroundPreview": "背景预览",
+      "backgroundOpacity": "背景透明度：{{value}}%",
+      "backgroundPickNotImage": "请选择有效的图片文件",
+      "backgroundPickFailed": "无法设置背景图片",
+      "backgroundClearFailed": "无法清除背景图片"
     },
     "ssh": {
       "title": "SSH 设置",

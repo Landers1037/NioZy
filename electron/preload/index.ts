@@ -85,6 +85,9 @@ const api: ElectronAPI = {
     onData: (cb) => onTerminalData(cb),
     onCwd: (cb) => onTerminalCwd(cb),
     onExit: (cb) => onTerminalExit(cb),
+    pickBackground: () => ipcRenderer.invoke('terminal:pickBackground'),
+    clearBackground: () => ipcRenderer.invoke('terminal:clearBackground'),
+    getBackgroundUrl: (ext) => ipcRenderer.invoke('terminal:getBackgroundUrl', ext),
   },
   vault: {
     list: () => ipcRenderer.invoke('vault:list'),

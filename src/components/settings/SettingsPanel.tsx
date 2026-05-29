@@ -90,7 +90,7 @@ export function SettingsPanel() {
           )
         })}
       </nav>
-      <div className="min-w-0 flex-1 overflow-y-auto no-drag">
+      <div className="min-w-0 flex-1 overflow-y-auto no-drag select-none">
         {section === 'appearance' && <AppearanceSettings />}
         {section === 'terminal' && <TerminalSettings />}
         {section === 'ssh' && <SshSettings />}

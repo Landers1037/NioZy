@@ -4,7 +4,7 @@ import type { FitAddon } from '@xterm/addon-fit'
 import type { CanvasAddon } from '@xterm/addon-canvas'
 import type { WebglAddon } from '@xterm/addon-webgl'
 import { useAppStore } from '@/stores/app-store'
-import { resolveTerminalTheme } from '@/lib/terminal-themes'
+import { resolveTerminalThemeWithBackground, hasTerminalBackgroundImage, getTerminalChromeBackgroundColor } from '@/lib/terminal-background'
 import type { TerminalViewProps } from './terminal-view-props'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
@@ -117,9 +117,10 @@ export function TerminalView({
   const superPowerSavingDom =
     settings?.performance.superPowerSaving === true &&
     settings.experimental?.terminalEmulator !== 'wterm'
+  const terminalHasBackgroundImage = hasTerminalBackgroundImage(settings?.terminal)
   const activeRenderer = effectiveRenderer(
     rendererPreference,
-    preferDomRenderer || superPowerSavingDom,
+    preferDomRenderer || superPowerSavingDom || terminalHasBackgroundImage,
   )
 
   const safeFit = useCallback(
@@ -342,7 +343,8 @@ export function TerminalView({
       if (disposed || !containerRef.current) return
 
       const s = useAppStore.getState().settings
-      const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
+      const scheme = s?.terminal.colorScheme ?? 'atom'
+      const theme = resolveTerminalThemeWithBackground(scheme, s?.terminal)
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
       const previewSettings = s?.preview ?? DEFAULT_PREVIEW_SETTINGS
       const term = new Terminal(
@@ -515,7 +517,8 @@ export function TerminalView({
       if (disposed || !containerRef.current) return
 
       const s = useAppStore.getState().settings
-      const theme = resolveTerminalTheme(s?.terminal.colorScheme ?? 'atom')
+      const scheme = s?.terminal.colorScheme ?? 'atom'
+      const theme = resolveTerminalThemeWithBackground(scheme, s?.terminal)
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
       const previewSettings = s?.preview ?? DEFAULT_PREVIEW_SETTINGS
       const term = new Terminal(
@@ -724,7 +727,10 @@ export function TerminalView({
   useEffect(() => {
     if (!termRef.current || !settings) return
     const cursor = getTerminalCursorOptions(settings.terminal)
-    termRef.current.options.theme = resolveTerminalTheme(settings.terminal.colorScheme)
+    termRef.current.options.theme = resolveTerminalThemeWithBackground(
+      settings.terminal.colorScheme,
+      settings.terminal,
+    )
     termRef.current.options.fontFamily = settings.terminal.fontFamily
     termRef.current.options.fontSize = settings.terminal.fontSize
     termRef.current.options.fontWeight = settings.terminal.fontWeight
@@ -766,15 +772,23 @@ export function TerminalView({
     termRef.current.blur()
   }, [isFocused, safeFit, effectiveTerminalId, loadWebgl, loadCanvas, activeRenderer, tab.id])
 
-  const terminalBackground =
-    resolveTerminalTheme(settings?.terminal.colorScheme ?? 'atom').background ?? '#101419'
+  const chromeBackground = hasTerminalBackgroundImage(settings?.terminal)
+    ? 'transparent'
+    : getTerminalChromeBackgroundColor(settings?.terminal)
 
   return (
     <div
       className="absolute inset-0 overflow-hidden p-[10px]"
-      style={{ backgroundColor: terminalBackground }}
+      style={{ backgroundColor: chromeBackground }}
     >
-      <div ref={containerRef} className="niozy-terminal-host h-full w-full overflow-hidden" />
+      <div
+        ref={containerRef}
+        className={
+          terminalHasBackgroundImage
+            ? 'niozy-terminal-host niozy-terminal-has-bg-image h-full w-full overflow-hidden'
+            : 'niozy-terminal-host h-full w-full overflow-hidden'
+        }
+      />
       <SshReconnectHint terminalId={effectiveTerminalId ?? undefined} />
     </div>
   )

@@ -138,6 +138,10 @@ export interface AppSettings {
     drawBoldTextInBrightColors: boolean
     /** 右键：有选区则复制，无选区则粘贴 */
     rightClickCopyPaste: boolean
+    /** 终端背景图扩展名（不含点），对应 background/bg.{ext} */
+    backgroundImageExt?: string
+    /** 终端背景图不透明度（0–100） */
+    backgroundOpacity: number
   }
   connections: CustomConnection[]
   builtinConnections: import('./builtin-shells').BuiltinConnections
@@ -322,6 +326,12 @@ export interface ElectronAPI {
     onData: (cb: (id: string, data: string) => void) => () => void
     onCwd: (cb: (id: string, cwd: string) => void) => () => void
     onExit: (cb: (id: string, code: number) => void) => () => void
+    pickBackground: () => Promise<import('../terminal-background-service').TerminalBackgroundPickResult>
+    clearBackground: () => Promise<import('../terminal-background-service').TerminalBackgroundClearResult>
+    getBackgroundUrl: (ext: string) => Promise<
+      | { ok: true; url: string }
+      | { ok: false; error: string }
+    >
   }
   vault: {
     list: () => Promise<VaultVariablePublic[]>

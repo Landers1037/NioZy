@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
+    backgroundOpacity: 100,
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
@@ -503,6 +504,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return () => cwdListeners.delete(cb)
       },
       onExit: () => () => undefined,
+      pickBackground: async () => ({ ok: false as const, canceled: true }),
+      clearBackground: async () => ({ ok: true as const }),
+      getBackgroundUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
     },
   }
 }

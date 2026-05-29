@@ -703,6 +703,27 @@ ipcMain.handle('logging:openLogDirectory', async (): Promise<void> => {
   }
 })
 
+ipcMain.handle('terminal:pickBackground', async () => {
+  const { pickAndInstallTerminalBackground } = await import('../terminal-background-service')
+  return pickAndInstallTerminalBackground(mainWindow)
+})
+
+ipcMain.handle('terminal:clearBackground', async () => {
+  const { clearTerminalBackgroundFiles } = await import('../terminal-background-service')
+  return clearTerminalBackgroundFiles()
+})
+
+ipcMain.handle('terminal:getBackgroundUrl', async (_, ext: string) => {
+  const { buildTerminalBackgroundPreviewUrl, terminalBackgroundExists } = await import(
+    '../terminal-background-service'
+  )
+  const normalized = typeof ext === 'string' ? ext.replace(/^\./, '').toLowerCase() : ''
+  if (!normalized || !terminalBackgroundExists(normalized)) {
+    return { ok: false as const, error: 'NOT_FOUND' }
+  }
+  return { ok: true as const, url: buildTerminalBackgroundPreviewUrl(normalized) }
+})
+
 ipcMain.handle('files:pickPrivateKey', async (): Promise<string | null> => {
   const openOptions = {
     title: '选择 SSH 私钥',

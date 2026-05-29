@@ -178,7 +178,16 @@
       "drawBoldBright": "Bold text in bright colors",
       "drawBoldBrightDesc": "Maps to xterm drawBoldTextInBrightColors",
       "rightClickCopyPaste": "Right-click copy / paste",
-      "rightClickCopyPasteDesc": "Copy when text is selected; paste when nothing is selected"
+      "rightClickCopyPasteDesc": "Copy when text is selected; paste when nothing is selected",
+      "background": "Background",
+      "backgroundDesc": "Set a local image as the terminal background. The file is stored as bg.<ext> in the background folder under your NioZy config directory.",
+      "backgroundPick": "Choose image",
+      "backgroundClear": "Clear background",
+      "backgroundPreview": "Background preview",
+      "backgroundOpacity": "Background opacity: {{value}}%",
+      "backgroundPickNotImage": "Please choose a valid image file",
+      "backgroundPickFailed": "Could not set background image",
+      "backgroundClearFailed": "Could not clear background image"
     },
     "ssh": {
       "title": "SSH",

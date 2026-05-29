@@ -13,6 +13,7 @@ import { useAppStore } from '@/stores/app-store'
 import { COLOR_SCHEME_OPTIONS } from '@/lib/terminal-themes'
 import { getCursorStyleOptions } from '@/lib/terminal-cursor'
 import { ColorSchemePreview } from '@/components/settings/ColorSchemePreview'
+import { TerminalBackgroundSettings } from '@/components/settings/TerminalBackgroundSettings'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { FontWeightFields } from '@/components/settings/FontWeightInput'
 import { SettingField } from './SettingField'
@@ -72,6 +73,8 @@ export function TerminalSettings() {
           </Select>
           <ColorSchemePreview schemeId={scheme} />
         </SettingField>
+
+        <TerminalBackgroundSettings />
 
         <SettingField icon={Type} label={t('settings.terminal.fontFamily')}>
           <FontFamilyPicker

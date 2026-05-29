@@ -10,6 +10,7 @@ import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { InactiveTerminalPlaceholder } from '@/components/terminal/InactiveTerminalPlaceholder'
 import { SuperPowerSavingPlaceholder } from '@/components/terminal/SuperPowerSavingPlaceholder'
 import { AttachPtyPendingPlaceholder } from '@/components/terminal/AttachPtyPendingPlaceholder'
+import { TerminalBackgroundLayer } from '@/components/terminal/TerminalBackgroundLayer'
 import { cn } from '@/lib/utils'
 
 const SplitTerminalPanel = lazy(() =>
@@ -86,7 +87,11 @@ export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
       )}
       {...(!isTabActive ? { inert: true } : {})}
     >
-      {terminalBody}
+      <TerminalBackgroundLayer
+        terminal={settings?.terminal}
+        className="pointer-events-none absolute inset-0 z-0"
+      />
+      <div className="relative z-10 h-full w-full">{terminalBody}</div>
     </div>
   )
 }

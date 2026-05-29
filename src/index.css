@@ -614,6 +614,17 @@ body {
   background-color: transparent !important;
 }
 
+/* 壁纸模式下避免 WebGL/Canvas 透明合成导致字形发糊；DOM 渲染 + 高不透明单元格底色 */
+.niozy-terminal-host.niozy-terminal-has-bg-image .xterm .xterm-screen {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.niozy-terminal-host.niozy-terminal-has-bg-image .xterm-rows {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* WebLinks 悬停时的下划线（始终高亮由 registerDecoration 着色） */
 .niozy-terminal-host .xterm .xterm-link {
   cursor: pointer;
