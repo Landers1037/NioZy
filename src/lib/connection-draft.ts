@@ -13,6 +13,7 @@ export type ConnectionDraft = {
   sshAuth: 'password' | 'publickey'
   sshPassword: string
   sshKeyPath: string
+  sshGroup: string
 }
 
 export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
@@ -27,6 +28,19 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   sshAuth: 'password',
   sshPassword: '',
   sshKeyPath: '',
+  sshGroup: '',
+}
+
+/** 从已保存的 SSH 连接收集不重复的分组名（按字母排序） */
+export function collectSshGroups(connections: CustomConnection[]): string[] {
+  const names = new Set<string>()
+  for (const c of connections) {
+    if (c.type === 'ssh') {
+      const g = c.sshGroup?.trim()
+      if (g) names.add(g)
+    }
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
 }
 
 export function connectionToDraft(c: CustomConnection): ConnectionDraft {
@@ -43,6 +57,7 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
       sshAuth: c.sshAuth ?? (c.sshKeyPath?.trim() ? 'publickey' : 'password'),
       sshPassword: c.sshPassword ?? '',
       sshKeyPath: c.sshKeyPath ?? '',
+      sshGroup: c.sshGroup ?? '',
     }
   }
   return {
@@ -83,6 +98,7 @@ export function draftToConnection(
         draft.sshAuth === 'publickey' && draft.sshKeyPath.trim()
           ? draft.sshKeyPath.trim()
           : undefined,
+      sshGroup: draft.sshGroup.trim() || undefined,
     }
   }
 

@@ -1,10 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -20,6 +26,7 @@ import type { CustomConnection } from '@/stores/app-store'
 import { randomUUID } from '@/lib/id'
 import { parseEnvLines, formatEnvLines } from '@/lib/connection-env'
 import {
+  collectSshGroups,
   connectionToDraft,
   draftToConnection,
   EMPTY_CONNECTION_DRAFT,
@@ -43,6 +50,8 @@ import {
   Pencil,
   Plug,
   Server,
+  ChevronDown,
+  FolderTree,
   Star,
   Tag,
   Terminal,
@@ -76,6 +85,10 @@ export function ConnectionSettings() {
   const [editingConnectionId, setEditingConnectionId] = useState<string | null>(null)
   const [draft, setDraft] = useState<ConnectionDraft>(EMPTY_CONNECTION_DRAFT)
   const ui = useUiClasses()
+  const existingSshGroups = useMemo(
+    () => collectSshGroups(settings?.connections ?? []),
+    [settings?.connections],
+  )
 
   if (!settings) return null
 
@@ -270,12 +283,68 @@ export function ConnectionSettings() {
             </Select>
           </SettingField>
 
-          <SettingField icon={Tag} label={t('settings.connections.name')}>
-            <Input
-              value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            />
-          </SettingField>
+          {draft.type === 'ssh' ? (
+            <div className="grid grid-cols-2 gap-4">
+              <SettingField icon={Tag} label={t('settings.connections.name')}>
+                <Input
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+              </SettingField>
+              <SettingField icon={FolderTree} label={t('settings.connections.group')}>
+                <div className="flex gap-1">
+                  <Input
+                    className="min-w-0 flex-1"
+                    value={draft.sshGroup}
+                    onChange={(e) => setDraft({ ...draft, sshGroup: e.target.value })}
+                    placeholder={t('settings.connections.groupPlaceholder')}
+                    list={
+                      existingSshGroups.length > 0 ? 'ssh-connection-groups' : undefined
+                    }
+                  />
+                  {existingSshGroups.length > 0 && (
+                    <>
+                      <datalist id="ssh-connection-groups">
+                        {existingSshGroups.map((g) => (
+                          <option key={g} value={g} />
+                        ))}
+                      </datalist>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="size-8 shrink-0"
+                            aria-label={t('settings.connections.pickGroup')}
+                          >
+                            <ChevronDown className="size-4" aria-hidden />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {existingSshGroups.map((g) => (
+                            <DropdownMenuItem
+                              key={g}
+                              onClick={() => setDraft({ ...draft, sshGroup: g })}
+                            >
+                              {g}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
+                </div>
+              </SettingField>
+            </div>
+          ) : (
+            <SettingField icon={Tag} label={t('settings.connections.name')}>
+              <Input
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </SettingField>
+          )}
 
           {draft.type === 'ssh' ? (
             <>
@@ -413,7 +482,14 @@ export function ConnectionSettings() {
                 <div className="min-w-0">
                   <p className="font-semibold">{c.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {c.type === 'ssh' ? `ssh ${c.sshUser}@${c.sshHost}` : c.command}
+                    {c.type === 'ssh'
+                      ? [
+                          `ssh ${c.sshUser}@${c.sshHost}`,
+                          c.sshGroup?.trim() ? c.sshGroup.trim() : null,
+                        ]
+                          .filter(Boolean)
+                          .join(t('common.listSeparator'))
+                      : c.command}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">

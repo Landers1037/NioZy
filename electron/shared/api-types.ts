@@ -97,6 +97,8 @@ export interface CustomConnection {
   /** 密码登录；支持 ${vaultKey} 引用存储库 */
   sshPassword?: string
   sshKeyPath?: string
+  /** SSH 连接分组（仅展示与组织用） */
+  sshGroup?: string
 }
 
 export interface AppSettings {
