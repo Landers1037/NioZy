@@ -84,7 +84,8 @@
     "welcome": "何かお手伝いできることはありますか？",
     "welcomeNoKey": "設定 → 実験的 → AI 機能で API キーを設定してください。",
     "configureKey": "先に設定 → 実験的で OpenAI API キーを設定してください",
-    "inputPlaceholder": "メッセージを入力…"
+    "inputPlaceholder": "メッセージを入力…",
+    "addAttachment": "添付を追加"
   },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },
@@ -317,6 +318,8 @@
         "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは平文または ${OPENAI_API_KEY} などのストア変数参照（密文推奨）。",
         "sidebarEnabled": "AI チャットサイドバーを有効化",
         "sidebarEnabledDesc": "右側に AI チャットサイドバーを表示。メッセージ送信には選択したプロバイダーの API キーが必要（ローカル Ollama は任意）。",
+        "attachmentsEnabled": "添付ファイルを有効化",
+        "attachmentsEnabledDesc": "オンにすると、AI サイドバーの「+」からローカルの画像やファイルを追加できます（ドラッグ＆ドロップ・貼り付けも可）。ビジョン／マルチモーダル対応モデルが必要です。",
         "sidebarWidth": "サイドバー幅",
         "sidebarWidthDesc": "AI チャットサイドバーの幅。変更後すぐに反映されます。",
         "sidebarWidths": {

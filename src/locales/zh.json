@@ -84,7 +84,8 @@
     "welcome": "有什么可以帮你的？",
     "welcomeNoKey": "请先在设置 → 实验特性 → AI 特性中配置 API Key。",
     "configureKey": "请先在设置 → 实验特性中配置 OpenAI API Key",
-    "inputPlaceholder": "输入消息…"
+    "inputPlaceholder": "输入消息…",
+    "addAttachment": "添加附件"
   },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },
@@ -326,6 +327,8 @@
         "description": "配置 AI 对话边栏与模型提供商。Runtime 仅在本机 127.0.0.1 监听。API Key 可填明文，或使用存储库变量如 ${OPENAI_API_KEY}（推荐密文变量）。",
         "sidebarEnabled": "开启 AI 对话边栏",
         "sidebarEnabledDesc": "在右侧显示 AI 对话边栏。发送消息需配置对应提供商的 API Key（Ollama 本地可留空）。",
+        "attachmentsEnabled": "支持附件",
+        "attachmentsEnabledDesc": "开启后，AI 边栏输入框旁的「+」可添加本地图片或文件（拖拽、粘贴同样可用）。需使用支持视觉/多模态的模型。",
         "sidebarWidth": "边栏宽度",
         "sidebarWidthDesc": "AI 对话边栏宽度，修改后立即生效。",
         "sidebarWidths": {

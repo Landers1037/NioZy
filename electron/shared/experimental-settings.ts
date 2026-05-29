@@ -45,6 +45,8 @@ export interface ExperimentalSettings {
   attachPtyTabSwitchDwellMs: number
   /** 开启 AI 对话边栏 */
   aiSidebarEnabled: boolean
+  /** AI 边栏支持附加本地图片/文件 */
+  aiAttachmentsEnabled: boolean
   /** AI 边栏宽度预设 */
   aiSidebarWidth: AiSidebarWidthPreset
   /** 本机 Copilot Runtime 监听端口 */
@@ -68,6 +70,7 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   attachPtyRenderMode: false,
   attachPtyTabSwitchDwellMs: DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   aiSidebarEnabled: false,
+  aiAttachmentsEnabled: false,
   aiSidebarWidth: DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
   aiRuntimePort: DEFAULT_AI_RUNTIME_PORT,
   aiProvider: DEFAULT_AI_PROVIDER,
@@ -110,6 +113,7 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     attachPtyRenderMode: o.attachPtyRenderMode === true,
     attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(o.attachPtyTabSwitchDwellMs),
     aiSidebarEnabled: o.aiSidebarEnabled === true,
+    aiAttachmentsEnabled: o.aiAttachmentsEnabled === true,
     aiSidebarWidth: normalizeAiSidebarWidthPreset(o.aiSidebarWidth),
     aiRuntimePort: normalizeAiRuntimePort(o.aiRuntimePort),
     aiProvider: provider,
