@@ -122,6 +122,8 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
 export {
   buildAiRuntimeConfig,
   resolveAiRuntimeConfig,
+  sanitizeResolvedAiRuntimeConfig,
+  warnIfAiApiKeyUnresolved,
   type AiProvider,
 } from './ai-provider-settings'
 

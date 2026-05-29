@@ -27,7 +27,11 @@ import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
 import { CopilotRuntimeServer } from '../copilot-runtime-server'
-import { buildAiRuntimeConfig, resolveAiRuntimeConfig } from '../shared/experimental-settings'
+import {
+  buildAiRuntimeConfig,
+  resolveAiRuntimeConfig,
+  sanitizeResolvedAiRuntimeConfig,
+} from '../shared/experimental-settings'
 import { containsVaultReference } from '../shared/vault-reference'
 import {
   applyChromiumPerformanceFlags,
@@ -202,19 +206,30 @@ const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
 const copilotRuntimeServer = new CopilotRuntimeServer()
 
-function syncCopilotRuntimeFromSettings(experimental = settingsStore.get().experimental): void {
+async function syncCopilotRuntimeFromSettings(
+  experimental = settingsStore.get().experimental,
+): Promise<void> {
   vaultStore.load()
   const built = buildAiRuntimeConfig(experimental)
-  const resolved = resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text))
-  void copilotRuntimeServer
-    .sync(resolved)
-    .catch((err) => console.error('[NioZy] Failed to sync copilot runtime:', err))
+  const resolved = sanitizeResolvedAiRuntimeConfig(
+    built.apiKey,
+    resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text)),
+  )
+  await copilotRuntimeServer.sync(resolved)
 }
 
-function syncCopilotRuntimeIfAiApiKeyUsesVault(): void {
+function syncCopilotRuntimeFromSettingsSafe(
+  experimental = settingsStore.get().experimental,
+): void {
+  void syncCopilotRuntimeFromSettings(experimental).catch((err) =>
+    console.error('[NioZy] Failed to sync copilot runtime:', err),
+  )
+}
+
+async function syncCopilotRuntimeIfAiApiKeyUsesVault(): Promise<void> {
   const key = settingsStore.get().experimental.aiApiKey
   if (!containsVaultReference(key)) return
-  syncCopilotRuntimeFromSettings()
+  await syncCopilotRuntimeFromSettings()
 }
 
 function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update']>[0]): boolean {
@@ -528,7 +543,7 @@ app.whenReady().then(async () => {
 
   settingsStore.load()
   vaultStore.load()
-  void syncCopilotRuntimeFromSettings()
+  syncCopilotRuntimeFromSettingsSafe()
   setDebugLogEnabled(settingsStore.get().advanced.debugLog === true)
   await syncSessionProxyFromSettings()
   initWebviewPreviewSession()
@@ -744,7 +759,11 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
 
   const updated = settingsStore.update(partial)
   if (experimentalAiSettingsChanged(partial)) {
-    syncCopilotRuntimeFromSettings(updated.experimental)
+    try {
+      await syncCopilotRuntimeFromSettings(updated.experimental)
+    } catch (err) {
+      console.error('[NioZy] Failed to sync copilot runtime:', err)
+    }
   }
   if (partial.advanced?.statusBarLiveStats !== undefined && liveBefore !== isStatusBarLiveStatsEnabled()) {
     syncSystemStatsPolling()
@@ -1084,16 +1103,24 @@ ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
 
 ipcMain.handle('vault:list', () => vaultStore.load())
 ipcMain.handle('vault:getKeys', () => vaultStore.getKeys())
-ipcMain.handle('vault:save', (_, input) => {
+ipcMain.handle('vault:save', async (_, input) => {
   vaultStore.load()
   const saved = vaultStore.save(input)
-  syncCopilotRuntimeIfAiApiKeyUsesVault()
+  try {
+    await syncCopilotRuntimeIfAiApiKeyUsesVault()
+  } catch (err) {
+    console.error('[NioZy] Failed to sync copilot runtime after vault save:', err)
+  }
   return saved
 })
-ipcMain.handle('vault:remove', (_, id: string) => {
+ipcMain.handle('vault:remove', async (_, id: string) => {
   vaultStore.load()
   vaultStore.remove(id)
-  syncCopilotRuntimeIfAiApiKeyUsesVault()
+  try {
+    await syncCopilotRuntimeIfAiApiKeyUsesVault()
+  } catch (err) {
+    console.error('[NioZy] Failed to sync copilot runtime after vault remove:', err)
+  }
 })
 ipcMain.handle('vault:resolve', (_, text: string) => {
   vaultStore.load()

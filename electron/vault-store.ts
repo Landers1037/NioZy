@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { randomUUID } from 'crypto'
 import { ensureConfigDir, getVaultFilePath } from './config-paths'
-import { VAULT_REF_PATTERN } from './shared/vault-reference'
 import { decryptSecret, encryptSecret } from './vault-crypto'
 
 export type VaultVariableType = 'plain' | 'secret'
@@ -106,13 +105,21 @@ export class VaultStore {
   }
 
   resolveText(text: string): string {
-    return text.replace(VAULT_REF_PATTERN, (_, name: string) => {
+    this.load()
+    return text.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_, name: string) => {
       const variable = this.variables.find((v) => v.key === name)
-      if (!variable) return `\${${name}}`
+      if (!variable) {
+        console.error(`[NioZy] Vault variable not found: ${name}`)
+        return `\${${name}}`
+      }
       if (variable.type === 'plain') return variable.value
       try {
         return decryptSecret(variable.value)
-      } catch {
+      } catch (err) {
+        console.error(
+          `[NioZy] Failed to decrypt vault variable "${name}". Check vault.json and niozy.key.`,
+          err,
+        )
         return `\${${name}}`
       }
     })
