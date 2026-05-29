@@ -169,7 +169,16 @@
       "drawBoldBright": "太字を明るい色で表示",
       "drawBoldBrightDesc": "xterm の drawBoldTextInBrightColors に対応",
       "rightClickCopyPaste": "右クリックでコピー / 貼り付け",
-      "rightClickCopyPasteDesc": "選択時はコピー、未選択時は貼り付け"
+      "rightClickCopyPasteDesc": "選択時はコピー、未選択時は貼り付け",
+      "background": "背景",
+      "backgroundDesc": "ターミナルの背景画像を設定します。画像は NioZy 設定ディレクトリの background フォルダに bg.拡張子 として保存されます。",
+      "backgroundPick": "画像を選択",
+      "backgroundClear": "背景をクリア",
+      "backgroundPreview": "背景プレビュー",
+      "backgroundOpacity": "背景の不透明度：{{value}}%",
+      "backgroundPickNotImage": "有効な画像ファイルを選択してください",
+      "backgroundPickFailed": "背景画像を設定できませんでした",
+      "backgroundClearFailed": "背景画像をクリアできませんでした"
     },
     "ssh": {
       "title": "SSH",

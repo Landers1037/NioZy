@@ -1,11 +1,11 @@
-import { useEffect, useCallback, useRef, useState } from 'react'
+import { useEffect, useCallback, useRef, useState, type CSSProperties } from 'react'
 import { Terminal, useTerminal } from '@wterm/react'
 import type { WTerm } from '@wterm/dom'
 import type { TerminalCore } from '@wterm/core'
 import '@wterm/react/css'
 import wtermWasmUrl from '@wterm/core/wasm?url'
 import { useAppStore } from '@/stores/app-store'
-import { resolveTerminalTheme } from '@/lib/terminal-themes'
+import { hasTerminalBackgroundImage, getTerminalChromeBackgroundColor, getTerminalCellBackgroundColor } from '@/lib/terminal-background'
 import { buildWtermFontStyle, getWtermThemeId } from '@/lib/wterm-theme'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
@@ -45,16 +45,22 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
 
   const colorScheme = settings?.terminal.colorScheme ?? 'atom'
   const wtermThemeId = getWtermThemeId(colorScheme)
-  const terminalBackground =
-    resolveTerminalTheme(colorScheme).background ?? '#101419'
+  const chromeBackground = hasTerminalBackgroundImage(settings?.terminal)
+    ? 'transparent'
+    : getTerminalChromeBackgroundColor(settings?.terminal)
 
   const wtermFontStyle = settings
-    ? buildWtermFontStyle(
-        settings.terminal.fontFamily,
-        settings.terminal.fontSize,
-        settings.terminal.fontWeight,
-        settings.terminal.fontWeightBold,
-      )
+    ? ({
+        ...buildWtermFontStyle(
+          settings.terminal.fontFamily,
+          settings.terminal.fontSize,
+          settings.terminal.fontWeight,
+          settings.terminal.fontWeightBold,
+        ),
+        ...(hasTerminalBackgroundImage(settings.terminal)
+          ? ({ '--term-bg': getTerminalCellBackgroundColor(settings.terminal) } as CSSProperties)
+          : {}),
+      } satisfies CSSProperties)
     : undefined
 
   const cursor = settings ? getTerminalCursorOptions(settings.terminal) : { cursorBlink: true }
@@ -257,7 +263,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   return (
     <div
       className="absolute inset-0 overflow-hidden p-[10px]"
-      style={{ backgroundColor: terminalBackground }}
+      style={{ backgroundColor: chromeBackground }}
     >
       <div
         ref={hostRef}

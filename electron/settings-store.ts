@@ -4,6 +4,11 @@ import { join } from 'path'
 import type { BuiltinConnections, CustomConnection } from './shared/api-types'
 import { ConnectionsStore, parseConnectionsFromUnknown } from './connections-store'
 import { ensureConfigDir, getConfigDir, getSettingsFilePath, getTermFilePath } from './config-paths'
+import {
+  normalizeTerminalBackgroundImageExt,
+  normalizeTerminalBackgroundOpacity,
+  DEFAULT_TERMINAL_BACKGROUND_OPACITY,
+} from './shared/terminal-background-settings'
 
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
@@ -89,6 +94,8 @@ export interface AppSettings {
     scrollback: number
     drawBoldTextInBrightColors: boolean
     rightClickCopyPaste: boolean
+    backgroundImageExt?: string
+    backgroundOpacity: number
   }
   connections: CustomConnection[]
   builtinConnections: BuiltinConnections
@@ -167,6 +174,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
+    backgroundOpacity: DEFAULT_TERMINAL_BACKGROUND_OPACITY,
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
@@ -239,6 +247,10 @@ function buildAppSettingsFromStored(
       ),
       rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
       renderer: normalizeTerminalRenderer(stored.terminal?.renderer),
+      backgroundImageExt: normalizeTerminalBackgroundImageExt(stored.terminal?.backgroundImageExt),
+      backgroundOpacity: normalizeTerminalBackgroundOpacity(
+        stored.terminal?.backgroundOpacity ?? DEFAULT_SETTINGS.terminal.backgroundOpacity,
+      ),
     },
     advanced: {
       ...DEFAULT_SETTINGS.advanced,
@@ -441,10 +453,14 @@ function deepMerge<T extends object>(target: T, source: Partial<T>): T {
   const out = { ...target }
   for (const key of Object.keys(source) as (keyof T)[]) {
     const sv = source[key]
+    if (sv === undefined) {
+      delete (out as Record<string, unknown>)[key as string]
+      continue
+    }
     const tv = target[key]
     if (sv && typeof sv === 'object' && !Array.isArray(sv) && tv && typeof tv === 'object') {
       out[key] = deepMerge(tv as object, sv as object) as T[keyof T]
-    } else if (sv !== undefined) {
+    } else {
       out[key] = sv as T[keyof T]
     }
   }

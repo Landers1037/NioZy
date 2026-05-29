@@ -218,14 +218,14 @@ export function TitleBarTerminalControls() {
                 <div className="grid grid-rows-2 gap-2">
                   <button
                     type="button"
-                    className="h-[22px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('top')}
                     aria-label={t('titleBar.snapLayout.top')}
                     title={t('titleBar.snapLayout.top')}
                   />
                   <button
                     type="button"
-                    className="h-[22px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('bottom')}
                     aria-label={t('titleBar.snapLayout.bottom')}
                     title={t('titleBar.snapLayout.bottom')}
@@ -238,28 +238,28 @@ export function TitleBarTerminalControls() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    className="h-[22px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('topLeft')}
                     aria-label={t('titleBar.snapLayout.topLeft')}
                     title={t('titleBar.snapLayout.topLeft')}
                   />
                   <button
                     type="button"
-                    className="h-[22px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('topRight')}
                     aria-label={t('titleBar.snapLayout.topRight')}
                     title={t('titleBar.snapLayout.topRight')}
                   />
                   <button
                     type="button"
-                    className="h-[22px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('bottomLeft')}
                     aria-label={t('titleBar.snapLayout.bottomLeft')}
                     title={t('titleBar.snapLayout.bottomLeft')}
                   />
                   <button
                     type="button"
-                    className="h-[22px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
+                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
                     onClick={() => snap('bottomRight')}
                     aria-label={t('titleBar.snapLayout.bottomRight')}
                     title={t('titleBar.snapLayout.bottomRight')}
