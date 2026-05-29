@@ -25,6 +25,7 @@ import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
 import { cn } from '@/lib/utils'
+import { AI_SIDEBAR_WIDTH_PX, useAiSidebarStore } from '@/stores/ai-sidebar-store'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -194,9 +195,22 @@ export default function App() {
     !!attachTargetTab &&
     attachCommitted.tabId === attachTargetTab.id
   const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div
+      className={cn(
+        'flex h-full flex-col bg-background',
+        aiSidebarEnabled &&
+          aiSidebarOpen &&
+          'transition-[padding-inline-end] duration-300 ease-out',
+      )}
+      style={
+        aiSidebarEnabled && aiSidebarOpen
+          ? { paddingInlineEnd: AI_SIDEBAR_WIDTH_PX }
+          : undefined
+      }
+    >
       {browserDevPreview && (
         <div
           className="shrink-0 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1 text-center text-xs text-amber-900 dark:text-amber-200"

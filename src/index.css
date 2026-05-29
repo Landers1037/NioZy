@@ -196,6 +196,17 @@ html.dark[data-ui-style='windows-classic'] {
 }
 
 @layer base {
+  /*
+   * CopilotKit pushes document.body via marginInlineEnd from a ResizeObserver on the sidebar.
+   * The aside uses w-full before md constraints; opening Radix selects can mis-measure ~viewport width,
+   * leaving a large gap before the fixed 480px panel. NioZy reserves space on the app shell instead.
+   */
+  body:has([data-copilot-sidebar]) {
+    margin-inline-end: 0 !important;
+    margin-inline-start: 0 !important;
+    transition: none !important;
+  }
+
   body {
     font-weight: var(--app-font-weight, 400);
   }

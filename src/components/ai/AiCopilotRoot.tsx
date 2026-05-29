@@ -4,7 +4,7 @@ import { CopilotKit } from '@copilotkit/react-core'
 import { CopilotSidebar, useCopilotChatConfiguration } from '@copilotkit/react-core/v2'
 import '@copilotkit/react-core/v2/styles.css'
 import { useAppStore } from '@/stores/app-store'
-import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
+import { AI_SIDEBAR_WIDTH_PX, useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import { buildAiRuntimeConfig } from '../../../electron/shared/experimental-settings'
 import { isAiRuntimeConfigured } from '@/lib/ai-provider-options'
 import { getElectronAPI } from '@/lib/electron-client'
@@ -97,6 +97,15 @@ export function AiCopilotRoot() {
     }
   }, [aiSidebarEnabled, runtimeConfigKey])
 
+  // CopilotKit may set body marginInlineEnd from a mis-measured sidebar width; always clear on exit.
+  useEffect(() => {
+    return () => {
+      document.body.style.marginInlineEnd = ''
+      document.body.style.marginInlineStart = ''
+      document.body.style.transition = ''
+    }
+  }, [])
+
   if (!aiSidebarEnabled || !runtimeUrl) return null
   const configured = aiRuntime ? isAiRuntimeConfigured(aiRuntime) : false
 
@@ -110,6 +119,7 @@ export function AiCopilotRoot() {
       <CopilotSidebar
         defaultOpen={false}
         position="right"
+        width={AI_SIDEBAR_WIDTH_PX}
         toggleButton={HiddenAiSidebarToggle}
         labels={{
           modalHeaderTitle: t('aiSidebar.title'),

@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 
+/** Keep in sync with CopilotKit `CopilotSidebar` width (default 480px). */
+export const AI_SIDEBAR_WIDTH_PX = 480
+
 interface AiSidebarState {
   isOpen: boolean
   setOpen: (open: boolean) => void
