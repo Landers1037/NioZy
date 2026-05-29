@@ -126,6 +126,9 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('fs:openWithProgram', programPath, targetPath),
     pickPrivateKey: () => ipcRenderer.invoke('files:pickPrivateKey') as Promise<string | null>,
   },
+  logging: {
+    openLogDirectory: () => ipcRenderer.invoke('logging:openLogDirectory') as Promise<void>,
+  },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
     getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),

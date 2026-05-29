@@ -10,6 +10,7 @@ import {
   Plug,
   Settings2,
   SlidersHorizontal,
+  ScrollText,
   Database,
   Keyboard,
   FolderCode,
@@ -27,6 +28,7 @@ import { FilesystemSettings } from './FilesystemSettings'
 import { ConnectionSettings } from './ConnectionSettings'
 import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
+import { LogSettings } from './LogSettings'
 import { VaultSettings } from './VaultSettings'
 import { ShortcutSettings } from './ShortcutSettings'
 import { ExperimentalSettings } from './ExperimentalSettings'
@@ -44,6 +46,7 @@ const SECTION_DEFS = [
   { id: 'vault', icon: Database },
   { id: 'shortcuts', icon: Keyboard },
   { id: 'system', icon: Settings2 },
+  { id: 'logging', icon: ScrollText },
   { id: 'advanced', icon: SlidersHorizontal },
   { id: 'experimental', icon: FlaskConical },
 ] as const satisfies ReadonlyArray<{ id: string; icon: LucideIcon }>
@@ -99,6 +102,7 @@ export function SettingsPanel() {
         {section === 'vault' && <VaultSettings />}
         {section === 'shortcuts' && <ShortcutSettings />}
         {section === 'system' && <SystemSettings />}
+        {section === 'logging' && <LogSettings />}
         {section === 'advanced' && <AdvancedSettings />}
         {section === 'experimental' && <ExperimentalSettings />}
       </div>

@@ -1,27 +1,21 @@
 import type { SshConnectionProfile } from './shared/ssh-types'
+import { createAppLogger } from './app-log'
 
-const TAG = '[NioZy][SCP]'
-
-function write(
-  level: 'log' | 'warn' | 'error',
-  message: string,
-  extra?: Record<string, unknown>,
-): void {
-  const fn = console[level]
-  if (extra && Object.keys(extra).length > 0) fn(TAG, message, extra)
-  else fn(TAG, message)
-}
+const log = createAppLogger('[NioZy][SCP]')
 
 export function scpLog(message: string, extra?: Record<string, unknown>): void {
-  write('log', message, extra)
+  if (extra && Object.keys(extra).length > 0) log.info(message, extra)
+  else log.info(message)
 }
 
 export function scpLogWarn(message: string, extra?: Record<string, unknown>): void {
-  write('warn', message, extra)
+  if (extra && Object.keys(extra).length > 0) log.warn(message, extra)
+  else log.warn(message)
 }
 
 export function scpLogError(message: string, extra?: Record<string, unknown>): void {
-  write('error', message, extra)
+  if (extra && Object.keys(extra).length > 0) log.error(message, extra)
+  else log.error(message)
 }
 
 export function scpProfileForLog(profile: SshConnectionProfile): Record<string, unknown> {

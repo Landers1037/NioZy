@@ -54,6 +54,10 @@ import {
   DEFAULT_PREVIEW_SETTINGS,
   normalizePreviewSettings,
 } from './shared/preview-settings'
+import {
+  DEFAULT_LOGGING_SETTINGS,
+  normalizeLoggingSettings,
+} from './shared/logging-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -106,9 +110,8 @@ export interface AppSettings {
     preserveWindowBounds: boolean
     /** preserveWindowBounds 为 true 时由主进程写入 */
     lastWindowState?: SavedWindowState
-    /** 为 true 时将主进程 console 追加写入当前工作目录 NioZy.log */
-    debugLog: boolean
   }
+  logging: import('./shared/logging-settings').LoggingSettings
   shortcuts: AppShortcuts
   ssh: import('./shared/ssh-settings').SshSettings
   shell: import('./shared/shell-settings').ShellSettings
@@ -180,8 +183,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     statusBarLiveStats: true,
     shellContextMenu: false,
     preserveWindowBounds: false,
-    debugLog: false,
   },
+  logging: { ...DEFAULT_LOGGING_SETTINGS },
   shortcuts: { ...DEFAULT_SHORTCUTS },
   ssh: { ...DEFAULT_SSH_SETTINGS },
   shell: { ...DEFAULT_SHELL_SETTINGS },
@@ -252,12 +255,14 @@ function buildAppSettingsFromStored(
         typeof stored.advanced?.preserveWindowBounds === 'boolean'
           ? stored.advanced.preserveWindowBounds
           : DEFAULT_SETTINGS.advanced.preserveWindowBounds,
-      debugLog:
-        typeof stored.advanced?.debugLog === 'boolean'
-          ? stored.advanced.debugLog
-          : DEFAULT_SETTINGS.advanced.debugLog,
       lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
     },
+    logging: normalizeLoggingSettings(
+      stored.logging,
+      typeof (stored.advanced as { debugLog?: boolean } | undefined)?.debugLog === 'boolean'
+        ? (stored.advanced as { debugLog: boolean }).debugLog
+        : undefined,
+    ),
     shortcuts: {
       ...DEFAULT_SETTINGS.shortcuts,
       ...stored.shortcuts,

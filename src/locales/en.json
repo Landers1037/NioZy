@@ -132,6 +132,7 @@
       "vault": "Vault",
       "shortcuts": "Shortcuts",
       "system": "System",
+      "logging": "Logging",
       "advanced": "Advanced",
       "experimental": "Experimental"
     },
@@ -382,9 +383,19 @@
       "shellContextMenuDesc": "Adds “Open with NioZy” to folder and folder-background context menus, opening a new PowerShell tab in that directory",
       "preserveWindowBounds": "Remember window size",
       "preserveWindowBoundsDesc": "Saves size and position when you close the window; if maximized on close, starts maximized next time",
-      "debugLog": "Enable debug logging",
-      "debugLogDesc": "Append main-process console output to NioZy.log in the current working directory",
       "transparency": "Window opacity: {{value}}%"
+    },
+    "logging": {
+      "title": "Logging",
+      "description": "Main-process log switch, level, and file path",
+      "enabled": "Enable logging",
+      "enabledDesc": "No log file is written when disabled",
+      "level": "Log level",
+      "levelDesc": "Only writes messages at or above the selected level (DEBUG, INFO, WARN, ERROR)",
+      "filePath": "Log file path",
+      "filePathDesc": "Leave empty to use NioZy.log in the application working directory",
+      "filePathPlaceholder": "Default: working directory/NioZy.log",
+      "openLogDirectory": "Open folder"
     },
     "shortcuts": {
       "title": "Shortcuts",
@@ -596,7 +607,8 @@
     "exportNoTerminal": "Export failed: terminal not found",
     "exportNotReady": "Export failed: terminal not ready",
     "exportSuccess": "Terminal exported",
-    "debugLogEnabled": "Debug logging enabled. Main-process output is appended to NioZy.log in the current directory.",
+    "loggingEnabled": "Logging enabled. Main-process output is written at the selected level.",
+    "openLogDirectoryFailed": "Could not open log folder",
     "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
     "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
     "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry.",
