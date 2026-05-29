@@ -1,4 +1,4 @@
-import { containsVaultReference } from './vault-reference'
+import { containsVaultReference, listVaultReferenceNames } from './vault-reference'
 
 export type AiProvider = 'openai' | 'anthropic' | 'deepseek' | 'ollama' | 'openai-compatible'
 
@@ -110,6 +110,39 @@ export function resolveAiRuntimeConfig(
     ...config,
     apiKey: resolveText(config.apiKey).trim(),
   }
+}
+
+export function warnIfAiApiKeyUnresolved(
+  storedApiKey: string,
+  resolvedApiKey: string,
+  provider: AiProvider,
+): void {
+  if (!aiProviderNeedsApiKey(provider)) return
+  const key = resolvedApiKey.trim()
+  if (key && !containsVaultReference(key)) return
+  const refs = listVaultReferenceNames(storedApiKey)
+  if (refs.length > 0) {
+    console.error(
+      `[NioZy] AI API Key vault reference could not be resolved: ${refs.map((r) => `\${${r}}`).join(', ')}. ` +
+        'Check variable names in Settings → Vault and that secret variables decrypt correctly.',
+    )
+    return
+  }
+  if (!key) {
+    console.error('[NioZy] AI API Key is empty after resolving vault references.')
+  }
+}
+
+/** 避免将未解析的 ${VAR} 当作 API Key 发给上游 */
+export function sanitizeResolvedAiRuntimeConfig(
+  storedApiKey: string,
+  config: AiRuntimeConfig,
+): AiRuntimeConfig {
+  if (!aiProviderNeedsApiKey(config.provider)) return config
+  const key = config.apiKey.trim()
+  if (key && !containsVaultReference(key)) return config
+  warnIfAiApiKeyUnresolved(storedApiKey, key, config.provider)
+  return { ...config, apiKey: '' }
 }
 
 export function buildAiRuntimeConfig(experimental: {
