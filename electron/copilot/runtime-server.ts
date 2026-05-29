@@ -1,4 +1,4 @@
-import './copilot-telemetry-env'
+import '../copilot-telemetry-env'
 import { createServer, type Server } from 'node:http'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
@@ -7,7 +7,7 @@ import { createCopilotNodeListener } from '@copilotkit/runtime/v2/node'
 import {
   aiProviderUsesOpenAiApi,
   type AiRuntimeConfig,
-} from './shared/ai-provider-settings'
+} from '../shared/ai-provider-settings'
 
 const BASE_PATH = '/api/copilotkit'
 const HOST = '127.0.0.1'

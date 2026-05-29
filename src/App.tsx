@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, lazy, Suspense } from 'react'
+import { useEffect, useMemo, useRef, lazy, Suspense, useState, type ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
 import { TitleBar } from '@/components/layout/TitleBar'
@@ -43,12 +43,6 @@ const ScpTransferDialog = lazy(() =>
     default: m.ScpTransferDialog,
   })),
 )
-const AiCopilotRoot = lazy(() =>
-  import('@/components/ai/AiCopilotRoot').then((m) => ({
-    default: m.AiCopilotRoot,
-  })),
-)
-
 export default function App() {
   const { t } = useTranslation()
   const tabs = useAppStore((s) => s.tabs)
@@ -200,6 +194,34 @@ export default function App() {
   const aiSidebarWidthPx = resolveAiSidebarWidthPx(
     settings?.experimental.aiSidebarWidth ?? 'default',
   )
+  const [AiCopilotRoot, setAiCopilotRoot] = useState<ComponentType | null>(null)
+  const [aiMountKey, setAiMountKey] = useState(0)
+
+  useEffect(() => {
+    if (!aiSidebarEnabled) {
+      useAiSidebarStore.getState().reset()
+      document.body.style.marginInlineEnd = ''
+      document.body.style.marginInlineStart = ''
+      document.body.style.transition = ''
+      setAiCopilotRoot(null)
+      return
+    }
+
+    let cancelled = false
+    void import('@/components/ai/AiCopilotRoot').then((m) => {
+      if (!cancelled) setAiCopilotRoot(() => m.AiCopilotRoot)
+    })
+
+    return () => {
+      cancelled = true
+      setAiCopilotRoot(null)
+      useAiSidebarStore.getState().reset()
+      document.body.style.marginInlineEnd = ''
+      document.body.style.marginInlineStart = ''
+      document.body.style.transition = ''
+      setAiMountKey((k) => k + 1)
+    }
+  }, [aiSidebarEnabled])
 
   return (
     <div
@@ -279,8 +301,8 @@ export default function App() {
       <StatusBar />
       <FilePreviewDialog />
       <Toaster position="bottom-right" richColors closeButton />
-      {aiSidebarEnabled && (
-        <Suspense fallback={null}>
+      {aiSidebarEnabled && AiCopilotRoot && (
+        <Suspense key={aiMountKey} fallback={null}>
           <AiCopilotRoot />
         </Suspense>
       )}

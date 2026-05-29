@@ -1,4 +1,3 @@
-import '../copilot-telemetry-env'
 import {
   app,
   BrowserWindow,
@@ -26,7 +25,11 @@ import { sendToRenderer } from './window-ipc'
 import { createTerminalOutputFlusher } from './terminal-output-flush'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
-import { CopilotRuntimeServer } from '../copilot-runtime-server'
+import {
+  syncCopilotRuntime,
+  disposeCopilotRuntime,
+  getCopilotRuntimeUrl,
+} from '../copilot/lazy'
 import {
   buildAiRuntimeConfig,
   resolveAiRuntimeConfig,
@@ -204,8 +207,6 @@ const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
 const settingsStore = new SettingsStore()
 const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
-const copilotRuntimeServer = new CopilotRuntimeServer()
-
 async function syncCopilotRuntimeFromSettings(
   experimental = settingsStore.get().experimental,
 ): Promise<void> {
@@ -215,7 +216,7 @@ async function syncCopilotRuntimeFromSettings(
     built.apiKey,
     resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text)),
   )
-  await copilotRuntimeServer.sync(resolved)
+  await syncCopilotRuntime(resolved)
 }
 
 function syncCopilotRuntimeFromSettingsSafe(
@@ -589,9 +590,9 @@ app.on('before-quit', () => {
   terminalService.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()
-  void copilotRuntimeServer
-    .stop(true)
-    .catch((err) => console.error('[NioZy] Failed to stop copilot runtime:', err))
+  void disposeCopilotRuntime(true).catch((err) =>
+    console.error('[NioZy] Failed to stop copilot runtime:', err),
+  )
 })
 
 app.on('will-quit', () => {
@@ -701,7 +702,7 @@ ipcMain.handle(
 )
 
 ipcMain.handle('settings:get', () => settingsStore.get())
-ipcMain.handle('copilot:getRuntimeUrl', () => copilotRuntimeServer.getRuntimeUrl())
+ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 
 ipcMain.handle('settings:exportToFile', async () => {
   const date = new Date().toISOString().slice(0, 10)
