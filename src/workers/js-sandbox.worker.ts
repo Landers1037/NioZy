@@ -103,16 +103,11 @@ async function runEval(requestId: string, code: string): Promise<void> {
   const wrapped = wrapJsSandboxEvalCode(code)
   let finalOutput: Extract<JsSandboxWorkerEvent, { type: 'result' | 'error' }> | undefined
 
-  console.log('[sandbox-worker] runEval', requestId, 'expectsResult=', expectsResult)
-  console.log('[sandbox-worker] wrapped code:', wrapped)
-
   try {
     const result = vm.evalCode(wrapped)
-    console.log('[sandbox-worker] evalCode done, hasError=', !!result.error)
     if (result.error) {
       const message = truncateOutput(vm.dump(result.error))
       result.error.dispose()
-      console.log('[sandbox-worker] error:', message)
       finalOutput = { type: 'error', requestId, message }
     } else {
       result.value.dispose()
@@ -121,7 +116,6 @@ async function runEval(requestId: string, code: string): Promise<void> {
         const dumped = vm.dump(valueHandle)
         valueHandle.dispose()
         const message = truncateOutput(formatEvalResult(dumped))
-        console.log('[sandbox-worker] result dumped:', JSON.stringify(dumped), 'message:', message)
         if (message !== 'undefined') {
           finalOutput = { type: 'result', requestId, message }
         }
@@ -129,11 +123,9 @@ async function runEval(requestId: string, code: string): Promise<void> {
     }
   } catch (err) {
     const message = truncateOutput(err instanceof Error ? err.message : String(err))
-    console.log('[sandbox-worker] catch:', message)
     finalOutput = { type: 'error', requestId, message }
   } finally {
     currentRequestId = ''
-    console.log('[sandbox-worker] posting done, output=', JSON.stringify(finalOutput))
     post({ type: 'done', requestId, output: finalOutput })
   }
 }

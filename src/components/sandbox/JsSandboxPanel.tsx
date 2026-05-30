@@ -1,7 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Braces, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  applyJsSandboxCompletion,
+  getJsSandboxCompletions,
+  type JsSandboxCompletion,
+} from '@/lib/js-sandbox-completions'
 import { jsSandboxClient } from '@/lib/js-sandbox-client'
 import {
   JS_SANDBOX_MAX_UI_LINES,
@@ -30,14 +35,29 @@ export function JsSandboxPanel() {
   const { t } = useTranslation()
   const fontFamily = useAppStore((s) => s.settings?.terminal.fontFamily)
   const [input, setInput] = useState('')
+  const [cursor, setCursor] = useState(0)
   const [lines, setLines] = useState<JsSandboxOutputLine[]>([])
   const [running, setRunning] = useState(false)
   const [ready, setReady] = useState(false)
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [suggestionIndex, setSuggestionIndex] = useState(0)
+  const [completionDismissed, setCompletionDismissed] = useState(false)
   const outputRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const requestCounter = useRef(0)
+
+  const completion = useMemo(
+    () => (completionDismissed ? null : getJsSandboxCompletions(input, cursor, history)),
+    [completionDismissed, input, cursor, history],
+  )
+  const suggestions = completion?.items ?? []
+  const suggestionsOpen = suggestions.length > 0
+
+  useEffect(() => {
+    setSuggestionIndex(0)
+    setCompletionDismissed(false)
+  }, [input, cursor])
 
   useEffect(() => {
     let cancelled = false
@@ -64,11 +84,34 @@ export function JsSandboxPanel() {
   }, [])
 
   useEffect(() => {
-    console.log('[sandbox-panel] lines state updated, count=', lines.length, lines.map((l) => l.kind + ':' + l.text).join(' | '))
     const el = outputRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
   }, [lines, running])
+
+  const syncCursor = useCallback((el: HTMLTextAreaElement) => {
+    setCursor(el.selectionStart ?? el.value.length)
+  }, [])
+
+  const applySuggestion = useCallback(
+    (item: JsSandboxCompletion) => {
+      if (!completion) return
+      const { text, cursor: nextCursor } = applyJsSandboxCompletion(input, completion.context, item)
+      setInput(text)
+      setCursor(nextCursor)
+      requestAnimationFrame(() => {
+        const el = textareaRef.current
+        if (!el) return
+        el.focus()
+        el.setSelectionRange(nextCursor, nextCursor)
+      })
+    },
+    [completion, input],
+  )
+
+  const appendOutputLine = useCallback((line: JsSandboxOutputLine) => {
+    setLines((prev) => appendLines(prev, [line]))
+  }, [])
 
   const runCode = useCallback(
     async (code: string) => {
@@ -83,80 +126,68 @@ export function JsSandboxPanel() {
       setHistoryIndex(-1)
 
       const requestId = `req-${++requestCounter.current}`
-      const inputLine: JsSandboxOutputLine = {
-        id: nextLineId(),
-        kind: 'input',
-        text: trimmed,
-      }
-      setLines((prev) => appendLines(prev, [inputLine]))
-
-      const pending: JsSandboxOutputLine[] = []
-
-      const flushPending = () => {
-        console.log('[sandbox-panel] flushPending, pending.length=', pending.length)
-        if (pending.length === 0) return
-        const snapshot = [...pending]
-        setLines((prev) => {
-          console.log('[sandbox-panel] setLines updater, prev.length=', prev.length, 'adding=', snapshot.map((l) => l.kind + ':' + l.text).join(' | '))
-          return appendLines(prev, snapshot)
-        })
-        pending.length = 0
-      }
+      appendOutputLine({ id: nextLineId(), kind: 'input', text: trimmed })
 
       const onEvent = (event: JsSandboxWorkerEvent) => {
-        console.log('[sandbox-panel] onEvent called, type=', event.type, JSON.stringify(event))
         if (event.type === 'ready') return
-        if (!('requestId' in event) || event.requestId !== requestId) {
-          console.log('[sandbox-panel] requestId mismatch, skipping', 'event.requestId=' + ('requestId' in event ? event.requestId : 'none'), 'expected=', requestId)
-          return
-        }
+        if (!('requestId' in event) || event.requestId !== requestId) return
         if (event.type === 'log') {
-          pending.push({
+          appendOutputLine({
             id: nextLineId(),
             kind: 'log',
             level: event.level,
             text: event.message,
           })
         } else if (event.type === 'result') {
-          console.log('[sandbox-panel] got result:', event.message)
-          pending.push({
-            id: nextLineId(),
-            kind: 'result',
-            text: event.message,
-          })
+          appendOutputLine({ id: nextLineId(), kind: 'result', text: event.message })
         } else if (event.type === 'error') {
-          pending.push({
-            id: nextLineId(),
-            kind: 'error',
-            text: event.message,
-          })
+          appendOutputLine({ id: nextLineId(), kind: 'error', text: event.message })
         }
-        flushPending()
       }
 
       try {
         await jsSandboxClient.eval(trimmed, requestId, onEvent)
-        flushPending()
       } catch (err) {
-        setLines((prev) =>
-          appendLines(prev, [
-            {
-              id: nextLineId(),
-              kind: 'error',
-              text: err instanceof Error ? err.message : String(err),
-            },
-          ]),
-        )
+        appendOutputLine({
+          id: nextLineId(),
+          kind: 'error',
+          text: err instanceof Error ? err.message : String(err),
+        })
       } finally {
         setRunning(false)
         setInput('')
+        setCursor(0)
         textareaRef.current?.focus()
       }
     },
-    [running],
+    [appendOutputLine, running],
   )
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (suggestionsOpen) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSuggestionIndex((i) => (i + 1) % suggestions.length)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSuggestionIndex((i) => (i - 1 + suggestions.length) % suggestions.length)
+        return
+      }
+      if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
+        e.preventDefault()
+        const item = suggestions[suggestionIndex]
+        if (item) applySuggestion(item)
+        return
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setCompletionDismissed(true)
+        return
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       void runCode(input)
@@ -167,7 +198,9 @@ export function JsSandboxPanel() {
       const nextIndex =
         historyIndex < 0 ? history.length - 1 : Math.max(0, historyIndex - 1)
       setHistoryIndex(nextIndex)
-      setInput(history[nextIndex] ?? '')
+      const nextInput = history[nextIndex] ?? ''
+      setInput(nextInput)
+      setCursor(nextInput.length)
       return
     }
     if (e.key === 'ArrowDown' && historyIndex >= 0) {
@@ -176,9 +209,12 @@ export function JsSandboxPanel() {
       if (nextIndex >= history.length) {
         setHistoryIndex(-1)
         setInput('')
+        setCursor(0)
       } else {
         setHistoryIndex(nextIndex)
-        setInput(history[nextIndex] ?? '')
+        const nextInput = history[nextIndex] ?? ''
+        setInput(nextInput)
+        setCursor(nextInput.length)
       }
     }
   }
@@ -272,18 +308,52 @@ export function JsSandboxPanel() {
 
       <div className="shrink-0 border-t border-border p-2">
         <div className="flex gap-2">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={!ready || running}
-            rows={3}
-            spellCheck={false}
-            placeholder={t('sandbox.inputPlaceholder')}
-            className="min-h-[72px] flex-1 resize-y rounded-md border border-input bg-muted/30 px-3 py-2 font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-            style={monoStyle}
-          />
+          <div className="relative min-w-0 flex-1">
+            {suggestionsOpen && (
+              <ul
+                role="listbox"
+                className="absolute bottom-full left-0 z-50 mb-1 max-h-48 w-full overflow-y-auto rounded-md border border-border bg-popover py-1 shadow-md"
+              >
+                {suggestions.map((item, index) => (
+                  <li key={`${item.kind}-${item.insertText}-${index}`} role="option" aria-selected={index === suggestionIndex}>
+                    <button
+                      type="button"
+                      className={cn(
+                        'flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-sm',
+                        index === suggestionIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/60',
+                      )}
+                      style={monoStyle}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applySuggestion(item)}
+                    >
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.detail && (
+                        <span className="shrink-0 text-xs text-muted-foreground">{item.detail}</span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value)
+                syncCursor(e.target)
+              }}
+              onSelect={(e) => syncCursor(e.currentTarget)}
+              onClick={(e) => syncCursor(e.currentTarget)}
+              onKeyUp={(e) => syncCursor(e.currentTarget)}
+              onKeyDown={handleKeyDown}
+              disabled={!ready || running}
+              rows={3}
+              spellCheck={false}
+              placeholder={t('sandbox.inputPlaceholder')}
+              className="min-h-[72px] w-full resize-y rounded-md border border-input bg-muted/30 px-3 py-2 font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              style={monoStyle}
+            />
+          </div>
           <Button
             type="button"
             className="shrink-0 self-end"
