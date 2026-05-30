@@ -277,8 +277,9 @@ function buildAppSettingsFromStored(
     },
     logging: normalizeLoggingSettings(
       stored.logging,
-      typeof (stored.advanced as { debugLog?: boolean } | undefined)?.debugLog === 'boolean'
-        ? (stored.advanced as { debugLog: boolean }).debugLog
+      typeof (stored.advanced as unknown as { debugLog?: unknown } | undefined)?.debugLog ===
+        'boolean'
+        ? (stored.advanced as unknown as { debugLog: boolean }).debugLog
         : undefined,
     ),
     shortcuts: {

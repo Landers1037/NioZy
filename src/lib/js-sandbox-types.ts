@@ -14,7 +14,11 @@ export type JsSandboxWorkerEvent =
   | { type: 'log'; requestId: string; level: JsSandboxLogLevel; message: string }
   | { type: 'result'; requestId: string; message: string }
   | { type: 'error'; requestId: string; message: string }
-  | { type: 'done'; requestId: string }
+  | {
+      type: 'done'
+      requestId: string
+      output?: Extract<JsSandboxWorkerEvent, { type: 'result' | 'error' }>
+    }
 
 export type JsSandboxOutputLine =
   | { id: string; kind: 'input'; text: string }

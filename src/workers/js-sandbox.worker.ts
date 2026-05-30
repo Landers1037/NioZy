@@ -3,7 +3,11 @@ import {
   disposeQuickJsSandboxModule,
   loadQuickJsSandboxModule,
 } from '@/lib/quickjs-sandbox-runtime'
-import { wrapJsSandboxEvalCode } from '@/lib/js-sandbox-eval-wrap'
+import {
+  JS_SANDBOX_RESULT_GLOBAL,
+  shouldCaptureJsSandboxEvalResult,
+  wrapJsSandboxEvalCode,
+} from '@/lib/js-sandbox-eval-wrap'
 import {
   JS_SANDBOX_EVAL_TIMEOUT_MS,
   JS_SANDBOX_MAX_OUTPUT_CHARS,
@@ -17,38 +21,49 @@ function truncateOutput(text: string): string {
   return `${text.slice(0, JS_SANDBOX_MAX_OUTPUT_CHARS)}\n…[truncated]`
 }
 
+function formatEvalResult(dumped: unknown): string {
+  if (dumped === undefined) return 'undefined'
+  if (typeof dumped === 'string') return dumped
+  if (typeof dumped === 'number' || typeof dumped === 'boolean' || dumped === null) {
+    return String(dumped)
+  }
+  if (typeof dumped === 'bigint') return `${dumped}n`
+  if (typeof dumped === 'symbol') return dumped.toString()
+  try {
+    return JSON.stringify(dumped, null, 2) ?? String(dumped)
+  } catch {
+    return String(dumped)
+  }
+}
+
 function post(event: JsSandboxWorkerEvent): void {
   self.postMessage(event)
 }
 
 let quickJsReady: Promise<QuickJSWASMModule> | null = null
+let sandboxContext: QuickJSContext | null = null
+let currentRequestId = ''
+let evalDeadline = 0
 
 async function ensureQuickJS() {
   quickJsReady ??= loadQuickJsSandboxModule()
   return quickJsReady
 }
 
-function installConsole(vm: QuickJSContext, requestId: string): void {
+/** 复用同一 Context；console 只安装一次，避免每次 eval 后 dispose 触发 GC 泄漏断言。 */
+function installConsoleOnce(vm: QuickJSContext): void {
   const consoleHandle = vm.newObject()
   const levels: JsSandboxLogLevel[] = ['log', 'warn', 'error']
 
   for (const level of levels) {
-    const fn = vm.newFunction(level, (...handles) => {
-      const parts: string[] = []
-      for (const handle of handles) {
-        try {
-          parts.push(vm.dump(handle))
-        } finally {
-          handle.dispose()
-        }
-      }
+    const fn = vm.newFunction(level, (...argHandles) => {
+      const parts = argHandles.map((handle) => vm.dump(handle))
       post({
         type: 'log',
-        requestId,
+        requestId: currentRequestId,
         level,
         message: truncateOutput(parts.join(' ')),
       })
-      return vm.undefined
     })
     vm.setProp(consoleHandle, level, fn)
     fn.dispose()
@@ -58,36 +73,68 @@ function installConsole(vm: QuickJSContext, requestId: string): void {
   consoleHandle.dispose()
 }
 
-async function runEval(requestId: string, code: string): Promise<void> {
+async function ensureSandboxContext(): Promise<QuickJSContext> {
   const QuickJS = await ensureQuickJS()
-  const vm = QuickJS.newContext()
-  const deadline = Date.now() + JS_SANDBOX_EVAL_TIMEOUT_MS
+  if (!sandboxContext) {
+    sandboxContext = QuickJS.newContext()
+    sandboxContext.runtime.setInterruptHandler(() => Date.now() > evalDeadline)
+    installConsoleOnce(sandboxContext)
+  }
+  return sandboxContext
+}
 
-  vm.runtime.setInterruptHandler(() => Date.now() > deadline)
+function disposeSandboxContext(): void {
+  if (sandboxContext) {
+    try {
+      sandboxContext.dispose()
+    } catch {
+      // Worker 即将终止时忽略 dispose 断言
+    }
+    sandboxContext = null
+  }
+  currentRequestId = ''
+}
+
+async function runEval(requestId: string, code: string): Promise<void> {
+  const vm = await ensureSandboxContext()
+  currentRequestId = requestId
+  evalDeadline = Date.now() + JS_SANDBOX_EVAL_TIMEOUT_MS
+  const expectsResult = shouldCaptureJsSandboxEvalResult(code)
+  const wrapped = wrapJsSandboxEvalCode(code)
+  let finalOutput: Extract<JsSandboxWorkerEvent, { type: 'result' | 'error' }> | undefined
+
+  console.log('[sandbox-worker] runEval', requestId, 'expectsResult=', expectsResult)
+  console.log('[sandbox-worker] wrapped code:', wrapped)
 
   try {
-    installConsole(vm, requestId)
-    const result = vm.evalCode(wrapJsSandboxEvalCode(code))
+    const result = vm.evalCode(wrapped)
+    console.log('[sandbox-worker] evalCode done, hasError=', !!result.error)
     if (result.error) {
       const message = truncateOutput(vm.dump(result.error))
       result.error.dispose()
-      post({ type: 'error', requestId, message })
+      console.log('[sandbox-worker] error:', message)
+      finalOutput = { type: 'error', requestId, message }
     } else {
-      const dumped = vm.dump(result.value)
       result.value.dispose()
-      if (dumped !== 'undefined') {
-        post({ type: 'result', requestId, message: truncateOutput(dumped) })
+      if (expectsResult) {
+        const valueHandle = vm.getProp(vm.global, JS_SANDBOX_RESULT_GLOBAL)
+        const dumped = vm.dump(valueHandle)
+        valueHandle.dispose()
+        const message = truncateOutput(formatEvalResult(dumped))
+        console.log('[sandbox-worker] result dumped:', JSON.stringify(dumped), 'message:', message)
+        if (message !== 'undefined') {
+          finalOutput = { type: 'result', requestId, message }
+        }
       }
     }
   } catch (err) {
-    post({
-      type: 'error',
-      requestId,
-      message: truncateOutput(err instanceof Error ? err.message : String(err)),
-    })
+    const message = truncateOutput(err instanceof Error ? err.message : String(err))
+    console.log('[sandbox-worker] catch:', message)
+    finalOutput = { type: 'error', requestId, message }
   } finally {
-    vm.dispose()
-    post({ type: 'done', requestId })
+    currentRequestId = ''
+    console.log('[sandbox-worker] posting done, output=', JSON.stringify(finalOutput))
+    post({ type: 'done', requestId, output: finalOutput })
   }
 }
 
@@ -95,7 +142,7 @@ self.onmessage = (event: MessageEvent<JsSandboxWorkerCommand>) => {
   const cmd = event.data
   switch (cmd.type) {
     case 'init':
-      void ensureQuickJS()
+      void ensureSandboxContext()
         .then(() => post({ type: 'ready' }))
         .catch((err) => {
           post({
@@ -109,6 +156,7 @@ self.onmessage = (event: MessageEvent<JsSandboxWorkerCommand>) => {
       void runEval(cmd.requestId, cmd.code)
       break
     case 'dispose':
+      disposeSandboxContext()
       disposeQuickJsSandboxModule()
       quickJsReady = null
       break
