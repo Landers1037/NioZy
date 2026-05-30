@@ -32,6 +32,7 @@ export type { SshSettings } from './ssh-settings'
 export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
 export type { ShellSettings } from './shell-settings'
 export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
+export type { CommandReplayItem } from './command-replay'
 export type { PerformanceSettings } from './performance-settings'
 export {
   DEFAULT_PERFORMANCE_SETTINGS,

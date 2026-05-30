@@ -12,6 +12,7 @@ import {
   Hash,
   GripVertical,
 } from 'lucide-react'
+import { CommandReplaySettingsSection } from '@/components/command-replay/CommandReplaySettingsSection'
 
 export function ShellSettings() {
   const { t } = useTranslation()
@@ -105,6 +106,8 @@ export function ShellSettings() {
             onCheckedChange={(v) => patchShell({ enableTabDrag: v })}
           />
         </SettingField>
+
+        <CommandReplaySettingsSection />
       </CardContent>
     </Card>
   )

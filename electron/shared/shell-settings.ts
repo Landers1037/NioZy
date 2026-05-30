@@ -1,3 +1,7 @@
+import { normalizeCommandReplayList, type CommandReplayItem } from './command-replay'
+
+export type { CommandReplayItem }
+
 export interface ShellSettings {
   /** 使用 Unicode 11 宽度表，正确渲染 emoji 等宽字符 */
   emojiNativeRendering: boolean
@@ -11,6 +15,8 @@ export interface ShellSettings {
   showTerminalIndex: boolean
   /** 长按侧栏终端 Tab 2s 后可拖拽调整顺序 */
   enableTabDrag: boolean
+  /** 命令重放列表 */
+  commandReplays: CommandReplayItem[]
 }
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
@@ -20,6 +26,7 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   shiftEnterNewline: false,
   showTerminalIndex: false,
   enableTabDrag: false,
+  commandReplays: [],
 }
 
 export function normalizeShellSettings(value: unknown): ShellSettings {
@@ -49,5 +56,6 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.enableTabDrag === 'boolean'
         ? v.enableTabDrag
         : DEFAULT_SHELL_SETTINGS.enableTabDrag,
+    commandReplays: normalizeCommandReplayList(v.commandReplays),
   }
 }

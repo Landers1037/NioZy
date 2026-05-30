@@ -55,6 +55,7 @@
     "searchNext": "Next",
     "searchPrev": "Previous",
     "searchNoMatch": "No matches found",
+    "commands": "Commands",
     "snap": "Snap",
     "snapHint": "Hover to choose a snap layout; click to snap the window",
     "snapLayout": {
@@ -73,6 +74,28 @@
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm only supports DOM rendering"
+  },
+  "commandReplay": {
+    "add": "Add command",
+    "delete": "Delete",
+    "listEmpty": "No saved commands yet",
+    "listAria": "Command replay list",
+    "startRecord": "Record",
+    "stopRecord": "Stop recording",
+    "recordingStarted": "Recording terminal input…",
+    "recordEmpty": "Nothing was recorded",
+    "noActiveTerminal": "Open and select a terminal tab first",
+    "saved": "Command saved",
+    "replay": "Replay",
+    "replayHint": "Click to replay in the active terminal",
+    "defaultName": "Command {{index}}",
+    "editDialog": {
+      "createTitle": "Save command replay",
+      "editTitle": "Edit command replay",
+      "name": "Name",
+      "namePlaceholder": "Name this command",
+      "command": "Command content"
+    }
   },
   "pomodoro": {
     "title": "Pomodoro",
@@ -230,7 +253,9 @@
       "showTerminalIndex": "Show terminal index",
       "showTerminalIndexDesc": "When enabled, shows an index number to the left of each terminal tab name in the sidebar",
       "enableTabDrag": "Enable drag reorder",
-      "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically"
+      "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically",
+      "commandReplayList": "Command replay list",
+      "commandReplayListDesc": "Save terminal input sequences for one-click replay from the title bar command panel"
     },
     "preview": {
       "title": "Preview",

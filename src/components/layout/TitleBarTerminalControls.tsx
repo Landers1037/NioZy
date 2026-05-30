@@ -21,6 +21,7 @@ import type { TerminalRenderer } from '../../../electron/shared/api-types'
 import { TerminalSearchDialog } from '@/components/layout/TerminalSearchDialog'
 import { UsageStatisticsDialog } from '@/components/layout/UsageStatisticsDialog'
 import { PomodoroDialog } from '@/components/layout/PomodoroDialog'
+import { TitleBarCommandReplay } from '@/components/layout/TitleBarCommandReplay'
 
 const titleBarMenuIconClass = 'size-3.5 shrink-0 text-muted-foreground'
 
@@ -162,6 +163,8 @@ export function TitleBarTerminalControls() {
           <BarChart3 className={titleBarMenuIconClass} aria-hidden />
         </Button>
       ) : null}
+      <TitleBarCommandReplay />
+
       <Button
         variant="outline"
         size="icon"

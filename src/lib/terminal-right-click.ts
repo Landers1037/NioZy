@@ -1,4 +1,4 @@
-import { getElectronAPI } from '@/lib/electron-client'
+import { writeTerminalInput } from '@/lib/terminal-write'
 
 /** 右键：有选区则复制，无选区则粘贴 */
 export function handleTerminalRightClickCopyPaste(
@@ -16,6 +16,6 @@ export function handleTerminalRightClickCopyPaste(
   }
 
   void navigator.clipboard.readText().then((text) => {
-    if (text) getElectronAPI().terminal.write(terminalId, text)
+    if (text) writeTerminalInput(terminalId, text)
   })
 }
