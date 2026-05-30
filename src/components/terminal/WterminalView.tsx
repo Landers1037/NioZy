@@ -23,7 +23,11 @@ import {
   registerWtermCursorLine,
   unregisterWtermCursorLine,
 } from '@/lib/command-replay-capture'
-import { registerWtermFocus, unregisterWtermFocus } from '@/lib/terminal-focus'
+import {
+  notifyTerminalFocusReady,
+  registerWtermFocus,
+  unregisterWtermFocus,
+} from '@/lib/terminal-focus'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { DEFAULT_GHOSTTY_SCROLLBACK_LIMIT } from '../../../electron/shared/experimental-settings'
 import { ghosttyWasmUrl, loadWtermGhosttyCore } from '@/lib/wterm-ghostty-core'
@@ -241,8 +245,9 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     (instance: WTerm) => {
       attachShellFeatures(instance)
       if (isFocused) focus()
+      if (tab.terminalId) notifyTerminalFocusReady(tab.terminalId)
     },
-    [attachShellFeatures, isFocused, focus],
+    [attachShellFeatures, isFocused, focus, tab.terminalId],
   )
 
   useEffect(() => {

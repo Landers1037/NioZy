@@ -29,6 +29,7 @@ import {
   createTerminalShellAddonState,
 } from '@/lib/terminal-shell-addons'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import { notifyTerminalFocusReady } from '@/lib/terminal-focus'
 import { writeTerminalInput } from '@/lib/terminal-write'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
@@ -464,6 +465,8 @@ export function TerminalView({
 
       scheduleFit(true)
       setTermReady(true)
+      const focusId = boundTerminalIdRef.current
+      if (focusId) notifyTerminalFocusReady(focusId)
     })()
 
     return () => {
@@ -631,6 +634,8 @@ export function TerminalView({
 
       scheduleFit(true)
       setTermReady(true)
+      const focusId = boundTerminalIdRef.current
+      if (focusId) notifyTerminalFocusReady(focusId)
     })()
 
     return () => {
@@ -751,7 +756,7 @@ export function TerminalView({
   }, [activeRenderer, termReady, applyRenderer])
 
   useEffect(() => {
-    if (!termRef.current || !effectiveTerminalId) return
+    if (!termReady || !termRef.current || !effectiveTerminalId) return
     if (isFocused) {
       touchTabActivity(tab.id)
       if (activeRenderer === 'webgl') {
@@ -759,6 +764,7 @@ export function TerminalView({
       }
       safeFit()
       termRef.current.focus()
+      notifyTerminalFocusReady(effectiveTerminalId)
       if (
         activeRenderer === 'webgl' &&
         !webglRef.current &&
@@ -771,7 +777,16 @@ export function TerminalView({
       return
     }
     termRef.current.blur()
-  }, [isFocused, safeFit, effectiveTerminalId, loadWebgl, loadCanvas, activeRenderer, tab.id])
+  }, [
+    isFocused,
+    termReady,
+    safeFit,
+    effectiveTerminalId,
+    loadWebgl,
+    loadCanvas,
+    activeRenderer,
+    tab.id,
+  ])
 
   const chromeBackground = hasTerminalBackgroundImage(settings?.terminal)
     ? 'transparent'

@@ -54,7 +54,8 @@ export function MinimalTabBar() {
           size="icon"
           className="size-6"
           title={t('sidebar.newPowerShell')}
-          onClick={() => createTerminal()}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => void createTerminal()}
         >
           <Plus className="size-3" />
         </Button>
