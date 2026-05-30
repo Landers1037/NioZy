@@ -1,6 +1,6 @@
 import type { Terminal } from '@xterm/xterm'
 import type { AppShortcuts } from '../../electron/shared/shortcuts'
-import { getElectronAPI } from '@/lib/electron-client'
+import { writeTerminalInput } from '@/lib/terminal-write'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import { matchAccelerator } from '@/lib/shortcut-utils'
@@ -32,7 +32,7 @@ export function handleTerminalModifiedEnterKey(
   if (modifier === null) return false
 
   event.preventDefault()
-  getElectronAPI().terminal.write(terminalId, `\x1b[13;${modifier}u`)
+  writeTerminalInput(terminalId, `\x1b[13;${modifier}u`)
   return true
 }
 
@@ -76,20 +76,20 @@ export function handleTerminalKeyboardShortcut(
   if (matchAccelerator(app.pasteFromClipboard, event)) {
     event.preventDefault()
     void navigator.clipboard.readText().then((text) => {
-      if (text) getElectronAPI().terminal.write(terminalId, text)
+      if (text) writeTerminalInput(terminalId, text)
     })
     return true
   }
 
   if (matchAccelerator(app.lineStart, event)) {
     event.preventDefault()
-    getElectronAPI().terminal.write(terminalId, '\x01')
+    writeTerminalInput(terminalId, '\x01')
     return true
   }
 
   if (matchAccelerator(app.lineEnd, event)) {
     event.preventDefault()
-    getElectronAPI().terminal.write(terminalId, '\x05')
+    writeTerminalInput(terminalId, '\x05')
     return true
   }
 

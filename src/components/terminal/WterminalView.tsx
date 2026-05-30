@@ -17,6 +17,13 @@ import {
 } from '@/lib/terminal-shortcut-actions'
 import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import { writeTerminalInput } from '@/lib/terminal-write'
+import {
+  readWtermCursorCommandFromInstance,
+  registerWtermCursorLine,
+  unregisterWtermCursorLine,
+} from '@/lib/command-replay-capture'
+import { registerWtermFocus, unregisterWtermFocus } from '@/lib/terminal-focus'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { DEFAULT_GHOSTTY_SCROLLBACK_LIMIT } from '../../../electron/shared/experimental-settings'
 import { ghosttyWasmUrl, loadWtermGhosttyCore } from '@/lib/wterm-ghostty-core'
@@ -198,11 +205,25 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     root?.querySelector('textarea')?.blur()
   }, [isFocused, focus, termRef])
 
+  useEffect(() => {
+    const terminalId = tab.terminalId
+    if (!terminalId) return
+    registerWtermFocus(terminalId, () => focus())
+    registerWtermCursorLine(terminalId, () => {
+      const instance = termRef.current?.instance
+      return instance ? readWtermCursorCommandFromInstance(instance) : null
+    })
+    return () => {
+      unregisterWtermFocus(terminalId)
+      unregisterWtermCursorLine(terminalId)
+    }
+  }, [tab.terminalId, focus, termRef])
+
   const handleData = useCallback(
     (data: string) => {
       if (!tab.terminalId) return
       touchTabActivity(tab.id)
-      getElectronAPI().terminal.write(tab.terminalId, data)
+      writeTerminalInput(tab.terminalId, data)
     },
     [tab.id, tab.terminalId],
   )

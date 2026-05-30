@@ -29,6 +29,7 @@ import {
   createTerminalShellAddonState,
 } from '@/lib/terminal-shell-addons'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import { writeTerminalInput } from '@/lib/terminal-write'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
 import { bindXtermTerminalPreview } from '@/lib/terminal-preview-mouse'
@@ -382,7 +383,7 @@ export function TerminalView({
         const terminalId = boundTerminalIdRef.current
         if (!terminalId) return
         touchTabActivity(tabRef.current.id)
-        api.terminal.write(terminalId, data)
+        writeTerminalInput(terminalId, data)
       }
       term.onData(onData)
 
@@ -549,7 +550,7 @@ export function TerminalView({
         const terminalId = boundTerminalIdRef.current
         if (!terminalId) return
         touchTabActivity(tabRef.current.id)
-        api.terminal.write(terminalId, data)
+        writeTerminalInput(terminalId, data)
       }
       term.onData(onData)
 
