@@ -19,7 +19,18 @@
     "emptyHint": "点击「新建终端」开始",
     "browserDevPreview": "浏览器开发预览（模拟 Electron API）— 可用开发者工具检查样式；真实终端请用",
     "settingsTabTitle": "设置",
-    "filesystemTabTitle": "文件系统"
+    "filesystemTabTitle": "文件系统",
+    "sandboxTabTitle": "JS 沙箱"
+  },
+  "sandbox": {
+    "title": "JS 沙箱",
+    "clear": "清空",
+    "run": "运行",
+    "running": "执行中…",
+    "loadingRuntime": "正在加载 QuickJS…",
+    "emptyHint": "在下方输入 JavaScript 并运行。支持 console.log、表达式求值等。",
+    "inputPlaceholder": "// 输入 JavaScript\n1 + 1",
+    "inputHint": "Enter 运行，Shift+Enter 换行，↑/↓ 浏览历史"
   },
   "filesystem": {
     "title": "本机文件系统",
@@ -391,6 +402,8 @@
       "terminalEmulatorDesc": "选择前端终端模拟器实现。Wterm 使用 WASM/DOM 渲染（实验性）。切换后请重新打开终端 Tab 生效。",
       "terminalEmulatorXterm": "Xterm.js（默认）",
       "terminalEmulatorWterm": "Wterm（实验性）",
+      "jsSandboxEnabled": "JS 沙箱",
+      "jsSandboxEnabledDesc": "在侧栏显示「打开沙箱」入口，使用 QuickJS WASM 在隔离环境中运行 JavaScript（非 Node.js，无文件系统与网络）。",
       "ai": {
         "title": "AI 特性",
         "description": "配置 AI 对话边栏与模型提供商。Runtime 仅在本机 127.0.0.1 监听。API Key 可填明文，或使用存储库变量如 ${OPENAI_API_KEY}（推荐密文变量）。",
@@ -585,6 +598,7 @@
     "connection": "连接",
     "settings": "设置",
     "filesystem": "文件系统",
+    "openJsSandbox": "打开沙箱",
     "newPowerShell": "新建 PowerShell"
   },
   "tab": {

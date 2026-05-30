@@ -1,5 +1,6 @@
 import type { AppTab } from '@/stores/app-store'
 import { FilesystemTabItem } from '@/components/layout/FilesystemTabItem'
+import { SandboxTabItem } from '@/components/layout/SandboxTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { WebviewTabItem } from '@/components/layout/WebviewTabItem'
 
@@ -14,6 +15,9 @@ interface SpecialTabItemProps {
 export function SpecialTabItem(props: SpecialTabItemProps) {
   if (props.tab.type === 'filesystem') {
     return <FilesystemTabItem {...props} />
+  }
+  if (props.tab.type === 'sandbox') {
+    return <SandboxTabItem {...props} />
   }
   if (props.tab.type === 'webview') {
     return <WebviewTabItem {...props} />
