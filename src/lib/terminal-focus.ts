@@ -40,3 +40,56 @@ export function focusActiveTerminal(): boolean {
   if (!terminalId) return false
   return focusTerminal(terminalId)
 }
+
+let pendingFocusTerminalId: string | null = null
+let pendingFocusRaf = 0
+let pendingFocusTimeout = 0
+
+function clearPendingFocusRetry(): void {
+  if (pendingFocusRaf) {
+    cancelAnimationFrame(pendingFocusRaf)
+    pendingFocusRaf = 0
+  }
+  if (pendingFocusTimeout) {
+    window.clearTimeout(pendingFocusTimeout)
+    pendingFocusTimeout = 0
+  }
+}
+
+/** 新建终端后请求聚焦；终端尚未挂载时会重试直至就绪 */
+export function requestTerminalFocus(terminalId: string): void {
+  pendingFocusTerminalId = terminalId
+  clearPendingFocusRetry()
+
+  const attempt = (): void => {
+    if (pendingFocusTerminalId !== terminalId) return
+    if (focusTerminal(terminalId)) {
+      pendingFocusTerminalId = null
+      clearPendingFocusRetry()
+      return
+    }
+    pendingFocusRaf = requestAnimationFrame(attempt)
+  }
+
+  attempt()
+  pendingFocusTimeout = window.setTimeout(() => {
+    if (pendingFocusTerminalId === terminalId) {
+      focusTerminal(terminalId)
+      pendingFocusTerminalId = null
+    }
+    clearPendingFocusRetry()
+  }, 2000)
+}
+
+/** 终端视图挂载就绪时调用，完成待处理的聚焦请求 */
+export function notifyTerminalFocusReady(terminalId: string): void {
+  if (pendingFocusTerminalId === terminalId) {
+    focusTerminal(terminalId)
+    pendingFocusTerminalId = null
+    clearPendingFocusRetry()
+    return
+  }
+  if (getActiveTerminalIdForFocus() === terminalId) {
+    focusTerminal(terminalId)
+  }
+}

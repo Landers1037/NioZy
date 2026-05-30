@@ -11,6 +11,7 @@ import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
 import type { TerminalCreateOptions } from '../../electron/shared/api-types'
 import type { TabTerminalSpawn } from '@/lib/terminal-tab-utils'
 import { connectionToTerminalSpawn } from '@/lib/terminal-tab-utils'
+import { requestTerminalFocus } from '@/lib/terminal-focus'
 
 type ShellType = BuiltinShellType | 'custom' | 'ssh'
 
@@ -50,6 +51,7 @@ async function openTerminalTab(
     sshConnectionId,
     terminalSpawn,
   })
+  requestTerminalFocus(result.id)
 }
 
 export async function createTerminal(shell?: BuiltinShellType): Promise<void> {
