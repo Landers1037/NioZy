@@ -63,6 +63,10 @@ import {
   DEFAULT_LOGGING_SETTINGS,
   normalizeLoggingSettings,
 } from './shared/logging-settings'
+import {
+  DEFAULT_USAGE_STATISTICS_SETTINGS,
+  normalizeUsageStatisticsSettings,
+} from './shared/usage-statistics-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -126,6 +130,7 @@ export interface AppSettings {
   filesystem: import('./shared/filesystem-settings').FilesystemSettings
   preview: import('./shared/preview-settings').PreviewSettings
   experimental: import('./shared/experimental-settings').ExperimentalSettings
+  statistics: import('./shared/usage-statistics-settings').UsageStatisticsSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -200,6 +205,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
+  statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
 }
 
 function buildAppSettingsFromStored(
@@ -298,6 +304,7 @@ function buildAppSettingsFromStored(
       (stored as Partial<AppSettings>).defaultTerminal,
     ),
     experimental: normalizeExperimentalSettings(stored.experimental),
+    statistics: normalizeUsageStatisticsSettings(stored.statistics),
   }
 }
 

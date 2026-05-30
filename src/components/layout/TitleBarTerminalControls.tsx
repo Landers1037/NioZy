@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, Shell, Crop, Search, SquareSplitHorizontal, Brain } from 'lucide-react'
+import { Check, ChevronDown, Shell, Crop, Search, SquareSplitHorizontal, Brain, BarChart3 } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,7 @@ import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import type { TerminalRenderer } from '../../../electron/shared/api-types'
 import { TerminalSearchDialog } from '@/components/layout/TerminalSearchDialog'
+import { UsageStatisticsDialog } from '@/components/layout/UsageStatisticsDialog'
 
 const titleBarMenuIconClass = 'size-3.5 shrink-0 text-muted-foreground'
 
@@ -40,6 +41,7 @@ export function TitleBarTerminalControls() {
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [statsOpen, setStatsOpen] = useState(false)
   const [snapOpen, setSnapOpen] = useState(false)
   const snapRootRef = useRef<HTMLDivElement | null>(null)
   const snapCloseTimerRef = useRef<number | null>(null)
@@ -50,6 +52,8 @@ export function TitleBarTerminalControls() {
   const useWterm = isWtermEmulator(settings)
   const renderer = settings.terminal.renderer
   const aiSidebarEnabled = settings.experimental.aiSidebarEnabled === true
+  const showUsageStatistics =
+    settings.statistics.enabled && settings.statistics.showStatusBar
 
   const handleAiSidebarToggle = () => {
     useAiSidebarStore.getState().toggle()
@@ -134,6 +138,18 @@ export function TitleBarTerminalControls() {
 
   return (
     <div className="flex items-center gap-1.5 border-r border-border pr-2 mr-0.5">
+      {showUsageStatistics ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('titleBar.usageStatistics')}
+          title={t('titleBar.usageStatistics')}
+          onClick={() => setStatsOpen(true)}
+        >
+          <BarChart3 className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      ) : null}
       <Button
         variant="outline"
         size="icon"
@@ -296,6 +312,7 @@ export function TitleBarTerminalControls() {
       )}
 
       <TerminalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <UsageStatisticsDialog open={statsOpen} onOpenChange={setStatsOpen} />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
