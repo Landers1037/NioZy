@@ -48,6 +48,7 @@
     "screenshot": "截图",
     "aiSidebar": "AI 对话",
     "usageStatistics": "使用统计",
+    "pomodoro": "番茄钟",
     "search": "搜索",
     "searchHint": "搜索当前终端输出；Enter 查找下一个，Shift+Enter 查找上一个",
     "searchPlaceholder": "输入要搜索的文本…",
@@ -72,6 +73,17 @@
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm 仅支持 DOM 渲染"
+  },
+  "pomodoro": {
+    "title": "番茄钟",
+    "duration": "专注时长",
+    "start": "开始",
+    "pause": "暂停",
+    "resume": "继续",
+    "reset": "重置",
+    "durationMinutes": "{{m}} 分钟",
+    "durationHours": "{{h}} 小时",
+    "durationHoursMinutes": "{{h}} 小时 {{m}} 分钟"
   },
   "screenshot": {
     "selectHint": "点击并拖拽开始截屏（Esc 关闭）",
@@ -655,6 +667,9 @@
     "settingsExportFailed": "导出设置失败",
     "statisticsCleared": "统计信息已清除",
     "statisticsClearFailed": "清除统计信息失败",
+    "pomodoroComplete": "恭喜达成目标！",
+    "pomodoroCompleteSubtitle": "专注时间已完成，继续保持！",
+    "pomodoroCompleteDurationLabel": "达成目标",
     "sshDisconnected": "SSH 连接已断开：{{title}}",
     "scpTransferDisabled": "请先在设置 → SSH 中开启 SCP 传输",
     "splitTerminalMax": "每个终端 Tab 最多拆分 3 个",

@@ -48,6 +48,7 @@
     "screenshot": "スクリーンショット",
     "aiSidebar": "AI チャット",
     "usageStatistics": "使用統計",
+    "pomodoro": "ポモドーロ",
     "search": "検索",
     "searchHint": "アクティブなターミナル出力を検索します。Enter: 次、Shift+Enter: 前。",
     "searchPlaceholder": "検索文字…",
@@ -72,6 +73,17 @@
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm は DOM レンダリングのみサポート"
+  },
+  "pomodoro": {
+    "title": "ポモドーロ",
+    "duration": "集中時間",
+    "start": "開始",
+    "pause": "一時停止",
+    "resume": "再開",
+    "reset": "リセット",
+    "durationMinutes": "{{m}} 分",
+    "durationHours": "{{h}} 時間",
+    "durationHoursMinutes": "{{h}} 時間 {{m}} 分"
   },
   "screenshot": {
     "selectHint": "クリックしてドラッグでキャプチャ（Esc で閉じる）",
@@ -646,6 +658,9 @@
     "settingsExportFailed": "設定のエクスポートに失敗しました",
     "statisticsCleared": "統計をクリアしました",
     "statisticsClearFailed": "統計のクリアに失敗しました",
+    "pomodoroComplete": "目標達成！",
+    "pomodoroCompleteSubtitle": "集中時間が完了しました。この調子で続けましょう！",
+    "pomodoroCompleteDurationLabel": "達成時間",
     "sshDisconnected": "SSH 切断: {{title}}",
     "scpTransferDisabled": "先に 設定 → SSH で SCP 転送を有効にしてください",
     "splitTerminalMax": "各ターミナルタブは最大 3 ペインまで",
