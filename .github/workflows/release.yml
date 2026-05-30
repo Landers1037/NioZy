@@ -41,10 +41,13 @@ jobs:
         env:
           # CI 无代码签名证书，跳过签名避免 electron-builder 失败
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run dist
+        # 仅打包 exe，Release 由下一步 action-gh-release 上传（避免 electron-builder 要求 GH_TOKEN）
+        run: npm run build && npx electron-builder --win --publish never
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
+        env:
+          GH_TOKEN: ${{ secrets.NIOZY_TOKEN }}
         with:
           name: NioZy ${{ env.TAG }}
           files: release/*.exe
