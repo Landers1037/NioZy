@@ -14,12 +14,11 @@ const pending = new Map<string, PendingEval>()
 
 function getWorker(): Worker {
   if (!worker) {
-    worker = new Worker(new URL('../workers/js-sandbox.worker.ts?repl-diag-v1', import.meta.url), {
+    worker = new Worker(new URL('../workers/js-sandbox.worker.ts', import.meta.url), {
       type: 'module',
     })
     worker.onmessage = (event: MessageEvent<JsSandboxWorkerEvent>) => {
       const data = event.data
-      console.log('[sandbox-client] received from worker:', JSON.stringify(data))
       if (data.type === 'ready') {
         initResolve?.()
         initResolve = null
@@ -36,11 +35,9 @@ function getWorker(): Worker {
 
       const requestId = 'requestId' in data ? data.requestId : ''
       const entry = pending.get(requestId)
-      console.log('[sandbox-client] pending entry for', requestId, ':', !!entry)
       if (!entry) return
 
       if (data.type === 'done') {
-        console.log('[sandbox-client] done, output:', JSON.stringify(data.output))
         if (data.output) {
           entry.onEvent(data.output)
         }
@@ -82,7 +79,6 @@ export const jsSandboxClient = {
     onEvent: (event: JsSandboxWorkerEvent) => void,
   ): Promise<void> {
     await this.init()
-    console.log('[sandbox-client] posting eval', requestId, JSON.stringify(code))
     return new Promise((resolve, reject) => {
       pending.set(requestId, { resolve, reject, onEvent })
       getWorker().postMessage({

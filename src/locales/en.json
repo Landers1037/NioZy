@@ -30,7 +30,7 @@
     "loadingRuntime": "Loading QuickJS…",
     "emptyHint": "Enter JavaScript below and run. Supports console.log, expressions, and more.",
     "inputPlaceholder": "1 + 1",
-    "inputHint": "Enter to run, Shift+Enter for newline, ↑/↓ for history"
+    "inputHint": "Enter to run, Shift+Enter for newline, ↑/↓ for history, Tab to complete"
   },
   "filesystem": {
     "title": "Local file system",
