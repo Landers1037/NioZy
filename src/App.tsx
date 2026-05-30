@@ -37,6 +37,11 @@ const FilesystemPanel = lazy(() =>
     default: m.FilesystemPanel,
   })),
 )
+const JsSandboxPanel = lazy(() =>
+  import('@/components/sandbox/JsSandboxPanel').then((m) => ({
+    default: m.JsSandboxPanel,
+  })),
+)
 const ScpTransferDialog = lazy(() =>
   import('@/components/scp/ScpTransferDialog').then((m) => ({
     default: m.ScpTransferDialog,
@@ -178,6 +183,8 @@ export default function App() {
   const terminalActive = activeTab?.type === 'terminal'
   const hasFilesystemTab = tabs.some((t) => t.type === 'filesystem')
   const filesystemTabActive = activeTab?.type === 'filesystem'
+  const hasSandboxTab = tabs.some((t) => t.type === 'sandbox')
+  const sandboxTabActive = activeTab?.type === 'sandbox'
   const attachPtyMode = isAttachPtyRenderMode(settings)
   const attachCommitted = useAttachPtySessionStore((s) => s.committed)
   const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
@@ -281,6 +288,19 @@ export default function App() {
               >
                 <Suspense fallback={null}>
                   <FilesystemPanel />
+                </Suspense>
+              </div>
+            )}
+            {hasSandboxTab && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !sandboxTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!sandboxTabActive ? { inert: true } : {})}
+              >
+                <Suspense fallback={null}>
+                  <JsSandboxPanel />
                 </Suspense>
               </div>
             )}

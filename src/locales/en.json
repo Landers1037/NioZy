@@ -19,7 +19,18 @@
     "emptyHint": "Click \"New terminal\" to get started",
     "browserDevPreview": "Browser dev preview (mock Electron API). Use DevTools for styling; run",
     "settingsTabTitle": "Settings",
-    "filesystemTabTitle": "File system"
+    "filesystemTabTitle": "File system",
+    "sandboxTabTitle": "JS Sandbox"
+  },
+  "sandbox": {
+    "title": "JS Sandbox",
+    "clear": "Clear",
+    "run": "Run",
+    "running": "Running…",
+    "loadingRuntime": "Loading QuickJS…",
+    "emptyHint": "Enter JavaScript below and run. Supports console.log, expressions, and more.",
+    "inputPlaceholder": "// Enter JavaScript\n1 + 1",
+    "inputHint": "Enter to run, Shift+Enter for newline, ↑/↓ for history"
   },
   "filesystem": {
     "title": "Local file system",
@@ -391,6 +402,8 @@
       "terminalEmulatorDesc": "Choose the frontend terminal implementation. Wterm uses WASM/DOM rendering (experimental). Restart open terminals after switching.",
       "terminalEmulatorXterm": "Xterm.js (default)",
       "terminalEmulatorWterm": "Wterm (experimental)",
+      "jsSandboxEnabled": "JS sandbox",
+      "jsSandboxEnabledDesc": "Show an “Open sandbox” entry in the sidebar. Runs JavaScript in an isolated QuickJS WASM environment (not Node.js; no filesystem or network).",
       "ai": {
         "title": "AI features",
         "description": "Configure the AI chat sidebar and model provider. Runtime listens on 127.0.0.1 only. API keys may be plain text or vault references like ${OPENAI_API_KEY} (secret variables recommended).",
@@ -585,6 +598,7 @@
     "connection": "Connect",
     "settings": "Settings",
     "filesystem": "File system",
+    "openJsSandbox": "Open sandbox",
     "newPowerShell": "New PowerShell"
   },
   "tab": {

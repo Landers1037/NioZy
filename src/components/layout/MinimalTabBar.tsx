@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Plus, Settings, Link2, FolderCode } from 'lucide-react'
+import { Plus, Settings, Link2, FolderCode, Braces } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -20,6 +20,9 @@ export function MinimalTabBar() {
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
+  const addSandboxTab = useAppStore((s) => s.addSandboxTab)
+  const settings = useAppStore((s) => s.settings)
+  const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
   const ui = useUiClasses()
 
   return (
@@ -83,6 +86,17 @@ export function MinimalTabBar() {
         >
           <FolderCode className="size-3" />
         </Button>
+        {jsSandboxEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.openJsSandbox')}
+            onClick={() => addSandboxTab()}
+          >
+            <Braces className="size-3" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"

@@ -96,6 +96,9 @@ export default defineConfig(({ command }) => {
     server: {
       strictPort: false,
     },
+    worker: {
+      format: 'es',
+    },
     build: {
       minify: 'esbuild',
       cssMinify: true,
@@ -111,6 +114,7 @@ export default defineConfig(({ command }) => {
             if (id.includes('@radix-ui')) return 'radix'
             if (id.includes('@xterm')) return 'xterm'
             if (id.includes('@wterm')) return 'wterm'
+            if (id.includes('quickjs-emscripten')) return 'quickjs'
             // lucide-react 与 react 等 vendor 依赖互相引用，单独拆出会形成 icons↔vendor 循环 chunk，生产环境可能白屏
             if (id.includes('@copilotkit')) return 'copilotkit'
             if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'

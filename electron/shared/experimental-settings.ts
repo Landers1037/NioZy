@@ -61,6 +61,8 @@ export interface ExperimentalSettings {
   aiApiKey: string
   /** @deprecated 迁移至 aiApiKey */
   openAiApiKey?: string
+  /** 启用 JS 沙箱（QuickJS WASM） */
+  jsSandboxEnabled: boolean
 }
 
 export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
@@ -77,6 +79,7 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   aiModel: DEFAULT_AI_MODEL,
   aiBaseUrl: normalizeAiBaseUrl(DEFAULT_AI_PROVIDER, undefined),
   aiApiKey: '',
+  jsSandboxEnabled: false,
 }
 
 export function normalizeTerminalEmulator(value: unknown): TerminalEmulator {
@@ -120,6 +123,7 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     aiModel: normalizeAiModel(provider, o.aiModel),
     aiBaseUrl: normalizeAiBaseUrl(provider, o.aiBaseUrl),
     aiApiKey,
+    jsSandboxEnabled: o.jsSandboxEnabled === true,
   }
 }
 

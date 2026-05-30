@@ -19,7 +19,18 @@
     "emptyHint": "「新しいターミナル」をクリックして開始",
     "browserDevPreview": "ブラウザ開発プレビュー（Electron API モック）。スタイルは DevTools で確認し、実行は",
     "settingsTabTitle": "設定",
-    "filesystemTabTitle": "ファイルシステム"
+    "filesystemTabTitle": "ファイルシステム",
+    "sandboxTabTitle": "JS サンドボックス"
+  },
+  "sandbox": {
+    "title": "JS サンドボックス",
+    "clear": "クリア",
+    "run": "実行",
+    "running": "実行中…",
+    "loadingRuntime": "QuickJS を読み込み中…",
+    "emptyHint": "下に JavaScript を入力して実行。console.log や式の評価に対応。",
+    "inputPlaceholder": "// JavaScript を入力\n1 + 1",
+    "inputHint": "Enter で実行、Shift+Enter で改行、↑/↓ で履歴"
   },
   "filesystem": {
     "title": "ローカルファイルシステム",
@@ -382,6 +393,8 @@
       "terminalEmulatorDesc": "フロントエンドのターミナル実装を選択。Wterm は WASM/DOM レンダリング（実験的）。切り替え後は開いているターミナルを再起動してください。",
       "terminalEmulatorXterm": "Xterm.js（デフォルト）",
       "terminalEmulatorWterm": "Wterm（実験的）",
+      "jsSandboxEnabled": "JS サンドボックス",
+      "jsSandboxEnabledDesc": "サイドバーに「サンドボックスを開く」を表示。QuickJS WASM の隔離環境で JavaScript を実行（Node.js ではなく、ファイルシステム・ネットワーク不可）。",
       "ai": {
         "title": "AI 機能",
         "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは平文または ${OPENAI_API_KEY} などのストア変数参照（密文推奨）。",
@@ -576,6 +589,7 @@
     "connection": "接続",
     "settings": "設定",
     "filesystem": "ファイルシステム",
+    "openJsSandbox": "サンドボックスを開く",
     "newPowerShell": "新しい PowerShell"
   },
   "tab": {

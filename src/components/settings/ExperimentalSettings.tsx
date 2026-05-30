@@ -15,7 +15,7 @@ import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
 import { ExperimentalAiSettings } from './ExperimentalAiSettings'
-import { Cpu, Link2, ScrollText, Terminal } from 'lucide-react'
+import { Braces, Cpu, Link2, ScrollText, Terminal } from 'lucide-react'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import {
@@ -48,9 +48,11 @@ export function ExperimentalSettings() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
+  const closeSandboxTabIfPresent = useAppStore((s) => s.closeSandboxTabIfPresent)
   if (!settings) return null
 
   const emulator = settings.experimental.terminalEmulator
+  const jsSandboxEnabled = settings.experimental.jsSandboxEnabled
   const ghosttyEnabled = settings.experimental.ghosttyCoreEnabled
   const attachPtyEnabled = settings.experimental.attachPtyRenderMode
   const attachPtyActive = isAttachPtyRenderMode(settings)
@@ -97,6 +99,28 @@ export function ExperimentalSettings() {
               <SelectItem value="wterm">{t('settings.experimental.terminalEmulatorWterm')}</SelectItem>
             </SelectContent>
           </Select>
+        </SettingField>
+
+        <SettingField
+          icon={Braces}
+          label={t('settings.experimental.jsSandboxEnabled')}
+          description={t('settings.experimental.jsSandboxEnabledDesc')}
+          row
+        >
+          <Switch
+            checked={jsSandboxEnabled}
+            onCheckedChange={(enabled) => {
+              if (enabled === jsSandboxEnabled) return
+              void patchSettings({
+                experimental: {
+                  ...settings.experimental,
+                  jsSandboxEnabled: enabled,
+                },
+              }).then(() => {
+                if (!enabled) closeSandboxTabIfPresent()
+              })
+            }}
+          />
         </SettingField>
 
         <ExperimentalAiSettings />

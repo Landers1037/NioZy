@@ -7,10 +7,15 @@ import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { recordTerminalTabClosed, recordTerminalTabOpened } from '@/lib/usage-statistics'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
-import { applyAppLocale, getFilesystemTabTitle, getSettingsTabTitle } from '@/lib/i18n'
+import {
+  applyAppLocale,
+  getFilesystemTabTitle,
+  getSandboxTabTitle,
+  getSettingsTabTitle,
+} from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
-export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview'
+export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox'
 
 export interface AppTab {
   id: string
@@ -60,6 +65,8 @@ interface AppState {
   addTerminalTab: (tab: AppTab) => void
   addSettingsTab: () => void
   addFilesystemTab: () => void
+  addSandboxTab: () => void
+  closeSandboxTabIfPresent: () => void
   addWebviewTab: (url: string, title?: string) => void
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
@@ -142,6 +149,27 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: [...s.tabs, tab],
       activeTabId: tab.id,
     }))
+  },
+  addSandboxTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'sandbox')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'sandbox',
+      type: 'sandbox',
+      title: getSandboxTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  closeSandboxTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'sandbox')
+    if (!existing) return
+    get().removeTab(existing.id)
   },
   addWebviewTab: (url, title) => {
     const id = `webview-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -238,6 +266,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: get().tabs.map((t) => {
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         return t
       }),
     })
@@ -252,6 +281,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: get().tabs.map((t) => {
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         return t
       }),
     })
