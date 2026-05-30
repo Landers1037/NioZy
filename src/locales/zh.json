@@ -29,7 +29,7 @@
     "running": "执行中…",
     "loadingRuntime": "正在加载 QuickJS…",
     "emptyHint": "在下方输入 JavaScript 并运行。支持 console.log、表达式求值等。",
-    "inputPlaceholder": "// 输入 JavaScript\n1 + 1",
+    "inputPlaceholder": "1 + 1",
     "inputHint": "Enter 运行，Shift+Enter 换行，↑/↓ 浏览历史"
   },
   "filesystem": {

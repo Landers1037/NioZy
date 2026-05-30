@@ -29,7 +29,7 @@
     "running": "実行中…",
     "loadingRuntime": "QuickJS を読み込み中…",
     "emptyHint": "下に JavaScript を入力して実行。console.log や式の評価に対応。",
-    "inputPlaceholder": "// JavaScript を入力\n1 + 1",
+    "inputPlaceholder": "1 + 1",
     "inputHint": "Enter で実行、Shift+Enter で改行、↑/↓ で履歴"
   },
   "filesystem": {

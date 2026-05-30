@@ -29,7 +29,7 @@
     "running": "Running…",
     "loadingRuntime": "Loading QuickJS…",
     "emptyHint": "Enter JavaScript below and run. Supports console.log, expressions, and more.",
-    "inputPlaceholder": "// Enter JavaScript\n1 + 1",
+    "inputPlaceholder": "1 + 1",
     "inputHint": "Enter to run, Shift+Enter for newline, ↑/↓ for history"
   },
   "filesystem": {

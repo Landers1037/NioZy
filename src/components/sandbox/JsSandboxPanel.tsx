@@ -64,6 +64,7 @@ export function JsSandboxPanel() {
   }, [])
 
   useEffect(() => {
+    console.log('[sandbox-panel] lines state updated, count=', lines.length, lines.map((l) => l.kind + ':' + l.text).join(' | '))
     const el = outputRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
@@ -92,14 +93,23 @@ export function JsSandboxPanel() {
       const pending: JsSandboxOutputLine[] = []
 
       const flushPending = () => {
+        console.log('[sandbox-panel] flushPending, pending.length=', pending.length)
         if (pending.length === 0) return
-        setLines((prev) => appendLines(prev, [...pending]))
+        const snapshot = [...pending]
+        setLines((prev) => {
+          console.log('[sandbox-panel] setLines updater, prev.length=', prev.length, 'adding=', snapshot.map((l) => l.kind + ':' + l.text).join(' | '))
+          return appendLines(prev, snapshot)
+        })
         pending.length = 0
       }
 
       const onEvent = (event: JsSandboxWorkerEvent) => {
+        console.log('[sandbox-panel] onEvent called, type=', event.type, JSON.stringify(event))
         if (event.type === 'ready') return
-        if (event.requestId !== requestId) return
+        if (!('requestId' in event) || event.requestId !== requestId) {
+          console.log('[sandbox-panel] requestId mismatch, skipping', 'event.requestId=' + ('requestId' in event ? event.requestId : 'none'), 'expected=', requestId)
+          return
+        }
         if (event.type === 'log') {
           pending.push({
             id: nextLineId(),
@@ -108,6 +118,7 @@ export function JsSandboxPanel() {
             text: event.message,
           })
         } else if (event.type === 'result') {
+          console.log('[sandbox-panel] got result:', event.message)
           pending.push({
             id: nextLineId(),
             kind: 'result',
@@ -237,7 +248,7 @@ export function JsSandboxPanel() {
                 key={line.id}
                 className="mt-0.5 whitespace-pre-wrap break-words text-sky-300"
               >
-                <span className="select-none text-zinc-500">&lt;- </span>
+                <span className="select-none text-zinc-500">= </span>
                 {line.text}
               </pre>
             )
