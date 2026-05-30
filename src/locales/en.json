@@ -48,6 +48,7 @@
     "screenshot": "Screenshot",
     "aiSidebar": "AI chat",
     "usageStatistics": "Usage statistics",
+    "pomodoro": "Pomodoro",
     "search": "Search",
     "searchHint": "Search within the active terminal output. Enter: next, Shift+Enter: previous.",
     "searchPlaceholder": "Search text…",
@@ -72,6 +73,17 @@
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
     "renderModeWtermHint": "Wterm only supports DOM rendering"
+  },
+  "pomodoro": {
+    "title": "Pomodoro",
+    "duration": "Focus duration",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "reset": "Reset",
+    "durationMinutes": "{{m}} min",
+    "durationHours": "{{h}} h",
+    "durationHoursMinutes": "{{h}} h {{m}} min"
   },
   "screenshot": {
     "selectHint": "Click and drag to start capture (Esc to close)",
@@ -655,6 +667,9 @@
     "settingsExportFailed": "Failed to export settings",
     "statisticsCleared": "Statistics cleared",
     "statisticsClearFailed": "Failed to clear statistics",
+    "pomodoroComplete": "Goal achieved!",
+    "pomodoroCompleteSubtitle": "Focus session complete — keep it up!",
+    "pomodoroCompleteDurationLabel": "Completed",
     "sshDisconnected": "SSH disconnected: {{title}}",
     "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first",
     "splitTerminalMax": "Each terminal tab can have at most 3 panes",

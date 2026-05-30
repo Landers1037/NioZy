@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, lazy, Suspense, useState, type ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Toaster } from 'sonner'
 import { TitleBar } from '@/components/layout/TitleBar'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
@@ -300,7 +299,6 @@ export default function App() {
       </div>
       <StatusBar />
       <FilePreviewDialog />
-      <Toaster position="bottom-right" richColors closeButton />
       {aiSidebarEnabled && AiCopilotRoot && (
         <Suspense key={aiMountKey} fallback={null}>
           <AiCopilotRoot />
