@@ -14,6 +14,8 @@ import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-
 import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
 import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
+import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-statistics-settings'
+import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -66,6 +68,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
+  statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -470,6 +473,12 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     logging: {
       openLogDirectory: async () => undefined,
+    },
+    statistics: {
+      get: async () => createEmptyUsageStatisticData(localTodayDate()),
+      recordTabOpen: () => undefined,
+      recordTabClose: () => undefined,
+      clear: async () => undefined,
     },
     terminal: {
       create: async (options) => {

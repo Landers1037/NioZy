@@ -28,6 +28,10 @@ export function getFontsCacheFilePath(): string {
   return join(getConfigDir(), 'fonts-cache.json')
 }
 
+export function getStatisticFilePath(): string {
+  return join(getConfigDir(), 'statistic.json')
+}
+
 /** 终端自定义背景图目录：%USERPROFILE%/.config/NioZy/background */
 export function getTerminalBackgroundDir(): string {
   return join(getConfigDir(), 'background')

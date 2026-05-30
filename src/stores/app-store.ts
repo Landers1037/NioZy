@@ -5,6 +5,7 @@ import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
 import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { getElectronAPI } from '@/lib/electron-client'
+import { recordTerminalTabClosed, recordTerminalTabOpened } from '@/lib/usage-statistics'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import { applyAppLocale, getFilesystemTabTitle, getSettingsTabTitle } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
@@ -108,6 +109,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveTab: (id) => set({ activeTabId: id }),
   addTerminalTab: (tab) => {
     useInactiveTabActivityStore.getState().touchTabActivity(tab.id)
+    recordTerminalTabOpened(get().settings)
     set((s) => ({
       tabs: [...s.tabs, tab],
       activeTabId: tab.id,
@@ -162,6 +164,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     const idSet = new Set(ids)
     set((s) => {
       const removed = s.tabs.filter((t) => idSet.has(t.id))
+      const removedTerminalCount = removed.filter((t) => t.type === 'terminal').length
+      if (removedTerminalCount > 0) {
+        const settings = get().settings
+        for (let i = 0; i < removedTerminalCount; i++) {
+          recordTerminalTabClosed(settings)
+        }
+      }
       // webview tabs clean up automatically when the <webview> element unmounts
       const tabs = s.tabs.filter((t) => !idSet.has(t.id))
       let activeTabId = s.activeTabId

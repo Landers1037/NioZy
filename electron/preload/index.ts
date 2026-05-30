@@ -132,6 +132,12 @@ const api: ElectronAPI = {
   logging: {
     openLogDirectory: () => ipcRenderer.invoke('logging:openLogDirectory') as Promise<void>,
   },
+  statistics: {
+    get: () => ipcRenderer.invoke('statistics:get'),
+    recordTabOpen: () => ipcRenderer.send('statistics:recordTabOpen'),
+    recordTabClose: () => ipcRenderer.send('statistics:recordTabClose'),
+    clear: () => ipcRenderer.invoke('statistics:clear') as Promise<void>,
+  },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
     getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),

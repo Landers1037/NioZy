@@ -17,6 +17,7 @@ import {
   FlaskConical,
   Gauge,
   Eye,
+  BarChart3,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -26,6 +27,7 @@ import { ShellSettings } from './ShellSettings'
 import { PerformanceSettings } from './PerformanceSettings'
 import { FilesystemSettings } from './FilesystemSettings'
 import { ConnectionSettings } from './ConnectionSettings'
+import { StatisticsSettings } from './StatisticsSettings'
 import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
 import { LogSettings } from './LogSettings'
@@ -45,6 +47,7 @@ const SECTION_DEFS = [
   { id: 'connections', icon: Plug },
   { id: 'vault', icon: Database },
   { id: 'shortcuts', icon: Keyboard },
+  { id: 'statistics', icon: BarChart3 },
   { id: 'system', icon: Settings2 },
   { id: 'logging', icon: ScrollText },
   { id: 'advanced', icon: SlidersHorizontal },
@@ -101,6 +104,7 @@ export function SettingsPanel() {
         {section === 'connections' && <ConnectionSettings />}
         {section === 'vault' && <VaultSettings />}
         {section === 'shortcuts' && <ShortcutSettings />}
+        {section === 'statistics' && <StatisticsSettings />}
         {section === 'system' && <SystemSettings />}
         {section === 'logging' && <LogSettings />}
         {section === 'advanced' && <AdvancedSettings />}

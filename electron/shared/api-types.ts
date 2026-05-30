@@ -173,6 +173,7 @@ export interface AppSettings {
   filesystem: import('./filesystem-settings').FilesystemSettings
   preview: import('./preview-settings').PreviewSettings
   experimental: import('./experimental-settings').ExperimentalSettings
+  statistics: import('./usage-statistics-settings').UsageStatisticsSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -210,6 +211,11 @@ export interface UpdateDownloadResult {
   installerPath?: string
   error?: string
 }
+
+export type {
+  UsageStatisticData,
+  StatisticCounters,
+} from './usage-statistics-data'
 
 export interface SystemStatsData {
   date: string
@@ -393,6 +399,12 @@ export interface ElectronAPI {
   logging: {
     /** 在资源管理器中打开日志文件所在目录 */
     openLogDirectory: () => Promise<void>
+  }
+  statistics: {
+    get: () => Promise<import('./usage-statistics-data').UsageStatisticData>
+    recordTabOpen: () => void
+    recordTabClose: () => void
+    clear: () => Promise<void>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

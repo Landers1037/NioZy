@@ -16,6 +16,7 @@ import { readFile, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled } from '../settings-store'
+import { StatisticsStore } from '../statistics-store'
 import { SystemStats } from '../system-stats'
 import { getAppMetricsSnapshot } from '../app-metrics'
 import { VaultStore } from '../vault-store'
@@ -216,8 +217,15 @@ const isDev = isElectronDev()
 const terminalService = new TerminalService()
 const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
 const settingsStore = new SettingsStore()
+const statisticsStore = new StatisticsStore(
+  () => settingsStore.get().statistics.enabled === true,
+)
 const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
+
+function syncStatisticsPolling(): void {
+  statisticsStore.syncPolling()
+}
 async function syncCopilotRuntimeFromSettings(
   experimental = settingsStore.get().experimental,
 ): Promise<void> {
@@ -587,6 +595,7 @@ app.whenReady().then(async () => {
   createWindow()
   createTray()
   syncSystemStatsPolling()
+  syncStatisticsPolling()
   syncGlobalShortcuts(settingsStore, () => mainWindow)
 
   if (settingsStore.get().advanced.shellContextMenu) {
@@ -616,6 +625,7 @@ app.on('before-quit', () => {
   terminalService.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()
+  statisticsStore.dispose()
   void disposeCopilotRuntime(true).catch((err) =>
     copilotLog.error('Failed to stop runtime', logErrorPayload(err)),
   )
@@ -861,6 +871,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.preview?.webviewCustomHeaders !== undefined) {
     syncWebviewPreviewCustomHeaders(updated.preview.webviewCustomHeaders)
   }
+  if (partial.statistics !== undefined) {
+    syncStatisticsPolling()
+  }
   return updated
 })
 
@@ -877,6 +890,13 @@ ipcMain.handle('system:getStats', () => systemStats.getCurrent())
 ipcMain.handle('system:getAppMetrics', () => getAppMetricsSnapshot())
 ipcMain.handle('system:reloadEnvironment', () => reloadSystemEnvironment())
 ipcMain.handle('system:isProcessElevated', () => isWindowsProcessElevated())
+
+ipcMain.handle('statistics:get', () => statisticsStore.getSnapshot())
+ipcMain.on('statistics:recordTabOpen', () => statisticsStore.recordTabOpen())
+ipcMain.on('statistics:recordTabClose', () => statisticsStore.recordTabClose())
+ipcMain.handle('statistics:clear', () => {
+  statisticsStore.clear()
+})
 
 ipcMain.handle('update:check', () => checkForAppUpdate())
 ipcMain.handle('update:download', (_, payload: { version: string; downloadUrl: string }) =>
@@ -1209,7 +1229,10 @@ ipcMain.handle('vault:resolve', (_, text: string) => {
   vaultStore.load()
   return vaultStore.resolveText(text)
 })
-ipcMain.on('terminal:write', (_, id: string, data: string) => terminalService.write(id, data))
+ipcMain.on('terminal:write', (_, id: string, data: string) => {
+  statisticsStore.recordCommandFromTerminalWrite(data)
+  terminalService.write(id, data)
+})
 ipcMain.on('terminal:resize', (_, id: string, cols: number, rows: number) =>
   terminalService.resize(id, cols, rows),
 )
