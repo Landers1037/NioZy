@@ -30,6 +30,30 @@ const onSshTransferProgress = createIpcMultiplex<[import('../shared/ssh-types').
   ipcRenderer,
   'ssh:transferProgress',
 )
+const onP2pSessionRequest = createIpcMultiplex<[import('../shared/p2p-types').P2pIncomingRequest]>(
+  ipcRenderer,
+  'p2p:sessionRequest',
+)
+const onP2pSessionEstablished = createIpcMultiplex<[import('../shared/p2p-types').P2pSessionInfo]>(
+  ipcRenderer,
+  'p2p:sessionEstablished',
+)
+const onP2pSessionDisconnected = createIpcMultiplex<[import('../shared/p2p-types').P2pSessionInfo]>(
+  ipcRenderer,
+  'p2p:sessionDisconnected',
+)
+const onP2pSessionClosed = createIpcMultiplex<[{ sessionId: string }]>(
+  ipcRenderer,
+  'p2p:sessionClosed',
+)
+const onP2pMessage = createIpcMultiplex<[import('../shared/p2p-types').P2pChatMessage]>(
+  ipcRenderer,
+  'p2p:message',
+)
+const onP2pFileProgress = createIpcMultiplex<[import('../shared/p2p-types').P2pFileProgress]>(
+  ipcRenderer,
+  'p2p:fileProgress',
+)
 
 const api: ElectronAPI = {
   window: {
@@ -190,6 +214,29 @@ const api: ElectronAPI = {
         ok: boolean
         error?: string
       }>,
+  },
+  p2p: {
+    getStatus: () => ipcRenderer.invoke('p2p:getStatus'),
+    scan: () => ipcRenderer.invoke('p2p:scan'),
+    connect: (host, port, message) => ipcRenderer.invoke('p2p:connect', host, port, message),
+    acceptRequest: (requestId) => ipcRenderer.invoke('p2p:acceptRequest', requestId),
+    rejectRequest: (requestId) => ipcRenderer.invoke('p2p:rejectRequest', requestId),
+    disconnect: (sessionId) => ipcRenderer.invoke('p2p:disconnect', sessionId),
+    sendText: (sessionId, text) => ipcRenderer.invoke('p2p:sendText', sessionId, text),
+    sendFile: (sessionId, localPath) => ipcRenderer.invoke('p2p:sendFile', sessionId, localPath),
+    pickAndSendFile: (sessionId, imagesOnly) =>
+      ipcRenderer.invoke('p2p:pickAndSendFile', sessionId, imagesOnly),
+    getSessions: () => ipcRenderer.invoke('p2p:getSessions'),
+    getHistory: (sessionId) => ipcRenderer.invoke('p2p:getHistory', sessionId),
+    getFullHistory: (sessionId) => ipcRenderer.invoke('p2p:getFullHistory', sessionId),
+    clearHistory: (sessionId) => ipcRenderer.invoke('p2p:clearHistory', sessionId),
+    openChatDirectory: () => ipcRenderer.invoke('p2p:openChatDirectory') as Promise<void>,
+    onSessionRequest: (cb) => onP2pSessionRequest(cb),
+    onSessionEstablished: (cb) => onP2pSessionEstablished(cb),
+    onSessionDisconnected: (cb) => onP2pSessionDisconnected(cb),
+    onSessionClosed: (cb) => onP2pSessionClosed(cb),
+    onMessage: (cb) => onP2pMessage(cb),
+    onFileProgress: (cb) => onP2pFileProgress(cb),
   },
 }
 

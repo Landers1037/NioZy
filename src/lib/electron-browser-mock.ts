@@ -15,6 +15,7 @@ import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-se
 import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-statistics-settings'
+import { DEFAULT_P2P_SETTINGS } from '../../electron/shared/p2p-settings'
 import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
@@ -69,6 +70,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
+  p2p: { ...DEFAULT_P2P_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -161,6 +163,7 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
     experimental: partial.experimental
       ? { ...mockSettings.experimental, ...partial.experimental }
       : mockSettings.experimental,
+    p2p: partial.p2p ? { ...mockSettings.p2p, ...partial.p2p } : mockSettings.p2p,
     connections: partial.connections ?? mockSettings.connections,
     builtinConnections: partial.builtinConnections ?? mockSettings.builtinConnections,
   }
@@ -484,6 +487,36 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     logging: {
       openLogDirectory: async () => undefined,
+    },
+    p2p: {
+      getStatus: async () => ({
+        running: false,
+        port: mockSettings.p2p.port,
+        deviceId: 'browser-mock-device',
+        hostname: 'browser-mock',
+        displayName: 'browser-mock',
+        discoveryEnabled: mockSettings.p2p.discoveryEnabled,
+        chatDirectory: 'C:\\Users\\Developer\\.config\\NioZy\\chat',
+      }),
+      scan: async () => [],
+      connect: async () => ({ ok: false, error: 'Browser preview' }),
+      acceptRequest: async () => ({ ok: false, error: 'Browser preview' }),
+      rejectRequest: async () => ({ ok: false, error: 'Browser preview' }),
+      disconnect: async () => ({ ok: false, error: 'Browser preview' }),
+      sendText: async () => ({ ok: false, error: 'Browser preview' }),
+      sendFile: async () => ({ ok: false, error: 'Browser preview' }),
+      pickAndSendFile: async () => ({ ok: false, error: 'Browser preview' }),
+      getSessions: async () => [],
+      getHistory: async () => ({ ok: true, messages: [] }),
+      getFullHistory: async () => ({ ok: true, messages: [] }),
+      clearHistory: async () => ({ ok: true }),
+      openChatDirectory: async () => undefined,
+      onSessionRequest: () => () => undefined,
+      onSessionEstablished: () => () => undefined,
+      onSessionDisconnected: () => () => undefined,
+      onSessionClosed: () => () => undefined,
+      onMessage: () => () => undefined,
+      onFileProgress: () => () => undefined,
     },
     statistics: {
       get: async () => createEmptyUsageStatisticData(localTodayDate()),

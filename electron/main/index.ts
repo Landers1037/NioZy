@@ -55,6 +55,8 @@ import {
   isWindowsShellContextMenuSupported,
   setWindowsShellContextMenu,
 } from '../windows-shell-context-menu'
+import { p2pService } from '../p2p/p2p-service'
+import { ensureChatDir, getChatDir } from '../config-paths'
 import { scpLog, scpProfileForLog } from '../scp-logger'
 import type { SshConnectionProfile, TerminalCreateOptions } from '../shared/api-types'
 import type { ScpTransferProgress } from '../shared/ssh-types'
@@ -250,6 +252,14 @@ async function syncCopilotRuntimeIfAiApiKeyUsesVault(): Promise<void> {
   const key = settingsStore.get().experimental.aiApiKey
   if (!containsVaultReference(key)) return
   await syncCopilotRuntimeFromSettings()
+}
+
+async function syncP2PFromSettings(): Promise<void> {
+  p2pService.configure(() => mainWindow)
+  const result = await p2pService.start(settingsStore.get().p2p)
+  if (!result.ok && result.error) {
+    mainLog.warn('P2P service failed to start', { error: result.error })
+  }
 }
 
 function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update']>[0]): boolean {
@@ -593,6 +603,8 @@ app.whenReady().then(async () => {
   mainLog.debug('Paths', { appPath: app.getAppPath(), mainDir: __dirname })
 
   createWindow()
+  p2pService.configure(() => mainWindow)
+  void syncP2PFromSettings()
   createTray()
   syncSystemStatsPolling()
   syncStatisticsPolling()
@@ -629,6 +641,7 @@ app.on('before-quit', () => {
   void disposeCopilotRuntime(true).catch((err) =>
     copilotLog.error('Failed to stop runtime', logErrorPayload(err)),
   )
+  void p2pService.stop()
 })
 
 app.on('will-quit', () => {
@@ -711,6 +724,45 @@ ipcMain.handle('logging:openLogDirectory', async (): Promise<void> => {
   if (result) {
     throw new Error(result)
   }
+})
+
+ipcMain.handle('p2p:getStatus', () => p2pService.getStatus())
+ipcMain.handle('p2p:scan', () => p2pService.scan())
+ipcMain.handle('p2p:connect', (_, host: string, port: number, message?: string) =>
+  p2pService.connect(host, port, message),
+)
+ipcMain.handle('p2p:acceptRequest', (_, requestId: string) => p2pService.acceptRequest(requestId))
+ipcMain.handle('p2p:rejectRequest', (_, requestId: string) => p2pService.rejectRequest(requestId))
+ipcMain.handle('p2p:disconnect', (_, sessionId: string) => p2pService.disconnect(sessionId))
+ipcMain.handle('p2p:sendText', (_, sessionId: string, text: string) =>
+  p2pService.sendText(sessionId, text),
+)
+ipcMain.handle('p2p:sendFile', (_, sessionId: string, localPath: string) =>
+  p2pService.sendFile(sessionId, localPath),
+)
+ipcMain.handle(
+  'p2p:pickAndSendFile',
+  async (_, sessionId: string, imagesOnly?: boolean) => {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      properties: ['openFile'],
+      filters: imagesOnly
+        ? [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'] }]
+        : undefined,
+    })
+    if (result.canceled || !result.filePaths[0]) {
+      return { ok: false, canceled: true as const }
+    }
+    return p2pService.sendFile(sessionId, result.filePaths[0])
+  },
+)
+ipcMain.handle('p2p:getSessions', () => p2pService.getSessions())
+ipcMain.handle('p2p:getHistory', (_, sessionId: string) => p2pService.loadHistory(sessionId))
+ipcMain.handle('p2p:getFullHistory', (_, sessionId: string) => p2pService.loadFullHistory(sessionId))
+ipcMain.handle('p2p:clearHistory', (_, sessionId: string) => p2pService.clearHistory(sessionId))
+ipcMain.handle('p2p:openChatDirectory', async (): Promise<void> => {
+  ensureChatDir()
+  const result = await shell.openPath(getChatDir())
+  if (result) throw new Error(result)
 })
 
 ipcMain.handle('terminal:pickBackground', async () => {
@@ -855,6 +907,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   }
   if (partial.logging !== undefined) {
     applyLoggingSettings(updated.logging)
+  }
+  if (partial.p2p !== undefined) {
+    await syncP2PFromSettings()
   }
   if (partial.theme !== undefined || partial.uiStyle !== undefined) {
     mainWindow?.setBackgroundColor(

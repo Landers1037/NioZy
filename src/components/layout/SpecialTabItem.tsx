@@ -1,4 +1,5 @@
 import type { AppTab } from '@/stores/app-store'
+import { ChatTabItem } from '@/components/layout/ChatTabItem'
 import { FilesystemTabItem } from '@/components/layout/FilesystemTabItem'
 import { SandboxTabItem } from '@/components/layout/SandboxTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
@@ -15,6 +16,9 @@ interface SpecialTabItemProps {
 export function SpecialTabItem(props: SpecialTabItemProps) {
   if (props.tab.type === 'filesystem') {
     return <FilesystemTabItem {...props} />
+  }
+  if (props.tab.type === 'chat') {
+    return <ChatTabItem {...props} />
   }
   if (props.tab.type === 'sandbox') {
     return <SandboxTabItem {...props} />

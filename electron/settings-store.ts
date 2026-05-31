@@ -67,6 +67,7 @@ import {
   DEFAULT_USAGE_STATISTICS_SETTINGS,
   normalizeUsageStatisticsSettings,
 } from './shared/usage-statistics-settings'
+import { DEFAULT_P2P_SETTINGS, normalizeP2pSettings } from './shared/p2p-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -131,6 +132,7 @@ export interface AppSettings {
   preview: import('./shared/preview-settings').PreviewSettings
   experimental: import('./shared/experimental-settings').ExperimentalSettings
   statistics: import('./shared/usage-statistics-settings').UsageStatisticsSettings
+  p2p: import('./shared/p2p-settings').P2pSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -206,6 +208,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
+  p2p: { ...DEFAULT_P2P_SETTINGS },
 }
 
 function buildAppSettingsFromStored(
@@ -306,6 +309,7 @@ function buildAppSettingsFromStored(
     ),
     experimental: normalizeExperimentalSettings(stored.experimental),
     statistics: normalizeUsageStatisticsSettings(stored.statistics),
+    p2p: normalizeP2pSettings(stored.p2p),
   }
 }
 

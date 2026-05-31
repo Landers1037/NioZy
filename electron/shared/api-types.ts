@@ -46,6 +46,20 @@ export {
   DEFAULT_FILESYSTEM_SETTINGS,
   normalizeFilesystemSettings,
 } from './filesystem-settings'
+export type { P2pSettings } from './p2p-settings'
+export { DEFAULT_P2P_SETTINGS, normalizeP2pSettings } from './p2p-settings'
+export type {
+  P2pPeerInfo,
+  P2pSessionInfo,
+  P2pSessionPeer,
+  P2pChatMessage,
+  P2pIncomingRequest,
+  P2pFileProgress,
+  P2pStatus,
+  P2pResult,
+  P2pConnectResult,
+  P2pHistoryResult,
+} from './p2p-types'
 export type {
   SshConnectionProfile,
   ScpFileEntry,
@@ -175,6 +189,7 @@ export interface AppSettings {
   preview: import('./preview-settings').PreviewSettings
   experimental: import('./experimental-settings').ExperimentalSettings
   statistics: import('./usage-statistics-settings').UsageStatisticsSettings
+  p2p: import('./p2p-settings').P2pSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -448,5 +463,30 @@ export interface ElectronAPI {
     savePng: (dataUrl: string, defaultFileName?: string) => Promise<{ ok: boolean; canceled?: boolean; error?: string }>
     /** 复制 PNG 到剪贴板 */
     copyToClipboard: (dataUrl: string) => Promise<{ ok: boolean; error?: string }>
+  }
+  p2p: {
+    getStatus: () => Promise<import('./p2p-types').P2pStatus>
+    scan: () => Promise<import('./p2p-types').P2pPeerInfo[]>
+    connect: (host: string, port: number, message?: string) => Promise<import('./p2p-types').P2pConnectResult>
+    acceptRequest: (requestId: string) => Promise<import('./p2p-types').P2pResult>
+    rejectRequest: (requestId: string) => Promise<import('./p2p-types').P2pResult>
+    disconnect: (sessionId: string) => Promise<import('./p2p-types').P2pResult>
+    sendText: (sessionId: string, text: string) => Promise<import('./p2p-types').P2pResult>
+    sendFile: (sessionId: string, localPath: string) => Promise<import('./p2p-types').P2pResult>
+    pickAndSendFile: (
+      sessionId: string,
+      imagesOnly?: boolean,
+    ) => Promise<import('./p2p-types').P2pResult & { canceled?: boolean }>
+    getSessions: () => Promise<import('./p2p-types').P2pSessionInfo[]>
+    getHistory: (sessionId: string) => Promise<import('./p2p-types').P2pHistoryResult>
+    getFullHistory: (sessionId: string) => Promise<import('./p2p-types').P2pHistoryResult>
+    clearHistory: (sessionId: string) => Promise<import('./p2p-types').P2pResult>
+    openChatDirectory: () => Promise<void>
+    onSessionRequest: (cb: (request: import('./p2p-types').P2pIncomingRequest) => void) => () => void
+    onSessionEstablished: (cb: (session: import('./p2p-types').P2pSessionInfo) => void) => () => void
+    onSessionDisconnected: (cb: (session: import('./p2p-types').P2pSessionInfo) => void) => () => void
+    onSessionClosed: (cb: (payload: { sessionId: string }) => void) => () => void
+    onMessage: (cb: (message: import('./p2p-types').P2pChatMessage) => void) => () => void
+    onFileProgress: (cb: (progress: import('./p2p-types').P2pFileProgress) => void) => () => void
   }
 }

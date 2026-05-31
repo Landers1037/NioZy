@@ -35,6 +35,10 @@ export function getFilesystemTabTitle(): string {
   return i18n.t('app.filesystemTabTitle')
 }
 
+export function getChatTabTitle(): string {
+  return i18n.t('app.chatTabTitle')
+}
+
 export function getSandboxTabTitle(): string {
   return i18n.t('app.sandboxTabTitle')
 }

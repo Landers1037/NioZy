@@ -37,7 +37,18 @@ export function getTerminalBackgroundDir(): string {
   return join(getConfigDir(), 'background')
 }
 
+/** 聊天记录与 P2P 设备身份目录：%USERPROFILE%/.config/NioZy/chat */
+export function getChatDir(): string {
+  return join(getConfigDir(), 'chat')
+}
+
 export function ensureConfigDir(): void {
   const dir = getConfigDir()
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+}
+
+export function ensureChatDir(): void {
+  ensureConfigDir()
+  const dir = getChatDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
 }
