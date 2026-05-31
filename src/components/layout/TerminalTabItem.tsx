@@ -60,6 +60,11 @@ import {
   canShowRestartAsAdminMenu,
   restartTerminalTabAsAdmin,
 } from '@/lib/terminal-restart-actions'
+import {
+  changeTerminalTabDirectory,
+  getDroppedFilePaths,
+  hasExternalFileDrag,
+} from '@/lib/terminal-drop-actions'
 
 interface TerminalTabItemProps {
   tab: AppTab
@@ -110,6 +115,7 @@ export function TerminalTabItem({
   const [editOpen, setEditOpen] = useState(false)
   const [editValue, setEditValue] = useState('')
   const [appElevated, setAppElevated] = useState(false)
+  const [fileDragOver, setFileDragOver] = useState(false)
 
   useEffect(() => {
     if (getElectronAPI().system.platform !== 'win32') return
@@ -151,6 +157,38 @@ export function TerminalTabItem({
 
   const compact = collapsed || iconOnly
 
+  const handleFileDragEnter = (e: React.DragEvent) => {
+    if (!hasExternalFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    setFileDragOver(true)
+  }
+
+  const handleFileDragOver = (e: React.DragEvent) => {
+    if (!hasExternalFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    setFileDragOver(true)
+  }
+
+  const handleFileDragLeave = (e: React.DragEvent) => {
+    if (!hasExternalFileDrag(e.dataTransfer)) return
+    const related = e.relatedTarget as Node | null
+    if (related && e.currentTarget.contains(related)) return
+    setFileDragOver(false)
+  }
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    if (!hasExternalFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    setFileDragOver(false)
+    const paths = getDroppedFilePaths(e.dataTransfer)
+    if (paths.length === 0) return
+    void changeTerminalTabDirectory(tab, paths[0])
+  }
+
   const row = (
     <div
       title={displayTitle}
@@ -162,11 +200,16 @@ export function TerminalTabItem({
         getTabHighlightClasses(isActive, iconOnly, uiStyle),
         isDragging && 'z-20 scale-[1.02] shadow-md ring-2 ring-primary/60',
         dragModeActive && !isDragging && 'opacity-60',
+        fileDragOver && 'bg-primary/15 ring-2 ring-primary/50',
       )}
       onClick={() => {
         if (shouldSuppressClick?.()) return
         setActiveTab(tab.id)
       }}
+      onDragEnter={handleFileDragEnter}
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
       onPointerDown={dragEnabled ? onDragPointerDown : undefined}
       onPointerMove={dragEnabled ? onDragPointerMove : undefined}
       onPointerUp={dragEnabled ? onDragPointerUp : undefined}

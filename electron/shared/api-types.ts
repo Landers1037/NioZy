@@ -394,6 +394,11 @@ export interface ElectronAPI {
       programPath: string,
       targetPath: string,
     ) => Promise<import('../fs-service').OpenWithProgramResult>
+    /** Electron：从拖放 File 对象解析本地绝对路径 */
+    getPathForFile: (file: File) => string
+    resolveTerminalDropDirectory: (
+      filePath: string,
+    ) => Promise<import('../fs-service').TerminalDropDirectoryResult>
     /** 选择 SSH 私钥文件；取消时返回 null */
     pickPrivateKey: () => Promise<string | null>
   }

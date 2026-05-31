@@ -4,7 +4,7 @@ import { existsSync } from 'fs'
 import { stat } from 'fs/promises'
 import { buildLocalPreviewUrl, buildLocalTextPreviewUrl } from './shared/local-file-url'
 import { homedir } from 'os'
-import { join, normalize } from 'path'
+import { dirname, join, normalize } from 'path'
 import { resolveExecutable } from './resolve-executable'
 import { isImageFilePath } from './shared/filesystem-image'
 import {
@@ -52,6 +52,37 @@ export interface ImagePreviewResult {
 export interface OpenWithProgramResult {
   ok: boolean
   error?: string
+}
+
+export interface TerminalDropDirectoryResult {
+  ok: boolean
+  directory?: string
+  error?: string
+}
+
+/** 将拖入终端 Tab 的文件/文件夹路径解析为应切换的工作目录 */
+export async function resolveTerminalDropDirectory(
+  filePath: string,
+): Promise<TerminalDropDirectoryResult> {
+  try {
+    const resolved = resolveExistingPreviewPath(filePath)
+    if (!resolved) {
+      return { ok: false, error: 'Path not found' }
+    }
+    const st = await stat(resolved)
+    if (st.isDirectory()) {
+      return { ok: true, directory: resolved }
+    }
+    if (st.isFile()) {
+      return { ok: true, directory: dirname(resolved) }
+    }
+    return { ok: false, error: 'Unsupported path type' }
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
 }
 
 function localAppData(): string {

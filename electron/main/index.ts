@@ -1117,6 +1117,9 @@ ipcMain.handle(
 ipcMain.handle('fs:openWithProgram', (_, programPath: string, targetPath: string) =>
   fsService.openWithProgram(programPath, targetPath),
 )
+ipcMain.handle('fs:resolveTerminalDropDirectory', (_, filePath: string) =>
+  fsService.resolveTerminalDropDirectory(filePath),
+)
 const SSH_PROFILE_NOT_FOUND = { ok: false as const, error: '无法解析 SSH 连接配置' }
 
 ipcMain.handle(
