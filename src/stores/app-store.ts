@@ -10,12 +10,13 @@ import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import {
   applyAppLocale,
   getFilesystemTabTitle,
+  getChatTabTitle,
   getSandboxTabTitle,
   getSettingsTabTitle,
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
-export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox'
+export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat'
 
 export interface AppTab {
   id: string
@@ -65,6 +66,7 @@ interface AppState {
   addTerminalTab: (tab: AppTab) => void
   addSettingsTab: () => void
   addFilesystemTab: () => void
+  addChatTab: () => void
   addSandboxTab: () => void
   closeSandboxTabIfPresent: () => void
   addWebviewTab: (url: string, title?: string) => void
@@ -144,6 +146,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       id: 'filesystem',
       type: 'filesystem',
       title: getFilesystemTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  addChatTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'chat')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'chat',
+      type: 'chat',
+      title: getChatTabTitle(),
     }
     set((s) => ({
       tabs: [...s.tabs, tab],
@@ -266,6 +284,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: get().tabs.map((t) => {
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         return t
       }),
@@ -281,6 +300,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: get().tabs.map((t) => {
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         return t
       }),

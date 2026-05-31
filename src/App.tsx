@@ -42,6 +42,11 @@ const JsSandboxPanel = lazy(() =>
     default: m.JsSandboxPanel,
   })),
 )
+const ChatPanel = lazy(() =>
+  import('@/components/chat/ChatPanel').then((m) => ({
+    default: m.ChatPanel,
+  })),
+)
 const ScpTransferDialog = lazy(() =>
   import('@/components/scp/ScpTransferDialog').then((m) => ({
     default: m.ScpTransferDialog,
@@ -185,6 +190,9 @@ export default function App() {
   const filesystemTabActive = activeTab?.type === 'filesystem'
   const hasSandboxTab = tabs.some((t) => t.type === 'sandbox')
   const sandboxTabActive = activeTab?.type === 'sandbox'
+  const hasChatTab = tabs.some((t) => t.type === 'chat')
+  const chatTabActive = activeTab?.type === 'chat'
+  const p2pChatEnabled = settings?.p2p.enabled === true
   const attachPtyMode = isAttachPtyRenderMode(settings)
   const attachCommitted = useAttachPtySessionStore((s) => s.committed)
   const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
@@ -301,6 +309,19 @@ export default function App() {
               >
                 <Suspense fallback={null}>
                   <JsSandboxPanel />
+                </Suspense>
+              </div>
+            )}
+            {hasChatTab && p2pChatEnabled && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !chatTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!chatTabActive ? { inert: true } : {})}
+              >
+                <Suspense fallback={null}>
+                  <ChatPanel />
                 </Suspense>
               </div>
             )}

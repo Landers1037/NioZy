@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -22,9 +22,11 @@ export function Sidebar() {
   const setCollapsed = useAppStore((s) => s.setSidebarCollapsed)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
+  const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const settings = useAppStore((s) => s.settings)
   const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
+  const p2pChatEnabled = settings?.p2p.enabled === true
   const patchSettings = useAppStore((s) => s.patchSettings)
 
   const storedWidth = settings?.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH
@@ -135,6 +137,19 @@ export function Sidebar() {
                 <span className="min-w-0 truncate">{t('sidebar.filesystem')}</span>
               )}
             </Button>
+            {p2pChatEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addChatTab()}
+              >
+                <MessageSquare className="size-4 shrink-0" />
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{t('sidebar.openChat')}</span>
+                )}
+              </Button>
+            )}
             {jsSandboxEnabled && (
               <Button
                 variant="ghost"

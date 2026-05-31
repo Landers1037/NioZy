@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Plus, Settings, Link2, FolderCode, Braces } from 'lucide-react'
+import { Plus, Settings, Link2, FolderCode, Braces, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -20,9 +20,11 @@ export function MinimalTabBar() {
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
+  const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const settings = useAppStore((s) => s.settings)
   const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
+  const p2pChatEnabled = settings?.p2p.enabled === true
   const ui = useUiClasses()
 
   return (
@@ -86,6 +88,17 @@ export function MinimalTabBar() {
         >
           <FolderCode className="size-3" />
         </Button>
+        {p2pChatEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.openChat')}
+            onClick={() => addChatTab()}
+          >
+            <MessageSquare className="size-3" />
+          </Button>
+        )}
         {jsSandboxEnabled && (
           <Button
             variant="ghost"

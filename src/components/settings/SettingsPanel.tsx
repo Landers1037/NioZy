@@ -18,6 +18,7 @@ import {
   Gauge,
   Eye,
   BarChart3,
+  MessageSquare,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -35,6 +36,7 @@ import { VaultSettings } from './VaultSettings'
 import { ShortcutSettings } from './ShortcutSettings'
 import { ExperimentalSettings } from './ExperimentalSettings'
 import { PreviewSettings } from './PreviewSettings'
+import { P2pSettings } from './P2pSettings'
 
 const SECTION_DEFS = [
   { id: 'appearance', icon: Palette },
@@ -49,6 +51,7 @@ const SECTION_DEFS = [
   { id: 'shortcuts', icon: Keyboard },
   { id: 'statistics', icon: BarChart3 },
   { id: 'system', icon: Settings2 },
+  { id: 'p2p', icon: MessageSquare },
   { id: 'logging', icon: ScrollText },
   { id: 'advanced', icon: SlidersHorizontal },
   { id: 'experimental', icon: FlaskConical },
@@ -106,6 +109,7 @@ export function SettingsPanel() {
         {section === 'shortcuts' && <ShortcutSettings />}
         {section === 'statistics' && <StatisticsSettings />}
         {section === 'system' && <SystemSettings />}
+        {section === 'p2p' && <P2pSettings />}
         {section === 'logging' && <LogSettings />}
         {section === 'advanced' && <AdvancedSettings />}
         {section === 'experimental' && <ExperimentalSettings />}
