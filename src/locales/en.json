@@ -612,7 +612,9 @@
     "editTitle": "Edit title",
     "editTitleDesc": "Custom label in sidebar and status bar. Empty or default restores \"{{defaultTitle}}\".",
     "openScpTransfer": "Open transfer",
-    "restartAsAdmin": "Restart as administrator"
+    "restartAsAdmin": "Restart as administrator",
+    "dropDirectoryFailed": "Could not switch to that path",
+    "dropDirectoryUnsupported": "Local paths cannot be dropped onto SSH terminals"
   },
   "scp": {
     "title": "SCP transfer — {{title}}",

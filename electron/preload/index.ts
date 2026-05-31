@@ -14,7 +14,7 @@ import { parseInitialSettingsFromArgv } from '../shared/initial-settings'
 import { createIpcMultiplex } from './ipc-multiplex'
 
 const require = createRequire(import.meta.url)
-const { contextBridge, ipcRenderer } = require('electron') as typeof import('electron')
+const { contextBridge, ipcRenderer, webUtils } = require('electron') as typeof import('electron')
 
 const initialSettings = parseInitialSettingsFromArgv(process.argv)
 
@@ -127,6 +127,9 @@ const api: ElectronAPI = {
     detectProgram: (options) => ipcRenderer.invoke('fs:detectProgram', options),
     openWithProgram: (programPath, targetPath) =>
       ipcRenderer.invoke('fs:openWithProgram', programPath, targetPath),
+    getPathForFile: (file: File) => webUtils.getPathForFile(file),
+    resolveTerminalDropDirectory: (filePath) =>
+      ipcRenderer.invoke('fs:resolveTerminalDropDirectory', filePath),
     pickPrivateKey: () => ipcRenderer.invoke('files:pickPrivateKey') as Promise<string | null>,
   },
   logging: {

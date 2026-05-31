@@ -612,7 +612,9 @@
     "editTitle": "编辑标题",
     "editTitleDesc": "自定义侧边栏与状态栏中的展示名称。留空或恢复为默认名称时将使用「{{defaultTitle}}」。",
     "openScpTransfer": "打开传输",
-    "restartAsAdmin": "以管理员身份重启"
+    "restartAsAdmin": "以管理员身份重启",
+    "dropDirectoryFailed": "无法切换到该路径",
+    "dropDirectoryUnsupported": "SSH 终端不支持拖入本地路径"
   },
   "scp": {
     "title": "SCP 传输 — {{title}}",

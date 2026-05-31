@@ -603,7 +603,9 @@
     "editTitle": "タイトルを編集",
     "editTitleDesc": "サイドバーとステータスバーのカスタムラベル。空またはデフォルトで「{{defaultTitle}}」に戻ります。",
     "openScpTransfer": "転送を開く",
-    "restartAsAdmin": "管理者として再起動"
+    "restartAsAdmin": "管理者として再起動",
+    "dropDirectoryFailed": "そのパスに切り替えできませんでした",
+    "dropDirectoryUnsupported": "SSH ターミナルにはローカルパスをドロップできません"
   },
   "scp": {
     "title": "SCP 転送 — {{title}}",

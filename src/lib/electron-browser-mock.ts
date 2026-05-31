@@ -469,6 +469,17 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         }
       },
       openWithProgram: async () => ({ ok: true }),
+      getPathForFile: (file) => (file as File & { path?: string }).path ?? '',
+      resolveTerminalDropDirectory: async (filePath) => {
+        const trimmed = filePath.trim()
+        if (!trimmed) return { ok: false, error: 'Empty path' }
+        const sep = trimmed.includes('\\') ? '\\' : '/'
+        const looksLikeDir = trimmed.endsWith(sep) || !trimmed.includes('.')
+        if (looksLikeDir) return { ok: true, directory: trimmed.replace(/[/\\]+$/, '') || trimmed }
+        const idx = trimmed.lastIndexOf(sep)
+        if (idx < 0) return { ok: true, directory: trimmed }
+        return { ok: true, directory: trimmed.slice(0, idx) }
+      },
       pickPrivateKey: async () => null,
     },
     logging: {
