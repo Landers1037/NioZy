@@ -1,14 +1,22 @@
 import type { Terminal } from '@xterm/xterm'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
+import {
+  applyXtermSelection,
+  getViewportCellFromMouse,
+  isXtermForceSelectionMouseEvent,
+  viewportRowToBufferRow,
+} from '@/lib/xterm-mouse-selection'
 
-/** 移动超过该像素视为拖选（非单击） */
+/** 移动超过该像素才视为拖选（非单击） */
 const SHIFT_SELECT_DRAG_THRESHOLD_PX = 4
 
 /**
- * 交互式 CLI（Claude/Cursor agent 等）在备用屏常开启 xterm 鼠标追踪。
- * 点击输出区会把坐标发给 PTY，缓冲区光标会跳到点击处，与 TUI 自绘输入框光标错位。
- * 开启 shiftEnterNewline 时，在备用屏拦截普通左键单击，仅 refocus。
- * 备用屏上按住 Shift 左键拖选，松开时自动复制到剪贴板。
+ * 备用屏（vim / less / 交互式 CLI）左键拖选。
+ *
+ * 原理：在 capture 阶段拦截 mousedown，阻止原始事件到达 xterm 的 "always-on"
+ * mousedown 处理器（该处理器会把鼠标事件转发给 PTY）；同时在 mousemove 期间通过
+ * xterm 公开 API term.select() 直接写入选区，无需依赖 SelectionService 的内部
+ * mousedown 触发机制，彻底绕过 PTY mouse reporting。
  */
 export function handleInteractiveCliMouseDown(
   term: Terminal,
@@ -16,66 +24,102 @@ export function handleInteractiveCliMouseDown(
   shiftEnterNewline: boolean,
 ): boolean {
   if (event.type !== 'mousedown' || event.button !== 0) return false
-  if (term.buffer.active.type !== 'alternate') return false
-  if (event.altKey) return false
+  if (event.ctrlKey && !event.shiftKey && !event.altKey) return false
 
-  if (event.shiftKey) {
-    attachShiftSelectCopyOnMouseUp(term, event)
+  const macOptionForces = term.options.macOptionClickForcesSelection
+  const forceModifier = isXtermForceSelectionMouseEvent(event, macOptionForces)
+
+  // 主缓冲区：Shift/Option 强制选区，松开后复制
+  if (term.buffer.active.type !== 'alternate') {
+    if (forceModifier) {
+      attachPublicApiDragSelect(term, event, { requireDragThreshold: false, copyOnRelease: true })
+    }
     return false
   }
 
-  if (!shiftEnterNewline) return false
+  // 备用屏（vim 等）
+  if (event.altKey && !forceModifier) return false
 
   event.preventDefault()
   event.stopImmediatePropagation()
-  term.focus()
+
+  if (shiftEnterNewline) {
+    // 交互式 CLI：单击不拦截，拖选后复制
+    attachPublicApiDragSelect(term, event, { requireDragThreshold: true, copyOnRelease: true })
+  } else {
+    // 普通备用屏（vim/less）：直接左键拖选
+    attachPublicApiDragSelect(term, event, { requireDragThreshold: false, copyOnRelease: true })
+  }
+
   return true
 }
 
-/** Shift+拖选结束后复制（xterm 由原生选区处理，不在此派发合成鼠标事件）。 */
-export function attachShiftSelectCopyOnMouseUp(
+/**
+ * 用 term.select() 实现鼠标拖选，无需合成事件。
+ * - requireDragThreshold：需超过 4px 才开始选区（交互式 CLI 单击不选中）
+ * - copyOnRelease：松开鼠标后自动复制到剪贴板
+ */
+function attachPublicApiDragSelect(
   term: Terminal,
-  event: MouseEvent,
-): void {
-  attachShiftSelectCopyOnMouseUpForElement(
-    term.element,
-    () => readTerminalSelectionText(term),
-    event,
-  )
-}
-
-export function attachShiftSelectCopyOnMouseUpForElement(
-  root: HTMLElement | undefined,
-  getSelectionText: () => string,
   downEvent: MouseEvent,
+  options: { requireDragThreshold: boolean; copyOnRelease: boolean },
 ): void {
-  if (!root) return
-
-  const ownerDoc = root.ownerDocument ?? document
+  const ownerDoc = term.element?.ownerDocument ?? document
   const startX = downEvent.clientX
   const startY = downEvent.clientY
 
+  const startCell = getViewportCellFromMouse(term, downEvent)
+  let startBufCol = startCell?.col ?? 0
+  let startBufRow = startCell ? viewportRowToBufferRow(term, startCell.row) : 0
+  let dragStarted = false
+
+  const onMove = (e: MouseEvent) => {
+    if ((e.buttons & 1) === 0) return
+
+    if (options.requireDragThreshold && !dragStarted) {
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) < SHIFT_SELECT_DRAG_THRESHOLD_PX) {
+        return
+      }
+      dragStarted = true
+    } else if (!options.requireDragThreshold) {
+      dragStarted = true
+    }
+
+    const cell = getViewportCellFromMouse(term, e)
+    if (!cell) return
+    const endBufRow = viewportRowToBufferRow(term, cell.row)
+    applyXtermSelection(term, startBufCol, startBufRow, cell.col, endBufRow)
+  }
+
   const onUp = (e: MouseEvent) => {
     cleanup()
-    if (e.button !== 0 || !e.shiftKey) return
-    const dragged =
-      Math.hypot(e.clientX - startX, e.clientY - startY) >= SHIFT_SELECT_DRAG_THRESHOLD_PX
-    if (!dragged) return
-
-    queueMicrotask(() => {
-      const text = getSelectionText()
-      if (text) void navigator.clipboard.writeText(text)
-    })
+    if (e.button !== 0) return
+    if (!dragStarted) {
+      if (options.requireDragThreshold) term.focus()
+      return
+    }
+    if (options.copyOnRelease) {
+      queueMicrotask(() => {
+        const text = readTerminalSelectionText(term)
+        if (text) void navigator.clipboard.writeText(text)
+      })
+    }
   }
 
   const cleanup = () => {
+    ownerDoc.removeEventListener('mousemove', onMove)
     ownerDoc.removeEventListener('mouseup', onUp)
   }
 
+  ownerDoc.addEventListener('mousemove', onMove)
   ownerDoc.addEventListener('mouseup', onUp)
 }
 
-/** 将浏览器选区更新为两点之间的文本（用于 wterm DOM 渲染器 Shift+拖选） */
+// ---------------------------------------------------------------------------
+// 保留供 wterm DOM 渲染器使用的辅助函数
+// ---------------------------------------------------------------------------
+
+/** 将浏览器选区更新为两点之间的文本（wterm DOM 渲染器 Shift+拖选） */
 export function extendNativeSelection(
   doc: Document,
   startX: number,
@@ -141,7 +185,7 @@ function caretRangeFromClientPoint(
   return caretPositionFromPoint?.call(doc, x, y) ?? null
 }
 
-/** wterm：Shift+左键拖选 DOM 文本，松开时复制 */
+/** wterm DOM 渲染器：Shift+左键拖选后复制 */
 export function attachAlternateScreenShiftDomSelect(
   root: HTMLElement,
   event: MouseEvent,
@@ -158,12 +202,7 @@ export function attachAlternateScreenShiftDomSelect(
       extendNativeSelection(ownerDoc, startX, startY, e.clientX, e.clientY)
       return
     }
-    if (
-      Math.hypot(e.clientX - startX, e.clientY - startY) <
-      SHIFT_SELECT_DRAG_THRESHOLD_PX
-    ) {
-      return
-    }
+    if (Math.hypot(e.clientX - startX, e.clientY - startY) < SHIFT_SELECT_DRAG_THRESHOLD_PX) return
     dragActive = true
     extendNativeSelection(ownerDoc, startX, startY, e.clientX, e.clientY)
   }

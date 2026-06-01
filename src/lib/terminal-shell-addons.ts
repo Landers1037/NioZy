@@ -13,6 +13,7 @@ import {
 } from '@/lib/terminal-url'
 import { handleTerminalLinkClick } from '@/lib/terminal-preview-open'
 import { openTerminalExternalLink } from '@/lib/terminal-url'
+import { isXtermForceSelectionMouseEvent } from '@/lib/xterm-mouse-selection'
 
 /** WebGL 下 canvas 盖住 bottom 装饰，用屏幕坐标换算缓冲区列行再匹配 URL */
 function getViewportCellFromMouse(term: Terminal, event: MouseEvent): { col: number; row: number } | null {
@@ -36,6 +37,11 @@ function bindHighlightLinkClickHandler(term: Terminal, listeners: IDisposable[])
   if (!el) return
 
   const onMouseUp = (event: MouseEvent) => {
+    if (
+      isXtermForceSelectionMouseEvent(event, term.options.macOptionClickForcesSelection)
+    ) {
+      return
+    }
     if (event.button !== 0 || term.hasSelection()) return
     const cell = getViewportCellFromMouse(term, event)
     if (!cell) return
