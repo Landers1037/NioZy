@@ -19,6 +19,7 @@ import {
 } from '@/lib/terminal-preview-tooltip'
 import { bufferColToStringIndex } from '@/lib/terminal-buffer'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
+import { isXtermForceSelectionMouseEvent } from '@/lib/xterm-mouse-selection'
 import i18n from '@/lib/i18n'
 
 const WTERM_LINK_CLASS = 'niozy-wterm-link'
@@ -212,6 +213,7 @@ export function bindDomTerminalPreview(
 
   const onMouseDown = (event: MouseEvent) => {
     if (event.button !== 0) return
+    if (isXtermForceSelectionMouseEvent(event)) return
 
     const target = event.target as HTMLElement
 
@@ -234,6 +236,7 @@ export function bindDomTerminalPreview(
 
   const onMouseUp = (event: MouseEvent) => {
     if (event.button !== 0) return
+    if (isXtermForceSelectionMouseEvent(event)) return
 
     const target = event.target as HTMLElement
 
@@ -371,14 +374,18 @@ export function bindXtermTerminalPreview(
     return { lineText, strCol }
   }
 
+  const macOptionForcesSelection = () => term.options.macOptionClickForcesSelection
+
   const onMouseDown = (event: MouseEvent) => {
     if (event.button !== 0) return
+    if (isXtermForceSelectionMouseEvent(event, macOptionForcesSelection())) return
     const ctx_line = getLineContext(event)
     if (!ctx_line) return
     handlePreviewMouseDown(ctx_line.lineText, ctx_line.strCol, event, ctx)
   }
 
   const onMouseUp = (event: MouseEvent) => {
+    if (isXtermForceSelectionMouseEvent(event, macOptionForcesSelection())) return
     const ctx_line = getLineContext(event)
     if (!ctx_line) return
     handlePreviewMouseUp(ctx_line.lineText, ctx_line.strCol, event, ctx, term)
@@ -456,6 +463,7 @@ export function bindXtermTerminalPreview(
   }
 
   const onMouseMove = (event: MouseEvent) => {
+    if (isXtermForceSelectionMouseEvent(event, macOptionForcesSelection())) return
     pendingMoveEvent = event
     if (moveRaf !== null) return
     moveRaf = requestAnimationFrame(flushMouseMove)
