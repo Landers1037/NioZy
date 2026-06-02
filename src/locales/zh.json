@@ -181,7 +181,7 @@
       "shortcuts": "快捷键",
       "statistics": "使用统计",
       "system": "系统设置",
-      "p2p": "P2P 通信",
+      "p2p": "加密通信",
       "logging": "日志设置",
       "advanced": "高级设置",
       "experimental": "实验特性"
@@ -417,6 +417,22 @@
       "vncWebEnabledDesc": "开启后可添加并打开 VNC 连接，并在应用内使用 noVNC 渲染远程桌面。",
       "vncAdaptiveScale": "开启 VNC 分辨率自适应",
       "vncAdaptiveScaleDesc": "开启后 VNC 画面将按右侧区域尺寸缩放以完整显示（scale-to-fit）。",
+      "vncHardwareAccel": "开启硬件加速",
+      "vncHardwareAccelDesc": "启用 GPU 友好的 Canvas 渲染上下文以提升绘制性能。noVNC 1.7 使用 Canvas 2D 渲染（非 WebGL），修改后需重新打开 VNC 连接生效。",
+      "vncLocalCursor": "使用本地光标",
+      "vncLocalCursorDesc": "开启后在客户端渲染鼠标光标（低延迟）；关闭则使用远程桌面 framebuffer 中的光标。修改后需重新打开 VNC 连接生效。",
+      "vncEncoding": "编码格式",
+      "vncEncodingDesc": "首选 VNC 画面编码格式，服务器不支持时会自动回退。默认 Tight。修改后需重新打开 VNC 连接生效。",
+      "vncEncodings": {
+        "raw": "Raw",
+        "copyrect": "CopyRect",
+        "rre": "RRE",
+        "hextile": "Hextile",
+        "tight": "Tight（默认）",
+        "tightPNG": "TightPNG",
+        "zrle": "ZRLE",
+        "jpeg": "JPEG"
+      },
       "vnc": {
         "title": "VNC 特性",
         "description": "VNC Viewer 与显示相关设置。"
@@ -484,7 +500,7 @@
       "transparency": "窗口透明度: {{value}}%"
     },
     "p2p": {
-      "title": "P2P 通信",
+      "title": "加密通信",
       "description": "局域网点对点加密聊天、文件传输与发现设置",
       "enabled": "开启 P2P 聊天通信",
       "enabledDesc": "开启后在侧栏显示聊天入口，并在本机监听通信端口",
@@ -651,7 +667,7 @@
     "connection": "连接",
     "settings": "设置",
     "filesystem": "文件系统",
-    "openChat": "P2P 聊天",
+    "openChat": "加密通信",
     "openJsSandbox": "打开沙箱",
     "newPowerShell": "新建 PowerShell"
   },
@@ -740,7 +756,7 @@
     }
   },
   "chat": {
-    "disabled": "请先在设置中开启 P2P 聊天通信",
+    "disabled": "请先在设置中开启加密通信",
     "scanLan": "扫描局域网",
     "scanning": "扫描中…",
     "newChat": "新建聊天",

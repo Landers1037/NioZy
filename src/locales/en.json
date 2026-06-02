@@ -181,7 +181,7 @@
       "shortcuts": "Shortcuts",
       "statistics": "Usage statistics",
       "system": "System",
-      "p2p": "P2P chat",
+      "p2p": "Encrypted communication",
       "logging": "Logging",
       "advanced": "Advanced",
       "experimental": "Experimental"
@@ -417,6 +417,22 @@
       "vncWebEnabledDesc": "When enabled, you can add VNC connections and open them inside the app using noVNC.",
       "vncAdaptiveScale": "Enable VNC adaptive scaling",
       "vncAdaptiveScaleDesc": "Scales the VNC viewport to fit the right panel (scale-to-fit).",
+      "vncHardwareAccel": "Enable hardware acceleration",
+      "vncHardwareAccelDesc": "Uses a GPU-friendly Canvas rendering context for better draw performance. noVNC 1.7 renders with Canvas 2D (not WebGL). Reopen VNC connections after changing.",
+      "vncLocalCursor": "Use local cursor",
+      "vncLocalCursorDesc": "Render the mouse cursor on the client (lower latency). When off, uses the cursor drawn in the remote framebuffer. Reopen VNC connections after changing.",
+      "vncEncoding": "Encoding format",
+      "vncEncodingDesc": "Preferred VNC framebuffer encoding; falls back if the server does not support it. Default is Tight. Reopen VNC connections after changing.",
+      "vncEncodings": {
+        "raw": "Raw",
+        "copyrect": "CopyRect",
+        "rre": "RRE",
+        "hextile": "Hextile",
+        "tight": "Tight (default)",
+        "tightPNG": "TightPNG",
+        "zrle": "ZRLE",
+        "jpeg": "JPEG"
+      },
       "vnc": {
         "title": "VNC features",
         "description": "VNC viewer and display-related settings."
@@ -484,7 +500,7 @@
       "transparency": "Window opacity: {{value}}%"
     },
     "p2p": {
-      "title": "P2P chat",
+      "title": "Encrypted communication",
       "description": "LAN peer-to-peer encrypted chat, file transfer, and discovery",
       "enabled": "Enable P2P chat",
       "enabledDesc": "Shows the chat entry in the sidebar and listens on the communication port",
@@ -651,7 +667,7 @@
     "connection": "Connect",
     "settings": "Settings",
     "filesystem": "File system",
-    "openChat": "P2P chat",
+    "openChat": "Encrypted communication",
     "openJsSandbox": "Open sandbox",
     "newPowerShell": "New PowerShell"
   },
@@ -740,7 +756,7 @@
     }
   },
   "chat": {
-    "disabled": "Enable P2P chat in Settings first",
+    "disabled": "Enable encrypted communication in Settings first",
     "scanLan": "Scan LAN",
     "scanning": "Scanning…",
     "newChat": "New chat",

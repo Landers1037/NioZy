@@ -3,6 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { cn } from '@/lib/utils'
+import {
+  applyVncRfbExperimentalOptions,
+  applyVncViewportOptions,
+  installVncCanvasAccelHints,
+} from '@/lib/vnc-rfb-config'
 
 type RfbModule = typeof import('@novnc/novnc')
 
@@ -15,6 +20,12 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
 
+  const experimental = settings?.experimental
+  const vncAdaptiveScale = experimental?.vncAdaptiveScale !== false
+  const vncHardwareAccel = experimental?.vncHardwareAccel === true
+  const vncLocalCursor = experimental?.vncLocalCursor !== false
+  const vncEncoding = experimental?.vncEncoding ?? 'tight'
+
   const conn = useMemo(() => {
     const c = settings?.connections.find((c) => c.id === connectionId)
     return c?.type === 'vnc' ? c : null
@@ -22,6 +33,7 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
 
   useEffect(() => {
     let cancelled = false
+    let removeCanvasAccel: (() => void) | undefined
     const api = getElectronAPI()
 
     const cleanup = async () => {
@@ -39,9 +51,11 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
       } catch {
         // ignore
       }
+      removeCanvasAccel?.()
+      removeCanvasAccel = undefined
     }
 
-    if (!settings?.experimental.vncWebEnabled) {
+    if (!experimental?.vncWebEnabled) {
       setStatus('idle')
       setError(null)
       void cleanup()
@@ -81,6 +95,10 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
       const el = containerRef.current
       if (!el) return
 
+      if (vncHardwareAccel) {
+        removeCanvasAccel = installVncCanvasAccelHints()
+      }
+
       const mod = (await import('@novnc/novnc')) as RfbModule
       if (cancelled) return
 
@@ -93,21 +111,19 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
       })
       rfbRef.current = rfb
 
-      const adaptiveScale = settings?.experimental.vncAdaptiveScale !== false
-      // scaleViewport: scale-to-fit inside container; clipViewport: allow panning when not scaling
-      rfb.scaleViewport = adaptiveScale
-      rfb.clipViewport = !adaptiveScale
-      // default: do not change remote resolution automatically
-      rfb.resizeSession = false
+      applyVncRfbExperimentalOptions(rfb, {
+        hardwareAccel: vncHardwareAccel,
+        localCursor: vncLocalCursor,
+        encoding: vncEncoding,
+      })
+      applyVncViewportOptions(rfb, vncAdaptiveScale)
 
-      // When container size changes (window resize, sidebar resize), re-apply scaling flags.
-      // noVNC reacts internally, but this ensures toggles take effect immediately.
       if (typeof ResizeObserver !== 'undefined') {
         const ro = new ResizeObserver(() => {
-          const nextAdaptive = settings?.experimental.vncAdaptiveScale !== false
+          const rfbLive = rfbRef.current
+          if (!rfbLive) return
           try {
-            rfb.scaleViewport = nextAdaptive
-            rfb.clipViewport = !nextAdaptive
+            applyVncViewportOptions(rfbLive, vncAdaptiveScale)
           } catch {
             // ignore
           }
@@ -156,10 +172,18 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
       cancelled = true
       void cleanup()
     }
-  }, [settings?.experimental.vncWebEnabled, settings?.experimental.vncAdaptiveScale, conn, tabId])
+  }, [
+    conn,
+    experimental?.vncWebEnabled,
+    tabId,
+    vncAdaptiveScale,
+    vncEncoding,
+    vncHardwareAccel,
+    vncLocalCursor,
+  ])
 
   const hint = (() => {
-    if (!settings?.experimental.vncWebEnabled) return t('settings.experimental.vncWebEnabledDesc')
+    if (!experimental?.vncWebEnabled) return t('settings.experimental.vncWebEnabledDesc')
     if (status === 'connecting') return t('common.loading')
     if (status === 'error') return error ?? 'VNC_ERROR'
     return null
@@ -179,4 +203,3 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
     </div>
   )
 }
-
