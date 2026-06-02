@@ -378,6 +378,12 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     putty: {
       connect: async () => ({ ok: false as const, error: 'Browser preview: PuTTY not supported' }),
     },
+    vnc: {
+      startProxy: async () => {
+        throw new Error('Browser preview: VNC not supported')
+      },
+      stopProxy: async () => undefined,
+    },
     ssh: {
       checkScp: async () => ({ found: false }),
       getProfile: async () => null,

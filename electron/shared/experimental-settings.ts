@@ -36,6 +36,10 @@ export interface ExperimentalSettings {
   ghosttyCoreEnabled: boolean
   /** Ghostty Core 回滚缓冲行数上限 */
   ghosttyScrollbackLimit: number
+  /** 在渲染进程启用基于 noVNC 的 VNC Web Viewer */
+  vncWebEnabled: boolean
+  /** VNC Viewer：根据右侧容器尺寸自适应缩放（scale-to-fit） */
+  vncAdaptiveScale: boolean
   /**
    * Attach-PTY 渲染：单 Tab 共用一个 xterm 实例，切换 Tab 时 attach 不同 PTY（分屏仍多实例）。
    * 仅支持 Xterm.js。
@@ -69,6 +73,8 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   terminalEmulator: 'xterm',
   ghosttyCoreEnabled: false,
   ghosttyScrollbackLimit: DEFAULT_GHOSTTY_SCROLLBACK_LIMIT,
+  vncWebEnabled: false,
+  vncAdaptiveScale: true,
   attachPtyRenderMode: false,
   attachPtyTabSwitchDwellMs: DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   aiSidebarEnabled: false,
@@ -113,6 +119,8 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     terminalEmulator: normalizeTerminalEmulator(o.terminalEmulator),
     ghosttyCoreEnabled: o.ghosttyCoreEnabled === true,
     ghosttyScrollbackLimit: normalizeGhosttyScrollbackLimit(o.ghosttyScrollbackLimit),
+    vncWebEnabled: o.vncWebEnabled === true,
+    vncAdaptiveScale: o.vncAdaptiveScale !== false,
     attachPtyRenderMode: o.attachPtyRenderMode === true,
     attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(o.attachPtyTabSwitchDwellMs),
     aiSidebarEnabled: o.aiSidebarEnabled === true,

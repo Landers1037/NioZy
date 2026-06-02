@@ -131,6 +131,7 @@ let screenshotWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
 let linkPreviewManager: LinkPreviewManager | null = null
+let vncProxyManager: import('../vnc-proxy').VncWsProxyManager | null = null
 
 /** 由“点击布局面板分屏”触发的可还原状态 */
 let mainWindowSnapRestoreBounds: Electron.Rectangle | null = null
@@ -632,6 +633,7 @@ app.on('before-quit', () => {
   linkPreviewManager?.closeAll()
   terminalOutputFlusher.dispose()
   terminalService.disposeAll()
+  void vncProxyManager?.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()
   statisticsStore.dispose()
@@ -1108,6 +1110,28 @@ ipcMain.handle('putty:connect', async (_, connectionId: string) => {
     return { ok: false as const, error: 'PuTTY connection not found' }
   }
   return launchPuttyFromConnection(conn, (text) => vaultStore.resolveText(text))
+})
+
+ipcMain.handle(
+  'vnc:startProxy',
+  async (
+    _,
+    input: {
+      tabId: string
+      host: string
+      port: number
+    },
+  ): Promise<{ wsUrl: string }> => {
+    if (!vncProxyManager) {
+      const mod = await import('../vnc-proxy')
+      vncProxyManager = new mod.VncWsProxyManager()
+    }
+    return vncProxyManager.start(input)
+  },
+)
+
+ipcMain.handle('vnc:stopProxy', async (_, input: { tabId: string }): Promise<void> => {
+  await vncProxyManager?.stop(input)
 })
 
 ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())

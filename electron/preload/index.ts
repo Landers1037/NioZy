@@ -147,6 +147,10 @@ const api: ElectronAPI = {
   putty: {
     connect: (connectionId) => ipcRenderer.invoke('putty:connect', connectionId),
   },
+  vnc: {
+    startProxy: (input) => ipcRenderer.invoke('vnc:startProxy', input) as Promise<{ wsUrl: string }>,
+    stopProxy: (input) => ipcRenderer.invoke('vnc:stopProxy', input) as Promise<void>,
+  },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
     getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),

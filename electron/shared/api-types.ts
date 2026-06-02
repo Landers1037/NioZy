@@ -96,7 +96,7 @@ export type PuttyProtocol = 'ssh' | 'telnet'
 export interface CustomConnection {
   id: string
   name: string
-  type: 'command' | 'ssh' | 'rdp' | 'wsl' | 'telnet' | 'putty'
+  type: 'command' | 'ssh' | 'rdp' | 'wsl' | 'telnet' | 'putty' | 'vnc'
   command: string
   args: string[]
   env: Record<string, string>
@@ -127,6 +127,14 @@ export interface CustomConnection {
   /** PuTTY 密码；支持 ${vaultKey} 引用存储库 */
   puttyPassword?: string
   puttyProtocol?: PuttyProtocol
+
+  /** VNC 主机 */
+  vncHost?: string
+  vncPort?: number
+  /** VNC 用户名（取决于服务端 security type，如 VeNCrypt Plain / UnixLogon / MSLogonII） */
+  vncUsername?: string
+  /** VNC 密码；支持 ${vaultKey} 引用存储库 */
+  vncPassword?: string
 }
 
 export type ExternalLaunchResult = { ok: true } | { ok: false; error: string }
@@ -451,6 +459,16 @@ export interface ElectronAPI {
   putty: {
     /** 使用已保存的 PuTTY 连接启动 putty.exe（仅 Windows） */
     connect: (connectionId: string) => Promise<ExternalLaunchResult>
+  }
+  vnc: {
+    /** 启动本地 WebSocket↔TCP 代理，并返回可供 noVNC 连接的 ws:// URL */
+    startProxy: (input: {
+      tabId: string
+      host: string
+      port: number
+    }) => Promise<{ wsUrl: string }>
+    /** 关闭指定 tab 的代理并释放资源 */
+    stopProxy: (input: { tabId: string }) => Promise<void>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

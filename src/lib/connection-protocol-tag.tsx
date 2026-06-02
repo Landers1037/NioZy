@@ -13,6 +13,7 @@ const TAG_STYLES: Record<ConnectionProtocolType, string> = {
     'border-orange-600/25 bg-orange-600/14 text-orange-950 dark:border-orange-400/30 dark:bg-orange-400/20 dark:text-orange-50',
   putty:
     'border-indigo-600/25 bg-indigo-600/14 text-indigo-950 dark:border-indigo-400/30 dark:bg-indigo-400/20 dark:text-indigo-50',
+  vnc: 'border-fuchsia-600/25 bg-fuchsia-600/14 text-fuchsia-950 dark:border-fuchsia-400/30 dark:bg-fuchsia-400/20 dark:text-fuchsia-50',
   command:
     'border-amber-600/25 bg-amber-600/14 text-amber-950 dark:border-amber-400/30 dark:bg-amber-400/20 dark:text-amber-50',
 }
@@ -29,6 +30,8 @@ export function connectionProtocolTagLabel(type: ConnectionProtocolType, t: TFun
       return t('settings.connections.protocolTagTelnet')
     case 'putty':
       return t('settings.connections.protocolTagPutty')
+    case 'vnc':
+      return t('settings.connections.protocolTagVnc')
     case 'command':
       return t('settings.connections.protocolTagCommand')
   }
@@ -67,6 +70,11 @@ export function connectionSavedSummary(c: CustomConnection, t: TFunction): strin
       const user = c.puttyUser?.trim()
       if (protocol === 'telnet') return target
       return user ? `${user}@${target}` : target
+    }
+    case 'vnc': {
+      const host = c.vncHost ?? c.command
+      const port = c.vncPort ?? 5900
+      return port === 5900 ? host : `${host}:${port}`
     }
     default:
       return c.command

@@ -13,6 +13,7 @@ import type { CustomConnection } from '../../../electron/shared/api-types'
 export function NewConnectionMenuContent() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
+  const vncEnabled = settings?.experimental.vncWebEnabled === true
 
   return (
     <>
@@ -23,7 +24,9 @@ export function NewConnectionMenuContent() {
         </DropdownMenuItem>
       ))}
       <DropdownMenuSeparator />
-      {settings?.connections.map((c) => (
+      {settings?.connections
+        .filter((c) => c.type !== 'vnc' || vncEnabled)
+        .map((c) => (
         <CustomConnectionMenuItem key={c.id} connection={c} />
       ))}
       {settings?.connections.length === 0 && (
@@ -47,6 +50,8 @@ function connectionMenuIcon(connection: CustomConnection) {
       return Network
     case 'putty':
       return AppWindow
+    case 'vnc':
+      return Monitor
     default:
       return Link2
   }

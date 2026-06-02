@@ -119,6 +119,10 @@ export async function createConnection(
 ): Promise<void> {
   try {
     if (custom) {
+      if (custom.type === 'vnc') {
+        useAppStore.getState().addVncTab(custom.id)
+        return
+      }
       if (isExternalConnectionType(custom.type)) {
         await launchExternalConnection(custom)
         return
