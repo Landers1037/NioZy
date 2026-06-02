@@ -57,6 +57,11 @@ import {
   Terminal,
   User,
 } from 'lucide-react'
+import { launchRdpConnection } from '@/lib/terminal-actions'
+import {
+  ConnectionProtocolTag,
+  connectionSavedSummary,
+} from '@/lib/connection-protocol-tag'
 
 function builtinConfigSummary(
   t: TFunction,
@@ -89,6 +94,7 @@ export function ConnectionSettings() {
     () => collectSshGroups(settings?.connections ?? []),
     [settings?.connections],
   )
+  const isWindows = getElectronAPI().system.platform === 'win32'
 
   if (!settings) return null
 
@@ -271,7 +277,9 @@ export function ConnectionSettings() {
             <Select
               value={draft.type}
               disabled={!!editingConnectionId}
-              onValueChange={(v) => setDraft({ ...draft, type: v as 'command' | 'ssh' })}
+              onValueChange={(v) =>
+                setDraft({ ...draft, type: v as ConnectionDraft['type'] })
+              }
             >
               <SelectTrigger className="max-w-xs">
                 <SelectValue />
@@ -279,6 +287,9 @@ export function ConnectionSettings() {
               <SelectContent>
                 <SelectItem value="command">{t('settings.connections.typeCommandCustom')}</SelectItem>
                 <SelectItem value="ssh">{t('settings.connections.typeSsh')}</SelectItem>
+                {isWindows && (
+                  <SelectItem value="rdp">{t('settings.connections.typeRdp')}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </SettingField>
@@ -346,7 +357,49 @@ export function ConnectionSettings() {
             </SettingField>
           )}
 
-          {draft.type === 'ssh' ? (
+          {draft.type === 'rdp' ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
+                  <Input
+                    value={draft.rdpHost}
+                    onChange={(e) => setDraft({ ...draft, rdpHost: e.target.value })}
+                    placeholder="192.168.1.1"
+                  />
+                </SettingField>
+                <SettingField icon={Network} label={t('settings.connections.port')}>
+                  <Input
+                    type="number"
+                    value={draft.rdpPort}
+                    onChange={(e) =>
+                      setDraft({ ...draft, rdpPort: Number(e.target.value) || 3389 })
+                    }
+                  />
+                </SettingField>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={User} label={t('settings.connections.username')}>
+                  <Input
+                    value={draft.rdpUser}
+                    onChange={(e) => setDraft({ ...draft, rdpUser: e.target.value })}
+                  />
+                </SettingField>
+                <SettingField icon={Lock} label={t('settings.connections.password')}>
+                  <InputWithVaultPicker
+                    type="password"
+                    wrapperClassName="w-full max-w-none"
+                    className="min-w-0 flex-1"
+                    value={draft.rdpPassword}
+                    onChange={(rdpPassword) => setDraft({ ...draft, rdpPassword })}
+                    placeholder={t('settings.connections.passwordPlaceholder')}
+                  />
+                </SettingField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.rdpLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'ssh' ? (
             <>
               <SettingField icon={Key} label={t('settings.connections.authMethod')}>
                 <Select
@@ -479,20 +532,25 @@ export function ConnectionSettings() {
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-semibold">{c.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {c.type === 'ssh'
-                      ? [
-                          `ssh ${c.sshUser}@${c.sshHost}`,
-                          c.sshGroup?.trim() ? c.sshGroup.trim() : null,
-                        ]
-                          .filter(Boolean)
-                          .join(t('common.listSeparator'))
-                      : c.command}
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <ConnectionProtocolTag type={c.type} />
+                    <p className="truncate font-semibold">{c.name}</p>
+                  </div>
+                  <p className="mt-1 truncate pl-0 text-xs text-muted-foreground">
+                    {connectionSavedSummary(c, t)}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
+                  {c.type === 'rdp' && isWindows && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => void launchRdpConnection(c)}
+                    >
+                      {t('settings.connections.connect')}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"

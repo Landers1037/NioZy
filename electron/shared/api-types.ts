@@ -87,7 +87,7 @@ export {
 export interface CustomConnection {
   id: string
   name: string
-  type: 'command' | 'ssh'
+  type: 'command' | 'ssh' | 'rdp'
   command: string
   args: string[]
   env: Record<string, string>
@@ -100,7 +100,15 @@ export interface CustomConnection {
   sshKeyPath?: string
   /** SSH 连接分组（仅展示与组织用） */
   sshGroup?: string
+  /** RDP 主机（Windows 远程桌面） */
+  rdpHost?: string
+  rdpPort?: number
+  rdpUser?: string
+  /** RDP 密码；支持 ${vaultKey} 引用存储库 */
+  rdpPassword?: string
 }
+
+export type RdpConnectResult = { ok: true } | { ok: false; error: string }
 
 export interface AppSettings {
   /** 界面语言 */
@@ -411,6 +419,10 @@ export interface ElectronAPI {
     recordTabOpen: () => void
     recordTabClose: () => void
     clear: () => Promise<void>
+  }
+  rdp: {
+    /** 使用已保存的 RDP 连接启动系统 mstsc（仅 Windows） */
+    connect: (connectionId: string) => Promise<RdpConnectResult>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>
