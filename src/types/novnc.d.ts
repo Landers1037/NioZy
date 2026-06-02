@@ -9,6 +9,9 @@ declare module '@novnc/novnc' {
 
   export interface RfbOptions {
     credentials?: RfbCredentials
+    shared?: boolean
+    repeaterID?: string
+    wsProtocols?: string[]
   }
 
   export interface RfbEvent {
@@ -22,6 +25,9 @@ declare module '@novnc/novnc' {
     scaleViewport: boolean
     resizeSession: boolean
     clipViewport: boolean
+    showDotCursor: boolean
+    qualityLevel: number
+    compressionLevel: number
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     addEventListener(type: string, listener: (ev: any) => void): void
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

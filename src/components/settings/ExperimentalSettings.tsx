@@ -15,7 +15,7 @@ import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
 import { ExperimentalAiSettings } from './ExperimentalAiSettings'
-import { Braces, Cpu, Link2, ScrollText, Terminal, Monitor } from 'lucide-react'
+import { Braces, Cpu, Link2, ScrollText, Terminal, Monitor, Zap, MousePointer2 } from 'lucide-react'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import {
@@ -27,6 +27,10 @@ import {
   normalizeGhosttyScrollbackLimit,
 } from '../../../electron/shared/experimental-settings'
 import { normalizeRendererForEmulator } from '@/lib/terminal-emulator'
+import {
+  VNC_ENCODING_VALUES,
+  type VncEncoding,
+} from '../../../electron/shared/vnc-settings'
 
 function notifyRestartRequired(
   t: (key: string) => string,
@@ -56,6 +60,9 @@ export function ExperimentalSettings() {
   const jsSandboxEnabled = settings.experimental.jsSandboxEnabled
   const vncWebEnabled = settings.experimental.vncWebEnabled === true
   const vncAdaptiveScale = settings.experimental.vncAdaptiveScale !== false
+  const vncHardwareAccel = settings.experimental.vncHardwareAccel === true
+  const vncLocalCursor = settings.experimental.vncLocalCursor !== false
+  const vncEncoding = settings.experimental.vncEncoding
   const ghosttyEnabled = settings.experimental.ghosttyCoreEnabled
   const attachPtyEnabled = settings.experimental.attachPtyRenderMode
   const attachPtyActive = isAttachPtyRenderMode(settings)
@@ -157,25 +164,98 @@ export function ExperimentalSettings() {
           </SettingField>
 
           {vncWebEnabled && (
-            <SettingField
-              icon={Monitor}
-              label={t('settings.experimental.vncAdaptiveScale')}
-              description={t('settings.experimental.vncAdaptiveScaleDesc')}
-              row
-            >
-              <Switch
-                checked={vncAdaptiveScale}
-                onCheckedChange={(enabled) => {
-                  if (enabled === vncAdaptiveScale) return
-                  void patchSettings({
-                    experimental: {
-                      ...settings.experimental,
-                      vncAdaptiveScale: enabled,
-                    },
-                  })
-                }}
-              />
-            </SettingField>
+            <>
+              <SettingField
+                icon={Monitor}
+                label={t('settings.experimental.vncAdaptiveScale')}
+                description={t('settings.experimental.vncAdaptiveScaleDesc')}
+                row
+              >
+                <Switch
+                  checked={vncAdaptiveScale}
+                  onCheckedChange={(enabled) => {
+                    if (enabled === vncAdaptiveScale) return
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        vncAdaptiveScale: enabled,
+                      },
+                    })
+                  }}
+                />
+              </SettingField>
+
+              <SettingField
+                icon={Zap}
+                label={t('settings.experimental.vncHardwareAccel')}
+                description={t('settings.experimental.vncHardwareAccelDesc')}
+                row
+              >
+                <Switch
+                  checked={vncHardwareAccel}
+                  onCheckedChange={(enabled) => {
+                    if (enabled === vncHardwareAccel) return
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        vncHardwareAccel: enabled,
+                      },
+                    })
+                  }}
+                />
+              </SettingField>
+
+              <SettingField
+                icon={MousePointer2}
+                label={t('settings.experimental.vncLocalCursor')}
+                description={t('settings.experimental.vncLocalCursorDesc')}
+                row
+              >
+                <Switch
+                  checked={vncLocalCursor}
+                  onCheckedChange={(enabled) => {
+                    if (enabled === vncLocalCursor) return
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        vncLocalCursor: enabled,
+                      },
+                    })
+                  }}
+                />
+              </SettingField>
+
+              <SettingField
+                icon={Monitor}
+                label={t('settings.experimental.vncEncoding')}
+                description={t('settings.experimental.vncEncodingDesc')}
+              >
+                <Select
+                  value={vncEncoding}
+                  onValueChange={(v) => {
+                    const next = v as VncEncoding
+                    if (next === vncEncoding) return
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        vncEncoding: next,
+                      },
+                    })
+                  }}
+                >
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VNC_ENCODING_VALUES.map((enc) => (
+                      <SelectItem key={enc} value={enc}>
+                        {t(`settings.experimental.vncEncodings.${enc}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SettingField>
+            </>
           )}
         </div>
 

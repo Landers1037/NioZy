@@ -2,6 +2,11 @@ export type TerminalEmulator = 'xterm' | 'wterm'
 
 import type { TerminalRenderer } from './terminal-renderer'
 import {
+  DEFAULT_VNC_ENCODING,
+  normalizeVncEncoding,
+  type VncEncoding,
+} from './vnc-settings'
+import {
   DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
   normalizeAiSidebarWidthPreset,
   type AiSidebarWidthPreset,
@@ -40,6 +45,12 @@ export interface ExperimentalSettings {
   vncWebEnabled: boolean
   /** VNC Viewer：根据右侧容器尺寸自适应缩放（scale-to-fit） */
   vncAdaptiveScale: boolean
+  /** VNC Viewer：硬件加速（GPU 友好的 Canvas 渲染上下文，实验性） */
+  vncHardwareAccel: boolean
+  /** VNC Viewer：本地光标（客户端渲染光标；关闭则使用远程 framebuffer 光标） */
+  vncLocalCursor: boolean
+  /** VNC Viewer：首选画面编码格式 */
+  vncEncoding: VncEncoding
   /**
    * Attach-PTY 渲染：单 Tab 共用一个 xterm 实例，切换 Tab 时 attach 不同 PTY（分屏仍多实例）。
    * 仅支持 Xterm.js。
@@ -75,6 +86,9 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   ghosttyScrollbackLimit: DEFAULT_GHOSTTY_SCROLLBACK_LIMIT,
   vncWebEnabled: false,
   vncAdaptiveScale: true,
+  vncHardwareAccel: false,
+  vncLocalCursor: true,
+  vncEncoding: DEFAULT_VNC_ENCODING,
   attachPtyRenderMode: false,
   attachPtyTabSwitchDwellMs: DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   aiSidebarEnabled: false,
@@ -121,6 +135,9 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     ghosttyScrollbackLimit: normalizeGhosttyScrollbackLimit(o.ghosttyScrollbackLimit),
     vncWebEnabled: o.vncWebEnabled === true,
     vncAdaptiveScale: o.vncAdaptiveScale !== false,
+    vncHardwareAccel: o.vncHardwareAccel === true,
+    vncLocalCursor: o.vncLocalCursor !== false,
+    vncEncoding: normalizeVncEncoding(o.vncEncoding),
     attachPtyRenderMode: o.attachPtyRenderMode === true,
     attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(o.attachPtyTabSwitchDwellMs),
     aiSidebarEnabled: o.aiSidebarEnabled === true,

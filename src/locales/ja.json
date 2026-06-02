@@ -176,7 +176,7 @@
       "shortcuts": "ショートカット",
       "statistics": "使用統計",
       "system": "システム",
-      "p2p": "P2P 通信",
+      "p2p": "暗号化通信",
       "logging": "ログ",
       "advanced": "詳細",
       "experimental": "実験的"
@@ -467,7 +467,7 @@
       "transparency": "ウィンドウ不透明度: {{value}}%"
     },
     "p2p": {
-      "title": "P2P 通信",
+      "title": "暗号化通信",
       "description": "LAN 上の P2P 暗号化チャット、ファイル転送、発見設定",
       "enabled": "P2P チャットを有効化",
       "enabledDesc": "サイドバーにチャット入口を表示し、通信ポートで待ち受けます",
@@ -631,7 +631,7 @@
     "connection": "接続",
     "settings": "設定",
     "filesystem": "ファイルシステム",
-    "openChat": "P2P チャット",
+    "openChat": "暗号化通信",
     "openJsSandbox": "サンドボックスを開く",
     "newPowerShell": "新しい PowerShell"
   },
@@ -720,7 +720,7 @@
     }
   },
   "chat": {
-    "disabled": "設定で P2P チャットを有効にしてください",
+    "disabled": "設定で暗号化通信を有効にしてください",
     "scanLan": "LAN をスキャン",
     "scanning": "スキャン中…",
     "newChat": "新規チャット",
