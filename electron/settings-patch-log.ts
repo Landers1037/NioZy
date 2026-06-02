@@ -1,7 +1,8 @@
 import type { AppSettings, CustomConnection } from './shared/api-types'
 
 const SENSITIVE_KEY = /(?:password|apikey|secret|token|privatekey|keypath)$/i
-const SENSITIVE_PATH = /\.(?:sshPassword|sshKeyPath|aiApiKey|openAiApiKey|value)$/i
+const SENSITIVE_PATH =
+  /\.(?:sshPassword|sshKeyPath|rdpPassword|puttyPassword|aiApiKey|openAiApiKey|value)$/i
 
 function isSensitive(path: string, key: string): boolean {
   return SENSITIVE_KEY.test(key) || SENSITIVE_PATH.test(path)
@@ -34,6 +35,35 @@ function summarizeConnection(c: CustomConnection): Record<string, unknown> {
       auth: c.sshAuth,
       hasPassword: Boolean(c.sshPassword?.trim()),
       hasKeyPath: Boolean(c.sshKeyPath?.trim()),
+    }
+  }
+  if (c.type === 'rdp') {
+    return {
+      id: c.id,
+      name: c.name,
+      type: 'rdp',
+      host: c.rdpHost,
+      user: c.rdpUser,
+      port: c.rdpPort,
+      hasPassword: Boolean(c.rdpPassword?.trim()),
+    }
+  }
+  if (c.type === 'wsl') {
+    return { id: c.id, name: c.name, type: 'wsl', distro: c.wslDistro }
+  }
+  if (c.type === 'telnet') {
+    return { id: c.id, name: c.name, type: 'telnet', host: c.telnetHost, port: c.telnetPort }
+  }
+  if (c.type === 'putty') {
+    return {
+      id: c.id,
+      name: c.name,
+      type: 'putty',
+      host: c.puttyHost,
+      user: c.puttyUser,
+      port: c.puttyPort,
+      protocol: c.puttyProtocol,
+      hasPassword: Boolean(c.puttyPassword?.trim()),
     }
   }
   return {

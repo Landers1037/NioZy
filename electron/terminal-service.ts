@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import * as pty from 'node-pty'
+import { Client, type ClientChannel } from 'ssh2'
 import { randomUUID } from 'crypto'
 import { resolveExecutable } from './resolve-executable'
 import { extractCwdFromTerminalData } from './terminal-cwd-parser'
@@ -7,6 +8,8 @@ import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integ
 import { buildElevatedPtySpawn } from './elevated-terminal-spawn'
 import { canSpawnElevatedTerminal } from './windows-admin'
 import { logErrorPayload, terminalLog } from './app-log'
+import { attachSsh2KeyboardInteractive, buildSsh2ConnectConfig } from './ssh2-connect'
+import type { SshConnectionProfile } from './shared/ssh-types'
 
 export type ShellType = 'powershell' | 'cmd' | 'pwsh' | 'custom' | 'ssh'
 
@@ -23,12 +26,24 @@ export interface TerminalCreateOptions {
   elevated?: boolean
 }
 
-interface PtySession {
+interface TerminalSession {
   id: string
-  pty: pty.IPty
   shell: ShellType
   name: string
   cwd: string
+  pty?: pty.IPty
+  ssh2?: {
+    client: Client
+    stream: ClientChannel
+  }
+}
+
+export interface Ssh2TerminalCreateOptions {
+  profile: SshConnectionProfile
+  enabledKex?: string[]
+  name?: string
+  cols?: number
+  rows?: number
 }
 
 /** 非活跃标签在主进程侧暂存的输出上限（字符数），切换回来时一次性回放 */
@@ -41,7 +56,7 @@ const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
 }
 
 export class TerminalService extends EventEmitter {
-  private sessions = new Map<string, PtySession>()
+  private sessions = new Map<string, TerminalSession>()
   /** 向渲染进程实时推流的终端 id（拆分视图可同时包含多个） */
   private activeStreamIds = new Set<string>()
   private pausedOutput = new Map<string, string>()
@@ -176,6 +191,112 @@ export class TerminalService extends EventEmitter {
     return { id, name, shell: options.shell, cwd: initialCwd }
   }
 
+  /** 使用 ssh2 库建立交互式 Shell（不依赖系统 ssh.exe） */
+  async createSsh2(options: Ssh2TerminalCreateOptions): Promise<{
+    id: string
+    name: string
+    shell: ShellType
+    cwd: string
+  }> {
+    const id = randomUUID()
+    const cols = options.cols ?? 120
+    const rows = options.rows ?? 30
+    const profile = options.profile
+    const displayHost = `${profile.user}@${profile.host}`
+    const name = options.name ?? displayHost
+    const initialCwd = `ssh://${displayHost}`
+
+    const client = new Client()
+    attachSsh2KeyboardInteractive(client, profile.password)
+
+    terminalLog.debug('Opening ssh2 terminal', {
+      host: profile.host,
+      port: profile.port ?? 22,
+      user: profile.user,
+      hasPassword: Boolean(profile.password),
+      hasKey: Boolean(profile.keyPath),
+    })
+
+    const config = await buildSsh2ConnectConfig(profile, options.enabledKex)
+
+    return new Promise((resolve, reject) => {
+      let settled = false
+
+      const fail = (err: unknown) => {
+        if (settled) return
+        settled = true
+        try {
+          client.end()
+        } catch {
+          /* ignore */
+        }
+        const detail = err instanceof Error ? err.message : String(err)
+        terminalLog.error('ssh2 terminal connect failed', {
+          host: profile.host,
+          ...logErrorPayload(err),
+        })
+        reject(new Error(`SSH 连接失败：${detail}`))
+      }
+
+      client.on('error', fail)
+
+      client.on('ready', () => {
+        client.shell(
+          { rows, cols, width: 0, height: 0, term: 'xterm-color' },
+          (shellErr, stream) => {
+            if (shellErr) {
+              fail(shellErr)
+              return
+            }
+            if (settled) {
+              stream.close()
+              return
+            }
+            settled = true
+
+            stream.on('data', (data: Buffer | string) => {
+              const text = typeof data === 'string' ? data : data.toString('utf8')
+              this.pushOutput(id, text)
+            })
+
+            stream.stderr?.on('data', (data: Buffer | string) => {
+              const text = typeof data === 'string' ? data : data.toString('utf8')
+              this.pushOutput(id, text)
+            })
+
+            let exited = false
+            const finishSession = (reason: string) => {
+              if (exited || !this.sessions.has(id)) return
+              exited = true
+              terminalLog.debug('ssh2 terminal session end', { id, name, reason })
+              this.sessions.delete(id)
+              this.emit('exit', id, 0)
+            }
+
+            stream.on('close', () => finishSession('stream-close'))
+            client.on('close', () => finishSession('client-close'))
+
+            this.sessions.set(id, {
+              id,
+              shell: 'ssh',
+              name,
+              cwd: initialCwd,
+              ssh2: { client, stream },
+            })
+            this.emit('cwd', id, initialCwd)
+            resolve({ id, name, shell: 'ssh', cwd: initialCwd })
+          },
+        )
+      })
+
+      try {
+        client.connect(config)
+      } catch (err) {
+        fail(err)
+      }
+    })
+  }
+
   /** 单终端 Tab：仅一个 id 实时推流，其余缓冲 */
   setActiveStream(id: string | null): void {
     this.activeStreamIds.clear()
@@ -214,11 +335,27 @@ export class TerminalService extends EventEmitter {
   }
 
   write(id: string, data: string): void {
-    this.sessions.get(id)?.pty.write(data)
+    const session = this.sessions.get(id)
+    if (!session) return
+    if (session.pty) {
+      session.pty.write(data)
+      return
+    }
+    session.ssh2?.stream.write(data)
   }
 
   resize(id: string, cols: number, rows: number): void {
-    this.sessions.get(id)?.pty.resize(cols, rows)
+    const session = this.sessions.get(id)
+    if (!session) return
+    if (session.pty) {
+      session.pty.resize(cols, rows)
+      return
+    }
+    try {
+      session.ssh2?.stream.setWindow(rows, cols, 0, 0)
+    } catch {
+      /* ignore */
+    }
   }
 
   getCwd(id: string): string | undefined {
@@ -231,10 +368,25 @@ export class TerminalService extends EventEmitter {
     this.sessions.delete(id)
     this.pausedOutput.delete(id)
     this.activeStreamIds.delete(id)
-    try {
-      session.pty.kill()
-    } catch {
-      /* ignore */
+    if (session.pty) {
+      try {
+        session.pty.kill()
+      } catch {
+        /* ignore */
+      }
+      return
+    }
+    if (session.ssh2) {
+      try {
+        session.ssh2.stream.close()
+      } catch {
+        /* ignore */
+      }
+      try {
+        session.ssh2.client.end()
+      } catch {
+        /* ignore */
+      }
     }
   }
 
@@ -244,10 +396,25 @@ export class TerminalService extends EventEmitter {
     this.pausedOutput.clear()
     this.activeStreamIds.clear()
     for (const session of sessions) {
-      try {
-        session.pty.kill()
-      } catch {
-        /* ignore */
+      if (session.pty) {
+        try {
+          session.pty.kill()
+        } catch {
+          /* ignore */
+        }
+        continue
+      }
+      if (session.ssh2) {
+        try {
+          session.ssh2.stream.close()
+        } catch {
+          /* ignore */
+        }
+        try {
+          session.ssh2.client.end()
+        } catch {
+          /* ignore */
+        }
       }
     }
   }

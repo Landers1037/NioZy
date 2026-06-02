@@ -30,6 +30,13 @@ export type { AppShortcuts } from './shortcuts'
 export { DEFAULT_SHORTCUTS, APP_SHORTCUT_LABELS } from './shortcuts'
 export type { SshSettings } from './ssh-settings'
 export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
+export {
+  SSH_KEX_ALGORITHM_IDS,
+  MODERN_SSH_KEX_ALGORITHM_IDS,
+  LEGACY_SSH_KEX_ALGORITHM_IDS,
+  DEFAULT_ENABLED_SSH_KEX_ALGORITHMS,
+  type SshKexAlgorithmId,
+} from './ssh-kex-algorithms'
 export type { ShellSettings } from './shell-settings'
 export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
 export type { CommandReplayItem } from './command-replay'
@@ -98,10 +105,12 @@ export {
   normalizeDefaultTerminal,
 } from './builtin-shells'
 
+export type PuttyProtocol = 'ssh' | 'telnet'
+
 export interface CustomConnection {
   id: string
   name: string
-  type: 'command' | 'ssh'
+  type: 'command' | 'ssh' | 'rdp' | 'wsl' | 'telnet' | 'putty' | 'vnc'
   command: string
   args: string[]
   env: Record<string, string>
@@ -114,7 +123,38 @@ export interface CustomConnection {
   sshKeyPath?: string
   /** SSH 连接分组（仅展示与组织用） */
   sshGroup?: string
+  /** RDP 主机（Windows 远程桌面） */
+  rdpHost?: string
+  rdpPort?: number
+  rdpUser?: string
+  /** RDP 密码；支持 ${vaultKey} 引用存储库 */
+  rdpPassword?: string
+  /** WSL 发行版名称（为空则使用默认） */
+  wslDistro?: string
+  /** Telnet 主机 */
+  telnetHost?: string
+  telnetPort?: number
+  /** PuTTY 主机 */
+  puttyHost?: string
+  puttyPort?: number
+  puttyUser?: string
+  /** PuTTY 密码；支持 ${vaultKey} 引用存储库 */
+  puttyPassword?: string
+  puttyProtocol?: PuttyProtocol
+
+  /** VNC 主机 */
+  vncHost?: string
+  vncPort?: number
+  /** VNC 用户名（取决于服务端 security type，如 VeNCrypt Plain / UnixLogon / MSLogonII） */
+  vncUsername?: string
+  /** VNC 密码；支持 ${vaultKey} 引用存储库 */
+  vncPassword?: string
 }
+
+export type ExternalLaunchResult = { ok: true } | { ok: false; error: string }
+
+/** @deprecated Use ExternalLaunchResult */
+export type RdpConnectResult = ExternalLaunchResult
 
 export interface AppSettings {
   /** 界面语言 */
@@ -426,6 +466,24 @@ export interface ElectronAPI {
     recordTabOpen: () => void
     recordTabClose: () => void
     clear: () => Promise<void>
+  }
+  rdp: {
+    /** 使用已保存的 RDP 连接启动系统 mstsc（仅 Windows） */
+    connect: (connectionId: string) => Promise<ExternalLaunchResult>
+  }
+  putty: {
+    /** 使用已保存的 PuTTY 连接启动 putty.exe（仅 Windows） */
+    connect: (connectionId: string) => Promise<ExternalLaunchResult>
+  }
+  vnc: {
+    /** 启动本地 WebSocket↔TCP 代理，并返回可供 noVNC 连接的 ws:// URL */
+    startProxy: (input: {
+      tabId: string
+      host: string
+      port: number
+    }) => Promise<{ wsUrl: string }>
+    /** 关闭指定 tab 的代理并释放资源 */
+    stopProxy: (input: { tabId: string }) => Promise<void>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

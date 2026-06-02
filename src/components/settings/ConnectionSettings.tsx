@@ -57,6 +57,16 @@ import {
   Terminal,
   User,
 } from 'lucide-react'
+import {
+  createConnection,
+  isExternalConnectionType,
+  launchExternalConnection,
+} from '@/lib/terminal-actions'
+import { defaultPuttyPort } from '@/lib/connection-draft'
+import {
+  ConnectionProtocolTag,
+  connectionSavedSummary,
+} from '@/lib/connection-protocol-tag'
 
 function builtinConfigSummary(
   t: TFunction,
@@ -89,6 +99,8 @@ export function ConnectionSettings() {
     () => collectSshGroups(settings?.connections ?? []),
     [settings?.connections],
   )
+  const isWindows = getElectronAPI().system.platform === 'win32'
+  const vncEnabled = settings?.experimental.vncWebEnabled === true
 
   if (!settings) return null
 
@@ -271,7 +283,9 @@ export function ConnectionSettings() {
             <Select
               value={draft.type}
               disabled={!!editingConnectionId}
-              onValueChange={(v) => setDraft({ ...draft, type: v as 'command' | 'ssh' })}
+              onValueChange={(v) =>
+                setDraft({ ...draft, type: v as ConnectionDraft['type'] })
+              }
             >
               <SelectTrigger className="max-w-xs">
                 <SelectValue />
@@ -279,6 +293,17 @@ export function ConnectionSettings() {
               <SelectContent>
                 <SelectItem value="command">{t('settings.connections.typeCommandCustom')}</SelectItem>
                 <SelectItem value="ssh">{t('settings.connections.typeSsh')}</SelectItem>
+                {isWindows && (
+                  <>
+                    <SelectItem value="rdp">{t('settings.connections.typeRdp')}</SelectItem>
+                    <SelectItem value="wsl">{t('settings.connections.typeWsl')}</SelectItem>
+                    <SelectItem value="telnet">{t('settings.connections.typeTelnet')}</SelectItem>
+                    <SelectItem value="putty">{t('settings.connections.typePutty')}</SelectItem>
+                  </>
+                )}
+                {vncEnabled && (
+                  <SelectItem value="vnc">{t('settings.connections.typeVnc')}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </SettingField>
@@ -346,7 +371,197 @@ export function ConnectionSettings() {
             </SettingField>
           )}
 
-          {draft.type === 'ssh' ? (
+          {draft.type === 'rdp' ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
+                  <Input
+                    value={draft.rdpHost}
+                    onChange={(e) => setDraft({ ...draft, rdpHost: e.target.value })}
+                    placeholder="192.168.1.1"
+                  />
+                </SettingField>
+                <SettingField icon={Network} label={t('settings.connections.port')}>
+                  <Input
+                    type="number"
+                    value={draft.rdpPort}
+                    onChange={(e) =>
+                      setDraft({ ...draft, rdpPort: Number(e.target.value) || 3389 })
+                    }
+                  />
+                </SettingField>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={User} label={t('settings.connections.username')}>
+                  <Input
+                    value={draft.rdpUser}
+                    onChange={(e) => setDraft({ ...draft, rdpUser: e.target.value })}
+                  />
+                </SettingField>
+                <SettingField icon={Lock} label={t('settings.connections.password')}>
+                  <InputWithVaultPicker
+                    type="password"
+                    wrapperClassName="w-full max-w-none"
+                    className="min-w-0 flex-1"
+                    value={draft.rdpPassword}
+                    onChange={(rdpPassword) => setDraft({ ...draft, rdpPassword })}
+                    placeholder={t('settings.connections.passwordPlaceholder')}
+                  />
+                </SettingField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.rdpLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'vnc' ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
+                  <Input
+                    value={draft.vncHost}
+                    onChange={(e) => setDraft({ ...draft, vncHost: e.target.value })}
+                    placeholder="192.168.1.1"
+                  />
+                </SettingField>
+                <SettingField icon={Network} label={t('settings.connections.port')}>
+                  <Input
+                    type="number"
+                    value={draft.vncPort}
+                    onChange={(e) =>
+                      setDraft({ ...draft, vncPort: Number(e.target.value) || 5900 })
+                    }
+                  />
+                </SettingField>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={User} label={t('settings.connections.username')}>
+                  <Input
+                    value={draft.vncUsername}
+                    onChange={(e) => setDraft({ ...draft, vncUsername: e.target.value })}
+                  />
+                </SettingField>
+                <SettingField icon={Lock} label={t('settings.connections.password')}>
+                  <InputWithVaultPicker
+                    type="password"
+                    wrapperClassName="w-full max-w-none"
+                    className="min-w-0 flex-1"
+                    value={draft.vncPassword}
+                    onChange={(vncPassword) => setDraft({ ...draft, vncPassword })}
+                    placeholder={t('settings.connections.passwordPlaceholder')}
+                  />
+                </SettingField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.vncLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'wsl' ? (
+            <>
+              <SettingField icon={Terminal} label={t('settings.connections.wslDistro')}>
+                <Input
+                  value={draft.wslDistro}
+                  onChange={(e) => setDraft({ ...draft, wslDistro: e.target.value })}
+                  placeholder={t('settings.connections.wslDistroPlaceholder')}
+                />
+              </SettingField>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.wslLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'telnet' ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
+                  <Input
+                    value={draft.telnetHost}
+                    onChange={(e) => setDraft({ ...draft, telnetHost: e.target.value })}
+                    placeholder="192.168.1.1"
+                  />
+                </SettingField>
+                <SettingField icon={Network} label={t('settings.connections.port')}>
+                  <Input
+                    type="number"
+                    value={draft.telnetPort}
+                    onChange={(e) =>
+                      setDraft({ ...draft, telnetPort: Number(e.target.value) || 23 })
+                    }
+                  />
+                </SettingField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.telnetLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'putty' ? (
+            <>
+              <SettingField icon={Cable} label={t('settings.connections.puttyProtocol')}>
+                <Select
+                  value={draft.puttyProtocol}
+                  onValueChange={(v) => {
+                    const protocol = v as 'ssh' | 'telnet'
+                    setDraft({
+                      ...draft,
+                      puttyProtocol: protocol,
+                      puttyPort: defaultPuttyPort(protocol),
+                    })
+                  }}
+                >
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ssh">{t('settings.connections.puttyProtocolSsh')}</SelectItem>
+                    <SelectItem value="telnet">
+                      {t('settings.connections.puttyProtocolTelnet')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </SettingField>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
+                  <Input
+                    value={draft.puttyHost}
+                    onChange={(e) => setDraft({ ...draft, puttyHost: e.target.value })}
+                    placeholder="192.168.1.1"
+                  />
+                </SettingField>
+                <SettingField icon={Network} label={t('settings.connections.port')}>
+                  <Input
+                    type="number"
+                    value={draft.puttyPort}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        puttyPort: Number(e.target.value) || defaultPuttyPort(draft.puttyProtocol),
+                      })
+                    }
+                  />
+                </SettingField>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={User} label={t('settings.connections.username')}>
+                  <Input
+                    value={draft.puttyUser}
+                    onChange={(e) => setDraft({ ...draft, puttyUser: e.target.value })}
+                    placeholder={t('settings.connections.puttyUserOptional')}
+                  />
+                </SettingField>
+                <SettingField icon={Lock} label={t('settings.connections.password')}>
+                  <InputWithVaultPicker
+                    type="password"
+                    wrapperClassName="w-full max-w-none"
+                    className="min-w-0 flex-1"
+                    value={draft.puttyPassword}
+                    onChange={(puttyPassword) => setDraft({ ...draft, puttyPassword })}
+                    placeholder={t('settings.connections.passwordPlaceholder')}
+                  />
+                </SettingField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.puttyLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'ssh' ? (
             <>
               <SettingField icon={Key} label={t('settings.connections.authMethod')}>
                 <Select
@@ -479,20 +694,32 @@ export function ConnectionSettings() {
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-semibold">{c.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {c.type === 'ssh'
-                      ? [
-                          `ssh ${c.sshUser}@${c.sshHost}`,
-                          c.sshGroup?.trim() ? c.sshGroup.trim() : null,
-                        ]
-                          .filter(Boolean)
-                          .join(t('common.listSeparator'))
-                      : c.command}
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <ConnectionProtocolTag type={c.type} />
+                    <p className="truncate font-semibold">{c.name}</p>
+                  </div>
+                  <p className="mt-1 truncate pl-0 text-xs text-muted-foreground">
+                    {connectionSavedSummary(c, t)}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
+                  {isWindows &&
+                    (isExternalConnectionType(c.type) ||
+                      c.type === 'wsl' ||
+                      c.type === 'telnet') && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() =>
+                          void (isExternalConnectionType(c.type)
+                            ? launchExternalConnection(c)
+                            : createConnection('custom', c))
+                        }
+                      >
+                        {t('settings.connections.connect')}
+                      </Button>
+                    )}
                   <Button
                     variant="outline"
                     size="sm"
