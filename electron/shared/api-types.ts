@@ -84,10 +84,12 @@ export {
   normalizeDefaultTerminal,
 } from './builtin-shells'
 
+export type PuttyProtocol = 'ssh' | 'telnet'
+
 export interface CustomConnection {
   id: string
   name: string
-  type: 'command' | 'ssh' | 'rdp'
+  type: 'command' | 'ssh' | 'rdp' | 'wsl' | 'telnet' | 'putty'
   command: string
   args: string[]
   env: Record<string, string>
@@ -106,9 +108,24 @@ export interface CustomConnection {
   rdpUser?: string
   /** RDP 密码；支持 ${vaultKey} 引用存储库 */
   rdpPassword?: string
+  /** WSL 发行版名称（为空则使用默认） */
+  wslDistro?: string
+  /** Telnet 主机 */
+  telnetHost?: string
+  telnetPort?: number
+  /** PuTTY 主机 */
+  puttyHost?: string
+  puttyPort?: number
+  puttyUser?: string
+  /** PuTTY 密码；支持 ${vaultKey} 引用存储库 */
+  puttyPassword?: string
+  puttyProtocol?: PuttyProtocol
 }
 
-export type RdpConnectResult = { ok: true } | { ok: false; error: string }
+export type ExternalLaunchResult = { ok: true } | { ok: false; error: string }
+
+/** @deprecated Use ExternalLaunchResult */
+export type RdpConnectResult = ExternalLaunchResult
 
 export interface AppSettings {
   /** 界面语言 */
@@ -422,7 +439,11 @@ export interface ElectronAPI {
   }
   rdp: {
     /** 使用已保存的 RDP 连接启动系统 mstsc（仅 Windows） */
-    connect: (connectionId: string) => Promise<RdpConnectResult>
+    connect: (connectionId: string) => Promise<ExternalLaunchResult>
+  }
+  putty: {
+    /** 使用已保存的 PuTTY 连接启动 putty.exe（仅 Windows） */
+    connect: (connectionId: string) => Promise<ExternalLaunchResult>
   }
   ssh: {
     checkScp: () => Promise<import('./ssh-types').ScpCheckResult>

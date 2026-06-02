@@ -144,6 +144,9 @@ const api: ElectronAPI = {
   rdp: {
     connect: (connectionId) => ipcRenderer.invoke('rdp:connect', connectionId),
   },
+  putty: {
+    connect: (connectionId) => ipcRenderer.invoke('putty:connect', connectionId),
+  },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
     getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),

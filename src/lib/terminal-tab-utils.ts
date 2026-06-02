@@ -3,6 +3,7 @@ import type { AppSettings, CustomConnection } from '../../electron/shared/api-ty
 import type { AppTab } from '@/stores/app-store'
 import { getBuiltinTerminalOptions } from '@/lib/builtin-connection-options'
 import { getSshConnection } from '@/lib/ssh-connection'
+import { customConnectionToTerminalCreate } from '@/lib/connection-terminal-spawn'
 import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
 
 export const MAX_TERMINAL_SPLITS = 3
@@ -54,6 +55,11 @@ export function connectionToTerminalSpawn(custom: CustomConnection): TabTerminal
       },
       sshConnectionId: custom.id,
     }
+  }
+
+  const terminalCreate = customConnectionToTerminalCreate(custom)
+  if (terminalCreate) {
+    return { create: terminalCreate }
   }
 
   return {

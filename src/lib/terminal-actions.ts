@@ -78,6 +78,12 @@ export async function openTerminalInDirectory(
   }
 }
 
+export function isExternalConnectionType(
+  type: CustomConnection['type'],
+): type is 'rdp' | 'putty' {
+  return type === 'rdp' || type === 'putty'
+}
+
 export async function launchRdpConnection(connection: CustomConnection): Promise<void> {
   if (connection.type !== 'rdp') return
   try {
@@ -90,14 +96,31 @@ export async function launchRdpConnection(connection: CustomConnection): Promise
   }
 }
 
+export async function launchPuttyConnection(connection: CustomConnection): Promise<void> {
+  if (connection.type !== 'putty') return
+  try {
+    const result = await getElectronAPI().putty.connect(connection.id)
+    if (!result.ok) {
+      toastTerminalError(new Error(result.error), connection.name)
+    }
+  } catch (error) {
+    toastTerminalError(error, connection.name)
+  }
+}
+
+export async function launchExternalConnection(connection: CustomConnection): Promise<void> {
+  if (connection.type === 'rdp') await launchRdpConnection(connection)
+  else if (connection.type === 'putty') await launchPuttyConnection(connection)
+}
+
 export async function createConnection(
   shell: ShellType,
   custom?: CustomConnection,
 ): Promise<void> {
   try {
     if (custom) {
-      if (custom.type === 'rdp') {
-        await launchRdpConnection(custom)
+      if (isExternalConnectionType(custom.type)) {
+        await launchExternalConnection(custom)
         return
       }
       const { create, sshConnectionId } = connectionToTerminalSpawn(custom)
