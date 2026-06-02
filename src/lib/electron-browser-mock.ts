@@ -375,6 +375,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     rdp: {
       connect: async () => ({ ok: false as const, error: 'Browser preview: RDP not supported' }),
     },
+    putty: {
+      connect: async () => ({ ok: false as const, error: 'Browser preview: PuTTY not supported' }),
+    },
     ssh: {
       checkScp: async () => ({ found: false }),
       getProfile: async () => null,

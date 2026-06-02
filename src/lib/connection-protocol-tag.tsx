@@ -8,6 +8,11 @@ export type ConnectionProtocolType = CustomConnection['type']
 const TAG_STYLES: Record<ConnectionProtocolType, string> = {
   ssh: 'border-sky-600/25 bg-sky-600/14 text-sky-950 dark:border-sky-400/30 dark:bg-sky-400/20 dark:text-sky-50',
   rdp: 'border-violet-600/25 bg-violet-600/14 text-violet-950 dark:border-violet-400/30 dark:bg-violet-400/20 dark:text-violet-50',
+  wsl: 'border-emerald-600/25 bg-emerald-600/14 text-emerald-950 dark:border-emerald-400/30 dark:bg-emerald-400/20 dark:text-emerald-50',
+  telnet:
+    'border-orange-600/25 bg-orange-600/14 text-orange-950 dark:border-orange-400/30 dark:bg-orange-400/20 dark:text-orange-50',
+  putty:
+    'border-indigo-600/25 bg-indigo-600/14 text-indigo-950 dark:border-indigo-400/30 dark:bg-indigo-400/20 dark:text-indigo-50',
   command:
     'border-amber-600/25 bg-amber-600/14 text-amber-950 dark:border-amber-400/30 dark:bg-amber-400/20 dark:text-amber-50',
 }
@@ -18,27 +23,54 @@ export function connectionProtocolTagLabel(type: ConnectionProtocolType, t: TFun
       return t('settings.connections.typeSsh')
     case 'rdp':
       return t('settings.connections.protocolTagRdp')
+    case 'wsl':
+      return t('settings.connections.protocolTagWsl')
+    case 'telnet':
+      return t('settings.connections.protocolTagTelnet')
+    case 'putty':
+      return t('settings.connections.protocolTagPutty')
     case 'command':
       return t('settings.connections.protocolTagCommand')
   }
 }
 
 export function connectionSavedSummary(c: CustomConnection, t: TFunction): string {
-  if (c.type === 'ssh') {
-    return [
-      `${c.sshUser}@${c.sshHost}`,
-      c.sshGroup?.trim() ? c.sshGroup.trim() : null,
-    ]
-      .filter(Boolean)
-      .join(t('common.listSeparator'))
+  switch (c.type) {
+    case 'ssh':
+      return [
+        `${c.sshUser}@${c.sshHost}`,
+        c.sshGroup?.trim() ? c.sshGroup.trim() : null,
+      ]
+        .filter(Boolean)
+        .join(t('common.listSeparator'))
+    case 'rdp': {
+      const host = c.rdpHost ?? c.command
+      const port = c.rdpPort ?? 3389
+      const target = port === 3389 ? host : `${host}:${port}`
+      return `${c.rdpUser}@${target}`
+    }
+    case 'wsl':
+      return c.wslDistro?.trim()
+        ? `wsl -d ${c.wslDistro.trim()}`
+        : t('settings.connections.wslDefaultDistro')
+    case 'telnet': {
+      const host = c.telnetHost ?? c.command
+      const port = c.telnetPort ?? 23
+      return port === 23 ? host : `${host}:${port}`
+    }
+    case 'putty': {
+      const host = c.puttyHost ?? c.command
+      const protocol = c.puttyProtocol ?? 'ssh'
+      const defaultPort = protocol === 'telnet' ? 23 : 22
+      const port = c.puttyPort ?? defaultPort
+      const target = port === defaultPort ? host : `${host}:${port}`
+      const user = c.puttyUser?.trim()
+      if (protocol === 'telnet') return target
+      return user ? `${user}@${target}` : target
+    }
+    default:
+      return c.command
   }
-  if (c.type === 'rdp') {
-    const host = c.rdpHost ?? c.command
-    const port = c.rdpPort ?? 3389
-    const target = port === 3389 ? host : `${host}:${port}`
-    return `${c.rdpUser}@${target}`
-  }
-  return c.command
 }
 
 export function ConnectionProtocolTag({

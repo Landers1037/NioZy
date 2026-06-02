@@ -1,9 +1,7 @@
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { spawn } from 'child_process'
-import type { CustomConnection } from './shared/api-types'
-
-export type RdpConnectResult = { ok: true } | { ok: false; error: string }
+import type { CustomConnection, ExternalLaunchResult } from './shared/api-types'
 
 function mstscExecutable(): string {
   const systemRoot = process.env.SystemRoot ?? 'C:\\Windows'
@@ -25,7 +23,7 @@ function runCmdkey(args: string[]): Promise<void> {
 export async function launchRdpFromConnection(
   conn: CustomConnection,
   resolveText: (text: string) => string,
-): Promise<RdpConnectResult> {
+): Promise<ExternalLaunchResult> {
   if (process.platform !== 'win32') {
     return { ok: false, error: 'RDP is only supported on Windows' }
   }
