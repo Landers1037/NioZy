@@ -367,6 +367,7 @@ function createWindow(): void {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
+    autoHideMenuBar: true,
     backgroundColor: getWindowBackgroundColor(settings.theme, settings.uiStyle),
     opacity: transparencyToOpacity(settings.advanced.transparency),
     webPreferences: {
@@ -377,6 +378,10 @@ function createWindow(): void {
       additionalArguments: [buildInitialSettingsArgv(settings)],
     },
   })
+
+  if (process.platform !== 'darwin') {
+    mainWindow.setMenuBarVisibility(false)
+  }
 
   mainWindow.webContents.on('preload-error', (_, path, error) => {
     mainLog.error('Failed to load preload', { path, error: logErrorPayload(error) })
@@ -570,6 +575,8 @@ app.whenReady().then(async () => {
     platform: process.platform,
     isDev,
   })
+
+  Menu.setApplicationMenu(null)
   configureSessionPrivacy()
   await registerLocalFileProtocolHandler()
 
