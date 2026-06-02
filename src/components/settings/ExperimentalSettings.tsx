@@ -15,7 +15,7 @@ import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
 import { ExperimentalAiSettings } from './ExperimentalAiSettings'
-import { Braces, Cpu, Link2, ScrollText, Terminal } from 'lucide-react'
+import { Braces, Cpu, Link2, ScrollText, Terminal, Monitor } from 'lucide-react'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import {
@@ -49,10 +49,13 @@ export function ExperimentalSettings() {
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   const closeSandboxTabIfPresent = useAppStore((s) => s.closeSandboxTabIfPresent)
+  const closeVncTabsIfPresent = useAppStore((s) => s.closeVncTabsIfPresent)
   if (!settings) return null
 
   const emulator = settings.experimental.terminalEmulator
   const jsSandboxEnabled = settings.experimental.jsSandboxEnabled
+  const vncWebEnabled = settings.experimental.vncWebEnabled === true
+  const vncAdaptiveScale = settings.experimental.vncAdaptiveScale !== false
   const ghosttyEnabled = settings.experimental.ghosttyCoreEnabled
   const attachPtyEnabled = settings.experimental.attachPtyRenderMode
   const attachPtyActive = isAttachPtyRenderMode(settings)
@@ -122,6 +125,59 @@ export function ExperimentalSettings() {
             }}
           />
         </SettingField>
+
+        <div className="flex flex-col gap-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+          <div>
+            <h3 className="text-sm font-medium">{t('settings.experimental.vnc.title')}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('settings.experimental.vnc.description')}
+            </p>
+          </div>
+
+          <SettingField
+            icon={Monitor}
+            label={t('settings.experimental.vncWebEnabled')}
+            description={t('settings.experimental.vncWebEnabledDesc')}
+            row
+          >
+            <Switch
+              checked={vncWebEnabled}
+              onCheckedChange={(enabled) => {
+                if (enabled === vncWebEnabled) return
+                void patchSettings({
+                  experimental: {
+                    ...settings.experimental,
+                    vncWebEnabled: enabled,
+                  },
+                }).then(() => {
+                  if (!enabled) closeVncTabsIfPresent()
+                })
+              }}
+            />
+          </SettingField>
+
+          {vncWebEnabled && (
+            <SettingField
+              icon={Monitor}
+              label={t('settings.experimental.vncAdaptiveScale')}
+              description={t('settings.experimental.vncAdaptiveScaleDesc')}
+              row
+            >
+              <Switch
+                checked={vncAdaptiveScale}
+                onCheckedChange={(enabled) => {
+                  if (enabled === vncAdaptiveScale) return
+                  void patchSettings({
+                    experimental: {
+                      ...settings.experimental,
+                      vncAdaptiveScale: enabled,
+                    },
+                  })
+                }}
+              />
+            </SettingField>
+          )}
+        </div>
 
         <ExperimentalAiSettings />
 

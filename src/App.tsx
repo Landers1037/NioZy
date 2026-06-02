@@ -52,6 +52,11 @@ const ScpTransferDialog = lazy(() =>
     default: m.ScpTransferDialog,
   })),
 )
+const VncPanel = lazy(() =>
+  import('@/components/vnc/VncPanel').then((m) => ({
+    default: m.VncPanel,
+  })),
+)
 export default function App() {
   const { t } = useTranslation()
   const tabs = useAppStore((s) => s.tabs)
@@ -193,6 +198,8 @@ export default function App() {
   const hasChatTab = tabs.some((t) => t.type === 'chat')
   const chatTabActive = activeTab?.type === 'chat'
   const p2pChatEnabled = settings?.p2p.enabled === true
+  const hasVncTab = tabs.some((t) => t.type === 'vnc')
+  const vncTabActive = activeTab?.type === 'vnc'
   const attachPtyMode = isAttachPtyRenderMode(settings)
   const attachCommitted = useAttachPtySessionStore((s) => s.committed)
   const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
@@ -328,6 +335,21 @@ export default function App() {
             {activeTab?.type === 'webview' && activeTab.webviewUrl && (
               <div className="absolute inset-0">
                 <LinkPreviewPanel tab={activeTab} />
+              </div>
+            )}
+            {hasVncTab && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !vncTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!vncTabActive ? { inert: true } : {})}
+              >
+                <Suspense fallback={null}>
+                  {activeTab?.type === 'vnc' && activeTab.vncConnectionId ? (
+                    <VncPanel tabId={activeTab.id} connectionId={activeTab.vncConnectionId} />
+                  ) : null}
+                </Suspense>
               </div>
             )}
             {tabs.length === 0 && (

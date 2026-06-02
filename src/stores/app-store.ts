@@ -16,7 +16,7 @@ import {
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
-export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat'
+export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat' | 'vnc'
 
 export interface AppTab {
   id: string
@@ -36,6 +36,8 @@ export interface AppTab {
   terminalSpawn?: TabTerminalSpawn
   /** 当前获得输入与输出流的拆分 pane 索引 */
   activeSplitIndex?: number
+  /** VNC Tab 关联的连接 id */
+  vncConnectionId?: string
 }
 
 interface AppState {
@@ -69,6 +71,8 @@ interface AppState {
   addChatTab: () => void
   addSandboxTab: () => void
   closeSandboxTabIfPresent: () => void
+  closeVncTabsIfPresent: () => void
+  addVncTab: (connectionId: string) => void
   addWebviewTab: (url: string, title?: string) => void
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
@@ -188,6 +192,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     const existing = get().tabs.find((t) => t.type === 'sandbox')
     if (!existing) return
     get().removeTab(existing.id)
+  },
+  closeVncTabsIfPresent: () => {
+    const vncTabs = get().tabs.filter((t) => t.type === 'vnc')
+    if (vncTabs.length === 0) return
+    get().removeTabs(vncTabs.map((t) => t.id))
+  },
+  addVncTab: (connectionId) => {
+    const settings = get().settings
+    const conn = settings?.connections.find((c) => c.id === connectionId)
+    const title = conn?.name?.trim() || 'VNC'
+    const id = `vnc-${connectionId}`
+    const existing = get().tabs.find((t) => t.id === id)
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = { id, type: 'vnc', title, vncConnectionId: connectionId }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
   },
   addWebviewTab: (url, title) => {
     const id = `webview-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`

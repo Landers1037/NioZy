@@ -375,6 +375,18 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       savePng: async () => ({ ok: false, error: 'Browser preview' }),
       copyToClipboard: async () => ({ ok: false, error: 'Browser preview' }),
     },
+    rdp: {
+      connect: async () => ({ ok: false as const, error: 'Browser preview: RDP not supported' }),
+    },
+    putty: {
+      connect: async () => ({ ok: false as const, error: 'Browser preview: PuTTY not supported' }),
+    },
+    vnc: {
+      startProxy: async () => {
+        throw new Error('Browser preview: VNC not supported')
+      },
+      stopProxy: async () => undefined,
+    },
     ssh: {
       checkScp: async () => ({ found: false }),
       getProfile: async () => null,

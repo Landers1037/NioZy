@@ -96,10 +96,20 @@ export default defineConfig(({ command }) => {
     server: {
       strictPort: false,
     },
+    // Electron 34+ bundles on modern Chromium; enable top-level await (needed by noVNC).
+    esbuild: {
+      target: 'es2022',
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'es2022',
+      },
+    },
     worker: {
       format: 'es',
     },
     build: {
+      target: 'es2022',
       minify: 'esbuild',
       cssMinify: true,
       rollupOptions: {

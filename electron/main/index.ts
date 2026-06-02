@@ -68,6 +68,8 @@ import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
 import { inferSshAuth } from '../ssh-auth'
 import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
+import { launchRdpFromConnection } from '../rdp-launch'
+import { launchPuttyFromConnection } from '../putty-launch'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
@@ -131,6 +133,7 @@ let screenshotWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
 let linkPreviewManager: LinkPreviewManager | null = null
+let vncProxyManager: import('../vnc-proxy').VncWsProxyManager | null = null
 
 /** 由“点击布局面板分屏”触发的可还原状态 */
 let mainWindowSnapRestoreBounds: Electron.Rectangle | null = null
@@ -375,6 +378,7 @@ function createWindow(): void {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
+    autoHideMenuBar: true,
     backgroundColor: getWindowBackgroundColor(settings.theme, settings.uiStyle),
     opacity: transparencyToOpacity(settings.advanced.transparency),
     webPreferences: {
@@ -385,6 +389,10 @@ function createWindow(): void {
       additionalArguments: [buildInitialSettingsArgv(settings)],
     },
   })
+
+  if (process.platform !== 'darwin') {
+    mainWindow.setMenuBarVisibility(false)
+  }
 
   mainWindow.webContents.on('preload-error', (_, path, error) => {
     mainLog.error('Failed to load preload', { path, error: logErrorPayload(error) })
@@ -578,6 +586,8 @@ app.whenReady().then(async () => {
     platform: process.platform,
     isDev,
   })
+
+  Menu.setApplicationMenu(null)
   configureSessionPrivacy()
   await registerLocalFileProtocolHandler()
 
@@ -635,6 +645,7 @@ app.on('before-quit', () => {
   linkPreviewManager?.closeAll()
   terminalOutputFlusher.dispose()
   terminalService.disposeAll()
+  void vncProxyManager?.disposeAll()
   unregisterGlobalShortcuts()
   systemStats.stop()
   statisticsStore.dispose()
@@ -1130,6 +1141,54 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
   return profile
 }
 
+ipcMain.handle('rdp:connect', async (_, connectionId: string) => {
+  if (process.platform !== 'win32') {
+    return { ok: false as const, error: 'RDP is only supported on Windows' }
+  }
+  vaultStore.load()
+  const conn = settingsStore.get().connections.find((c) => c.id === connectionId && c.type === 'rdp')
+  if (!conn) {
+    return { ok: false as const, error: 'RDP connection not found' }
+  }
+  return launchRdpFromConnection(conn, (text) => vaultStore.resolveText(text))
+})
+
+ipcMain.handle('putty:connect', async (_, connectionId: string) => {
+  if (process.platform !== 'win32') {
+    return { ok: false as const, error: 'PuTTY is only supported on Windows' }
+  }
+  vaultStore.load()
+  const conn = settingsStore
+    .get()
+    .connections.find((c) => c.id === connectionId && c.type === 'putty')
+  if (!conn) {
+    return { ok: false as const, error: 'PuTTY connection not found' }
+  }
+  return launchPuttyFromConnection(conn, (text) => vaultStore.resolveText(text))
+})
+
+ipcMain.handle(
+  'vnc:startProxy',
+  async (
+    _,
+    input: {
+      tabId: string
+      host: string
+      port: number
+    },
+  ): Promise<{ wsUrl: string }> => {
+    if (!vncProxyManager) {
+      const mod = await import('../vnc-proxy')
+      vncProxyManager = new mod.VncWsProxyManager()
+    }
+    return vncProxyManager.start(input)
+  },
+)
+
+ipcMain.handle('vnc:stopProxy', async (_, input: { tabId: string }): Promise<void> => {
+  await vncProxyManager?.stop(input)
+})
+
 ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
 ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))
 ipcMain.handle('ssh:listLocal', (_, dirPath: string) => sshService.listLocalDirectory(dirPath))
@@ -1193,7 +1252,8 @@ ipcMain.handle(
       afterTransfer: Boolean(options?.afterTransfer),
       ...scpProfileForLog(profile),
     })
-    return sshService.listRemoteDirectoryWithRetry(profile, remotePath, options)
+    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
+    return sshService.listRemoteDirectoryWithRetry(profile, remotePath, options, enabledKex)
   },
 )
 ipcMain.handle(
@@ -1205,7 +1265,8 @@ ipcMain.handle(
     const sendProgress = (progress: ScpTransferProgress) => {
       event.sender.send('ssh:transferProgress', progress)
     }
-    return sshService.scpUpload(profile, localPath, remotePath, sendProgress)
+    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
+    return sshService.scpUpload(profile, localPath, remotePath, sendProgress, enabledKex)
   },
 )
 ipcMain.handle(
@@ -1217,11 +1278,12 @@ ipcMain.handle(
     const sendProgress = (progress: ScpTransferProgress) => {
       event.sender.send('ssh:transferProgress', progress)
     }
-    return sshService.scpDownload(profile, remotePath, localPath, sendProgress)
+    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
+    return sshService.scpDownload(profile, remotePath, localPath, sendProgress, enabledKex)
   },
 )
 
-ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
+ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
   vaultStore.load()
   terminalLog.info('Create terminal requested', {
     shell: options.shell,
@@ -1240,6 +1302,32 @@ ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
       .get()
       .connections.find((c) => c.id === options.sshConnectionId && c.type === 'ssh')
     if (conn) {
+      const sshSettings = settingsStore.get().ssh
+      if (sshSettings.useBuiltinSsh2) {
+        const profile = resolveSshProfile(options.sshConnectionId)
+        if (!profile) {
+          throw new Error('无法解析 SSH 连接配置')
+        }
+        try {
+          const session = await terminalService.createSsh2({
+            profile,
+            enabledKex: sshSettings.enabledKexAlgorithms,
+            name: conn.name,
+            cols: options.cols,
+            rows: options.rows,
+          })
+          terminalLog.info('Terminal created (ssh2)', {
+            id: session.id,
+            shell: session.shell,
+            name: session.name,
+            cwd: session.cwd,
+          })
+          return session
+        } catch (err) {
+          terminalLog.error('ssh2 terminal create failed', logErrorPayload(err))
+          throw err
+        }
+      }
       resolved = applySshConnectionToTerminalOptions(resolved, conn, (text) =>
         vaultStore.resolveText(text),
       )

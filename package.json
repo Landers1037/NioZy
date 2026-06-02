@@ -1,6 +1,6 @@
 {
   "name": "niozy",
-  "version": "0.1.15",
+  "version": "0.1.17",
   "description": "NioZy - Multi-terminal manager",
   "main": "out/main/index.mjs",
   "type": "module",
@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json"
   },
   "dependencies": {
+    "@novnc/novnc": "^1.7.0",
     "@js-preview/docx": "^1.6.4",
     "@js-preview/excel": "^1.7.14",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -60,6 +61,7 @@
     "tui-color-picker": "^2.2.8",
     "tui-image-editor": "^3.15.3",
     "xlsx": "^0.18.5",
+    "ws": "^8.18.3",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -71,6 +73,7 @@
     "@types/react-dom": "^19.0.3",
     "@types/screenshot-desktop": "^1.15.0",
     "@types/ssh2": "^1.15.5",
+    "@types/ws": "^8.5.14",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^34.2.0",
     "electron-builder": "^25.1.8",

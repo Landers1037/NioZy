@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Link2, Server } from 'lucide-react'
+import { AppWindow, Boxes, Link2, Monitor, Network, Server } from 'lucide-react'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -13,6 +13,7 @@ import type { CustomConnection } from '../../../electron/shared/api-types'
 export function NewConnectionMenuContent() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
+  const vncEnabled = settings?.experimental.vncWebEnabled === true
 
   return (
     <>
@@ -23,7 +24,9 @@ export function NewConnectionMenuContent() {
         </DropdownMenuItem>
       ))}
       <DropdownMenuSeparator />
-      {settings?.connections.map((c) => (
+      {settings?.connections
+        .filter((c) => c.type !== 'vnc' || vncEnabled)
+        .map((c) => (
         <CustomConnectionMenuItem key={c.id} connection={c} />
       ))}
       {settings?.connections.length === 0 && (
@@ -35,8 +38,27 @@ export function NewConnectionMenuContent() {
   )
 }
 
+function connectionMenuIcon(connection: CustomConnection) {
+  switch (connection.type) {
+    case 'ssh':
+      return Server
+    case 'rdp':
+      return Monitor
+    case 'wsl':
+      return Boxes
+    case 'telnet':
+      return Network
+    case 'putty':
+      return AppWindow
+    case 'vnc':
+      return Monitor
+    default:
+      return Link2
+  }
+}
+
 function CustomConnectionMenuItem({ connection }: { connection: CustomConnection }) {
-  const Icon = connection.type === 'ssh' ? Server : Link2
+  const Icon = connectionMenuIcon(connection)
 
   return (
     <DropdownMenuItem onClick={() => createConnection('custom', connection)}>
