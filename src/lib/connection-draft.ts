@@ -2,7 +2,7 @@ import type { CustomConnection } from '@/stores/app-store'
 import { formatEnvLines, parseEnvLines } from '@/lib/connection-env'
 
 export type ConnectionDraft = {
-  type: 'command' | 'ssh'
+  type: 'command' | 'ssh' | 'rdp'
   name: string
   command: string
   argsStr: string
@@ -14,6 +14,10 @@ export type ConnectionDraft = {
   sshPassword: string
   sshKeyPath: string
   sshGroup: string
+  rdpHost: string
+  rdpPort: number
+  rdpUser: string
+  rdpPassword: string
 }
 
 export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
@@ -29,6 +33,10 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   sshPassword: '',
   sshKeyPath: '',
   sshGroup: '',
+  rdpHost: '',
+  rdpPort: 3389,
+  rdpUser: '',
+  rdpPassword: '',
 }
 
 /** 从已保存的 SSH 连接收集不重复的分组名（按字母排序） */
@@ -46,11 +54,9 @@ export function collectSshGroups(connections: CustomConnection[]): string[] {
 export function connectionToDraft(c: CustomConnection): ConnectionDraft {
   if (c.type === 'ssh') {
     return {
+      ...EMPTY_CONNECTION_DRAFT,
       type: 'ssh',
       name: c.name,
-      command: '',
-      argsStr: '',
-      envStr: '',
       sshUser: c.sshUser ?? '',
       sshHost: c.sshHost ?? c.command,
       sshPort: c.sshPort ?? 22,
@@ -58,6 +64,17 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
       sshPassword: c.sshPassword ?? '',
       sshKeyPath: c.sshKeyPath ?? '',
       sshGroup: c.sshGroup ?? '',
+    }
+  }
+  if (c.type === 'rdp') {
+    return {
+      ...EMPTY_CONNECTION_DRAFT,
+      type: 'rdp',
+      name: c.name,
+      rdpHost: c.rdpHost ?? c.command,
+      rdpPort: c.rdpPort ?? 3389,
+      rdpUser: c.rdpUser ?? '',
+      rdpPassword: c.rdpPassword ?? '',
     }
   }
   return {
@@ -99,6 +116,22 @@ export function draftToConnection(
           ? draft.sshKeyPath.trim()
           : undefined,
       sshGroup: draft.sshGroup.trim() || undefined,
+    }
+  }
+
+  if (draft.type === 'rdp') {
+    if (!draft.rdpHost.trim() || !draft.rdpUser.trim()) return null
+    return {
+      id,
+      name: draft.name.trim(),
+      type: 'rdp',
+      command: draft.rdpHost.trim(),
+      args: [],
+      env: {},
+      rdpHost: draft.rdpHost.trim(),
+      rdpPort: draft.rdpPort > 0 ? draft.rdpPort : 3389,
+      rdpUser: draft.rdpUser.trim(),
+      rdpPassword: draft.rdpPassword.trim() || undefined,
     }
   }
 

@@ -66,6 +66,7 @@ import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
 import { inferSshAuth } from '../ssh-auth'
 import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
+import { launchRdpFromConnection } from '../rdp-launch'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
@@ -1074,6 +1075,18 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
   })
   return profile
 }
+
+ipcMain.handle('rdp:connect', async (_, connectionId: string) => {
+  if (process.platform !== 'win32') {
+    return { ok: false as const, error: 'RDP is only supported on Windows' }
+  }
+  vaultStore.load()
+  const conn = settingsStore.get().connections.find((c) => c.id === connectionId && c.type === 'rdp')
+  if (!conn) {
+    return { ok: false as const, error: 'RDP connection not found' }
+  }
+  return launchRdpFromConnection(conn, (text) => vaultStore.resolveText(text))
+})
 
 ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
 ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))

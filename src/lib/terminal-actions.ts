@@ -78,12 +78,28 @@ export async function openTerminalInDirectory(
   }
 }
 
+export async function launchRdpConnection(connection: CustomConnection): Promise<void> {
+  if (connection.type !== 'rdp') return
+  try {
+    const result = await getElectronAPI().rdp.connect(connection.id)
+    if (!result.ok) {
+      toastTerminalError(new Error(result.error), connection.name)
+    }
+  } catch (error) {
+    toastTerminalError(error, connection.name)
+  }
+}
+
 export async function createConnection(
   shell: ShellType,
   custom?: CustomConnection,
 ): Promise<void> {
   try {
     if (custom) {
+      if (custom.type === 'rdp') {
+        await launchRdpConnection(custom)
+        return
+      }
       const { create, sshConnectionId } = connectionToTerminalSpawn(custom)
       await openTerminalTab({ ...create, sshConnectionId })
       return

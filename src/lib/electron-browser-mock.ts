@@ -372,6 +372,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       savePng: async () => ({ ok: false, error: 'Browser preview' }),
       copyToClipboard: async () => ({ ok: false, error: 'Browser preview' }),
     },
+    rdp: {
+      connect: async () => ({ ok: false as const, error: 'Browser preview: RDP not supported' }),
+    },
     ssh: {
       checkScp: async () => ({ found: false }),
       getProfile: async () => null,

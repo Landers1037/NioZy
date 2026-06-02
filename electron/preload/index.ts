@@ -141,6 +141,9 @@ const api: ElectronAPI = {
     recordTabClose: () => ipcRenderer.send('statistics:recordTabClose'),
     clear: () => ipcRenderer.invoke('statistics:clear') as Promise<void>,
   },
+  rdp: {
+    connect: (connectionId) => ipcRenderer.invoke('rdp:connect', connectionId),
+  },
   ssh: {
     checkScp: () => ipcRenderer.invoke('ssh:checkScp'),
     getProfile: (connectionId) => ipcRenderer.invoke('ssh:getProfile', connectionId),

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Link2, Server } from 'lucide-react'
+import { Link2, Monitor, Server } from 'lucide-react'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -36,7 +36,8 @@ export function NewConnectionMenuContent() {
 }
 
 function CustomConnectionMenuItem({ connection }: { connection: CustomConnection }) {
-  const Icon = connection.type === 'ssh' ? Server : Link2
+  const Icon =
+    connection.type === 'ssh' ? Server : connection.type === 'rdp' ? Monitor : Link2
 
   return (
     <DropdownMenuItem onClick={() => createConnection('custom', connection)}>
