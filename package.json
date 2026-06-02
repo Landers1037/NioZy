@@ -1,6 +1,6 @@
 {
   "name": "niozy",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "NioZy - Multi-terminal manager",
   "main": "out/main/index.mjs",
   "type": "module",
