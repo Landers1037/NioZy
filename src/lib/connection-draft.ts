@@ -26,6 +26,10 @@ export type ConnectionDraft = {
   puttyUser: string
   puttyPassword: string
   puttyProtocol: PuttyProtocol
+  vncHost: string
+  vncPort: number
+  vncUsername: string
+  vncPassword: string
 }
 
 export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
@@ -53,6 +57,10 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   puttyUser: '',
   puttyPassword: '',
   puttyProtocol: 'ssh',
+  vncHost: '',
+  vncPort: 5900,
+  vncUsername: '',
+  vncPassword: '',
 }
 
 export function defaultPuttyPort(protocol: PuttyProtocol): number {
@@ -118,6 +126,15 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
         puttyUser: c.puttyUser ?? '',
         puttyPassword: c.puttyPassword ?? '',
         puttyProtocol: c.puttyProtocol ?? 'ssh',
+      }
+    case 'vnc':
+      return {
+        ...base,
+        type: 'vnc',
+        vncHost: c.vncHost ?? c.command,
+        vncPort: c.vncPort ?? 5900,
+        vncUsername: c.vncUsername ?? '',
+        vncPassword: c.vncPassword ?? '',
       }
     default:
       return {
@@ -215,6 +232,22 @@ export function draftToConnection(
         puttyUser: draft.puttyUser.trim() || undefined,
         puttyPassword: draft.puttyPassword.trim() || undefined,
         puttyProtocol: protocol,
+      }
+    }
+    case 'vnc': {
+      if (!draft.vncHost.trim()) return null
+      const port = draft.vncPort > 0 ? draft.vncPort : 5900
+      return {
+        id,
+        name: draft.name.trim(),
+        type: 'vnc',
+        command: draft.vncHost.trim(),
+        args: [],
+        env: {},
+        vncHost: draft.vncHost.trim(),
+        vncPort: port,
+        vncUsername: draft.vncUsername.trim() || undefined,
+        vncPassword: draft.vncPassword.trim() || undefined,
       }
     }
     default: {

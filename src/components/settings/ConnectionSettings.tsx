@@ -100,6 +100,7 @@ export function ConnectionSettings() {
     [settings?.connections],
   )
   const isWindows = getElectronAPI().system.platform === 'win32'
+  const vncEnabled = settings?.experimental.vncWebEnabled === true
 
   if (!settings) return null
 
@@ -300,6 +301,9 @@ export function ConnectionSettings() {
                     <SelectItem value="putty">{t('settings.connections.typePutty')}</SelectItem>
                   </>
                 )}
+                {vncEnabled && (
+                  <SelectItem value="vnc">{t('settings.connections.typeVnc')}</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </SettingField>
@@ -407,6 +411,48 @@ export function ConnectionSettings() {
               </div>
               <p className="text-xs text-muted-foreground">
                 {t('settings.connections.rdpLaunchHint')}
+              </p>
+            </>
+          ) : draft.type === 'vnc' ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={Server} label={t('settings.connections.host')}>
+                  <Input
+                    value={draft.vncHost}
+                    onChange={(e) => setDraft({ ...draft, vncHost: e.target.value })}
+                    placeholder="192.168.1.1"
+                  />
+                </SettingField>
+                <SettingField icon={Network} label={t('settings.connections.port')}>
+                  <Input
+                    type="number"
+                    value={draft.vncPort}
+                    onChange={(e) =>
+                      setDraft({ ...draft, vncPort: Number(e.target.value) || 5900 })
+                    }
+                  />
+                </SettingField>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <SettingField icon={User} label={t('settings.connections.username')}>
+                  <Input
+                    value={draft.vncUsername}
+                    onChange={(e) => setDraft({ ...draft, vncUsername: e.target.value })}
+                  />
+                </SettingField>
+                <SettingField icon={Lock} label={t('settings.connections.password')}>
+                  <InputWithVaultPicker
+                    type="password"
+                    wrapperClassName="w-full max-w-none"
+                    className="min-w-0 flex-1"
+                    value={draft.vncPassword}
+                    onChange={(vncPassword) => setDraft({ ...draft, vncPassword })}
+                    placeholder={t('settings.connections.passwordPlaceholder')}
+                  />
+                </SettingField>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.vncLaunchHint')}
               </p>
             </>
           ) : draft.type === 'wsl' ? (
