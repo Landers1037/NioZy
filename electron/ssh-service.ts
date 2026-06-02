@@ -96,15 +96,17 @@ export async function listLocalDirectory(dirPath: string): Promise<ScpListResult
 export async function listRemoteDirectory(
   profile: SshConnectionProfile,
   remotePath: string,
+  enabledKex?: string[],
 ): Promise<ScpListResult> {
   scpLog('listRemote via ssh2/sftp (in-process password/key auth)')
-  return listRemoteViaSsh2(profile, remotePath)
+  return listRemoteViaSsh2(profile, remotePath, enabledKex)
 }
 
 export async function listRemoteDirectoryWithRetry(
   profile: SshConnectionProfile,
   remotePath: string,
   options?: { afterTransfer?: boolean },
+  enabledKex?: string[],
 ): Promise<ScpListResult> {
   const maxAttempts = options?.afterTransfer ? 3 : 1
   if (options?.afterTransfer) {
@@ -120,7 +122,7 @@ export async function listRemoteDirectoryWithRetry(
       scpLog('listRemote retry', { attempt, maxAttempts, remotePath })
       await delay(LIST_REMOTE_RETRY_DELAY_MS)
     }
-    last = await listRemoteDirectory(profile, remotePath)
+    last = await listRemoteDirectory(profile, remotePath, enabledKex)
     if (last.ok) return last
     const retryable = /timed out|timeout|Connection reset|Connection refused|ECONN/i.test(
       last.error ?? '',
@@ -135,8 +137,9 @@ export async function scpUpload(
   localPath: string,
   remotePath: string,
   onProgress?: ScpProgressCallback,
+  enabledKex?: string[],
 ): Promise<ScpTransferResult> {
-  return uploadViaSsh2(profile, localPath, remotePath, onProgress)
+  return uploadViaSsh2(profile, localPath, remotePath, onProgress, enabledKex)
 }
 
 export async function scpDownload(
@@ -144,6 +147,7 @@ export async function scpDownload(
   remotePath: string,
   localPath: string,
   onProgress?: ScpProgressCallback,
+  enabledKex?: string[],
 ): Promise<ScpTransferResult> {
-  return downloadViaSsh2(profile, remotePath, localPath, onProgress)
+  return downloadViaSsh2(profile, remotePath, localPath, onProgress, enabledKex)
 }

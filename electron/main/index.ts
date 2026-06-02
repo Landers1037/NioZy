@@ -1166,7 +1166,8 @@ ipcMain.handle(
       afterTransfer: Boolean(options?.afterTransfer),
       ...scpProfileForLog(profile),
     })
-    return sshService.listRemoteDirectoryWithRetry(profile, remotePath, options)
+    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
+    return sshService.listRemoteDirectoryWithRetry(profile, remotePath, options, enabledKex)
   },
 )
 ipcMain.handle(
@@ -1178,7 +1179,8 @@ ipcMain.handle(
     const sendProgress = (progress: ScpTransferProgress) => {
       event.sender.send('ssh:transferProgress', progress)
     }
-    return sshService.scpUpload(profile, localPath, remotePath, sendProgress)
+    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
+    return sshService.scpUpload(profile, localPath, remotePath, sendProgress, enabledKex)
   },
 )
 ipcMain.handle(
@@ -1190,11 +1192,12 @@ ipcMain.handle(
     const sendProgress = (progress: ScpTransferProgress) => {
       event.sender.send('ssh:transferProgress', progress)
     }
-    return sshService.scpDownload(profile, remotePath, localPath, sendProgress)
+    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
+    return sshService.scpDownload(profile, remotePath, localPath, sendProgress, enabledKex)
   },
 )
 
-ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
+ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
   vaultStore.load()
   terminalLog.info('Create terminal requested', {
     shell: options.shell,
@@ -1213,6 +1216,32 @@ ipcMain.handle('terminal:create', (_, options: TerminalCreateOptions) => {
       .get()
       .connections.find((c) => c.id === options.sshConnectionId && c.type === 'ssh')
     if (conn) {
+      const sshSettings = settingsStore.get().ssh
+      if (sshSettings.useBuiltinSsh2) {
+        const profile = resolveSshProfile(options.sshConnectionId)
+        if (!profile) {
+          throw new Error('无法解析 SSH 连接配置')
+        }
+        try {
+          const session = await terminalService.createSsh2({
+            profile,
+            enabledKex: sshSettings.enabledKexAlgorithms,
+            name: conn.name,
+            cols: options.cols,
+            rows: options.rows,
+          })
+          terminalLog.info('Terminal created (ssh2)', {
+            id: session.id,
+            shell: session.shell,
+            name: session.name,
+            cwd: session.cwd,
+          })
+          return session
+        } catch (err) {
+          terminalLog.error('ssh2 terminal create failed', logErrorPayload(err))
+          throw err
+        }
+      }
       resolved = applySshConnectionToTerminalOptions(resolved, conn, (text) =>
         vaultStore.resolveText(text),
       )

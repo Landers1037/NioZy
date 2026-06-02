@@ -30,6 +30,13 @@ export type { AppShortcuts } from './shortcuts'
 export { DEFAULT_SHORTCUTS, APP_SHORTCUT_LABELS } from './shortcuts'
 export type { SshSettings } from './ssh-settings'
 export { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './ssh-settings'
+export {
+  SSH_KEX_ALGORITHM_IDS,
+  MODERN_SSH_KEX_ALGORITHM_IDS,
+  LEGACY_SSH_KEX_ALGORITHM_IDS,
+  DEFAULT_ENABLED_SSH_KEX_ALGORITHMS,
+  type SshKexAlgorithmId,
+} from './ssh-kex-algorithms'
 export type { ShellSettings } from './shell-settings'
 export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
 export type { CommandReplayItem } from './command-replay'
