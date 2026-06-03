@@ -15,3 +15,18 @@ export function getTerminalBufferText(term: Terminal): string {
   }
   return lines.join('\n')
 }
+
+/**
+ * 将快照写回 xterm。须用 CRLF：仅 \\n 只会下移光标不会回到行首，会出现阶梯状错位。
+ */
+export function restoreTerminalBufferText(term: Terminal, bufferText: string): void {
+  if (!bufferText) return
+  const normalized = bufferText.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const lines = normalized.split('\n')
+  if (lines.at(-1) === '' && normalized.endsWith('\n')) {
+    lines.pop()
+  }
+  for (const line of lines) {
+    term.writeln(line)
+  }
+}

@@ -56,7 +56,7 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
-import { getTerminalBufferText } from '@/lib/terminal-buffer'
+import { getTerminalBufferText, restoreTerminalBufferText } from '@/lib/terminal-buffer'
 import {
   useAttachPtySessionStore,
   type AttachPtyCommittedSession,
@@ -86,9 +86,8 @@ export function TerminalView({
   const boundTerminalIdRef = useRef<string | null>(
     isAttachHost ? (attachSession?.terminalId ?? null) : (tab.terminalId ?? null),
   )
-  const prevAttachSessionRef = useRef<AttachPtyCommittedSession | null>(
-    attachSession ?? null,
-  )
+  /** Attach 宿主 remount 后须为 null，否则会误判「已 attach」而跳过快照恢复 */
+  const prevAttachSessionRef = useRef<AttachPtyCommittedSession | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
   const canvasRef = useRef<CanvasAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
@@ -309,14 +308,15 @@ export function TerminalView({
       boundTerminalIdRef.current = session.terminalId
       registerTerminal(session.terminalId, term)
       term.clear()
+      safeFit(true)
       const snap = useAttachPtySessionStore.getState().takeSnapshot(session.tabId)
       if (snap?.bufferText) {
-        term.write(snap.bufferText)
+        restoreTerminalBufferText(term, snap.bufferText)
       }
       scheduleFit(true)
       term.focus()
     },
-    [detachAttachSession, scheduleFit],
+    [detachAttachSession, safeFit, scheduleFit],
   )
 
   useEffect(() => {
@@ -374,7 +374,7 @@ export function TerminalView({
 
       const snap = useAttachPtySessionStore.getState().takeSnapshot(tab.id)
       if (snap?.bufferText) {
-        term.write(snap.bufferText)
+        restoreTerminalBufferText(term, snap.bufferText)
       }
 
       applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
