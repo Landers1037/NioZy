@@ -364,16 +364,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     screenshot: {
       open: () => {
-        // Browser 预览无法调用 desktopCapturer；这里仅提示/占位
         alert('浏览器开发预览不支持截图，请用 npm run start 启动桌面应用。')
       },
       close: () => undefined,
-      enterEditMode: () => undefined,
-      captureScreen: async () => {
-        throw new Error('Browser preview: captureScreen not supported')
-      },
-      savePng: async () => ({ ok: false, error: 'Browser preview' }),
-      copyToClipboard: async () => ({ ok: false, error: 'Browser preview' }),
     },
     rdp: {
       connect: async () => ({ ok: false as const, error: 'Browser preview: RDP not supported' }),

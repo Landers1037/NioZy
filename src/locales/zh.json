@@ -120,13 +120,6 @@
     "durationHours": "{{h}} 小时",
     "durationHoursMinutes": "{{h}} 小时 {{m}} 分钟"
   },
-  "screenshot": {
-    "selectHint": "点击并拖拽开始截屏（Esc 关闭）",
-    "editTitle": "编辑截图",
-    "errorPrefix": "截图失败：",
-    "retry": "重试",
-    "copy": "复制"
-  },
   "aiSidebar": {
     "title": "AI 助手",
     "welcome": "有什么可以帮你的？",

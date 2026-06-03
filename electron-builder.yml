@@ -16,6 +16,8 @@ asar: true
 asarUnpack:
   - '**/node_modules/node-pty/**'
   - '**/node_modules/font-list/**'
+  - '**/node_modules/node-screenshots/**'
+  - '**/node_modules/node-screenshots-*/**'
   - '**/fonts/**'
   - '**/*.{ttf,otf,woff,woff2}'
   - out/main/scripts/**
