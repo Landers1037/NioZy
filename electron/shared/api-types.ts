@@ -530,6 +530,7 @@ export interface ElectronAPI {
     getSessions: () => Promise<import('./p2p-types').P2pSessionInfo[]>
     getConversations: () => Promise<import('./p2p-types').P2pSessionInfo[]>
     openConversation: (deviceId: string) => Promise<import('./p2p-types').P2pOpenConversationResult>
+    hideFromSidebar: (sessionId: string) => Promise<import('./p2p-types').P2pResult>
     removeConversation: (sessionId: string) => Promise<import('./p2p-types').P2pResult>
     getHistory: (sessionId: string) => Promise<import('./p2p-types').P2pHistoryResult>
     getFullHistory: (sessionId: string) => Promise<import('./p2p-types').P2pHistoryResult>
@@ -539,6 +540,7 @@ export interface ElectronAPI {
     onSessionEstablished: (cb: (session: import('./p2p-types').P2pSessionInfo) => void) => () => void
     onSessionDisconnected: (cb: (session: import('./p2p-types').P2pSessionInfo) => void) => () => void
     onSessionClosed: (cb: (payload: { sessionId: string }) => void) => () => void
+    onConversationHidden: (cb: (payload: { sessionId: string }) => void) => () => void
     onMessage: (cb: (message: import('./p2p-types').P2pChatMessage) => void) => () => void
     onFileProgress: (cb: (progress: import('./p2p-types').P2pFileProgress) => void) => () => void
   }

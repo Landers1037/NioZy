@@ -38,6 +38,9 @@ export function ChatConversation() {
   const activeSession = sessions.find((s) => s.sessionId === activeSessionId)
   const messages = activeSessionId ? (messagesBySession[activeSessionId] ?? []) : []
   const isOnline = activeSession?.status === 'connected'
+  const hasSecureSession = Boolean(activeSession?.hasSecureSession)
+  const canSend = isOnline
+  const showDisconnect = isOnline || hasSecureSession
 
   if (!activeSession) {
     return (
@@ -51,7 +54,7 @@ export function ChatConversation() {
     activeSession.peer.displayName || activeSession.peer.hostname || activeSession.peer.ip
 
   const handleSend = async () => {
-    if (!isOnline) return
+    if (!canSend) return
     const text = draft.trim()
     if (!text || !activeSessionId) return
     setSending(true)
@@ -65,7 +68,7 @@ export function ChatConversation() {
   }
 
   const handlePickFile = async (imagesOnly: boolean) => {
-    if (!isOnline || !activeSessionId) return
+    if (!canSend || !activeSessionId) return
     const result = await getElectronAPI().p2p.pickAndSendFile(activeSessionId, imagesOnly)
     if (result.canceled) return
     if (!result.ok) toast.error(result.error ?? t('toast.p2pSendFailed'))
@@ -78,7 +81,7 @@ export function ChatConversation() {
       toast.error(result.error ?? t('toast.p2pConnectFailed'))
       return
     }
-    upsertSession({ ...activeSession, status: 'disconnected' })
+    upsertSession({ ...activeSession, status: 'disconnected', hasSecureSession: false })
   }
 
   const handleDeleteConversation = async () => {
@@ -108,7 +111,7 @@ export function ChatConversation() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {isOnline && (
+          {showDisconnect && (
             <Button type="button" variant="outline" size="sm" onClick={() => void handleDisconnect()}>
               {t('chat.disconnect')}
             </Button>
@@ -136,7 +139,7 @@ export function ChatConversation() {
           type="button"
           variant="ghost"
           size="icon"
-          disabled={!isOnline}
+          disabled={!canSend}
           onClick={() => void handlePickFile(false)}
           title={t('chat.attachFile')}
         >
@@ -146,7 +149,7 @@ export function ChatConversation() {
           type="button"
           variant="ghost"
           size="icon"
-          disabled={!isOnline}
+          disabled={!canSend}
           onClick={() => void handlePickFile(true)}
           title={t('chat.attachImage')}
         >
@@ -164,11 +167,11 @@ export function ChatConversation() {
         <Input
           className="min-w-0 flex-1"
           value={draft}
-          disabled={!isOnline}
+          disabled={!canSend}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={isOnline ? t('chat.inputPlaceholder') : t('chat.offlineInputPlaceholder')}
+          placeholder={canSend ? t('chat.inputPlaceholder') : t('chat.offlineInputPlaceholder')}
           onKeyDown={(e) => {
-            if (!isOnline) return
+            if (!canSend) return
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
               void handleSend()
@@ -178,7 +181,7 @@ export function ChatConversation() {
         <Button
           type="button"
           size="icon"
-          disabled={!isOnline || sending || !draft.trim()}
+          disabled={!canSend || sending || !draft.trim()}
           onClick={() => void handleSend()}
         >
           <Send className="size-4" />

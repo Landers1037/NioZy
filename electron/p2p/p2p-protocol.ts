@@ -9,6 +9,9 @@ export type WireFrameType =
   | 'SESSION_REQUEST'
   | 'SESSION_ACCEPT'
   | 'SESSION_REJECT'
+  | 'SESSION_RESUME'
+  | 'SESSION_RESUME_ACCEPT'
+  | 'SESSION_RESUME_REJECT'
   | 'ENCRYPTED'
 
 export type EncryptedPayloadType =
