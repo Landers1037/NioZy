@@ -20,7 +20,7 @@
     "browserDevPreview": "Browser dev preview (mock Electron API). Use DevTools for styling; run",
     "settingsTabTitle": "Settings",
     "filesystemTabTitle": "File system",
-    "chatTabTitle": "P2P chat",
+    "chatTabTitle": "Encrypted chat",
     "sandboxTabTitle": "JS Sandbox"
   },
   "sandbox": {
@@ -495,7 +495,7 @@
     "p2p": {
       "title": "Encrypted communication",
       "description": "LAN peer-to-peer encrypted chat, file transfer, and discovery",
-      "enabled": "Enable P2P chat",
+      "enabled": "Enable encrypted chat",
       "enabledDesc": "Shows the chat entry in the sidebar and listens on the communication port",
       "port": "Communication port",
       "portDesc": "Default 6869; other NioZy clients discover and connect on this port",

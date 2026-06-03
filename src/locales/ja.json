@@ -20,7 +20,7 @@
     "browserDevPreview": "ブラウザ開発プレビュー（Electron API モック）。スタイルは DevTools で確認し、実行は",
     "settingsTabTitle": "設定",
     "filesystemTabTitle": "ファイルシステム",
-    "chatTabTitle": "P2P チャット",
+    "chatTabTitle": "暗号化チャット",
     "sandboxTabTitle": "JS サンドボックス"
   },
   "sandbox": {
@@ -462,7 +462,7 @@
     "p2p": {
       "title": "暗号化通信",
       "description": "LAN 上の P2P 暗号化チャット、ファイル転送、発見設定",
-      "enabled": "P2P チャットを有効化",
+      "enabled": "暗号化チャットを有効化",
       "enabledDesc": "サイドバーにチャット入口を表示し、通信ポートで待ち受けます",
       "port": "通信ポート",
       "portDesc": "デフォルト 6869。他の NioZy クライアントがこのポートで発見・接続します",
