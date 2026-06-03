@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils'
 import {
   canGoUpScpLocalPath,
+  initialScpLocalPath,
   isScpLocalRoots,
   parentScpLocalPath,
   SCP_LOCAL_ROOTS,
@@ -252,7 +253,11 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
         hasPassword: Boolean(prof.password),
         hasKey: Boolean(prof.keyPath),
       })
-      const initialLocal = (tab.terminalId && terminalCwds[tab.terminalId]) || ''
+      const initialLocal = initialScpLocalPath(
+        tab.terminalId,
+        terminalCwds,
+        Boolean(tab.sshConnectionId),
+      )
       setLocalPath(initialLocal)
       setRemotePath('~')
       setSelectedLocal(null)
