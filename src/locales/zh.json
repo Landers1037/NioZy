@@ -20,7 +20,7 @@
     "browserDevPreview": "浏览器开发预览（模拟 Electron API）— 可用开发者工具检查样式；真实终端请用",
     "settingsTabTitle": "设置",
     "filesystemTabTitle": "文件系统",
-    "chatTabTitle": "P2P 聊天",
+    "chatTabTitle": "加密聊天",
     "sandboxTabTitle": "JS 沙箱"
   },
   "sandbox": {
@@ -495,7 +495,7 @@
     "p2p": {
       "title": "加密通信",
       "description": "局域网点对点加密聊天、文件传输与发现设置",
-      "enabled": "开启 P2P 聊天通信",
+      "enabled": "开启加密聊天",
       "enabledDesc": "开启后在侧栏显示聊天入口，并在本机监听通信端口",
       "port": "通信端口",
       "portDesc": "默认 6869；其他 NioZy 客户端通过该端口发现与连接",
