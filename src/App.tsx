@@ -191,6 +191,8 @@ export default function App() {
     : undefined
   const browserDevPreview = isBrowserDevPreview()
   const terminalActive = activeTab?.type === 'terminal'
+  const hasSettingsTab = tabs.some((t) => t.type === 'settings')
+  const settingsTabActive = activeTab?.type === 'settings'
   const hasFilesystemTab = tabs.some((t) => t.type === 'filesystem')
   const filesystemTabActive = activeTab?.type === 'filesystem'
   const hasSandboxTab = tabs.some((t) => t.type === 'sandbox')
@@ -286,8 +288,14 @@ export default function App() {
               />
             ))}
             {showAttachPtyHost && <AttachPtyTerminalHost />}
-            {activeTab?.type === 'settings' && (
-              <div className="absolute inset-0">
+            {hasSettingsTab && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !settingsTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!settingsTabActive ? { inert: true } : {})}
+              >
                 <Suspense fallback={null}>
                   <SettingsPanel />
                 </Suspense>
