@@ -120,13 +120,6 @@
     "durationHours": "{{h}} 時間",
     "durationHoursMinutes": "{{h}} 時間 {{m}} 分"
   },
-  "screenshot": {
-    "selectHint": "クリックしてドラッグでキャプチャ（Esc で閉じる）",
-    "editTitle": "スクリーンショットを編集",
-    "errorPrefix": "キャプチャに失敗しました: ",
-    "retry": "再試行",
-    "copy": "コピー"
-  },
   "aiSidebar": {
     "title": "AI アシスタント",
     "welcome": "何かお手伝いできることはありますか？",

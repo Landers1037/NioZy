@@ -120,13 +120,6 @@
     "durationHours": "{{h}} h",
     "durationHoursMinutes": "{{h}} h {{m}} min"
   },
-  "screenshot": {
-    "selectHint": "Click and drag to start capture (Esc to close)",
-    "editTitle": "Edit screenshot",
-    "errorPrefix": "Capture failed: ",
-    "retry": "Retry",
-    "copy": "Copy"
-  },
   "aiSidebar": {
     "title": "AI Assistant",
     "welcome": "How can I help you today?",

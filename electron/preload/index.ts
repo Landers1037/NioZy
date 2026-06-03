@@ -205,25 +205,6 @@ const api: ElectronAPI = {
   screenshot: {
     open: () => ipcRenderer.send('screenshot:open'),
     close: () => ipcRenderer.send('screenshot:close'),
-    enterEditMode: () => ipcRenderer.send('screenshot:enterEditMode'),
-    captureScreen: async () => {
-      const res = (await ipcRenderer.invoke('screenshot:captureScreen')) as
-        | { ok: true; dataUrl: string; width: number; height: number }
-        | { ok: false; error: string }
-      if (!res.ok) throw new Error(res.error || 'CAPTURE_FAILED')
-      return { dataUrl: res.dataUrl, width: res.width, height: res.height }
-    },
-    savePng: (dataUrl, defaultFileName) =>
-      ipcRenderer.invoke('screenshot:savePng', { dataUrl, defaultFileName }) as Promise<{
-        ok: boolean
-        canceled?: boolean
-        error?: string
-      }>,
-    copyToClipboard: (dataUrl) =>
-      ipcRenderer.invoke('screenshot:copyToClipboard', { dataUrl }) as Promise<{
-        ok: boolean
-        error?: string
-      }>,
   },
   p2p: {
     getStatus: () => ipcRenderer.invoke('p2p:getStatus'),
