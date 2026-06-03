@@ -764,7 +764,13 @@
     "historyCleared": "チャット履歴を削除しました",
     "historyOutbound": "送信",
     "historyInbound": "受信",
-    "noMessagesYet": "メッセージはありません。下の入力欄から送信できます。"
+    "noMessagesYet": "メッセージはありません。下の入力欄から送信できます。",
+    "deleteConversation": "会話を削除",
+    "deleteConversationConfirmTitle": "この会話を削除しますか？",
+    "deleteConversationConfirmDesc": "{{name}} との会話リスト、チャット履歴、添付ファイルが完全に削除されます。元に戻せません。",
+    "deleteConversationConfirmAction": "削除する",
+    "deleteConversationFailed": "会話の削除に失敗しました",
+    "conversationDeleted": "会話を削除しました"
   },
   "toast": {
     "terminalStartFailed": "ターミナルの起動に失敗しました",

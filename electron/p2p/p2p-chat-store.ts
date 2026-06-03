@@ -3,7 +3,7 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { ensureChatDir, getChatDir } from '../config-paths'
 import { sanitizeFileName } from './p2p-crypto'
-import type { P2pChatMessage, P2pSessionPeer } from '../shared/p2p-types'
+import type { P2pChatMessage, P2pSessionInfo, P2pSessionPeer } from '../shared/p2p-types'
 
 const HISTORY_LIMIT = 200
 
@@ -13,6 +13,7 @@ interface PeerMeta {
   displayName: string
   lastIp: string
   lastPort: number
+  isInitiator?: boolean
   updatedAt: string
 }
 
@@ -40,17 +41,80 @@ export function ensurePeerStore(deviceId: string): void {
   if (!existsSync(files)) mkdirSync(files, { recursive: true })
 }
 
-export function updatePeerMeta(peer: P2pSessionPeer): void {
+export function updatePeerMeta(peer: P2pSessionPeer, isInitiator = true): void {
   ensurePeerStore(peer.deviceId)
+  let existingInitiator = isInitiator
+  const mp = metaPath(peer.deviceId)
+  if (existsSync(mp)) {
+    try {
+      const existing = JSON.parse(readFileSync(mp, 'utf8')) as Partial<PeerMeta>
+      if (typeof existing.isInitiator === 'boolean') existingInitiator = existing.isInitiator
+    } catch {
+      // ignore
+    }
+  }
   const meta: PeerMeta = {
     deviceId: peer.deviceId,
     hostname: peer.hostname,
     displayName: peer.displayName,
     lastIp: peer.ip,
     lastPort: peer.port,
+    isInitiator: existingInitiator,
     updatedAt: new Date().toISOString(),
   }
-  writeFileSync(metaPath(peer.deviceId), JSON.stringify(meta, null, 2), 'utf8')
+  writeFileSync(mp, JSON.stringify(meta, null, 2), 'utf8')
+}
+
+export function listSavedConversations(): P2pSessionInfo[] {
+  ensureChatDir()
+  const root = getChatDir()
+  let entries: string[] = []
+  try {
+    entries = readdirSync(root, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+  } catch {
+    return []
+  }
+
+  const conversations: P2pSessionInfo[] = []
+  for (const deviceId of entries) {
+    const mp = metaPath(deviceId)
+    if (!existsSync(mp)) continue
+    try {
+      const meta = JSON.parse(readFileSync(mp, 'utf8')) as PeerMeta
+      conversations.push({
+        sessionId: meta.deviceId,
+        peer: {
+          deviceId: meta.deviceId,
+          hostname: meta.hostname,
+          displayName: meta.displayName,
+          ip: meta.lastIp,
+          port: meta.lastPort,
+        },
+        status: 'disconnected',
+        isInitiator: meta.isInitiator ?? true,
+      })
+    } catch {
+      // skip
+    }
+  }
+  return conversations.sort((a, b) => {
+    const aPath = metaPath(a.sessionId)
+    const bPath = metaPath(b.sessionId)
+    try {
+      const aMeta = JSON.parse(readFileSync(aPath, 'utf8')) as PeerMeta
+      const bMeta = JSON.parse(readFileSync(bPath, 'utf8')) as PeerMeta
+      return bMeta.updatedAt.localeCompare(aMeta.updatedAt)
+    } catch {
+      return 0
+    }
+  })
+}
+
+export function removeSavedConversation(deviceId: string): void {
+  const dir = peerDir(deviceId)
+  if (existsSync(dir)) rmSync(dir, { recursive: true, force: true })
 }
 
 export function listKnownPeers(): P2pSessionPeer[] {

@@ -8,6 +8,7 @@ import type {
   P2pConnectResult,
   P2pHistoryResult,
   P2pIncomingRequest,
+  P2pOpenConversationResult,
   P2pPeerInfo,
   P2pResult,
   P2pSessionInfo,
@@ -35,7 +36,7 @@ import {
   loadOrCreateDeviceIdentity,
   type DeviceIdentity,
 } from './p2p-crypto'
-import { scanLan } from './p2p-discovery'
+import { scanLan, probePeer } from './p2p-discovery'
 import {
   appendMessage,
   createFileMessage,
@@ -44,6 +45,8 @@ import {
   getFullHistory,
   clearPeerHistory,
   listKnownPeers,
+  listSavedConversations,
+  removeSavedConversation,
   updateMessage,
   updatePeerMeta,
   allocateFilePath,
@@ -292,7 +295,7 @@ export class P2PService {
                 sessionKey,
                 isInitiator: true,
               })
-              updatePeerMeta(pending.peer)
+              updatePeerMeta(pending.peer, true)
               this.push('p2p:sessionEstablished', this.toSessionInfo(session))
               resolve({ ok: true, sessionId: session.sessionId })
             }
@@ -331,7 +334,7 @@ export class P2PService {
       sessionKey,
       isInitiator: false,
     })
-    updatePeerMeta(pending.peer)
+    updatePeerMeta(pending.peer, false)
     this.push('p2p:sessionEstablished', this.toSessionInfo(session))
     return { ok: true }
   }
@@ -353,10 +356,27 @@ export class P2PService {
 
   disconnect(sessionId: string): P2pResult {
     const session = this.sessions.get(sessionId)
-    if (!session) return { ok: false, error: 'Session not found' }
+    if (!session) return { ok: true }
     this.detachSessionSocket(session)
     session.socket.destroy()
-    this.removeSession(sessionId)
+    this.sessions.delete(sessionId)
+
+    const saved = listSavedConversations().find((s) => s.sessionId === sessionId)
+    if (saved) {
+      this.push('p2p:sessionDisconnected', { ...saved, status: 'disconnected' })
+    }
+    return { ok: true }
+  }
+
+  removeConversation(sessionId: string): P2pResult {
+    const session = this.sessions.get(sessionId)
+    if (session) {
+      this.detachSessionSocket(session)
+      session.socket.destroy()
+      this.sessions.delete(sessionId)
+    }
+    removeSavedConversation(sessionId)
+    this.push('p2p:sessionClosed', { sessionId })
     return { ok: true }
   }
 
@@ -435,6 +455,47 @@ export class P2PService {
 
   getSessions(): P2pSessionInfo[] {
     return [...this.sessions.values()].map((s) => this.toSessionInfo(s))
+  }
+
+  getConversations(): P2pSessionInfo[] {
+    const saved = listSavedConversations()
+    const active = new Map(this.getSessions().map((s) => [s.sessionId, s]))
+    return saved.map((s) => active.get(s.sessionId) ?? s)
+  }
+
+  async openConversation(deviceId: string): Promise<P2pOpenConversationResult> {
+    const active = this.sessions.get(deviceId)
+    if (active?.status === 'connected') {
+      return { ok: true, session: this.toSessionInfo(active), online: true }
+    }
+
+    const saved = listSavedConversations().find((s) => s.sessionId === deviceId)
+    if (!saved) return { ok: false, error: 'Conversation not found', online: false }
+
+    const { peer } = saved
+    let online = false
+    try {
+      const probed = await probePeer(peer.ip, peer.port)
+      online = probed?.deviceId === peer.deviceId
+    } catch {
+      online = false
+    }
+
+    if (online) {
+      const result = await this.connect(peer.ip, peer.port)
+      if (result.ok && result.sessionId) {
+        const session = this.sessions.get(result.sessionId)
+        if (session) {
+          return { ok: true, session: this.toSessionInfo(session), online: true }
+        }
+      }
+    }
+
+    return {
+      ok: true,
+      session: { ...saved, status: 'disconnected' },
+      online: false,
+    }
   }
 
   loadHistory(sessionId: string): P2pHistoryResult {

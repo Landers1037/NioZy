@@ -536,6 +536,9 @@ export interface ElectronAPI {
       imagesOnly?: boolean,
     ) => Promise<import('./p2p-types').P2pResult & { canceled?: boolean }>
     getSessions: () => Promise<import('./p2p-types').P2pSessionInfo[]>
+    getConversations: () => Promise<import('./p2p-types').P2pSessionInfo[]>
+    openConversation: (deviceId: string) => Promise<import('./p2p-types').P2pOpenConversationResult>
+    removeConversation: (sessionId: string) => Promise<import('./p2p-types').P2pResult>
     getHistory: (sessionId: string) => Promise<import('./p2p-types').P2pHistoryResult>
     getFullHistory: (sessionId: string) => Promise<import('./p2p-types').P2pHistoryResult>
     clearHistory: (sessionId: string) => Promise<import('./p2p-types').P2pResult>

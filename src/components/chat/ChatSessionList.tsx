@@ -43,6 +43,7 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
   const [connectPort, setConnectPort] = useState(String(port || DEFAULT_P2P_PORT))
   const [message, setMessage] = useState('')
   const [connecting, setConnecting] = useState(false)
+  const [openingSessionId, setOpeningSessionId] = useState<string | null>(null)
 
   useEffect(() => {
     setConnectPort(String(port || DEFAULT_P2P_PORT))
@@ -53,11 +54,36 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
     if (result.ok) setMessages(sessionId, result.messages)
   }
 
+  const handleOpenConversation = async (session: P2pSessionInfo) => {
+    setActiveSessionId(session.sessionId)
+    await loadHistory(session.sessionId)
+
+    if (session.status === 'connected') {
+      upsertSession(session)
+      return
+    }
+
+    setOpeningSessionId(session.sessionId)
+    try {
+      const result = await getElectronAPI().p2p.openConversation(session.sessionId)
+      if (result.ok && result.session) {
+        upsertSession(result.session)
+      } else if (!result.ok) {
+        upsertSession({ ...session, status: 'disconnected' })
+        toast.error(result.error ?? t('toast.p2pConnectFailed'))
+      }
+    } catch {
+      upsertSession({ ...session, status: 'disconnected' })
+      toast.error(t('toast.p2pConnectFailed'))
+    } finally {
+      setOpeningSessionId(null)
+    }
+  }
+
   const handleSelectPeer = async (peer: P2pPeerInfo) => {
     const existing = sessions.find((s) => s.peer.deviceId === peer.deviceId)
     if (existing) {
-      setActiveSessionId(existing.sessionId)
-      await loadHistory(existing.sessionId)
+      await handleOpenConversation(existing)
       return
     }
     setConnecting(true)
@@ -136,23 +162,26 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
             if (item.kind === 'session') {
               const { session } = item
               const active = activeSessionId === session.sessionId
+              const opening = openingSessionId === session.sessionId
+              const isOnline = session.status === 'connected'
               return (
                 <button
                   key={`session-${session.sessionId}`}
                   type="button"
+                  disabled={opening}
                   className={cn(
                     'mb-1 flex w-full flex-col rounded-md px-2 py-2 text-left text-sm hover:bg-muted',
                     active && 'bg-muted',
                   )}
-                  onClick={() => {
-                    setActiveSessionId(session.sessionId)
-                    void loadHistory(session.sessionId)
-                  }}
+                  onClick={() => void handleOpenConversation(session)}
                 >
-                  <span className="truncate font-medium">{sessionLabel(session)}</span>
+                  <span className="flex items-center gap-2 truncate font-medium">
+                    {opening && <Loader2 className="size-3 shrink-0 animate-spin" />}
+                    {sessionLabel(session)}
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {session.peer.ip}:{session.peer.port} ·{' '}
-                    {session.status === 'connected' ? t('chat.connected') : t('chat.offline')}
+                    {isOnline ? t('chat.connected') : t('chat.offline')}
                   </span>
                 </button>
               )

@@ -800,7 +800,13 @@
     "historyCleared": "Chat history cleared",
     "historyOutbound": "Sent",
     "historyInbound": "Received",
-    "noMessagesYet": "No messages yet. Type below to start chatting."
+    "noMessagesYet": "No messages yet. Type below to start chatting.",
+    "deleteConversation": "Delete conversation",
+    "deleteConversationConfirmTitle": "Delete this conversation?",
+    "deleteConversationConfirmDesc": "This permanently removes the conversation with {{name}}, including all local messages and attachment files. This cannot be undone.",
+    "deleteConversationConfirmAction": "Delete",
+    "deleteConversationFailed": "Failed to delete conversation",
+    "conversationDeleted": "Conversation deleted"
   },
   "toast": {
     "terminalStartFailed": "Failed to start terminal",
