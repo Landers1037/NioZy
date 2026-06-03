@@ -27,6 +27,7 @@ import {
   type EncryptedPayloadType,
 } from './p2p-protocol'
 import {
+  computeResumeProof,
   computeSharedSecret,
   decryptPayload,
   deriveSessionKey,
@@ -44,9 +45,14 @@ import {
   getHistory,
   getFullHistory,
   clearPeerHistory,
+  clearSessionKey,
   listKnownPeers,
   listSavedConversations,
+  loadPeerMeta,
+  loadSessionKey,
+  hideConversationFromSidebar,
   removeSavedConversation,
+  saveSessionKey,
   updateMessage,
   updatePeerMeta,
   allocateFilePath,
@@ -57,6 +63,7 @@ type P2pPushChannel =
   | 'p2p:sessionEstablished'
   | 'p2p:sessionDisconnected'
   | 'p2p:sessionClosed'
+  | 'p2p:conversationHidden'
   | 'p2p:message'
   | 'p2p:fileProgress'
 
@@ -310,6 +317,106 @@ export class P2PService {
     })
   }
 
+  /** 使用已保存的会话密钥恢复 TCP 连接，不重新发起 DH 握手 */
+  async resumeSession(
+    peer: P2pSessionInfo['peer'],
+    sessionKey: Buffer,
+  ): Promise<P2pConnectResult> {
+    if (!this.settings?.enabled) return { ok: false, error: 'P2P is disabled' }
+    const identity = this.identity ?? loadOrCreateDeviceIdentity()
+    const proof = computeResumeProof(sessionKey, identity.deviceId, peer.deviceId)
+    let resolvedPeer = peer
+
+    return new Promise((resolve) => {
+      const socket = connect({ host: peer.ip, port: peer.port })
+      const reader = new WireFrameReader()
+      let step: 'hello' | 'resume' | 'done' = 'hello'
+
+      const fail = (error: string) => {
+        socket.destroy()
+        resolve({ ok: false, error })
+      }
+
+      socket.on('connect', () => {
+        socket.write(
+          encodeWireFrame({
+            type: 'HELLO',
+            magic: P2P_MAGIC,
+            version: P2P_VERSION,
+            deviceId: identity.deviceId,
+            hostname: identity.hostname,
+            displayName: identity.hostname,
+            publicKey: identity.publicKey,
+          }),
+        )
+      })
+
+      socket.on('data', (chunk) => {
+        try {
+          reader.feed(chunk, (frame) => {
+            if (step === 'hello') {
+              if (
+                !isValidHello(frame) ||
+                frame.probe ||
+                typeof frame.deviceId !== 'string'
+              ) {
+                fail('Invalid HELLO response')
+                return
+              }
+              resolvedPeer = {
+                deviceId: frame.deviceId,
+                hostname: typeof frame.hostname === 'string' ? frame.hostname : peer.hostname,
+                displayName:
+                  typeof frame.displayName === 'string'
+                    ? frame.displayName
+                    : typeof frame.hostname === 'string'
+                      ? frame.hostname
+                      : peer.displayName,
+                ip: peer.ip,
+                port: peer.port,
+              }
+              step = 'resume'
+              socket.write(
+                encodeWireFrame({
+                  type: 'SESSION_RESUME',
+                  deviceId: identity.deviceId,
+                  proof,
+                }),
+              )
+              return
+            }
+
+            if (step === 'resume') {
+              if (frame.type === 'SESSION_RESUME_REJECT') {
+                fail(
+                  typeof frame.reason === 'string' ? frame.reason : 'Session resume rejected',
+                )
+                return
+              }
+              if (frame.type !== 'SESSION_RESUME_ACCEPT') return
+              step = 'done'
+              const session = this.registerSession({
+                peer: resolvedPeer,
+                socket,
+                reader,
+                sessionKey,
+                isInitiator: true,
+              })
+              updatePeerMeta(resolvedPeer, true)
+              this.push('p2p:sessionEstablished', this.toSessionInfo(session))
+              resolve({ ok: true, sessionId: session.sessionId })
+            }
+          })
+        } catch (err) {
+          fail(err instanceof Error ? err.message : 'Resume failed')
+        }
+      })
+
+      socket.on('error', (err) => fail(err.message))
+      socket.setTimeout(15000, () => fail('Connection timed out'))
+    })
+  }
+
   async acceptRequest(requestId: string): Promise<P2pResult> {
     const pending = this.pendingIncoming.get(requestId)
     if (!pending) return { ok: false, error: 'Request not found' }
@@ -356,15 +463,35 @@ export class P2PService {
 
   disconnect(sessionId: string): P2pResult {
     const session = this.sessions.get(sessionId)
-    if (!session) return { ok: true }
-    this.detachSessionSocket(session)
-    session.socket.destroy()
-    this.sessions.delete(sessionId)
+    if (session) {
+      this.detachSessionSocket(session)
+      session.socket.destroy()
+      this.sessions.delete(sessionId)
+    }
+    clearSessionKey(sessionId)
 
     const saved = listSavedConversations().find((s) => s.sessionId === sessionId)
     if (saved) {
-      this.push('p2p:sessionDisconnected', { ...saved, status: 'disconnected' })
+      this.push('p2p:sessionDisconnected', {
+        ...saved,
+        status: 'disconnected',
+        hasSecureSession: false,
+      })
     }
+    return { ok: true }
+  }
+
+  hideFromSidebar(sessionId: string): P2pResult {
+    const session = this.sessions.get(sessionId)
+    if (session) {
+      this.detachSessionSocket(session)
+      session.socket.destroy()
+      this.sessions.delete(sessionId)
+    }
+    if (!hideConversationFromSidebar(sessionId)) {
+      return { ok: false, error: 'Conversation not found' }
+    }
+    this.push('p2p:conversationHidden', { sessionId })
     return { ok: true }
   }
 
@@ -469,10 +596,12 @@ export class P2PService {
       return { ok: true, session: this.toSessionInfo(active), online: true }
     }
 
-    const saved = listSavedConversations().find((s) => s.sessionId === deviceId)
+    const saved = listSavedConversations({ includeHidden: true }).find(
+      (s) => s.sessionId === deviceId,
+    )
     if (!saved) return { ok: false, error: 'Conversation not found', online: false }
 
-    const { peer } = saved
+    const peer = { ...saved.peer }
     let online = false
     try {
       const probed = await probePeer(peer.ip, peer.port)
@@ -482,19 +611,64 @@ export class P2PService {
     }
 
     if (online) {
-      const result = await this.connect(peer.ip, peer.port)
-      if (result.ok && result.sessionId) {
-        const session = this.sessions.get(result.sessionId)
+      updatePeerMeta(peer, saved.isInitiator)
+    }
+
+    if (!online) {
+      return {
+        ok: false,
+        online: false,
+        error: 'Peer is offline or unreachable at saved address',
+        session: { ...saved, peer, status: 'disconnected' },
+      }
+    }
+
+    const sessionKey =
+      this.sessions.get(deviceId)?.sessionKey ?? loadSessionKey(deviceId) ?? null
+
+    if (sessionKey) {
+      const resumeResult = await this.resumeSession(peer, sessionKey)
+      if (resumeResult.ok && resumeResult.sessionId) {
+        const session = this.sessions.get(resumeResult.sessionId)
         if (session) {
           return { ok: true, session: this.toSessionInfo(session), online: true }
         }
       }
+      if (resumeResult.error) {
+        return {
+          ok: false,
+          online: true,
+          handshakeFailed: true,
+          error: resumeResult.error,
+          session: {
+            ...saved,
+            peer,
+            status: 'disconnected',
+            hasSecureSession: true,
+          },
+        }
+      }
+    }
+
+    const connectResult = await this.connect(peer.ip, peer.port)
+    if (connectResult.ok && connectResult.sessionId) {
+      const session = this.sessions.get(connectResult.sessionId)
+      if (session) {
+        return { ok: true, session: this.toSessionInfo(session), online: true }
+      }
     }
 
     return {
-      ok: true,
-      session: { ...saved, status: 'disconnected' },
-      online: false,
+      ok: false,
+      online: true,
+      handshakeFailed: true,
+      error: connectResult.error ?? 'Handshake failed',
+      session: {
+        ...saved,
+        peer,
+        status: 'disconnected',
+        hasSecureSession: Boolean(sessionKey),
+      },
     }
   }
 
@@ -601,6 +775,68 @@ export class P2PService {
             return
           }
 
+          if (
+            frame.type === 'SESSION_RESUME' &&
+            typeof frame.deviceId === 'string' &&
+            typeof frame.proof === 'string'
+          ) {
+            handled = true
+            const remoteDeviceId = frame.deviceId
+            const sessionKey = loadSessionKey(remoteDeviceId)
+            if (!sessionKey) {
+              socket.write(
+                encodeWireFrame({
+                  type: 'SESSION_RESUME_REJECT',
+                  deviceId: remoteDeviceId,
+                  reason: 'No saved session',
+                }),
+              )
+              socket.destroy()
+              return
+            }
+            const expectedProof = computeResumeProof(
+              sessionKey,
+              remoteDeviceId,
+              identity.deviceId,
+            )
+            if (expectedProof !== frame.proof) {
+              socket.write(
+                encodeWireFrame({
+                  type: 'SESSION_RESUME_REJECT',
+                  deviceId: remoteDeviceId,
+                  reason: 'Invalid resume proof',
+                }),
+              )
+              socket.destroy()
+              return
+            }
+            const remoteIp = socket.remoteAddress?.replace(/^::ffff:/, '') ?? 'unknown'
+            const meta = loadPeerMeta(remoteDeviceId)
+            const peer = {
+              deviceId: remoteDeviceId,
+              hostname: meta?.hostname ?? remoteIp,
+              displayName: meta?.displayName ?? meta?.hostname ?? remoteIp,
+              ip: remoteIp,
+              port: this.settings?.port ?? 6869,
+            }
+            socket.write(
+              encodeWireFrame({
+                type: 'SESSION_RESUME_ACCEPT',
+                deviceId: identity.deviceId,
+              }),
+            )
+            const session = this.registerSession({
+              peer,
+              socket,
+              reader,
+              sessionKey,
+              isInitiator: false,
+            })
+            updatePeerMeta(peer, false)
+            this.push('p2p:sessionEstablished', this.toSessionInfo(session))
+            return
+          }
+
           if (frame.type === 'SESSION_REQUEST' && typeof frame.requestId === 'string') {
             handled = true
             const from = frame.from as Record<string, unknown> | undefined
@@ -683,6 +919,7 @@ export class P2PService {
       incomingFiles: new Map(),
     }
     this.sessions.set(session.sessionId, session)
+    saveSessionKey(session.sessionId, session.sessionKey)
 
     const onData = (chunk: Buffer) => this.handleSessionData(session, chunk)
     input.socket.removeAllListeners('data')
@@ -868,6 +1105,7 @@ export class P2PService {
       peer: session.peer,
       status: session.status,
       isInitiator: session.isInitiator,
+      hasSecureSession: true,
     }
   }
 }

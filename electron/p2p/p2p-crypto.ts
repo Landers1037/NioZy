@@ -2,6 +2,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
+  createHmac,
   createPrivateKey,
   createPublicKey,
   diffieHellman,
@@ -92,6 +93,16 @@ export function deriveSessionKey(sharedSecret: Buffer, requestId: string): Buffe
     .update(requestId)
     .update('niozy-p2p-v1')
     .digest()
+}
+
+export function computeResumeProof(
+  sessionKey: Buffer,
+  localDeviceId: string,
+  peerDeviceId: string,
+): string {
+  return createHmac('sha256', sessionKey)
+    .update(`${localDeviceId}:${peerDeviceId}`)
+    .digest('base64')
 }
 
 export function encryptPayload(key: Buffer, plaintext: string): string {

@@ -25,6 +25,11 @@ export function useP2pIpcSync(enabled: boolean): void {
       }),
       api.onSessionDisconnected((session) => upsertSession(session)),
       api.onSessionClosed(({ sessionId }) => removeSession(sessionId)),
+      api.onConversationHidden(({ sessionId }) => {
+        removeSession(sessionId)
+        const active = useP2pChatStore.getState().activeSessionId
+        if (active === sessionId) setActiveSessionId(null)
+      }),
       api.onMessage((message) => appendMessage(message)),
       api.onFileProgress((progress) => setFileProgress(progress)),
     ]

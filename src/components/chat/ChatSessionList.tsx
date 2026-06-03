@@ -4,6 +4,22 @@ import { toast } from 'sonner'
 import { Loader2, Plus, Radar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -16,7 +32,7 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { useP2pChatStore } from '@/stores/p2p-chat-store'
 import { cn } from '@/lib/utils'
 import { DEFAULT_P2P_PORT, normalizeP2pPort } from '../../../electron/shared/p2p-settings'
-import type { P2pPeerInfo, P2pSessionInfo } from '../../../electron/shared/p2p-types'
+import type { P2pOpenConversationResult, P2pPeerInfo, P2pSessionInfo } from '../../../electron/shared/p2p-types'
 
 interface ChatSessionListProps {
   port: number
@@ -24,6 +40,69 @@ interface ChatSessionListProps {
 
 function sessionLabel(session: P2pSessionInfo): string {
   return session.peer.displayName || session.peer.hostname || session.peer.ip
+}
+
+interface SessionListItemProps {
+  session: P2pSessionInfo
+  active: boolean
+  opening: boolean
+  onOpen: () => void
+  onOpenPanel: () => void
+  onClosePanel: () => void
+  onRemoveFromList: () => void
+  onReconnect: () => void
+}
+
+function SessionListItem({
+  session,
+  active,
+  opening,
+  onOpen,
+  onOpenPanel,
+  onClosePanel,
+  onRemoveFromList,
+  onReconnect,
+}: SessionListItemProps) {
+  const { t } = useTranslation()
+  const isOnline = session.status === 'connected'
+
+  const row = (
+    <button
+      type="button"
+      disabled={opening}
+      className={cn(
+        'mb-1 flex w-full flex-col rounded-md px-2 py-2 text-left text-sm hover:bg-muted',
+        active && 'bg-muted',
+      )}
+      onClick={onOpen}
+    >
+      <span className="flex items-center gap-2 truncate font-medium">
+        {opening && <Loader2 className="size-3 shrink-0 animate-spin" />}
+        {sessionLabel(session)}
+      </span>
+      <span className="truncate text-xs text-muted-foreground">
+        {session.peer.ip}:{session.peer.port} ·{' '}
+        {isOnline ? t('chat.connected') : t('chat.offline')}
+      </span>
+    </button>
+  )
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onSelect={onOpenPanel}>{t('chat.contextOpenSession')}</ContextMenuItem>
+        <ContextMenuItem onSelect={onClosePanel}>{t('chat.contextCloseSession')}</ContextMenuItem>
+        <ContextMenuItem onSelect={onReconnect}>{t('chat.contextReconnect')}</ContextMenuItem>
+        <ContextMenuItem
+          className="text-destructive focus:text-destructive"
+          onSelect={onRemoveFromList}
+        >
+          {t('chat.contextRemoveFromList')}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
 }
 
 export function ChatSessionList({ port }: ChatSessionListProps) {
@@ -36,6 +115,7 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
   const mergePeers = useP2pChatStore((s) => s.mergePeers)
   const setActiveSessionId = useP2pChatStore((s) => s.setActiveSessionId)
   const upsertSession = useP2pChatStore((s) => s.upsertSession)
+  const removeSession = useP2pChatStore((s) => s.removeSession)
   const setMessages = useP2pChatStore((s) => s.setMessages)
 
   const [newOpen, setNewOpen] = useState(false)
@@ -44,6 +124,11 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
   const [message, setMessage] = useState('')
   const [connecting, setConnecting] = useState(false)
   const [openingSessionId, setOpeningSessionId] = useState<string | null>(null)
+  const [handshakeRetry, setHandshakeRetry] = useState<{
+    sessionId: string
+    error?: string
+  } | null>(null)
+  const [retryingHandshake, setRetryingHandshake] = useState(false)
 
   useEffect(() => {
     setConnectPort(String(port || DEFAULT_P2P_PORT))
@@ -52,6 +137,40 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
   const loadHistory = async (sessionId: string) => {
     const result = await getElectronAPI().p2p.getHistory(sessionId)
     if (result.ok) setMessages(sessionId, result.messages)
+  }
+
+  const applyOpenConversationResult = (
+    session: P2pSessionInfo,
+    result: P2pOpenConversationResult,
+  ): boolean => {
+    if (result.session) upsertSession(result.session)
+    if (result.ok && result.session?.status === 'connected') return true
+    if (result.handshakeFailed) {
+      setHandshakeRetry({ sessionId: session.sessionId, error: result.error })
+      return true
+    }
+    if (!result.online) {
+      toast.error(result.error ?? t('chat.peerUnreachable'))
+      return false
+    }
+    if (!result.ok) {
+      toast.error(result.error ?? t('toast.p2pConnectFailed'))
+    }
+    return false
+  }
+
+  const runOpenConversation = async (session: P2pSessionInfo) => {
+    setOpeningSessionId(session.sessionId)
+    try {
+      const result = await getElectronAPI().p2p.openConversation(session.sessionId)
+      return applyOpenConversationResult(session, result)
+    } catch {
+      upsertSession({ ...session, status: 'disconnected' })
+      toast.error(t('toast.p2pConnectFailed'))
+      return false
+    } finally {
+      setOpeningSessionId(null)
+    }
   }
 
   const handleOpenConversation = async (session: P2pSessionInfo) => {
@@ -63,20 +182,48 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
       return
     }
 
-    setOpeningSessionId(session.sessionId)
+    await runOpenConversation(session)
+  }
+
+  const handleOpenPanel = async (session: P2pSessionInfo) => {
+    if (activeSessionId === session.sessionId) return
+    setActiveSessionId(session.sessionId)
+    await loadHistory(session.sessionId)
+  }
+
+  const handleClosePanel = (session: P2pSessionInfo) => {
+    if (activeSessionId === session.sessionId) setActiveSessionId(null)
+  }
+
+  const handleRemoveFromList = async (session: P2pSessionInfo) => {
+    const result = await getElectronAPI().p2p.hideFromSidebar(session.sessionId)
+    if (!result.ok) {
+      toast.error(result.error ?? t('chat.removeFromListFailed'))
+      return
+    }
+    removeSession(session.sessionId)
+    if (activeSessionId === session.sessionId) setActiveSessionId(null)
+  }
+
+  const handleReconnect = async (session: P2pSessionInfo) => {
+    setActiveSessionId(session.sessionId)
+    await loadHistory(session.sessionId)
+    await runOpenConversation(session)
+  }
+
+  const handleRetryHandshake = async () => {
+    if (!handshakeRetry) return
+    const session = sessions.find((s) => s.sessionId === handshakeRetry.sessionId)
+    if (!session) {
+      setHandshakeRetry(null)
+      return
+    }
+    setRetryingHandshake(true)
     try {
-      const result = await getElectronAPI().p2p.openConversation(session.sessionId)
-      if (result.ok && result.session) {
-        upsertSession(result.session)
-      } else if (!result.ok) {
-        upsertSession({ ...session, status: 'disconnected' })
-        toast.error(result.error ?? t('toast.p2pConnectFailed'))
-      }
-    } catch {
-      upsertSession({ ...session, status: 'disconnected' })
-      toast.error(t('toast.p2pConnectFailed'))
+      const ok = await runOpenConversation(session)
+      if (ok) setHandshakeRetry(null)
     } finally {
-      setOpeningSessionId(null)
+      setRetryingHandshake(false)
     }
   }
 
@@ -161,29 +308,18 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
           listItems.map((item) => {
             if (item.kind === 'session') {
               const { session } = item
-              const active = activeSessionId === session.sessionId
-              const opening = openingSessionId === session.sessionId
-              const isOnline = session.status === 'connected'
               return (
-                <button
+                <SessionListItem
                   key={`session-${session.sessionId}`}
-                  type="button"
-                  disabled={opening}
-                  className={cn(
-                    'mb-1 flex w-full flex-col rounded-md px-2 py-2 text-left text-sm hover:bg-muted',
-                    active && 'bg-muted',
-                  )}
-                  onClick={() => void handleOpenConversation(session)}
-                >
-                  <span className="flex items-center gap-2 truncate font-medium">
-                    {opening && <Loader2 className="size-3 shrink-0 animate-spin" />}
-                    {sessionLabel(session)}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {session.peer.ip}:{session.peer.port} ·{' '}
-                    {isOnline ? t('chat.connected') : t('chat.offline')}
-                  </span>
-                </button>
+                  session={session}
+                  active={activeSessionId === session.sessionId}
+                  opening={openingSessionId === session.sessionId}
+                  onOpen={() => void handleOpenConversation(session)}
+                  onOpenPanel={() => void handleOpenPanel(session)}
+                  onClosePanel={() => handleClosePanel(session)}
+                  onRemoveFromList={() => void handleRemoveFromList(session)}
+                  onReconnect={() => void handleReconnect(session)}
+                />
               )
             }
             const { peer } = item
@@ -206,6 +342,33 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
           })
         )}
       </div>
+
+      <AlertDialog
+        open={handshakeRetry !== null}
+        onOpenChange={(open) => {
+          if (!open) setHandshakeRetry(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('chat.handshakeFailedTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {handshakeRetry?.error
+                ? t('chat.handshakeFailedDescWithError', { error: handshakeRetry.error })
+                : t('chat.handshakeFailedDesc')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={retryingHandshake}
+              onClick={() => void handleRetryHandshake()}
+            >
+              {t('chat.handshakeRetry')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent>

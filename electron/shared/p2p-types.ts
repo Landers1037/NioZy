@@ -22,6 +22,8 @@ export interface P2pSessionInfo {
   peer: P2pSessionPeer
   status: P2pSessionStatus
   isInitiator: boolean
+  /** 本地已保存会话密钥（未点「断开连接」前可复用，无需重新握手） */
+  hasSecureSession?: boolean
 }
 
 export type P2pMessageDirection = 'inbound' | 'outbound'
@@ -84,4 +86,6 @@ export interface P2pHistoryResult {
 export interface P2pOpenConversationResult extends P2pResult {
   session?: P2pSessionInfo
   online?: boolean
+  /** 对端在线但恢复连接或密钥握手失败 */
+  handshakeFailed?: boolean
 }

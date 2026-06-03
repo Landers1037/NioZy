@@ -46,6 +46,10 @@ const onP2pSessionClosed = createIpcMultiplex<[{ sessionId: string }]>(
   ipcRenderer,
   'p2p:sessionClosed',
 )
+const onP2pConversationHidden = createIpcMultiplex<[{ sessionId: string }]>(
+  ipcRenderer,
+  'p2p:conversationHidden',
+)
 const onP2pMessage = createIpcMultiplex<[import('../shared/p2p-types').P2pChatMessage]>(
   ipcRenderer,
   'p2p:message',
@@ -220,6 +224,7 @@ const api: ElectronAPI = {
     getSessions: () => ipcRenderer.invoke('p2p:getSessions'),
     getConversations: () => ipcRenderer.invoke('p2p:getConversations'),
     openConversation: (deviceId) => ipcRenderer.invoke('p2p:openConversation', deviceId),
+    hideFromSidebar: (sessionId) => ipcRenderer.invoke('p2p:hideFromSidebar', sessionId),
     removeConversation: (sessionId) => ipcRenderer.invoke('p2p:removeConversation', sessionId),
     getHistory: (sessionId) => ipcRenderer.invoke('p2p:getHistory', sessionId),
     getFullHistory: (sessionId) => ipcRenderer.invoke('p2p:getFullHistory', sessionId),
@@ -229,6 +234,7 @@ const api: ElectronAPI = {
     onSessionEstablished: (cb) => onP2pSessionEstablished(cb),
     onSessionDisconnected: (cb) => onP2pSessionDisconnected(cb),
     onSessionClosed: (cb) => onP2pSessionClosed(cb),
+    onConversationHidden: (cb) => onP2pConversationHidden(cb),
     onMessage: (cb) => onP2pMessage(cb),
     onFileProgress: (cb) => onP2pFileProgress(cb),
   },

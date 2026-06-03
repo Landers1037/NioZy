@@ -673,6 +673,7 @@ ipcMain.handle(
 ipcMain.handle('p2p:getSessions', () => p2pService.getSessions())
 ipcMain.handle('p2p:getConversations', () => p2pService.getConversations())
 ipcMain.handle('p2p:openConversation', (_, deviceId: string) => p2pService.openConversation(deviceId))
+ipcMain.handle('p2p:hideFromSidebar', (_, sessionId: string) => p2pService.hideFromSidebar(sessionId))
 ipcMain.handle('p2p:removeConversation', (_, sessionId: string) => p2pService.removeConversation(sessionId))
 ipcMain.handle('p2p:getHistory', (_, sessionId: string) => p2pService.loadHistory(sessionId))
 ipcMain.handle('p2p:getFullHistory', (_, sessionId: string) => p2pService.loadFullHistory(sessionId))

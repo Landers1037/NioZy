@@ -14,7 +14,76 @@ interface PeerMeta {
   lastIp: string
   lastPort: number
   isInitiator?: boolean
+  sessionKeyB64?: string
+  hiddenFromSidebar?: boolean
   updatedAt: string
+}
+
+export function loadPeerMeta(deviceId: string): PeerMeta | null {
+  const mp = metaPath(deviceId)
+  if (!existsSync(mp)) return null
+  try {
+    return JSON.parse(readFileSync(mp, 'utf8')) as PeerMeta
+  } catch {
+    return null
+  }
+}
+
+export function saveSessionKey(deviceId: string, sessionKey: Buffer): void {
+  ensurePeerStore(deviceId)
+  const mp = metaPath(deviceId)
+  let meta: PeerMeta
+  try {
+    meta = existsSync(mp)
+      ? (JSON.parse(readFileSync(mp, 'utf8')) as PeerMeta)
+      : {
+          deviceId,
+          hostname: deviceId,
+          displayName: deviceId,
+          lastIp: '',
+          lastPort: 0,
+          updatedAt: new Date().toISOString(),
+        }
+  } catch {
+    meta = {
+      deviceId,
+      hostname: deviceId,
+      displayName: deviceId,
+      lastIp: '',
+      lastPort: 0,
+      updatedAt: new Date().toISOString(),
+    }
+  }
+  meta.sessionKeyB64 = sessionKey.toString('base64')
+  meta.updatedAt = new Date().toISOString()
+  writeFileSync(mp, JSON.stringify(meta, null, 2), 'utf8')
+}
+
+export function loadSessionKey(deviceId: string): Buffer | null {
+  const meta = loadPeerMeta(deviceId)
+  if (!meta?.sessionKeyB64) return null
+  try {
+    return Buffer.from(meta.sessionKeyB64, 'base64')
+  } catch {
+    return null
+  }
+}
+
+export function clearSessionKey(deviceId: string): void {
+  const mp = metaPath(deviceId)
+  if (!existsSync(mp)) return
+  try {
+    const meta = JSON.parse(readFileSync(mp, 'utf8')) as PeerMeta
+    delete meta.sessionKeyB64
+    meta.updatedAt = new Date().toISOString()
+    writeFileSync(mp, JSON.stringify(meta, null, 2), 'utf8')
+  } catch {
+    // ignore
+  }
+}
+
+export function hasStoredSessionKey(deviceId: string): boolean {
+  return loadSessionKey(deviceId) !== null
 }
 
 function peerDir(deviceId: string): string {
@@ -44,11 +113,13 @@ export function ensurePeerStore(deviceId: string): void {
 export function updatePeerMeta(peer: P2pSessionPeer, isInitiator = true): void {
   ensurePeerStore(peer.deviceId)
   let existingInitiator = isInitiator
+  let sessionKeyB64: string | undefined
   const mp = metaPath(peer.deviceId)
   if (existsSync(mp)) {
     try {
       const existing = JSON.parse(readFileSync(mp, 'utf8')) as Partial<PeerMeta>
       if (typeof existing.isInitiator === 'boolean') existingInitiator = existing.isInitiator
+      if (typeof existing.sessionKeyB64 === 'string') sessionKeyB64 = existing.sessionKeyB64
     } catch {
       // ignore
     }
@@ -60,12 +131,28 @@ export function updatePeerMeta(peer: P2pSessionPeer, isInitiator = true): void {
     lastIp: peer.ip,
     lastPort: peer.port,
     isInitiator: existingInitiator,
+    sessionKeyB64,
+    hiddenFromSidebar: false,
     updatedAt: new Date().toISOString(),
   }
   writeFileSync(mp, JSON.stringify(meta, null, 2), 'utf8')
 }
 
-export function listSavedConversations(): P2pSessionInfo[] {
+export function hideConversationFromSidebar(deviceId: string): boolean {
+  const mp = metaPath(deviceId)
+  if (!existsSync(mp)) return false
+  try {
+    const meta = JSON.parse(readFileSync(mp, 'utf8')) as PeerMeta
+    meta.hiddenFromSidebar = true
+    meta.updatedAt = new Date().toISOString()
+    writeFileSync(mp, JSON.stringify(meta, null, 2), 'utf8')
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function listSavedConversations(options?: { includeHidden?: boolean }): P2pSessionInfo[] {
   ensureChatDir()
   const root = getChatDir()
   let entries: string[] = []
@@ -83,6 +170,7 @@ export function listSavedConversations(): P2pSessionInfo[] {
     if (!existsSync(mp)) continue
     try {
       const meta = JSON.parse(readFileSync(mp, 'utf8')) as PeerMeta
+      if (meta.hiddenFromSidebar && !options?.includeHidden) continue
       conversations.push({
         sessionId: meta.deviceId,
         peer: {
@@ -94,6 +182,7 @@ export function listSavedConversations(): P2pSessionInfo[] {
         },
         status: 'disconnected',
         isInitiator: meta.isInitiator ?? true,
+        hasSecureSession: Boolean(meta.sessionKeyB64),
       })
     } catch {
       // skip
