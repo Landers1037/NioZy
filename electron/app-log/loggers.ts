@@ -23,3 +23,6 @@ export const updateLog = createAppLogger('Update')
 
 /** 链接预览 */
 export const previewLog = createAppLogger('Preview')
+
+/** 加密聊天（P2P） */
+export const p2pLog = createAppLogger('P2P')

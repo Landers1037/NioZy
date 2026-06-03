@@ -32,4 +32,5 @@ export {
   fsLog,
   updateLog,
   previewLog,
+  p2pLog,
 } from './loggers'
