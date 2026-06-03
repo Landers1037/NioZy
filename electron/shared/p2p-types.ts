@@ -80,3 +80,8 @@ export interface P2pHistoryResult {
   messages: P2pChatMessage[]
   error?: string
 }
+
+export interface P2pOpenConversationResult extends P2pResult {
+  session?: P2pSessionInfo
+  online?: boolean
+}

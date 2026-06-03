@@ -237,6 +237,9 @@ const api: ElectronAPI = {
     pickAndSendFile: (sessionId, imagesOnly) =>
       ipcRenderer.invoke('p2p:pickAndSendFile', sessionId, imagesOnly),
     getSessions: () => ipcRenderer.invoke('p2p:getSessions'),
+    getConversations: () => ipcRenderer.invoke('p2p:getConversations'),
+    openConversation: (deviceId) => ipcRenderer.invoke('p2p:openConversation', deviceId),
+    removeConversation: (sessionId) => ipcRenderer.invoke('p2p:removeConversation', sessionId),
     getHistory: (sessionId) => ipcRenderer.invoke('p2p:getHistory', sessionId),
     getFullHistory: (sessionId) => ipcRenderer.invoke('p2p:getFullHistory', sessionId),
     clearHistory: (sessionId) => ipcRenderer.invoke('p2p:clearHistory', sessionId),

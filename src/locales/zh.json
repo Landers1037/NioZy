@@ -800,7 +800,13 @@
     "historyCleared": "聊天记录已清空",
     "historyOutbound": "发送",
     "historyInbound": "接收",
-    "noMessagesYet": "暂无消息，输入内容开始聊天"
+    "noMessagesYet": "暂无消息，输入内容开始聊天",
+    "deleteConversation": "删除对话",
+    "deleteConversationConfirmTitle": "删除此对话？",
+    "deleteConversationConfirmDesc": "将永久删除与 {{name}} 的对话列表、聊天记录和附件文件，此操作不可恢复。",
+    "deleteConversationConfirmAction": "确认删除",
+    "deleteConversationFailed": "删除对话失败",
+    "conversationDeleted": "对话已删除"
   },
   "toast": {
     "terminalStartFailed": "终端启动失败",

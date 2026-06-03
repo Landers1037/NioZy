@@ -15,7 +15,7 @@ export function useP2pIpcSync(enabled: boolean): void {
     if (!enabled) return
     const api = getElectronAPI().p2p
 
-    void api.getSessions().then(setSessions).catch(() => {})
+    void api.getConversations().then(setSessions).catch(() => {})
 
     const unsubs = [
       api.onSessionRequest((request) => setPendingRequest(request)),
