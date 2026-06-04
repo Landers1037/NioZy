@@ -148,6 +148,15 @@
     "fieldLevel": "Priority",
     "fieldDate": "Date",
     "fieldTime": "Time",
+    "fieldRepeat": "Repeat",
+    "fieldRepeatDesc": "Schedules the next reminder automatically; after today’s alert it shows as done and stays in the list",
+    "fieldRepeatInterval": "Repeat interval",
+    "repeatBadge": "Repeating reminder",
+    "repeat": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
     "dismiss": "Dismiss",
     "snoozeMinutes": "Snooze {{minutes}} min",
     "level": {

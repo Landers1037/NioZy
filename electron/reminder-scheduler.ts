@@ -8,6 +8,7 @@ import {
 import type { ReminderStore } from './reminder-store'
 import type { SettingsStore } from './settings-store'
 import type { ReminderDuePayload, ReminderItem } from './shared/reminder-data'
+import { isReminderRepeating } from './shared/reminder-data'
 
 const FALLBACK_CHECK_MS = 60_000
 
@@ -87,6 +88,10 @@ export class ReminderScheduler {
     this.firing = true
     try {
       this.fireDueItems(dueItems)
+      const repeatIds = dueItems.filter((item) => isReminderRepeating(item)).map((item) => item.id)
+      if (repeatIds.length > 0) {
+        this.reminderStore.completeRepeatingOccurrences(repeatIds)
+      }
     } finally {
       this.firing = false
       this.scheduleNextTimeout()
@@ -130,9 +135,15 @@ export class ReminderScheduler {
   private syncPendingAlerts(): void {
     const items = this.reminderStore.list()
     const byId = new Map(items.map((item) => [item.id, item]))
+    const now = Date.now()
     for (const id of this.pendingAlertIds) {
       const item = byId.get(id)
-      if (!item || item.dismissed || Date.parse(item.remindAt) > Date.now()) {
+      if (!item || item.dismissed) {
+        this.pendingAlertIds.delete(id)
+        continue
+      }
+      const at = Date.parse(item.remindAt)
+      if (!Number.isFinite(at) || at > now) {
         this.pendingAlertIds.delete(id)
       }
     }
