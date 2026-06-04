@@ -15,6 +15,8 @@ import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled } from '../settings-store'
 import { StatisticsStore } from '../statistics-store'
+import { ReminderStore } from '../reminder-store'
+import { ReminderScheduler } from '../reminder-scheduler'
 import { SystemStats } from '../system-stats'
 import { getAppMetricsSnapshot } from '../app-metrics'
 import { VaultStore } from '../vault-store'
@@ -228,11 +230,28 @@ const settingsStore = new SettingsStore()
 const statisticsStore = new StatisticsStore(
   () => settingsStore.get().statistics.enabled === true,
 )
+const reminderStore = new ReminderStore()
+const reminderScheduler = new ReminderScheduler(
+  reminderStore,
+  settingsStore,
+  (win, payload) => sendToRenderer(win, 'reminder:due', payload),
+  () => mainWindow,
+)
 const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
 
 function syncStatisticsPolling(): void {
   statisticsStore.syncPolling()
+}
+
+function syncReminderScheduler(): void {
+  const enabled = settingsStore.get().reminder.enabled === true
+  if (enabled) {
+    reminderScheduler.start()
+    reminderScheduler.reschedule()
+  } else {
+    reminderScheduler.stop()
+  }
 }
 async function syncCopilotRuntimeFromSettings(
   experimental = settingsStore.get().experimental,
@@ -520,6 +539,7 @@ app.whenReady().then(async () => {
   createTray()
   syncSystemStatsPolling()
   syncStatisticsPolling()
+  syncReminderScheduler()
   syncGlobalShortcuts(settingsStore, () => mainWindow)
   initScreenshotsService(settingsStore.get().locale)
 
@@ -851,6 +871,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.statistics !== undefined) {
     syncStatisticsPolling()
   }
+  if (partial.reminder !== undefined) {
+    syncReminderScheduler()
+  }
   return updated
 })
 
@@ -873,6 +896,85 @@ ipcMain.on('statistics:recordTabOpen', () => statisticsStore.recordTabOpen())
 ipcMain.on('statistics:recordTabClose', () => statisticsStore.recordTabClose())
 ipcMain.handle('statistics:clear', () => {
   statisticsStore.clear()
+})
+
+ipcMain.handle('reminder:list', () => reminderStore.list())
+
+ipcMain.handle('reminder:save', (_, item) => {
+  if (!item || typeof item !== 'object') throw new Error('INVALID_ITEM')
+  const saved = reminderStore.saveItem({
+    id: typeof item.id === 'string' ? item.id : undefined,
+    title: typeof item.title === 'string' ? item.title : '',
+    content: typeof item.content === 'string' ? item.content : '',
+    level: item.level,
+    remindAt: typeof item.remindAt === 'string' ? item.remindAt : new Date().toISOString(),
+    dismissed: item.dismissed === true,
+  })
+  reminderScheduler.reschedule()
+  return saved
+})
+
+ipcMain.handle('reminder:delete', (_, id: string) => {
+  if (typeof id !== 'string' || !id.trim()) return
+  reminderStore.deleteItem(id.trim())
+  reminderScheduler.reschedule()
+})
+
+ipcMain.handle('reminder:snooze', (_, ids: string[], minutes: number) => {
+  if (!Array.isArray(ids)) return
+  const validIds = ids.filter((id) => typeof id === 'string' && id.trim())
+  const mins = typeof minutes === 'number' && Number.isFinite(minutes) ? minutes : 0
+  reminderStore.snoozeItems(validIds, mins)
+  reminderScheduler.reschedule()
+})
+
+ipcMain.handle('reminder:dismiss', (_, ids: string[]) => {
+  if (!Array.isArray(ids)) return
+  const validIds = ids.filter((id) => typeof id === 'string' && id.trim())
+  reminderStore.dismissItems(validIds)
+  reminderScheduler.reschedule()
+})
+
+ipcMain.handle('reminder:clearCompleted', () => {
+  const removed = reminderStore.clearCompleted()
+  reminderScheduler.reschedule()
+  return removed
+})
+
+ipcMain.handle('reminder:pickImage', async () => {
+  const { pickAndInstallReminderImage } = await import('../reminder-image-service')
+  const result = await pickAndInstallReminderImage(mainWindow)
+  if (result.ok) {
+    settingsStore.update({
+      reminder: {
+        ...settingsStore.get().reminder,
+        customImageExt: result.ext,
+      },
+    })
+  }
+  return result
+})
+
+ipcMain.handle('reminder:clearImage', async () => {
+  const { clearReminderImageFiles } = await import('../reminder-image-service')
+  const result = await clearReminderImageFiles()
+  if (result.ok) {
+    settingsStore.update({
+      reminder: {
+        ...settingsStore.get().reminder,
+        customImageExt: null,
+      },
+    })
+  }
+  return result
+})
+
+ipcMain.handle('reminder:getImageUrl', async () => {
+  const { getReminderImageUrlFromExt } = await import('../reminder-image-service')
+  const ext = settingsStore.get().reminder.customImageExt
+  const url = getReminderImageUrlFromExt(ext)
+  if (!url) return { ok: false as const, error: 'NOT_FOUND' }
+  return { ok: true as const, url }
 })
 
 ipcMain.handle('update:check', () => checkForAppUpdate())

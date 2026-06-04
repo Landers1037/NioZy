@@ -23,6 +23,8 @@ import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
+import { useReminderAlerts } from '@/hooks/useReminderAlerts'
+import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
 import { cn } from '@/lib/utils'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
@@ -75,6 +77,7 @@ export default function App() {
 
   useAppShortcuts()
   useSshDisconnectAlert()
+  useReminderAlerts()
   useTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
   useAttachPtyTabSwitch(tabs, activeTabId)
@@ -370,6 +373,7 @@ export default function App() {
       </div>
       <StatusBar />
       <FilePreviewDialog />
+      <ReminderDueDialog />
       {aiSidebarEnabled && AiCopilotRoot && (
         <Suspense key={aiMountKey} fallback={null}>
           <AiCopilotRoot />

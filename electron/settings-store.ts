@@ -68,6 +68,10 @@ import {
   normalizeUsageStatisticsSettings,
 } from './shared/usage-statistics-settings'
 import { DEFAULT_P2P_SETTINGS, normalizeP2pSettings } from './shared/p2p-settings'
+import {
+  DEFAULT_REMINDER_SETTINGS,
+  normalizeReminderSettings,
+} from './shared/reminder-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -133,6 +137,7 @@ export interface AppSettings {
   experimental: import('./shared/experimental-settings').ExperimentalSettings
   statistics: import('./shared/usage-statistics-settings').UsageStatisticsSettings
   p2p: import('./shared/p2p-settings').P2pSettings
+  reminder: import('./shared/reminder-settings').ReminderSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -209,6 +214,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
   p2p: { ...DEFAULT_P2P_SETTINGS },
+  reminder: { ...DEFAULT_REMINDER_SETTINGS },
 }
 
 function buildAppSettingsFromStored(
@@ -310,6 +316,7 @@ function buildAppSettingsFromStored(
     experimental: normalizeExperimentalSettings(stored.experimental),
     statistics: normalizeUsageStatisticsSettings(stored.statistics),
     p2p: normalizeP2pSettings(stored.p2p),
+    reminder: normalizeReminderSettings(stored.reminder),
   }
 }
 

@@ -19,6 +19,7 @@ import {
   Eye,
   BarChart3,
   MessageSquare,
+  Bell,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -29,6 +30,7 @@ import { PerformanceSettings } from './PerformanceSettings'
 import { FilesystemSettings } from './FilesystemSettings'
 import { ConnectionSettings } from './ConnectionSettings'
 import { StatisticsSettings } from './StatisticsSettings'
+import { ReminderSettings } from './ReminderSettings'
 import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
 import { LogSettings } from './LogSettings'
@@ -50,6 +52,7 @@ const SECTION_DEFS = [
   { id: 'vault', icon: Database },
   { id: 'shortcuts', icon: Keyboard },
   { id: 'statistics', icon: BarChart3 },
+  { id: 'reminder', icon: Bell },
   { id: 'system', icon: Settings2 },
   { id: 'p2p', icon: MessageSquare },
   { id: 'logging', icon: ScrollText },
@@ -108,6 +111,7 @@ export function SettingsPanel() {
         {section === 'vault' && <VaultSettings />}
         {section === 'shortcuts' && <ShortcutSettings />}
         {section === 'statistics' && <StatisticsSettings />}
+        {section === 'reminder' && <ReminderSettings />}
         {section === 'system' && <SystemSettings />}
         {section === 'p2p' && <P2pSettings />}
         {section === 'logging' && <LogSettings />}

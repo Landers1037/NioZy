@@ -230,6 +230,7 @@ export interface AppSettings {
   experimental: import('./experimental-settings').ExperimentalSettings
   statistics: import('./usage-statistics-settings').UsageStatisticsSettings
   p2p: import('./p2p-settings').P2pSettings
+  reminder: import('./reminder-settings').ReminderSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -466,6 +467,21 @@ export interface ElectronAPI {
     recordTabOpen: () => void
     recordTabClose: () => void
     clear: () => Promise<void>
+  }
+  reminder: {
+    list: () => Promise<import('./reminder-data').ReminderItem[]>
+    save: (item: import('./reminder-data').ReminderItem) => Promise<import('./reminder-data').ReminderItem>
+    delete: (id: string) => Promise<void>
+    snooze: (ids: string[], minutes: number) => Promise<void>
+    dismiss: (ids: string[]) => Promise<void>
+    clearCompleted: () => Promise<number>
+    pickImage: () => Promise<import('../reminder-image-service').ReminderImagePickResult>
+    clearImage: () => Promise<import('../reminder-image-service').ReminderImageClearResult>
+    getImageUrl: () => Promise<
+      | { ok: true; url: string }
+      | { ok: false; error: string }
+    >
+    onDue: (cb: (payload: import('./reminder-data').ReminderDuePayload) => void) => () => void
   }
   rdp: {
     /** 使用已保存的 RDP 连接启动系统 mstsc（仅 Windows） */
