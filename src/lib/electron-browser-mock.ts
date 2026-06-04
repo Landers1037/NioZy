@@ -16,6 +16,7 @@ import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimenta
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-statistics-settings'
 import { DEFAULT_P2P_SETTINGS } from '../../electron/shared/p2p-settings'
+import { DEFAULT_REMINDER_SETTINGS } from '../../electron/shared/reminder-settings'
 import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
@@ -71,6 +72,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
   p2p: { ...DEFAULT_P2P_SETTINGS },
+  reminder: { ...DEFAULT_REMINDER_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -533,6 +535,18 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       recordTabOpen: () => undefined,
       recordTabClose: () => undefined,
       clear: async () => undefined,
+    },
+    reminder: {
+      list: async () => [],
+      save: async (item) => item,
+      delete: async () => undefined,
+      snooze: async () => undefined,
+      dismiss: async () => undefined,
+      clearCompleted: async () => 0,
+      pickImage: async () => ({ ok: false as const, canceled: true }),
+      clearImage: async () => ({ ok: true as const }),
+      getImageUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
+      onDue: () => () => undefined,
     },
     terminal: {
       create: async (options) => {

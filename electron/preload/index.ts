@@ -58,6 +58,10 @@ const onP2pFileProgress = createIpcMultiplex<[import('../shared/p2p-types').P2pF
   ipcRenderer,
   'p2p:fileProgress',
 )
+const onReminderDue = createIpcMultiplex<[import('../shared/reminder-data').ReminderDuePayload]>(
+  ipcRenderer,
+  'reminder:due',
+)
 
 const api: ElectronAPI = {
   window: {
@@ -168,6 +172,18 @@ const api: ElectronAPI = {
     recordTabOpen: () => ipcRenderer.send('statistics:recordTabOpen'),
     recordTabClose: () => ipcRenderer.send('statistics:recordTabClose'),
     clear: () => ipcRenderer.invoke('statistics:clear') as Promise<void>,
+  },
+  reminder: {
+    list: () => ipcRenderer.invoke('reminder:list'),
+    save: (item) => ipcRenderer.invoke('reminder:save', item),
+    delete: (id) => ipcRenderer.invoke('reminder:delete', id),
+    snooze: (ids, minutes) => ipcRenderer.invoke('reminder:snooze', ids, minutes),
+    dismiss: (ids) => ipcRenderer.invoke('reminder:dismiss', ids),
+    clearCompleted: () => ipcRenderer.invoke('reminder:clearCompleted') as Promise<number>,
+    pickImage: () => ipcRenderer.invoke('reminder:pickImage'),
+    clearImage: () => ipcRenderer.invoke('reminder:clearImage'),
+    getImageUrl: () => ipcRenderer.invoke('reminder:getImageUrl'),
+    onDue: (cb) => onReminderDue(cb),
   },
   rdp: {
     connect: (connectionId) => ipcRenderer.invoke('rdp:connect', connectionId),

@@ -42,6 +42,26 @@ export function getChatDir(): string {
   return join(getConfigDir(), 'chat')
 }
 
+/** 提醒事项与自定义提醒图目录：%USERPROFILE%/.config/NioZy/reminder */
+export function getReminderDir(): string {
+  return join(getConfigDir(), 'reminder')
+}
+
+export function getReminderFilePath(): string {
+  return join(getReminderDir(), 'reminder.json')
+}
+
+export function getReminderImagePath(ext: string): string {
+  const normalized = ext.replace(/^\./, '').toLowerCase()
+  return join(getReminderDir(), `reminder.${normalized}`)
+}
+
+export function ensureReminderDir(): void {
+  ensureConfigDir()
+  const dir = getReminderDir()
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+}
+
 export function ensureConfigDir(): void {
   const dir = getConfigDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
