@@ -148,6 +148,15 @@
     "fieldLevel": "事项级别",
     "fieldDate": "日期",
     "fieldTime": "时间",
+    "fieldRepeat": "重复提醒",
+    "fieldRepeatDesc": "开启后按周期自动排下次提醒；今日触发后显示为已完成并保留",
+    "fieldRepeatInterval": "重复周期",
+    "repeatBadge": "重复提醒",
+    "repeat": {
+      "daily": "每天",
+      "weekly": "每周",
+      "monthly": "每月"
+    },
     "dismiss": "关闭提醒",
     "snoozeMinutes": "推迟 {{minutes}} 分钟",
     "level": {

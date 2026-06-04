@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Repeat2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -28,7 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { isReminderCompleted, isReminderUntriggered, type ReminderItem } from '../../../electron/shared/reminder-data'
+import {
+  isReminderCompleted,
+  isReminderRepeating,
+  isReminderUntriggered,
+  type ReminderItem,
+  type ReminderRepeat,
+} from '../../../electron/shared/reminder-data'
 import type { ReminderLevel } from '../../../electron/shared/reminder-settings'
 import { ReminderLevelTag } from '@/lib/reminder-level-tag'
 import {
@@ -42,15 +49,27 @@ import { cn } from '@/lib/utils'
 
 type ViewMode = 'list' | 'detail' | 'create'
 
+type RepeatInterval = Exclude<ReminderRepeat, 'none'>
+
 function createEmptyDraft(): {
   title: string
   content: string
   level: ReminderLevel
   date: string
   time: string
+  repeatEnabled: boolean
+  repeatInterval: RepeatInterval
 } {
   const { date, time } = splitRemindAt(new Date().toISOString())
-  return { title: '', content: '', level: 'normal', date, time }
+  return {
+    title: '',
+    content: '',
+    level: 'normal',
+    date,
+    time,
+    repeatEnabled: false,
+    repeatInterval: 'daily',
+  }
 }
 
 export function ReminderDialog({
@@ -118,6 +137,9 @@ export function ReminderDialog({
       level: item.level,
       date: parts.date,
       time: parts.time,
+      repeatEnabled: isReminderRepeating(item),
+      repeatInterval:
+        item.repeat === 'weekly' || item.repeat === 'monthly' ? item.repeat : 'daily',
     })
     setView('detail')
   }
@@ -137,6 +159,8 @@ export function ReminderDialog({
         remindAt: combineRemindAt(draft.date, draft.time),
         createdAt: selectedItem?.createdAt ?? new Date().toISOString(),
         dismissed: false,
+        repeat: draft.repeatEnabled ? draft.repeatInterval : 'none',
+        occurrenceDoneAt: selectedItem?.occurrenceDoneAt ?? null,
       })
       toast.success(t('reminder.saved'))
       setView('list')
@@ -224,9 +248,16 @@ export function ReminderDialog({
                                 {item.title}
                               </span>
                             </div>
-                            <span className="text-xs text-muted-foreground tabular-nums">
-                              {formatReminderDateTime(item.remindAt)}
-                            </span>
+                            <div className="flex items-center gap-1 text-xs leading-none text-muted-foreground">
+                              <span className="tabular-nums">{formatReminderDateTime(item.remindAt)}</span>
+                              {isReminderRepeating(item) ? (
+                                <Repeat2
+                                  className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400"
+                                  aria-label={t('reminder.repeatBadge')}
+                                  title={t(`reminder.repeat.${item.repeat}`)}
+                                />
+                              ) : null}
+                            </div>
                           </div>
                           {isReminderCompleted(item) ? (
                             <span
@@ -343,6 +374,42 @@ export function ReminderDialog({
                     onChange={(e) => setDraft((prev) => ({ ...prev, time: e.target.value }))}
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-lg border border-border/60 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <Label htmlFor="reminder-repeat-enabled">{t('reminder.fieldRepeat')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('reminder.fieldRepeatDesc')}</p>
+                  </div>
+                  <Switch
+                    id="reminder-repeat-enabled"
+                    checked={draft.repeatEnabled}
+                    onCheckedChange={(repeatEnabled) =>
+                      setDraft((prev) => ({ ...prev, repeatEnabled }))
+                    }
+                  />
+                </div>
+                {draft.repeatEnabled ? (
+                  <div className="grid gap-2">
+                    <Label>{t('reminder.fieldRepeatInterval')}</Label>
+                    <Select
+                      value={draft.repeatInterval}
+                      onValueChange={(value: RepeatInterval) =>
+                        setDraft((prev) => ({ ...prev, repeatInterval: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">{t('reminder.repeat.daily')}</SelectItem>
+                        <SelectItem value="weekly">{t('reminder.repeat.weekly')}</SelectItem>
+                        <SelectItem value="monthly">{t('reminder.repeat.monthly')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex flex-wrap gap-2 pt-1">

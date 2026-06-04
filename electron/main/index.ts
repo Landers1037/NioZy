@@ -909,6 +909,8 @@ ipcMain.handle('reminder:save', (_, item) => {
     level: item.level,
     remindAt: typeof item.remindAt === 'string' ? item.remindAt : new Date().toISOString(),
     dismissed: item.dismissed === true,
+    repeat: item.repeat,
+    occurrenceDoneAt: item.occurrenceDoneAt ?? null,
   })
   reminderScheduler.reschedule()
   return saved

@@ -2,12 +2,15 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { randomUUID } from 'crypto'
 import { ensureReminderDir, getReminderFilePath } from './config-paths'
 import {
+  advanceRemindAt,
   createEmptyReminderData,
   createReminderItem,
-  normalizeReminderData,
   isReminderCompleted,
+  isReminderRepeating,
+  normalizeReminderData,
   type ReminderDataFile,
   type ReminderItem,
+  type ReminderRepeat,
 } from './shared/reminder-data'
 import type { ReminderLevel } from './shared/reminder-settings'
 
@@ -68,7 +71,9 @@ export class ReminderStore {
     return this.data.items.filter((item) => {
       if (item.dismissed) return false
       const at = Date.parse(item.remindAt)
-      return Number.isFinite(at) && at <= now
+      if (!Number.isFinite(at) || at > now) return false
+      if (isReminderRepeating(item) && isReminderCompleted(item, now)) return false
+      return true
     })
   }
 
@@ -90,18 +95,27 @@ export class ReminderStore {
     level: ReminderLevel
     remindAt: string
     dismissed?: boolean
+    repeat?: ReminderRepeat
+    occurrenceDoneAt?: string | null
   }): ReminderItem {
     const existingIndex =
       input.id !== undefined ? this.data.items.findIndex((item) => item.id === input.id) : -1
+    const existing = existingIndex >= 0 ? this.data.items[existingIndex] : null
+    const remindAtChanged =
+      existing !== null && existing.remindAt !== input.remindAt
+    const repeat = input.repeat ?? existing?.repeat ?? 'none'
     const item = createReminderItem({
       id: input.id ?? randomUUID(),
       title: input.title,
       content: input.content,
       level: normalizeLevel(input.level),
       remindAt: input.remindAt,
-      createdAt:
-        existingIndex >= 0 ? this.data.items[existingIndex].createdAt : new Date().toISOString(),
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
       dismissed: input.dismissed,
+      repeat,
+      occurrenceDoneAt: remindAtChanged
+        ? null
+        : (input.occurrenceDoneAt ?? existing?.occurrenceDoneAt ?? null),
     })
     if (existingIndex >= 0) {
       this.data.items[existingIndex] = item
@@ -130,6 +144,23 @@ export class ReminderStore {
       if (!idSet.has(item.id)) continue
       item.remindAt = nextAt
       item.dismissed = false
+      item.occurrenceDoneAt = null
+      changed = true
+    }
+    if (!changed) return
+    this.persist()
+    this.notifyChange()
+  }
+
+  completeRepeatingOccurrences(ids: string[], now = Date.now()): void {
+    if (ids.length === 0) return
+    const idSet = new Set(ids)
+    let changed = false
+    for (const item of this.data.items) {
+      if (!idSet.has(item.id) || !isReminderRepeating(item)) continue
+      item.occurrenceDoneAt = new Date(now).toISOString()
+      item.remindAt = advanceRemindAt(item.remindAt, item.repeat)
+      item.dismissed = false
       changed = true
     }
     if (!changed) return
@@ -140,11 +171,19 @@ export class ReminderStore {
   dismissItems(ids: string[]): void {
     if (ids.length === 0) return
     const idSet = new Set(ids)
+    const repeatIds: string[] = []
     let changed = false
     for (const item of this.data.items) {
       if (!idSet.has(item.id)) continue
+      if (isReminderRepeating(item)) {
+        repeatIds.push(item.id)
+        continue
+      }
       item.dismissed = true
       changed = true
+    }
+    if (repeatIds.length > 0) {
+      this.completeRepeatingOccurrences(repeatIds)
     }
     if (!changed) return
     this.persist()

@@ -148,6 +148,15 @@
     "fieldLevel": "優先度",
     "fieldDate": "日付",
     "fieldTime": "時刻",
+    "fieldRepeat": "繰り返し",
+    "fieldRepeatDesc": "周期ごとに次回を自動設定。本日の通知後は完了表示のままリストに残ります",
+    "fieldRepeatInterval": "繰り返し間隔",
+    "repeatBadge": "繰り返しリマインダー",
+    "repeat": {
+      "daily": "毎日",
+      "weekly": "毎週",
+      "monthly": "毎月"
+    },
     "dismiss": "リマインダーを閉じる",
     "snoozeMinutes": "{{minutes}} 分後に再通知",
     "level": {
