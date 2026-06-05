@@ -126,6 +126,8 @@ export interface CustomConnection {
   sshKeyPath?: string
   /** SSH 连接分组（仅展示与组织用） */
   sshGroup?: string
+  /** SSH 连接成功后依次执行的 bash 命令（每行一条；支持 ${vaultKey}） */
+  sshStartupScript?: string
   /** RDP 主机（Windows 远程桌面） */
   rdpHost?: string
   rdpPort?: number

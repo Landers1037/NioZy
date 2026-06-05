@@ -35,6 +35,7 @@ function summarizeConnection(c: CustomConnection): Record<string, unknown> {
       auth: c.sshAuth,
       hasPassword: Boolean(c.sshPassword?.trim()),
       hasKeyPath: Boolean(c.sshKeyPath?.trim()),
+      hasStartupScript: Boolean(c.sshStartupScript?.trim()),
     }
   }
   if (c.type === 'rdp') {

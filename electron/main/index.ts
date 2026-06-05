@@ -63,7 +63,7 @@ import {
 import { p2pService } from '../p2p/p2p-service'
 import { ensureChatDir, getChatDir } from '../config-paths'
 import { scpLog, scpProfileForLog } from '../scp-logger'
-import type { SshConnectionProfile, TerminalCreateOptions } from '../shared/api-types'
+import type { SshConnectionProfile, TerminalCreateOptions, CustomConnection } from '../shared/api-types'
 import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
@@ -73,6 +73,7 @@ import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
 import { inferSshAuth } from '../ssh-auth'
 import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
+import { scheduleSshStartupScript } from '../ssh-startup-script'
 import { launchRdpFromConnection } from '../rdp-launch'
 import { launchPuttyFromConnection } from '../putty-launch'
 import { runConnectivityCheck } from '../connectivity-check-service'
@@ -1070,6 +1071,13 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
   return profile
 }
 
+function runSshConnectionStartupScript(terminalId: string, conn: CustomConnection): void {
+  const raw = conn.sshStartupScript?.trim()
+  if (!raw) return
+  const script = vaultStore.resolveText(raw)
+  scheduleSshStartupScript((data) => terminalService.write(terminalId, data), script)
+}
+
 ipcMain.handle('rdp:connect', async (_, connectionId: string) => {
   if (process.platform !== 'win32') {
     return { ok: false as const, error: 'RDP is only supported on Windows' }
@@ -1226,11 +1234,13 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
     args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
     env: options.env ? vaultStore.resolveEnv(options.env) : undefined,
   }
+  let sshConn: CustomConnection | undefined
   if (options.sshConnectionId) {
     const conn = settingsStore
       .get()
       .connections.find((c) => c.id === options.sshConnectionId && c.type === 'ssh')
     if (conn) {
+      sshConn = conn
       const sshSettings = settingsStore.get().ssh
       if (sshSettings.useBuiltinSsh2) {
         const profile = resolveSshProfile(options.sshConnectionId)
@@ -1245,6 +1255,7 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
             cols: options.cols,
             rows: options.rows,
           })
+          runSshConnectionStartupScript(session.id, conn)
           terminalLog.info('Terminal created (ssh2)', {
             id: session.id,
             shell: session.shell,
@@ -1264,6 +1275,9 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
   }
   try {
     const session = terminalService.create(resolved)
+    if (sshConn) {
+      runSshConnectionStartupScript(session.id, sshConn)
+    }
     terminalLog.info('Terminal created', {
       id: session.id,
       shell: session.shell,
