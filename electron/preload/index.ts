@@ -226,6 +226,9 @@ const api: ElectronAPI = {
     open: () => ipcRenderer.send('screenshot:open'),
     close: () => ipcRenderer.send('screenshot:close'),
   },
+  connectivity: {
+    check: (input) => ipcRenderer.invoke('connectivity:check', input),
+  },
   p2p: {
     getStatus: () => ipcRenderer.invoke('p2p:getStatus'),
     scan: () => ipcRenderer.invoke('p2p:scan'),
@@ -253,6 +256,11 @@ const api: ElectronAPI = {
     onConversationHidden: (cb) => onP2pConversationHidden(cb),
     onMessage: (cb) => onP2pMessage(cb),
     onFileProgress: (cb) => onP2pFileProgress(cb),
+  },
+  notes: {
+    list: () => ipcRenderer.invoke('notes:list'),
+    save: (input) => ipcRenderer.invoke('notes:save', input),
+    delete: (id) => ipcRenderer.invoke('notes:delete', id),
   },
 }
 

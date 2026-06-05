@@ -16,6 +16,9 @@
 | 主题与 UI 风格 | 渲染层 + 共享类型 | `theme`、`uiStyle` 写入 DOM |
 | 国际化 i18n | 渲染层 | `zh` / `en` / `ja` |
 | 窗口 IPC | 主进程 | 最小化、最大化、贴靠分屏 |
+| 连通检测 | 主进程 + 渲染层 | 标题栏弹框，`connectivity:check`（见 [功能连通检测.md](./功能连通检测.md)） |
+| 辅助功能开关 | 主进程 + 渲染层 | `settings.assistive` 控制标题栏入口显隐（见 [辅助功能.md](./辅助功能.md)） |
+| 备忘录 | 主进程 + 渲染层 | 标题栏弹框 CRUD，数据存储在配置目录 `note.json`（见 [辅助功能.md](./辅助功能.md)） |
 | 系统指标轮询 | 主进程 → 渲染层 | `system:getStats` 推送 |
 
 ## 架构与数据流
@@ -116,6 +119,7 @@ sequenceDiagram
 | `%USERPROFILE%\.config\NioZy\settings.json` | 除连接列表外的全部 `AppSettings` |
 | `%USERPROFILE%\.config\NioZy\term.json` | `{ "connections": CustomConnection[] }` |
 | `%USERPROFILE%\.config\NioZy\fonts-cache.json` | 系统字体列表缓存 |
+| `%USERPROFILE%\.config\NioZy\note.json` | 备忘录数据（数组：`NoteItem[]`） |
 
 路径定义：
 
@@ -196,7 +200,9 @@ export function TitleBar() {
   // Logo、窗口最小化/最大化/关闭 → electronAPI.window.*
 ```
 
-终端相关工具入口在 `TitleBarTerminalControls`：`42:96:src/components/layout/TitleBarTerminalControls.tsx`。
+终端相关工具入口在 `TitleBarTerminalControls`：`42:96:src/components/layout/TitleBarTerminalControls.tsx`（含番茄钟、提醒、使用统计、命令回放、搜索、分屏、截图、**连通检测**、AI 边栏、渲染引擎/模式等）。
+
+连通检测详见 [功能连通检测.md](./功能连通检测.md)。
 
 ### 状态栏
 

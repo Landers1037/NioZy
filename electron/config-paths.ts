@@ -24,6 +24,10 @@ export function getVaultKeyFilePath(): string {
   return join(getConfigDir(), 'niozy.key')
 }
 
+export function getNoteFilePath(): string {
+  return join(getConfigDir(), 'note.json')
+}
+
 export function getFontsCacheFilePath(): string {
   return join(getConfigDir(), 'fonts-cache.json')
 }

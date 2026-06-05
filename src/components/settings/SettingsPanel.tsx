@@ -8,6 +8,7 @@ import {
   Server,
   TerminalSquare,
   Plug,
+  Accessibility,
   Settings2,
   SlidersHorizontal,
   ScrollText,
@@ -31,6 +32,7 @@ import { FilesystemSettings } from './FilesystemSettings'
 import { ConnectionSettings } from './ConnectionSettings'
 import { StatisticsSettings } from './StatisticsSettings'
 import { ReminderSettings } from './ReminderSettings'
+import { AssistiveSettings } from './AssistiveSettings'
 import { SystemSettings } from './SystemSettings'
 import { AdvancedSettings } from './AdvancedSettings'
 import { LogSettings } from './LogSettings'
@@ -53,6 +55,7 @@ const SECTION_DEFS = [
   { id: 'shortcuts', icon: Keyboard },
   { id: 'statistics', icon: BarChart3 },
   { id: 'reminder', icon: Bell },
+  { id: 'assistive', icon: Accessibility },
   { id: 'system', icon: Settings2 },
   { id: 'p2p', icon: MessageSquare },
   { id: 'logging', icon: ScrollText },
@@ -112,6 +115,7 @@ export function SettingsPanel() {
         {section === 'shortcuts' && <ShortcutSettings />}
         {section === 'statistics' && <StatisticsSettings />}
         {section === 'reminder' && <ReminderSettings />}
+        {section === 'assistive' && <AssistiveSettings />}
         {section === 'system' && <SystemSettings />}
         {section === 'p2p' && <P2pSettings />}
         {section === 'logging' && <LogSettings />}

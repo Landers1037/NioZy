@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronDown, Shell, Crop, Search, SquareSplitHorizontal, Brain, BarChart3, Timer, Bell } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  Shell,
+  Crop,
+  Search,
+  SquareSplitHorizontal,
+  Brain,
+  BarChart3,
+  Timer,
+  Bell,
+  Cable,
+  NotebookPen,
+} from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -23,6 +36,8 @@ import { UsageStatisticsDialog } from '@/components/layout/UsageStatisticsDialog
 import { PomodoroDialog } from '@/components/layout/PomodoroDialog'
 import { ReminderDialog } from '@/components/reminder/ReminderDialog'
 import { TitleBarCommandReplay } from '@/components/layout/TitleBarCommandReplay'
+import { ConnectivityCheckDialog } from '@/components/layout/ConnectivityCheckDialog'
+import { NotesDialog } from '@/components/notes/NotesDialog'
 
 const titleBarMenuIconClass = 'size-3.5 shrink-0 text-muted-foreground'
 
@@ -47,6 +62,8 @@ export function TitleBarTerminalControls() {
   const [statsOpen, setStatsOpen] = useState(false)
   const [pomodoroOpen, setPomodoroOpen] = useState(false)
   const [reminderOpen, setReminderOpen] = useState(false)
+  const [connectivityOpen, setConnectivityOpen] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
   const [snapOpen, setSnapOpen] = useState(false)
   const snapRootRef = useRef<HTMLDivElement | null>(null)
   const snapCloseTimerRef = useRef<number | null>(null)
@@ -60,6 +77,13 @@ export function TitleBarTerminalControls() {
   const showUsageStatistics =
     settings.statistics.enabled && settings.statistics.showStatusBar
   const showReminders = settings.reminder.enabled === true
+  const assistive = settings.assistive
+  const showPomodoro = assistive.pomodoroEnabled !== false
+  const showCommandReplay = assistive.commandReplayEnabled !== false
+  const showTerminalSearch = assistive.terminalSearchEnabled !== false
+  const showConnectivityCheck = assistive.connectivityCheckEnabled !== false
+  const showScreenshot = assistive.screenshotEnabled !== false
+  const showNotes = assistive.notesEnabled !== false
 
   const handleAiSidebarToggle = () => {
     useAiSidebarStore.getState().toggle()
@@ -144,16 +168,18 @@ export function TitleBarTerminalControls() {
 
   return (
     <div className="flex items-center gap-1.5 border-r border-border pr-2 mr-0.5">
-      <Button
-        variant="outline"
-        size="icon"
-        className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
-        aria-label={t('titleBar.pomodoro')}
-        title={t('titleBar.pomodoro')}
-        onClick={() => setPomodoroOpen(true)}
-      >
-        <Timer className={titleBarMenuIconClass} aria-hidden />
-      </Button>
+      {showPomodoro ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('titleBar.pomodoro')}
+          title={t('titleBar.pomodoro')}
+          onClick={() => setPomodoroOpen(true)}
+        >
+          <Timer className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      ) : null}
       {showReminders ? (
         <Button
           variant="outline"
@@ -164,6 +190,18 @@ export function TitleBarTerminalControls() {
           onClick={() => setReminderOpen(true)}
         >
           <Bell className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      ) : null}
+      {showNotes ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('notes.title')}
+          title={t('notes.title')}
+          onClick={() => setNotesOpen(true)}
+        >
+          <NotebookPen className={titleBarMenuIconClass} aria-hidden />
         </Button>
       ) : null}
       {showUsageStatistics ? (
@@ -178,18 +216,33 @@ export function TitleBarTerminalControls() {
           <BarChart3 className={titleBarMenuIconClass} aria-hidden />
         </Button>
       ) : null}
-      <TitleBarCommandReplay />
+      {showCommandReplay ? <TitleBarCommandReplay /> : null}
 
-      <Button
-        variant="outline"
-        size="icon"
-        className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
-        aria-label={t('titleBar.search')}
-        title={t('titleBar.search')}
-        onClick={() => setSearchOpen(true)}
-      >
-        <Search className={titleBarMenuIconClass} aria-hidden />
-      </Button>
+      {showConnectivityCheck ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('titleBar.connectivityCheck')}
+          title={t('titleBar.connectivityCheck')}
+          onClick={() => setConnectivityOpen(true)}
+        >
+          <Cable className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      ) : null}
+
+      {showTerminalSearch ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('titleBar.search')}
+          title={t('titleBar.search')}
+          onClick={() => setSearchOpen(true)}
+        >
+          <Search className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      ) : null}
 
       <div
         ref={snapRootRef}
@@ -317,16 +370,18 @@ export function TitleBarTerminalControls() {
         ) : null}
       </div>
 
-      <Button
-        variant="outline"
-        size="icon"
-        className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
-        aria-label={t('titleBar.screenshot')}
-        title={t('titleBar.screenshot')}
-        onClick={() => getElectronAPI().screenshot.open()}
-      >
-        <Crop className={titleBarMenuIconClass} aria-hidden />
-      </Button>
+      {showScreenshot ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
+          aria-label={t('titleBar.screenshot')}
+          title={t('titleBar.screenshot')}
+          onClick={() => getElectronAPI().screenshot.open()}
+        >
+          <Crop className={titleBarMenuIconClass} aria-hidden />
+        </Button>
+      ) : null}
 
       {aiSidebarEnabled && (
         <Button
@@ -341,10 +396,15 @@ export function TitleBarTerminalControls() {
         </Button>
       )}
 
-      <TerminalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <TerminalSearchDialog open={showTerminalSearch && searchOpen} onOpenChange={setSearchOpen} />
       <UsageStatisticsDialog open={statsOpen} onOpenChange={setStatsOpen} />
-      <PomodoroDialog open={pomodoroOpen} onOpenChange={setPomodoroOpen} />
+      <PomodoroDialog open={showPomodoro && pomodoroOpen} onOpenChange={setPomodoroOpen} />
       <ReminderDialog open={reminderOpen} onOpenChange={setReminderOpen} />
+      <ConnectivityCheckDialog
+        open={showConnectivityCheck && connectivityOpen}
+        onOpenChange={setConnectivityOpen}
+      />
+      <NotesDialog open={showNotes && notesOpen} onOpenChange={setNotesOpen} />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
