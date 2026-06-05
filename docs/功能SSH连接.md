@@ -6,7 +6,8 @@
 
 - 保存 SSH 主机配置（在 `term.json` 连接列表，`type: 'ssh'`）
 - 密码 / 私钥 / 键盘交互认证（`ssh-askpass`）
-- 交互式 Shell 会话（`TerminalService.createSsh2`）
+- 交互式 Shell 会话（`TerminalService.createSsh2` 或系统 `ssh.exe`）
+- **连接后脚本**：`sshStartupScript` 多行 bash，连接成功后按行依次执行（见 [功能连接管理.md](./功能连接管理.md)）
 - SSH Tab 断开检测与告警（`useSshDisconnectAlert`）
 - 断开后在同一 Tab 按 Enter 重连
 - KEX 算法等高级选项（`settings.ssh`）
@@ -16,7 +17,7 @@
 
 | 层级 | 文件 |
 |------|------|
-| **主进程** | `electron/ssh-service.ts`、`electron/ssh2-connect.ts`、`electron/ssh-terminal-spawn.ts`、`electron/ssh-auth.ts` |
+| **主进程** | `electron/ssh-service.ts`、`electron/ssh2-connect.ts`、`electron/ssh-terminal-spawn.ts`、`electron/ssh-auth.ts`、`electron/ssh-startup-script.ts` |
 | **渲染层** | `src/lib/ssh-connection.ts`、`src/hooks/useSshDisconnectAlert.ts` |
 | **设置 UI** | `src/components/settings/SshSettings.tsx` |
 
@@ -36,7 +37,9 @@ flowchart TB
     TS["TerminalService.createSsh2"]
     Conn["ssh2-connect"]
     Auth["ssh-auth + askpass"]
+    Startup["ssh-startup-script"]
     TS --> Conn --> Auth
+    TS --> Startup
   end
 
   termjson[("term.json connections")]
@@ -66,7 +69,10 @@ sequenceDiagram
   S2->>Remote: TCP 22
   Remote-->>S2: 交互式 shell stream
   S2-->>TS: 注册 session
-  TS-->>TA: { id, name, cwd }
+  TS-->>API: { id, name, cwd }
+  API->>Startup: runSshConnectionStartupScript（若有 sshStartupScript）
+  Startup->>S2: 按行 write 到 shell stream
+  API-->>TA: { id, name, cwd }
   TA->>UI: addTerminalTab(sshConnectionId)
 ```
 
@@ -114,7 +120,7 @@ sequenceDiagram
 
 | 路径 | 内容 |
 |------|------|
-| `term.json` | SSH 连接配置（host、user、auth 等） |
+| `term.json` | SSH 连接配置（host、user、auth、`sshStartupScript` 等） |
 | `settings.json` | `ssh.*` 全局 SSH 行为 |
 
 私钥路径为本地文件路径；密钥内容可通过 Vault `${VAR}` 引用（见 [功能保险箱.md](./功能保险箱.md)）。
@@ -139,6 +145,8 @@ export function checkScpInPath(): ScpCheckResult
 ```
 
 连接配置解析：`electron/main/index.ts` 中 `resolveSshProfile(connectionId)`（`ipcMain.handle('ssh:getProfile', ...)`）。
+
+连接后脚本：`electron/ssh-startup-script.ts`；`terminal:create` 中 `runSshConnectionStartupScript`（ssh2 与系统 ssh 两条路径均会调用）。
 
 ### 渲染层打开 SSH Tab
 

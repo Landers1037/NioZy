@@ -16,6 +16,7 @@ export type ConnectionDraft = {
   sshPassword: string
   sshKeyPath: string
   sshGroup: string
+  sshStartupScript: string
   rdpHost: string
   rdpPort: number
   rdpUser: string
@@ -48,6 +49,7 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   sshPassword: '',
   sshKeyPath: '',
   sshGroup: '',
+  sshStartupScript: '',
   rdpHost: '',
   rdpPort: 3389,
   rdpUser: '',
@@ -114,6 +116,7 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
         sshPassword: c.sshPassword ?? '',
         sshKeyPath: c.sshKeyPath ?? '',
         sshGroup: c.sshGroup ?? '',
+        sshStartupScript: c.sshStartupScript ?? '',
       }
     case 'rdp':
       return {
@@ -198,6 +201,7 @@ export function draftToConnection(
             ? draft.sshKeyPath.trim()
             : undefined,
         sshGroup: draft.sshGroup.trim() || undefined,
+        sshStartupScript: draft.sshStartupScript.trim() || undefined,
       }
     }
     case 'rdp': {

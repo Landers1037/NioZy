@@ -677,6 +677,20 @@ export function ConnectionSettings() {
                   </SettingField>
                 )}
               </div>
+
+              <SettingField
+                icon={FileCode}
+                label={t('settings.connections.sshStartupScript')}
+              >
+                <TextareaWithVaultPicker
+                  value={draft.sshStartupScript}
+                  onChange={(sshStartupScript) => setDraft({ ...draft, sshStartupScript })}
+                  placeholder={t('settings.connections.sshStartupScriptPlaceholder')}
+                />
+              </SettingField>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.connections.sshStartupScriptHint')}
+              </p>
             </>
           ) : (
             <>
