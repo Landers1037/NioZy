@@ -4,6 +4,8 @@ import { formatEnvLines, parseEnvLines } from '@/lib/connection-env'
 export type ConnectionDraft = {
   type: CustomConnection['type']
   name: string
+  /** Windows：文件夹右键「通过 NioZy 打开」（仅 type=command） */
+  shellContextMenu: boolean
   command: string
   argsStr: string
   envStr: string
@@ -35,6 +37,7 @@ export type ConnectionDraft = {
 export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   type: 'command',
   name: '',
+  shellContextMenu: false,
   command: '',
   argsStr: '',
   envStr: '',
@@ -65,6 +68,23 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
 
 export function defaultPuttyPort(protocol: PuttyProtocol): number {
   return protocol === 'telnet' ? 23 : 22
+}
+
+/** 是否已有同名自定义命令启用了右键打开（排除当前编辑中的连接） */
+export function hasDuplicateShellContextMenuName(
+  connections: CustomConnection[],
+  name: string,
+  excludeId?: string | null,
+): boolean {
+  const normalized = name.trim().toLocaleLowerCase()
+  if (!normalized) return false
+  return connections.some(
+    (c) =>
+      c.type === 'command' &&
+      c.shellContextMenu === true &&
+      c.id !== excludeId &&
+      c.name.trim().toLocaleLowerCase() === normalized,
+  )
 }
 
 /** 从已保存的 SSH 连接收集不重复的分组名（按字母排序） */
@@ -140,6 +160,7 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
       return {
         ...base,
         type: 'command',
+        shellContextMenu: c.shellContextMenu === true,
         command: c.command,
         argsStr: c.args.join(' '),
         envStr: formatEnvLines(c.env),
@@ -259,6 +280,7 @@ export function draftToConnection(
         command: draft.command.trim(),
         args: draft.argsStr.split(' ').filter(Boolean),
         env: parseEnvLines(draft.envStr),
+        ...(draft.shellContextMenu ? { shellContextMenu: true } : {}),
       }
     }
   }

@@ -18,7 +18,7 @@ import { LinkPreviewPanel } from '@/components/preview/LinkPreviewPanel'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
-import { createTerminal, openTerminalInDirectory } from '@/lib/terminal-actions'
+import { createTerminal, handleOpenDirectoryPayload } from '@/lib/terminal-actions'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
@@ -108,7 +108,7 @@ export default function App() {
         booted.current = true
         void (async () => {
           const pending = await api.app.getPendingOpenDirectory()
-          if (pending) await openTerminalInDirectory(pending)
+          if (pending) await handleOpenDirectoryPayload(pending)
           else await createTerminal()
         })()
       }
@@ -159,8 +159,8 @@ export default function App() {
     const api = getElectronAPI()
     const unsubCwd = api.terminal.onCwd(setTerminalCwd)
     const unsubExit = api.terminal.onExit((id) => clearTerminalCwd(id))
-    const unsubOpenDir = api.app.onOpenDirectory((directory) => {
-      void openTerminalInDirectory(directory)
+    const unsubOpenDir = api.app.onOpenDirectory((payload) => {
+      void handleOpenDirectoryPayload(payload)
     })
     const unsubNewTerminal = api.app.onNewTerminal(() => {
       void createTerminal()

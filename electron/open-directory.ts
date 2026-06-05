@@ -1,9 +1,21 @@
 import { existsSync, statSync } from 'fs'
 import { normalize } from 'path'
 import type { BrowserWindow } from 'electron'
+import type { AppOpenDirectoryPayload } from './shared/api-types'
 import { sendToRenderer } from './main/window-ipc'
 
-let pendingOpenDirectory: string | null = null
+export const CONNECTION_ARG_PREFIX = '--niozy-connection='
+
+let pendingOpenRequest: AppOpenDirectoryPayload | null = null
+
+export function parseConnectionIdFromArgv(argv: string[]): string | null {
+  for (const arg of argv) {
+    if (!arg?.startsWith(CONNECTION_ARG_PREFIX)) continue
+    const id = arg.slice(CONNECTION_ARG_PREFIX.length).trim()
+    if (id) return id
+  }
+  return null
+}
 
 export function parseDirectoryFromArgv(argv: string[]): string | null {
   for (let i = argv.length - 1; i >= 1; i--) {
@@ -21,30 +33,46 @@ export function parseDirectoryFromArgv(argv: string[]): string | null {
   return null
 }
 
+export function parseOpenRequestFromArgv(argv: string[]): AppOpenDirectoryPayload | null {
+  const directory = parseDirectoryFromArgv(argv)
+  if (!directory) return null
+  const connectionId = parseConnectionIdFromArgv(argv) ?? undefined
+  return { directory, connectionId }
+}
+
 export function setInitialOpenDirectoryFromArgv(argv: string[]): void {
-  const dir = parseDirectoryFromArgv(argv)
-  if (dir) pendingOpenDirectory = dir
+  const request = parseOpenRequestFromArgv(argv)
+  if (request) pendingOpenRequest = request
 }
 
-export function takePendingOpenDirectory(): string | null {
-  const dir = pendingOpenDirectory
-  pendingOpenDirectory = null
-  return dir
+export function takePendingOpenDirectory(): AppOpenDirectoryPayload | null {
+  const request = pendingOpenRequest
+  pendingOpenRequest = null
+  return request
 }
 
-export function queueOpenDirectory(win: BrowserWindow | null, directory: string): void {
+export function queueOpenDirectory(
+  win: BrowserWindow | null,
+  directory: string,
+  connectionId?: string,
+): void {
   const normalized = normalize(directory)
   if (!existsSync(normalized) || !statSync(normalized).isDirectory()) return
 
+  const payload: AppOpenDirectoryPayload = {
+    directory: normalized,
+    ...(connectionId ? { connectionId } : {}),
+  }
+
   if (win && !win.webContents.isLoading()) {
-    sendToRenderer(win, 'app:openDirectory', normalized)
+    sendToRenderer(win, 'app:openDirectory', payload)
     return
   }
-  pendingOpenDirectory = normalized
+  pendingOpenRequest = payload
 }
 
 export function flushPendingOpenDirectory(win: BrowserWindow | null): void {
-  if (!pendingOpenDirectory || !win || win.webContents.isLoading()) return
-  sendToRenderer(win, 'app:openDirectory', pendingOpenDirectory)
-  pendingOpenDirectory = null
+  if (!pendingOpenRequest || !win || win.webContents.isLoading()) return
+  sendToRenderer(win, 'app:openDirectory', pendingOpenRequest)
+  pendingOpenRequest = null
 }

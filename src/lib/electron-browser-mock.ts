@@ -318,7 +318,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     app: {
       getVersion: async () => '0.1.0',
       getPendingOpenDirectory: async () => null,
-      onOpenDirectory: () => () => undefined,
+      onOpenDirectory: (_cb) => () => undefined,
       onNewTerminal: () => () => undefined,
       onOpenSettings: () => () => undefined,
       relaunch: () => {

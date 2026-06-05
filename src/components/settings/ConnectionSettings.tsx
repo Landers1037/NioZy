@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import type { TFunction } from 'i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -30,6 +32,7 @@ import {
   connectionToDraft,
   draftToConnection,
   EMPTY_CONNECTION_DRAFT,
+  hasDuplicateShellContextMenuName,
   type ConnectionDraft,
 } from '@/lib/connection-draft'
 import {
@@ -144,8 +147,17 @@ export function ConnectionSettings() {
     setDraft(connectionToDraft(c))
   }
 
-  const saveConnection = () => {
+  const saveConnection = async () => {
     const id = editingConnectionId ?? randomUUID()
+    if (
+      draft.type === 'command' &&
+      draft.shellContextMenu &&
+      hasDuplicateShellContextMenuName(settings.connections, draft.name, editingConnectionId)
+    ) {
+      toast.error(t('toast.shellContextMenuDuplicateName'))
+      return
+    }
+
     const conn = draftToConnection(draft, id)
     if (!conn) return
 
@@ -153,8 +165,12 @@ export function ConnectionSettings() {
       ? settings.connections.map((c) => (c.id === editingConnectionId ? conn : c))
       : [...settings.connections, conn]
 
-    patchSettings({ connections })
-    cancelEditConnection()
+    try {
+      await patchSettings({ connections })
+      cancelEditConnection()
+    } catch {
+      toast.error(t('toast.connectionContextMenuFailed'))
+    }
   }
 
   const removeConnection = (id: string) => {
@@ -361,6 +377,37 @@ export function ConnectionSettings() {
                   )}
                 </div>
               </SettingField>
+            </div>
+          ) : draft.type === 'command' ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex min-w-0 items-start gap-2">
+                <Tag className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <Label className="text-sm leading-none">{t('settings.connections.name')}</Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Input
+                  className="min-w-0 flex-1"
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+                {isWindows && (
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Label
+                      htmlFor="connection-shell-context-menu"
+                      className="whitespace-nowrap text-sm font-normal text-muted-foreground"
+                    >
+                      {t('settings.connections.shellContextMenu')}
+                    </Label>
+                    <Switch
+                      id="connection-shell-context-menu"
+                      checked={draft.shellContextMenu}
+                      onCheckedChange={(shellContextMenu) =>
+                        setDraft({ ...draft, shellContextMenu })
+                      }
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <SettingField icon={Tag} label={t('settings.connections.name')}>
