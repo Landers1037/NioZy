@@ -47,6 +47,7 @@ import { configureSessionPrivacy, disableCrashReporting } from '../session-priva
 import {
   flushPendingOpenDirectory,
   parseDirectoryFromArgv,
+  parseConnectionIdFromArgv,
   queueOpenDirectory,
   setInitialOpenDirectoryFromArgv,
   takePendingOpenDirectory,
@@ -55,6 +56,10 @@ import {
   isWindowsShellContextMenuSupported,
   setWindowsShellContextMenu,
 } from '../windows-shell-context-menu'
+import {
+  syncAllConnectionContextMenus,
+  syncConnectionContextMenus,
+} from '../windows-connection-context-menu'
 import { p2pService } from '../p2p/p2p-service'
 import { ensureChatDir, getChatDir } from '../config-paths'
 import { scpLog, scpProfileForLog } from '../scp-logger'
@@ -358,9 +363,9 @@ async function syncShellContextMenuRegistry(enabled: boolean): Promise<void> {
   await setWindowsShellContextMenu(enabled)
 }
 
-function handleOpenDirectoryRequest(directory: string): void {
+function handleOpenDirectoryRequest(directory: string, connectionId?: string | null): void {
   showMainWindow()
-  queueOpenDirectory(mainWindow, directory)
+  queueOpenDirectory(mainWindow, directory, connectionId ?? undefined)
 }
 
 function resolvePreloadPath(): string {
@@ -495,8 +500,12 @@ function createTray(): void {
 if (gotSingleInstanceLock) {
   app.on('second-instance', (_event, argv) => {
     const directory = parseDirectoryFromArgv(argv)
-    mainLog.info('Second instance', { directory: directory ?? null })
-    if (directory) handleOpenDirectoryRequest(directory)
+    const connectionId = parseConnectionIdFromArgv(argv)
+    mainLog.info('Second instance', {
+      directory: directory ?? null,
+      connectionId: connectionId ?? null,
+    })
+    if (directory) handleOpenDirectoryRequest(directory, connectionId)
     else showMainWindow()
   })
 }
@@ -548,6 +557,9 @@ app.whenReady().then(async () => {
       mainLog.error('Failed to sync shell context menu registry', logErrorPayload(err))
     })
   }
+  void syncAllConnectionContextMenus(settingsStore.get().connections).catch((err) => {
+    mainLog.error('Failed to sync connection context menu registry', logErrorPayload(err))
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -821,7 +833,16 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     await syncShellContextMenuRegistry(partial.advanced.shellContextMenu)
   }
 
+  const prevConnections = settingsStore.get().connections
   const updated = settingsStore.update(partial)
+  if (partial.connections !== undefined) {
+    try {
+      await syncConnectionContextMenus(prevConnections, updated.connections)
+    } catch (err) {
+      settingsLog.error('Failed to sync connection context menus', logErrorPayload(err))
+      throw err
+    }
+  }
   if (experimentalAiSettingsChanged(partial)) {
     try {
       await syncCopilotRuntimeFromSettings(updated.experimental)

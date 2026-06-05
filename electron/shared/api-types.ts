@@ -149,9 +149,16 @@ export interface CustomConnection {
   vncUsername?: string
   /** VNC 密码；支持 ${vaultKey} 引用存储库 */
   vncPassword?: string
+  /** Windows：在资源管理器文件夹右键注册「通过 NioZy 打开 {名称}」（仅 type=command） */
+  shellContextMenu?: boolean
 }
 
 export type ExternalLaunchResult = { ok: true } | { ok: false; error: string }
+
+export interface AppOpenDirectoryPayload {
+  directory: string
+  connectionId?: string
+}
 
 /** @deprecated Use ExternalLaunchResult */
 export type RdpConnectResult = ExternalLaunchResult
@@ -363,8 +370,8 @@ export interface ElectronAPI {
   }
   app: {
     getVersion: () => Promise<string>
-    getPendingOpenDirectory: () => Promise<string | null>
-    onOpenDirectory: (cb: (directory: string) => void) => () => void
+    getPendingOpenDirectory: () => Promise<AppOpenDirectoryPayload | null>
+    onOpenDirectory: (cb: (payload: AppOpenDirectoryPayload) => void) => () => void
     /** 托盘菜单：新建终端 Tab */
     onNewTerminal: (cb: () => void) => () => void
     /** 托盘菜单：打开设置 Tab */

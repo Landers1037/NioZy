@@ -78,6 +78,37 @@ export async function openTerminalInDirectory(
   }
 }
 
+/** 在指定目录下打开已保存的自定义命令连接 */
+export async function openConnectionInDirectory(
+  connectionId: string,
+  cwd: string,
+): Promise<void> {
+  const conn = useAppStore
+    .getState()
+    .settings?.connections.find((c) => c.id === connectionId && c.type === 'command')
+  if (!conn) {
+    toastTerminalError(new Error(i18n.t('toast.connectionNotFound')))
+    return
+  }
+  try {
+    const { create } = connectionToTerminalSpawn(conn)
+    await openTerminalTab({ ...create, cwd })
+  } catch (error) {
+    toastTerminalError(error, conn.name)
+  }
+}
+
+export async function handleOpenDirectoryPayload(payload: {
+  directory: string
+  connectionId?: string
+}): Promise<void> {
+  if (payload.connectionId) {
+    await openConnectionInDirectory(payload.connectionId, payload.directory)
+    return
+  }
+  await openTerminalInDirectory(payload.directory)
+}
+
 export function isExternalConnectionType(
   type: CustomConnection['type'],
 ): type is 'rdp' | 'putty' {
