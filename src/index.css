@@ -173,6 +173,52 @@ html.dark[data-ui-style='wa-fu'] {
   --ring: #e8a0b0;
 }
 
+/* —— 赛博朋克（Cyber2077 霓虹：黄 / 青 / 品红）—— */
+html[data-ui-style='cyberpunk'] {
+  --radius: 0.25rem;
+  --background: #e4e0f0;
+  --foreground: #0a0a12;
+  --card: #f0ecfa;
+  --card-foreground: #0a0a12;
+  --popover: #f0ecfa;
+  --popover-foreground: #0a0a12;
+  --muted: #d8d0ec;
+  --muted-foreground: #4a4560;
+  --border: #9b8fbb;
+  --primary: #c4006a;
+  --primary-foreground: #f5f2fc;
+  --accent: #d8d0ec;
+  --accent-foreground: #0a0a12;
+  --destructive: #e6003a;
+  --ring: #0099cc;
+  --cyber-neon-yellow: #c4a800;
+  --cyber-neon-cyan: #0099cc;
+  --cyber-neon-pink: #c4006a;
+  --cyber-neon-purple: #7a00cc;
+}
+
+html.dark[data-ui-style='cyberpunk'] {
+  --background: #0b0b14;
+  --foreground: #e8e6f5;
+  --card: #12121e;
+  --card-foreground: #e8e6f5;
+  --popover: #12121e;
+  --popover-foreground: #e8e6f5;
+  --muted: #1a1a2a;
+  --muted-foreground: #8892b8;
+  --border: #2d2d48;
+  --primary: #fcee0a;
+  --primary-foreground: #0b0b14;
+  --accent: #1a1a2a;
+  --accent-foreground: #e8e6f5;
+  --destructive: #ff2a6d;
+  --ring: #00f0ff;
+  --cyber-neon-yellow: #fcee0a;
+  --cyber-neon-cyan: #00f0ff;
+  --cyber-neon-pink: #ff2a6d;
+  --cyber-neon-purple: #bd00ff;
+}
+
 html.dark[data-ui-style='windows-classic'] {
   --background: #2a2a2a;
   --foreground: #ffffff;
@@ -243,6 +289,21 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='wa-fu'] h6 {
     font-weight: var(--app-font-weight-bold, 600);
     letter-spacing: 0.02em;
+  }
+
+  html[data-ui-style='cyberpunk'] body {
+    letter-spacing: 0.02em;
+  }
+
+  html[data-ui-style='cyberpunk'] h1,
+  html[data-ui-style='cyberpunk'] h2,
+  html[data-ui-style='cyberpunk'] h3,
+  html[data-ui-style='cyberpunk'] h4,
+  html[data-ui-style='cyberpunk'] h5,
+  html[data-ui-style='cyberpunk'] h6 {
+    font-weight: var(--app-font-weight-bold, 700);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   html[data-ui-style='windows-classic'] body {
@@ -480,6 +541,149 @@ html[data-ui-style='wa-fu'] .ui-switch-thumb {
 
 html[data-ui-style='wa-fu'] .ui-slider-thumb {
   border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+/* Cyberpunk：霓虹光晕、网格底纹、标题栏 */
+html[data-ui-style='cyberpunk'] {
+  background-image:
+    linear-gradient(rgb(0 240 255 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 240 255 / 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html.dark[data-ui-style='cyberpunk'] {
+  background-image:
+    linear-gradient(rgb(0 240 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 240 255 / 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html[data-ui-style='cyberpunk'] .ui-cyber-titlebar {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card) 92%, var(--cyber-neon-cyan)) 0%,
+    var(--card) 100%
+  );
+  box-shadow:
+    inset 0 -1px 0 var(--cyber-neon-cyan),
+    0 0 12px rgb(0 240 255 / 0.08);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-cyber-titlebar {
+  background: linear-gradient(
+    180deg,
+    #1a1a2e 0%,
+    #12121e 60%,
+    #0e0e18 100%
+  );
+  box-shadow:
+    inset 0 -2px 0 var(--cyber-neon-yellow),
+    0 0 16px rgb(252 238 10 / 0.12),
+    0 1px 0 rgb(0 240 255 / 0.35);
+}
+
+html[data-ui-style='cyberpunk'] .ui-cyber-statusbar {
+  box-shadow: inset 0 1px 0 rgb(0 240 255 / 0.15);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-cyber-statusbar {
+  box-shadow:
+    inset 0 1px 0 rgb(0 240 255 / 0.25),
+    0 0 10px rgb(0 240 255 / 0.06);
+}
+
+html[data-ui-style='cyberpunk'] .ui-cyber-panel {
+  position: relative;
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-cyber-panel::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 20px rgb(0 240 255 / 0.03);
+}
+
+html[data-ui-style='cyberpunk'] .ui-card {
+  border-radius: 0.25rem;
+  border-color: color-mix(in srgb, var(--cyber-neon-cyan) 25%, var(--border));
+  box-shadow:
+    0 0 12px rgb(0 240 255 / 0.06),
+    inset 0 0 0 1px rgb(252 238 10 / 0.04);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-card {
+  border-color: color-mix(in srgb, var(--cyber-neon-cyan) 30%, var(--border));
+  box-shadow:
+    0 0 16px rgb(0 240 255 / 0.1),
+    inset 0 0 0 1px rgb(252 238 10 / 0.06);
+}
+
+html[data-ui-style='cyberpunk'] .ui-overlay-panel {
+  border: 1px solid color-mix(in srgb, var(--cyber-neon-cyan) 35%, var(--border));
+  box-shadow:
+    0 0 24px rgb(0 240 255 / 0.12),
+    0 0 48px rgb(255 42 109 / 0.06);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-overlay-panel {
+  box-shadow:
+    0 0 28px rgb(0 240 255 / 0.18),
+    0 0 56px rgb(255 42 109 / 0.1),
+    inset 0 0 30px rgb(0 240 255 / 0.03);
+}
+
+html[data-ui-style='cyberpunk'] .ui-btn {
+  font-weight: var(--app-font-weight, 500);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.85em;
+}
+
+html[data-ui-style='cyberpunk'] .ui-btn.bg-primary {
+  box-shadow: 0 0 12px rgb(252 238 10 / 0.25);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-btn.bg-primary {
+  box-shadow: 0 0 14px rgb(252 238 10 / 0.35);
+}
+
+html[data-ui-style='cyberpunk'] .ui-btn.bg-primary:hover {
+  box-shadow: 0 0 18px rgb(252 238 10 / 0.4);
+}
+
+html[data-ui-style='cyberpunk'] .ui-label {
+  font-weight: var(--app-font-weight, 500);
+  letter-spacing: 0.03em;
+}
+
+html[data-ui-style='cyberpunk'] .ui-card-title {
+  font-weight: var(--app-font-weight-bold, 700);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+html[data-ui-style='cyberpunk'] .ui-switch-track[data-state='checked'] {
+  box-shadow: 0 0 8px rgb(0 240 255 / 0.35);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-switch-track[data-state='checked'] {
+  box-shadow: 0 0 10px rgb(252 238 10 / 0.4);
+}
+
+html[data-ui-style='cyberpunk'] .ui-switch-thumb {
+  box-shadow: 0 0 6px rgb(0 240 255 / 0.2);
+}
+
+html[data-ui-style='cyberpunk'] .ui-slider-thumb {
+  border-color: var(--cyber-neon-cyan);
+  box-shadow: 0 0 8px rgb(0 240 255 / 0.35);
+}
+
+html.dark[data-ui-style='cyberpunk'] .ui-slider-thumb {
+  border-color: var(--cyber-neon-yellow);
+  box-shadow: 0 0 10px rgb(252 238 10 / 0.4);
 }
 
 @layer utilities {

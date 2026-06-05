@@ -1,14 +1,21 @@
 type ThemeMode = 'light' | 'dark'
 
-/** minimal：暖中性灰极简；niozy：原版 NioZy；windowsClassic：Windows XP 怀旧；waFu：日式传统和风 */
-export type UiStyle = 'minimal' | 'niozy' | 'windowsClassic' | 'waFu'
+/** minimal：暖中性灰极简；niozy：原版 NioZy；windowsClassic：Windows XP 怀旧；waFu：日式传统和风；cyberpunk：赛博朋克霓虹 */
+export type UiStyle = 'minimal' | 'niozy' | 'windowsClassic' | 'waFu' | 'cyberpunk'
 
-export const UI_STYLE_VALUES: UiStyle[] = ['minimal', 'niozy', 'windowsClassic', 'waFu']
+export const UI_STYLE_VALUES: UiStyle[] = [
+  'minimal',
+  'niozy',
+  'windowsClassic',
+  'waFu',
+  'cyberpunk',
+]
 
 export function normalizeUiStyle(value: unknown): UiStyle {
   if (value === 'niozy') return 'niozy'
   if (value === 'windowsClassic') return 'windowsClassic'
   if (value === 'waFu') return 'waFu'
+  if (value === 'cyberpunk') return 'cyberpunk'
   return 'minimal'
 }
 
@@ -17,6 +24,7 @@ export function uiStyleToDataAttribute(style: UiStyle): string {
   if (style === 'niozy') return 'niozy'
   if (style === 'windowsClassic') return 'windows-classic'
   if (style === 'waFu') return 'wa-fu'
+  if (style === 'cyberpunk') return 'cyberpunk'
   return 'minimal'
 }
 
@@ -25,6 +33,7 @@ const WINDOW_BG: Record<UiStyle, Record<ThemeMode, string>> = {
   niozy: { light: '#F4F5F7', dark: '#0F1419' },
   windowsClassic: { light: '#ECE9D8', dark: '#2A2A2A' },
   waFu: { light: '#F5F0E6', dark: '#1C1814' },
+  cyberpunk: { light: '#E4E0F0', dark: '#0B0B14' },
 }
 
 export function getWindowBackgroundColor(theme: ThemeMode, uiStyle: UiStyle): string {
