@@ -75,9 +75,11 @@ import { inferSshAuth } from '../ssh-auth'
 import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
 import { launchRdpFromConnection } from '../rdp-launch'
 import { launchPuttyFromConnection } from '../putty-launch'
+import { runConnectivityCheck } from '../connectivity-check-service'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
+import { NoteStore } from '../note-store'
 import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
@@ -244,6 +246,7 @@ const reminderScheduler = new ReminderScheduler(
 )
 const vaultStore = new VaultStore()
 const systemStats = new SystemStats()
+const noteStore = new NoteStore()
 
 function syncStatisticsPolling(): void {
   statisticsStore.syncPolling()
@@ -1006,6 +1009,23 @@ ipcMain.handle('update:download', (_, payload: { version: string; downloadUrl: s
 )
 
 ipcMain.handle('fonts:list', () => listSystemFonts())
+
+ipcMain.handle('connectivity:check', (_, input) => runConnectivityCheck(input))
+
+ipcMain.handle('notes:list', () => noteStore.list())
+ipcMain.handle('notes:save', (_, input) => {
+  if (!input || typeof input !== 'object') throw new Error('INVALID_ITEM')
+  const raw = input as { id?: unknown; title?: unknown; content?: unknown }
+  return noteStore.save({
+    id: typeof raw.id === 'string' ? raw.id : undefined,
+    title: typeof raw.title === 'string' ? raw.title : '',
+    content: typeof raw.content === 'string' ? raw.content : '',
+  })
+})
+ipcMain.handle('notes:delete', (_, id: string) => {
+  if (typeof id !== 'string' || !id.trim()) return
+  noteStore.delete(id.trim())
+})
 
 ipcMain.on('screenshot:open', () => {
   void openScreenshotCapture().catch((err) => {

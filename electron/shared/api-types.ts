@@ -55,6 +55,9 @@ export {
 } from './filesystem-settings'
 export type { P2pSettings } from './p2p-settings'
 export { DEFAULT_P2P_SETTINGS, normalizeP2pSettings } from './p2p-settings'
+export type { AssistiveSettings } from './assistive-settings'
+export { DEFAULT_ASSISTIVE_SETTINGS, normalizeAssistiveSettings } from './assistive-settings'
+export type { NoteItem } from './note-types'
 export type {
   P2pPeerInfo,
   P2pSessionInfo,
@@ -238,6 +241,7 @@ export interface AppSettings {
   statistics: import('./usage-statistics-settings').UsageStatisticsSettings
   p2p: import('./p2p-settings').P2pSettings
   reminder: import('./reminder-settings').ReminderSettings
+  assistive: import('./assistive-settings').AssistiveSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -537,6 +541,11 @@ export interface ElectronAPI {
     /** 结束截图 */
     close: () => void
   }
+  connectivity: {
+    check: (
+      input: import('./connectivity-check-types').ConnectivityCheckRequest,
+    ) => Promise<import('./connectivity-check-types').ConnectivityCheckResult>
+  }
   p2p: {
     getStatus: () => Promise<import('./p2p-types').P2pStatus>
     scan: () => Promise<import('./p2p-types').P2pPeerInfo[]>
@@ -566,5 +575,15 @@ export interface ElectronAPI {
     onConversationHidden: (cb: (payload: { sessionId: string }) => void) => () => void
     onMessage: (cb: (message: import('./p2p-types').P2pChatMessage) => void) => () => void
     onFileProgress: (cb: (progress: import('./p2p-types').P2pFileProgress) => void) => () => void
+  }
+
+  notes: {
+    list: () => Promise<import('./note-types').NoteItem[]>
+    save: (input: {
+      id?: string
+      title?: string
+      content?: string
+    }) => Promise<import('./note-types').NoteItem>
+    delete: (id: string) => Promise<void>
   }
 }

@@ -370,6 +370,14 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
       close: () => undefined,
     },
+    connectivity: {
+      check: async () => ({
+        ok: false,
+        reachable: false,
+        message: 'Browser preview',
+        detail: '连通检测需在 Electron 桌面应用中运行。',
+      }),
+    },
     rdp: {
       connect: async () => ({ ok: false as const, error: 'Browser preview: RDP not supported' }),
     },
