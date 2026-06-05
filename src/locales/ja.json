@@ -241,6 +241,10 @@
     "waFu": {
       "label": "🌸",
       "description": "和風伝統：和紙の暖かい生成り、桜色のアクセント、藍色・抹茶のプリセット、柔らかな縁取り"
+    },
+    "cyberpunk": {
+      "label": "Cyberpunk",
+      "description": "ネオンサイバーパンク：Cyber2077 風イエロー/シアン/マゼンタ、暗色グリッド、グロー枠、大文字見出し"
     }
   },
   "settings": {

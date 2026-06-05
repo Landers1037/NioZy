@@ -241,6 +241,10 @@
     "waFu": {
       "label": "🌸",
       "description": "Japanese wa-fu: washi warm ivory, sakura pink accents, indigo and matcha presets, soft borders"
+    },
+    "cyberpunk": {
+      "label": "Cyberpunk",
+      "description": "Neon cyberpunk: Cyber2077 yellow/cyan/magenta, dark grid backdrop, glow borders, uppercase headings"
     }
   },
   "settings": {

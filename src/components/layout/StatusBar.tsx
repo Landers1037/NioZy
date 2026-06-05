@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 import { AppMetricsDialog } from '@/components/layout/AppMetricsDialog'
 import type { ThemeMode } from '../../../electron/shared/api-types'
+import type { UiStyle } from '../../../electron/shared/ui-style'
 
 type StatusTagVariant =
   | 'date'
@@ -60,8 +61,38 @@ const cwdLabelDark = 'text-amber-50/60'
 const cwdDividerLight = 'text-amber-900/35'
 const cwdDividerDark = 'text-amber-50/35'
 
-function getTagVariants(theme: ThemeMode): Record<StatusTagVariant, string> {
+const cyberTagVariantsLight: Record<StatusTagVariant, string> = {
+  date: 'border border-[#c4a800]/45 bg-[#c4a800]/14 text-[#6b5800]',
+  time: 'border border-[#0099cc]/45 bg-[#0099cc]/12 text-[#005577]',
+  cpu: 'border border-[#c4006a]/45 bg-[#c4006a]/12 text-[#8a0048]',
+  memory: 'border border-[#7a00cc]/45 bg-[#7a00cc]/12 text-[#4a0080]',
+  metric: 'border border-[#c4006a]/45 bg-[#c4006a]/14 text-[#8a0048] hover:bg-[#c4006a]/22',
+  off: 'border border-border bg-muted text-muted-foreground',
+  cwd: 'border border-[#c4a800]/40 bg-[#c4a800]/10 text-[#6b5800]',
+  tab: 'border border-[#0099cc]/40 bg-[#0099cc]/10 text-[#005577]',
+}
+
+const cyberTagVariantsDark: Record<StatusTagVariant, string> = {
+  date: 'border border-[#fcee0a]/45 bg-[#fcee0a]/12 text-[#fcee0a] shadow-[0_0_8px_rgb(252_238_10/0.2)]',
+  time: 'border border-[#00f0ff]/45 bg-[#00f0ff]/10 text-[#00f0ff] shadow-[0_0_8px_rgb(0_240_255/0.2)]',
+  cpu: 'border border-[#ff2a6d]/45 bg-[#ff2a6d]/10 text-[#ff2a6d] shadow-[0_0_8px_rgb(255_42_109/0.2)]',
+  memory: 'border border-[#bd00ff]/45 bg-[#bd00ff]/10 text-[#bd00ff] shadow-[0_0_8px_rgb(189_0_255/0.2)]',
+  metric:
+    'border border-[#ff2a6d]/45 bg-[#ff2a6d]/12 text-[#ff2a6d] shadow-[0_0_8px_rgb(255_42_109/0.2)] hover:bg-[#ff2a6d]/20',
+  off: 'border border-border/60 bg-muted/80 text-muted-foreground',
+  cwd: 'border border-[#fcee0a]/35 bg-[#fcee0a]/8 text-[#fcee0a]',
+  tab: 'border border-[#00f0ff]/35 bg-[#00f0ff]/8 text-[#00f0ff]',
+}
+
+function getTagVariants(theme: ThemeMode, uiStyle?: UiStyle): Record<StatusTagVariant, string> {
+  if (uiStyle === 'cyberpunk') {
+    return theme === 'dark' ? cyberTagVariantsDark : cyberTagVariantsLight
+  }
   return theme === 'dark' ? tagVariantsDark : tagVariantsLight
+}
+
+function usesColoredStatusTags(uiStyle: UiStyle): boolean {
+  return uiStyle === 'niozy' || uiStyle === 'cyberpunk'
 }
 
 const metricTagVariantsLight =
@@ -94,18 +125,20 @@ function NiozyStatusTag({
   children,
   variant,
   theme,
+  uiStyle,
   className,
 }: {
   children: ReactNode
   variant: StatusTagVariant
   theme: ThemeMode
+  uiStyle: UiStyle
   className?: string
 }) {
   return (
     <span
       className={cn(
         'inline-flex max-w-full items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium leading-tight',
-        getTagVariants(theme)[variant],
+        getTagVariants(theme, uiStyle)[variant],
         className,
       )}
     >
@@ -161,7 +194,7 @@ function MetricButton({
   onClick,
   title,
   theme,
-  isNiozy,
+  uiStyle,
   isClassic,
   fieldClass,
   renderTag,
@@ -170,7 +203,7 @@ function MetricButton({
   onClick: () => void
   title: string
   theme: ThemeMode
-  isNiozy: boolean
+  uiStyle: UiStyle
   isClassic: boolean
   fieldClass: string
   renderTag: (content: ReactNode, className?: string) => ReactNode
@@ -185,14 +218,14 @@ function MetricButton({
     onClick()
   }
 
-  if (isNiozy) {
+  if (usesColoredStatusTags(uiStyle)) {
     return (
       <button
         type="button"
         title={title}
         className={cn(
           'inline-flex max-w-full cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium leading-tight transition-colors',
-          getTagVariants(theme).metric,
+          getTagVariants(theme, uiStyle).metric,
           className,
         )}
         onClick={handleClick}
@@ -256,7 +289,7 @@ export function StatusBar() {
     activeTab?.type === 'terminal' ? getActiveTerminalId(activeTab) : undefined
   const activeCwd = activeTerminalId ? terminalCwds[activeTerminalId] : undefined
   const isDark = theme === 'dark'
-  const isNiozy = uiStyle === 'niozy'
+  const coloredTags = usesColoredStatusTags(uiStyle)
   const isClassic = uiStyle === 'windowsClassic'
   const fieldClass = ui.statusTag
 
@@ -288,20 +321,20 @@ export function StatusBar() {
         <div className="flex min-w-0 items-center gap-1">
           {liveStats ? (
             <>
-              {isNiozy ? (
+              {coloredTags ? (
                 <>
-                  <NiozyStatusTag variant="date" theme={theme}>
+                  <NiozyStatusTag variant="date" theme={theme} uiStyle={uiStyle}>
                     <StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>
                   </NiozyStatusTag>
-                  <NiozyStatusTag variant="time" theme={theme}>
+                  <NiozyStatusTag variant="time" theme={theme} uiStyle={uiStyle}>
                     <StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>
                   </NiozyStatusTag>
-                  <NiozyStatusTag variant="cpu" theme={theme}>
+                  <NiozyStatusTag variant="cpu" theme={theme} uiStyle={uiStyle}>
                     <StatusTagLabel icon={Cpu}>
                       {t('statusBar.cpu', { percent: stats.cpuPercent })}
                     </StatusTagLabel>
                   </NiozyStatusTag>
-                  <NiozyStatusTag variant="memory" theme={theme} className="truncate">
+                  <NiozyStatusTag variant="memory" theme={theme} uiStyle={uiStyle} className="truncate">
                     <StatusTagLabel icon={MemoryStick} truncate>
                       {memoryLabel}
                     </StatusTagLabel>
@@ -309,7 +342,7 @@ export function StatusBar() {
                   <MetricButton
                     title={t('statusBar.metricTitle')}
                     theme={theme}
-                    isNiozy={isNiozy}
+                    uiStyle={uiStyle}
                     isClassic={isClassic}
                     fieldClass={fieldClass}
                     renderTag={renderTag}
@@ -336,7 +369,7 @@ export function StatusBar() {
                   <MetricButton
                     title={t('statusBar.metricTitle')}
                     theme={theme}
-                    isNiozy={isNiozy}
+                    uiStyle={uiStyle}
                     isClassic={isClassic}
                     fieldClass={fieldClass}
                     renderTag={renderTag}
@@ -345,8 +378,8 @@ export function StatusBar() {
                 </>
               )}
             </>
-          ) : isNiozy ? (
-          <NiozyStatusTag variant="off" theme={theme}>
+          ) : coloredTags ? (
+          <NiozyStatusTag variant="off" theme={theme} uiStyle={uiStyle}>
             <StatusTagLabel icon={EyeOff}>{t('statusBar.liveStatsOff')}</StatusTagLabel>
           </NiozyStatusTag>
         ) : (
@@ -357,8 +390,8 @@ export function StatusBar() {
       </div>
       <div className="flex min-w-0 shrink items-center gap-1">
         {activeTab?.type === 'terminal' &&
-          (isNiozy ? (
-            <NiozyStatusTag variant="cwd" theme={theme} className="max-w-[min(50vw,320px)]">
+          (coloredTags ? (
+            <NiozyStatusTag variant="cwd" theme={theme} uiStyle={uiStyle} className="max-w-[min(50vw,320px)]">
               <StatusTagIcon icon={FolderOpen} />
               <span className={cn('shrink-0', isDark ? cwdLabelDark : cwdLabelLight)}>
                 {t('statusBar.cwd')}
@@ -392,8 +425,8 @@ export function StatusBar() {
               </span>
             </MinimalStatusTag>
           ))}
-        {isNiozy ? (
-          <NiozyStatusTag variant="tab" theme={theme} className="max-w-[160px] shrink-0">
+        {coloredTags ? (
+          <NiozyStatusTag variant="tab" theme={theme} uiStyle={uiStyle} className="max-w-[160px] shrink-0">
             <StatusTagIcon icon={SquareTerminal} />
             <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
               {t('statusBar.current')}
