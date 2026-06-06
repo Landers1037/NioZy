@@ -59,6 +59,11 @@ const VncPanel = lazy(() =>
     default: m.VncPanel,
   })),
 )
+const RepoManagementPanel = lazy(() =>
+  import('@/components/repo/RepoManagementPanel').then((m) => ({
+    default: m.RepoManagementPanel,
+  })),
+)
 export default function App() {
   const { t } = useTranslation()
   const tabs = useAppStore((s) => s.tabs)
@@ -202,6 +207,8 @@ export default function App() {
   const sandboxTabActive = activeTab?.type === 'sandbox'
   const hasChatTab = tabs.some((t) => t.type === 'chat')
   const chatTabActive = activeTab?.type === 'chat'
+  const hasRepoTab = tabs.some((t) => t.type === 'repo')
+  const repoTabActive = activeTab?.type === 'repo'
   const p2pChatEnabled = settings?.p2p.enabled === true
   const hasVncTab = tabs.some((t) => t.type === 'vnc')
   const vncTabActive = activeTab?.type === 'vnc'
@@ -340,6 +347,19 @@ export default function App() {
               >
                 <Suspense fallback={null}>
                   <ChatPanel />
+                </Suspense>
+              </div>
+            )}
+            {hasRepoTab && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !repoTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!repoTabActive ? { inert: true } : {})}
+              >
+                <Suspense fallback={null}>
+                  <RepoManagementPanel />
                 </Suspense>
               </div>
             )}

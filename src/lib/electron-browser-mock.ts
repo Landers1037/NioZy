@@ -17,6 +17,7 @@ import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings
 import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-statistics-settings'
 import { DEFAULT_P2P_SETTINGS } from '../../electron/shared/p2p-settings'
 import { DEFAULT_REMINDER_SETTINGS } from '../../electron/shared/reminder-settings'
+import { DEFAULT_ASSISTIVE_SETTINGS } from '../../electron/shared/assistive-settings'
 import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
@@ -73,6 +74,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
   p2p: { ...DEFAULT_P2P_SETTINGS },
   reminder: { ...DEFAULT_REMINDER_SETTINGS },
+  assistive: { ...DEFAULT_ASSISTIVE_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -555,6 +557,32 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       clearImage: async () => ({ ok: true as const }),
       getImageUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
       onDue: () => () => undefined,
+    },
+    repo: {
+      detectGit: async () => ({ found: false }),
+      pickDirectory: async () => null,
+      validateRepo: async () => ({ ok: false, error: 'NOT_GIT_REPO' as const }),
+      listManaged: async () => [],
+      add: async () => ({ ok: false, error: 'NOT_GIT_REPO' as const }),
+      remove: async () => false,
+      pull: async () => ({ ok: false, error: 'Browser preview' }),
+      listBranches: async () => ({ error: 'Browser preview' }),
+      checkout: async () => ({ ok: false, error: 'Browser preview' }),
+      getGraphCommits: async () => ({ error: 'Browser preview' }),
+      getCommitDetail: async () => ({ error: 'Browser preview' }),
+      getCommitFileDiff: async () => ({ error: 'Browser preview' }),
+      getById: async () => null,
+    },
+    notes: {
+      list: async () => [],
+      save: async (input) => ({
+        id: input.id ?? 'mock-note',
+        title: input.title ?? '',
+        content: input.content ?? '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+      delete: async () => undefined,
     },
     terminal: {
       create: async (options) => {

@@ -7,6 +7,8 @@ export interface FilesystemCustomOpener {
 }
 
 export interface FilesystemSettings {
+  /** 开启后在侧栏显示「文件系统」Tab */
+  localFilesystemEnabled: boolean
   /** 开启后双击图片可在弹框中预览 */
   imagePreviewEnabled: boolean
   /** 右键显示「通过 VS Code 打开」 */
@@ -17,15 +19,22 @@ export interface FilesystemSettings {
   vsCodePath: string
   cursorPath: string
   customOpeners: FilesystemCustomOpener[]
+  /** 开启后在侧栏显示「仓库管理」Tab */
+  repoManagementEnabled: boolean
+  /** 留空则自动检测 git.exe */
+  gitPath: string
 }
 
 export const DEFAULT_FILESYSTEM_SETTINGS: FilesystemSettings = {
+  localFilesystemEnabled: true,
   imagePreviewEnabled: true,
   openWithVsCode: true,
   openWithCursor: true,
   vsCodePath: '',
   cursorPath: '',
   customOpeners: [],
+  repoManagementEnabled: false,
+  gitPath: '',
 }
 
 export function normalizeFilesystemSettings(value: unknown): FilesystemSettings {
@@ -46,6 +55,7 @@ export function normalizeFilesystemSettings(value: unknown): FilesystemSettings 
     : DEFAULT_FILESYSTEM_SETTINGS.customOpeners
 
   return {
+    localFilesystemEnabled: v.localFilesystemEnabled !== false,
     imagePreviewEnabled:
       typeof v.imagePreviewEnabled === 'boolean'
         ? v.imagePreviewEnabled
@@ -63,5 +73,7 @@ export function normalizeFilesystemSettings(value: unknown): FilesystemSettings 
     cursorPath:
       typeof v.cursorPath === 'string' ? v.cursorPath : DEFAULT_FILESYSTEM_SETTINGS.cursorPath,
     customOpeners,
+    repoManagementEnabled: v.repoManagementEnabled === true,
+    gitPath: typeof v.gitPath === 'string' ? v.gitPath : DEFAULT_FILESYSTEM_SETTINGS.gitPath,
   }
 }

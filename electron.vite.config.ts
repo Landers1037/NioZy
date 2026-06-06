@@ -93,6 +93,7 @@ export default defineConfig(({ command }) => {
   },
   renderer: {
     root: '.',
+    publicDir: resolve('public'),
     server: {
       strictPort: false,
     },

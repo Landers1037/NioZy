@@ -28,6 +28,10 @@ export function getNoteFilePath(): string {
   return join(getConfigDir(), 'note.json')
 }
 
+export function getRepoFilePath(): string {
+  return join(getConfigDir(), 'repo.json')
+}
+
 export function getFontsCacheFilePath(): string {
   return join(getConfigDir(), 'fonts-cache.json')
 }

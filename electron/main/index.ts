@@ -77,6 +77,7 @@ import { scheduleSshStartupScript } from '../ssh-startup-script'
 import { launchRdpFromConnection } from '../rdp-launch'
 import { launchPuttyFromConnection } from '../putty-launch'
 import { runConnectivityCheck } from '../connectivity-check-service'
+import { GitService } from '../git-service'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
@@ -214,8 +215,13 @@ async function syncWebviewPreviewFromSettings(): Promise<void> {
   await syncWebviewPreviewProxy(settings.system.proxy)
 }
 
+function syncGitPathFromSettings(): void {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+}
+
 async function syncAllSettingsSideEffects(): Promise<void> {
   const updated = settingsStore.get()
+  syncGitPathFromSettings()
   await syncShellContextMenuRegistry(updated.advanced.shellContextMenu)
   app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
   syncGlobalShortcuts(settingsStore, () => mainWindow)
@@ -246,6 +252,7 @@ const reminderScheduler = new ReminderScheduler(
   () => mainWindow,
 )
 const vaultStore = new VaultStore()
+const gitService = new GitService()
 const systemStats = new SystemStats()
 const noteStore = new NoteStore()
 
@@ -526,6 +533,7 @@ app.whenReady().then(async () => {
   await registerLocalFileProtocolHandler()
 
   settingsStore.load()
+  syncGitPathFromSettings()
   vaultStore.load()
   const logging = settingsStore.get().logging
   applyLoggingSettings(logging)
@@ -1027,6 +1035,47 @@ ipcMain.handle('notes:delete', (_, id: string) => {
   if (typeof id !== 'string' || !id.trim()) return
   noteStore.delete(id.trim())
 })
+
+ipcMain.handle('repo:detectGit', () => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.detectGit()
+})
+ipcMain.handle('repo:pickDirectory', () => gitService.pickDirectory(mainWindow))
+ipcMain.handle('repo:validateRepo', (_, path: string) => gitService.validateRepo(path))
+ipcMain.handle('repo:listManaged', () => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.listManaged()
+})
+ipcMain.handle('repo:add', (_, path: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.addRepo(path)
+})
+ipcMain.handle('repo:remove', (_, id: string) => gitService.removeRepo(id))
+ipcMain.handle('repo:pull', (_, id: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.pull(id)
+})
+ipcMain.handle('repo:listBranches', (_, id: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.listBranches(id)
+})
+ipcMain.handle('repo:checkout', (_, id: string, branch: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.checkout(id, branch)
+})
+ipcMain.handle('repo:getGraphCommits', (_, id: string, cursor?: import('../shared/repo-types').GitGraphCursor) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.getGraphCommits(id, cursor)
+})
+ipcMain.handle('repo:getCommitDetail', (_, id: string, sha: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.getCommitDetail(id, sha)
+})
+ipcMain.handle('repo:getCommitFileDiff', (_, id: string, sha: string, filePath: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return gitService.getCommitFileDiff(id, sha, filePath)
+})
+ipcMain.handle('repo:getById', (_, id: string) => gitService.getRepo(id) ?? null)
 
 ipcMain.on('screenshot:open', () => {
   void openScreenshotCapture().catch((err) => {

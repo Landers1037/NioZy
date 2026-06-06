@@ -17,6 +17,7 @@ import {
   Plus,
   Trash2,
   ExternalLink,
+  GitBranch,
 } from 'lucide-react'
 
 export function FilesystemSettings() {
@@ -29,6 +30,9 @@ export function FilesystemSettings() {
 
   const patchFilesystem = (partial: Partial<typeof fs>) =>
     patchSettings({ filesystem: { ...fs, ...partial } })
+
+  const closeRepoTabIfPresent = useAppStore((s) => s.closeRepoTabIfPresent)
+  const closeFilesystemTabIfPresent = useAppStore((s) => s.closeFilesystemTabIfPresent)
 
   const detectEditor = async (kind: 'vscode' | 'cursor') => {
     const configured = kind === 'vscode' ? fs.vsCodePath : fs.cursorPath
@@ -52,6 +56,31 @@ export function FilesystemSettings() {
           : t('settings.filesystem.cursorNotFound'),
       )
     }
+  }
+
+  const detectGit = async () => {
+    if (fs.gitPath.trim()) {
+      patchFilesystem({ gitPath: fs.gitPath.trim() })
+    }
+    const result = await getElectronAPI().repo.detectGit()
+    if (result.found && result.path) {
+      toast.success(t('settings.filesystem.gitFound', { path: result.path }))
+      if (!fs.gitPath.trim()) {
+        patchFilesystem({ gitPath: result.path })
+      }
+    } else {
+      toast.error(t('settings.filesystem.gitNotFound'))
+    }
+  }
+
+  const handleRepoManagementToggle = (enabled: boolean) => {
+    patchFilesystem({ repoManagementEnabled: enabled })
+    if (!enabled) closeRepoTabIfPresent()
+  }
+
+  const handleLocalFilesystemToggle = (enabled: boolean) => {
+    patchFilesystem({ localFilesystemEnabled: enabled })
+    if (!enabled) closeFilesystemTabIfPresent()
   }
 
   const detectCustom = async (opener: FilesystemCustomOpener) => {
@@ -104,6 +133,18 @@ export function FilesystemSettings() {
         <CardDescription>{t('settings.filesystem.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
+        <SettingField
+          icon={FolderCode}
+          label={t('settings.filesystem.localFilesystemEnabled')}
+          description={t('settings.filesystem.localFilesystemEnabledDesc')}
+          row
+        >
+          <Switch
+            checked={fs.localFilesystemEnabled}
+            onCheckedChange={(v) => handleLocalFilesystemToggle(v)}
+          />
+        </SettingField>
+
         <SettingField
           icon={Image}
           label={t('settings.filesystem.imagePreview')}
@@ -240,6 +281,35 @@ export function FilesystemSettings() {
               ))}
             </ul>
           )}
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-border pt-4">
+          <p className="text-sm font-medium">{t('settings.filesystem.repoSettingsTitle')}</p>
+
+          <SettingField
+            icon={GitBranch}
+            label={t('settings.filesystem.repoManagementEnabled')}
+            description={t('settings.filesystem.repoManagementEnabledDesc')}
+            row
+          >
+            <Switch
+              checked={fs.repoManagementEnabled}
+              onCheckedChange={(v) => handleRepoManagementToggle(v)}
+            />
+          </SettingField>
+
+          <div className="flex flex-col gap-2 pl-0 sm:pl-8">
+            <Input
+              value={fs.gitPath}
+              onChange={(e) => patchFilesystem({ gitPath: e.target.value })}
+              placeholder={t('settings.filesystem.gitPathPlaceholder')}
+              className="font-mono text-xs"
+            />
+            <Button type="button" variant="outline" className="w-fit" onClick={() => void detectGit()}>
+              <Search className="size-4" />
+              {t('settings.filesystem.detectGit')}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
