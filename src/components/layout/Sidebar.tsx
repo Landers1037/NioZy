@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -22,10 +22,13 @@ export function Sidebar() {
   const setCollapsed = useAppStore((s) => s.setSidebarCollapsed)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
+  const addRepoTab = useAppStore((s) => s.addRepoTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const settings = useAppStore((s) => s.settings)
   const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
+  const localFilesystemEnabled = settings?.filesystem.localFilesystemEnabled !== false
+  const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
   const patchSettings = useAppStore((s) => s.patchSettings)
 
@@ -126,17 +129,32 @@ export function Sidebar() {
               collapsed ? 'flex-col items-center' : 'w-full flex-col',
             )}
           >
-            <Button
-              variant="ghost"
-              size={collapsed ? 'icon' : 'default'}
-              className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
-              onClick={() => addFilesystemTab()}
-            >
-              <FolderCode className="size-4 shrink-0" />
-              {!collapsed && (
-                <span className="min-w-0 truncate">{t('sidebar.filesystem')}</span>
-              )}
-            </Button>
+            {localFilesystemEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addFilesystemTab()}
+              >
+                <FolderCode className="size-4 shrink-0" />
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{t('sidebar.filesystem')}</span>
+                )}
+              </Button>
+            )}
+            {repoManagementEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addRepoTab()}
+              >
+                <GitBranch className="size-4 shrink-0" />
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{t('sidebar.repoManagement')}</span>
+                )}
+              </Button>
+            )}
             {p2pChatEnabled && (
               <Button
                 variant="ghost"

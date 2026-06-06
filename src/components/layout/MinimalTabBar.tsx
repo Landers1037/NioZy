@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Plus, Settings, Link2, FolderCode, Braces, MessageSquare } from 'lucide-react'
+import { Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -20,10 +20,13 @@ export function MinimalTabBar() {
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
+  const addRepoTab = useAppStore((s) => s.addRepoTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const settings = useAppStore((s) => s.settings)
   const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
+  const localFilesystemEnabled = settings?.filesystem.localFilesystemEnabled !== false
+  const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
   const ui = useUiClasses()
 
@@ -79,15 +82,28 @@ export function MinimalTabBar() {
             <NewConnectionMenuContent />
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6"
-          title={t('sidebar.filesystem')}
-          onClick={() => addFilesystemTab()}
-        >
-          <FolderCode className="size-3" />
-        </Button>
+        {localFilesystemEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.filesystem')}
+            onClick={() => addFilesystemTab()}
+          >
+            <FolderCode className="size-3" />
+          </Button>
+        )}
+        {repoManagementEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.repoManagement')}
+            onClick={() => addRepoTab()}
+          >
+            <GitBranch className="size-3" />
+          </Button>
+        )}
         {p2pChatEnabled && (
           <Button
             variant="ghost"

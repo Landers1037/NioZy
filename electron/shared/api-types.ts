@@ -588,4 +588,37 @@ export interface ElectronAPI {
     }) => Promise<import('./note-types').NoteItem>
     delete: (id: string) => Promise<void>
   }
+  repo: {
+    detectGit: () => Promise<import('./repo-types').GitDetectResult>
+    pickDirectory: () => Promise<string | null>
+    validateRepo: (path: string) => Promise<import('./repo-types').GitRepoValidateResult>
+    listManaged: () => Promise<import('./repo-types').ManagedRepoSummary[]>
+    add: (
+      path: string,
+    ) => Promise<
+      | { ok: true; repo: import('./repo-types').ManagedRepo }
+      | { ok: false; error: 'DUPLICATE' }
+      | import('./repo-types').GitRepoValidateResult
+    >
+    remove: (id: string) => Promise<boolean>
+    pull: (id: string) => Promise<import('./repo-types').GitPullResult>
+    listBranches: (
+      id: string,
+    ) => Promise<import('./repo-types').GitBranchInfo[] | { error: string }>
+    checkout: (id: string, branch: string) => Promise<import('./repo-types').GitCheckoutResult>
+    getGraphCommits: (
+      id: string,
+      cursor?: import('./repo-types').GitGraphCursor,
+    ) => Promise<import('./repo-types').GitGraphCommitsResult | { error: string }>
+    getCommitDetail: (
+      id: string,
+      sha: string,
+    ) => Promise<import('./repo-types').GitCommitDetail | { error: string }>
+    getCommitFileDiff: (
+      id: string,
+      sha: string,
+      filePath: string,
+    ) => Promise<import('./repo-types').GitCommitFileDiff | { error: string }>
+    getById: (id: string) => Promise<import('./repo-types').ManagedRepo | null>
+  }
 }

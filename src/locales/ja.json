@@ -426,6 +426,8 @@
     "filesystem": {
       "title": "ファイルシステム",
       "description": "ローカルファイルツリーのプレビュー、コンテキストメニューの開く操作、外部プログラム",
+      "localFilesystemEnabled": "ローカルファイルシステムを有効にする",
+      "localFilesystemEnabledDesc": "有効時、サイドバーに「ファイルシステム」タブを表示",
       "imagePreview": "画像プレビュー",
       "imagePreviewDesc": "有効時、画像ファイルのクリックまたはダブルクリックでダイアログにプレビュー",
       "contextMenuTitle": "コンテキストメニュー",

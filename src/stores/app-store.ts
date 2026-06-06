@@ -12,11 +12,12 @@ import {
   getFilesystemTabTitle,
   getChatTabTitle,
   getSandboxTabTitle,
+  getRepoTabTitle,
   getSettingsTabTitle,
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 
-export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat' | 'vnc'
+export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat' | 'vnc' | 'repo'
 
 export interface AppTab {
   id: string
@@ -68,6 +69,9 @@ interface AppState {
   addTerminalTab: (tab: AppTab) => void
   addSettingsTab: () => void
   addFilesystemTab: () => void
+  closeFilesystemTabIfPresent: () => void
+  addRepoTab: () => void
+  closeRepoTabIfPresent: () => void
   addChatTab: () => void
   addSandboxTab: () => void
   closeSandboxTabIfPresent: () => void
@@ -155,6 +159,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: [...s.tabs, tab],
       activeTabId: tab.id,
     }))
+  },
+  closeFilesystemTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'filesystem')
+    if (!existing) return
+    get().removeTab(existing.id)
+  },
+  addRepoTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'repo')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'repo',
+      type: 'repo',
+      title: getRepoTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  closeRepoTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'repo')
+    if (!existing) return
+    get().removeTab(existing.id)
   },
   addChatTab: () => {
     const existing = get().tabs.find((t) => t.type === 'chat')
@@ -309,6 +339,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: get().tabs.map((t) => {
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        if (t.type === 'repo') return { ...t, title: getRepoTabTitle() }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         return t
@@ -325,6 +356,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tabs: get().tabs.map((t) => {
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
+        if (t.type === 'repo') return { ...t, title: getRepoTabTitle() }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         return t

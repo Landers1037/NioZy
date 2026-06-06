@@ -43,4 +43,8 @@ export function getSandboxTabTitle(): string {
   return i18n.t('app.sandboxTabTitle')
 }
 
+export function getRepoTabTitle(): string {
+  return i18n.t('app.repoTabTitle')
+}
+
 export default i18n

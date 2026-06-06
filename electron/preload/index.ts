@@ -262,6 +262,22 @@ const api: ElectronAPI = {
     save: (input) => ipcRenderer.invoke('notes:save', input),
     delete: (id) => ipcRenderer.invoke('notes:delete', id),
   },
+  repo: {
+    detectGit: () => ipcRenderer.invoke('repo:detectGit'),
+    pickDirectory: () => ipcRenderer.invoke('repo:pickDirectory') as Promise<string | null>,
+    validateRepo: (path) => ipcRenderer.invoke('repo:validateRepo', path),
+    listManaged: () => ipcRenderer.invoke('repo:listManaged'),
+    add: (path) => ipcRenderer.invoke('repo:add', path),
+    remove: (id) => ipcRenderer.invoke('repo:remove', id),
+    pull: (id) => ipcRenderer.invoke('repo:pull', id),
+    listBranches: (id) => ipcRenderer.invoke('repo:listBranches', id),
+    checkout: (id, branch) => ipcRenderer.invoke('repo:checkout', id, branch),
+    getGraphCommits: (id, cursor) => ipcRenderer.invoke('repo:getGraphCommits', id, cursor),
+    getCommitDetail: (id, sha) => ipcRenderer.invoke('repo:getCommitDetail', id, sha),
+    getCommitFileDiff: (id, sha, filePath) =>
+      ipcRenderer.invoke('repo:getCommitFileDiff', id, sha, filePath),
+    getById: (id) => ipcRenderer.invoke('repo:getById', id),
+  },
 }
 
 try {
