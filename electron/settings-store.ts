@@ -120,6 +120,8 @@ export interface AppSettings {
   }
   advanced: {
     hardwareAcceleration: boolean
+    /** 为 true 时在 Chromium 启用 WebGPU（须同时开启硬件加速） */
+    webGpuAcceleration: boolean
     /** 为 true 时 webPreferences.sandbox 为 false */
     disableSandbox: boolean
     transparency: number
@@ -153,22 +155,33 @@ function normalizeLayoutMode(value: unknown): LayoutMode {
   return 'default'
 }
 
-/** 启动最早阶段读取（须在 app.whenReady 之前用于 disableHardwareAcceleration） */
-export function isHardwareAccelerationEnabled(): boolean {
+function readAdvancedFlagFromDisk(
+  key: 'hardwareAcceleration' | 'webGpuAcceleration',
+): boolean {
   ensureConfigDir()
   const path = getSettingsFilePath()
-  if (!existsSync(path)) return DEFAULT_SETTINGS.advanced.hardwareAcceleration
+  const fallback = DEFAULT_SETTINGS.advanced[key]
+  if (!existsSync(path)) return fallback
   try {
     const raw = JSON.parse(readFileSync(path, 'utf-8')) as {
-      advanced?: { hardwareAcceleration?: unknown }
+      advanced?: Partial<Record<typeof key, unknown>>
     }
-    const value = raw.advanced?.hardwareAcceleration
-    return typeof value === 'boolean'
-      ? value
-      : DEFAULT_SETTINGS.advanced.hardwareAcceleration
+    const value = raw.advanced?.[key]
+    return typeof value === 'boolean' ? value : fallback
   } catch {
-    return DEFAULT_SETTINGS.advanced.hardwareAcceleration
+    return fallback
   }
+}
+
+/** 启动最早阶段读取（须在 app.whenReady 之前用于 disableHardwareAcceleration） */
+export function isHardwareAccelerationEnabled(): boolean {
+  return readAdvancedFlagFromDisk('hardwareAcceleration')
+}
+
+/** 启动最早阶段读取（须在 app.whenReady 之前；仅在硬件加速开启时生效） */
+export function isWebGpuAccelerationEnabled(): boolean {
+  if (!isHardwareAccelerationEnabled()) return false
+  return readAdvancedFlagFromDisk('webGpuAcceleration')
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -203,6 +216,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   advanced: {
     hardwareAcceleration: true,
+    webGpuAcceleration: false,
     disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
@@ -276,6 +290,20 @@ function buildAppSettingsFromStored(
     advanced: {
       ...DEFAULT_SETTINGS.advanced,
       ...stored.advanced,
+      hardwareAcceleration:
+        typeof stored.advanced?.hardwareAcceleration === 'boolean'
+          ? stored.advanced.hardwareAcceleration
+          : DEFAULT_SETTINGS.advanced.hardwareAcceleration,
+      webGpuAcceleration: (() => {
+        const hardwareAcceleration =
+          typeof stored.advanced?.hardwareAcceleration === 'boolean'
+            ? stored.advanced.hardwareAcceleration
+            : DEFAULT_SETTINGS.advanced.hardwareAcceleration
+        if (!hardwareAcceleration) return false
+        return typeof stored.advanced?.webGpuAcceleration === 'boolean'
+          ? stored.advanced.webGpuAcceleration
+          : DEFAULT_SETTINGS.advanced.webGpuAcceleration
+      })(),
       disableSandbox:
         typeof stored.advanced?.disableSandbox === 'boolean'
           ? stored.advanced.disableSandbox

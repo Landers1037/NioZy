@@ -4,9 +4,21 @@ import { Slider } from '@/components/ui/slider'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
+import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
 import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
+import { GpuIcon } from '@/components/icons/GpuIcon'
 import { getElectronAPI } from '@/lib/electron-client'
+
+function notifyWebGpuRestartRequired(t: (key: string) => string) {
+  toast.info(t('toast.webGpuAccelerationRestart'), {
+    duration: 10_000,
+    action: {
+      label: t('toast.restartApp'),
+      onClick: () => relaunchApp(),
+    },
+  })
+}
 
 export function AdvancedSettings() {
   const { t } = useTranslation()
@@ -33,8 +45,34 @@ export function AdvancedSettings() {
             onCheckedChange={(v) => {
               if (v === settings.advanced.hardwareAcceleration) return
               void patchSettings({
-                advanced: { ...settings.advanced, hardwareAcceleration: v },
+                advanced: {
+                  ...settings.advanced,
+                  hardwareAcceleration: v,
+                  webGpuAcceleration: v ? settings.advanced.webGpuAcceleration : false,
+                },
               }).then(() => toast.info(t('toast.hardwareAccelerationRestart')))
+            }}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={GpuIcon}
+          label={t('settings.advanced.webGpuAcceleration')}
+          description={t('settings.advanced.webGpuAccelerationDesc')}
+          row
+        >
+          <Switch
+            checked={settings.advanced.webGpuAcceleration === true}
+            disabled={!settings.advanced.hardwareAcceleration}
+            onCheckedChange={(v) => {
+              if (v === settings.advanced.webGpuAcceleration) return
+              void patchSettings({
+                advanced: {
+                  ...settings.advanced,
+                  hardwareAcceleration: true,
+                  webGpuAcceleration: v,
+                },
+              }).then(() => notifyWebGpuRestartRequired(t))
             }}
           />
         </SettingField>
