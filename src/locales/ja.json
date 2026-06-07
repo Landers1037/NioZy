@@ -281,6 +281,8 @@
       "connectivityCheckEnabledDesc": "オフで疎通確認入口を非表示",
       "screenshotEnabled": "スクリーンショットを有効化",
       "screenshotEnabledDesc": "オフでスクリーンショット入口を非表示、機能も無効化",
+      "screenshotHideSelf": "スクリーンショット時に自身を非表示",
+      "screenshotHideSelfDesc": "オンにすると、キャプチャ開始時に NioZy 本体を一時的に非表示にし、画面に写り込まないようにします",
       "notesEnabled": "メモを有効化",
       "notesEnabledDesc": "タイトルバーにメモボタンを表示し、追加/編集/削除（設定ディレクトリの note.json に保存）"
     },

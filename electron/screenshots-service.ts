@@ -1,4 +1,5 @@
 import Screenshots, { type Lang } from 'electron-screenshots'
+import type { BrowserWindow } from 'electron'
 import type { AppLocale } from './shared/locale'
 import { mainLog } from './app-log'
 
@@ -47,7 +48,57 @@ const SCREENSHOT_LANG: Record<AppLocale, Lang> = {
   },
 }
 
+type ScreenshotsHostContext = {
+  getMainWindow: () => BrowserWindow | null
+  shouldHideSelf: () => boolean
+}
+
 let instance: Screenshots | null = null
+let hostContext: ScreenshotsHostContext | null = null
+let savedMainOpacity: number | null = null
+let didHideMainForCapture = false
+
+export function configureScreenshotsService(ctx: ScreenshotsHostContext): void {
+  hostContext = ctx
+}
+
+function hideMainWindowForCapture(): void {
+  const win = hostContext?.getMainWindow()
+  if (!win || win.isDestroyed() || !hostContext?.shouldHideSelf()) return
+
+  savedMainOpacity = win.getOpacity()
+  win.setOpacity(0)
+  didHideMainForCapture = true
+  mainLog.debug('[screenshots] main window hidden for capture')
+}
+
+function restoreMainWindowAfterCapture(): void {
+  if (!didHideMainForCapture) return
+
+  const win = hostContext?.getMainWindow()
+  if (!win || win.isDestroyed()) {
+    didHideMainForCapture = false
+    savedMainOpacity = null
+    return
+  }
+
+  if (savedMainOpacity !== null) {
+    win.setOpacity(savedMainOpacity)
+  }
+  if (!win.isVisible()) {
+    win.show()
+  }
+  didHideMainForCapture = false
+  savedMainOpacity = null
+  mainLog.debug('[screenshots] main window restored after capture')
+}
+
+function bindScreenshotLifecycle(instanceRef: Screenshots): void {
+  const restore = () => restoreMainWindowAfterCapture()
+  instanceRef.on('ok', restore)
+  instanceRef.on('cancel', restore)
+  instanceRef.on('windowClosed', restore)
+}
 
 export function initScreenshotsService(locale: AppLocale): Screenshots {
   if (instance) return instance
@@ -56,6 +107,8 @@ export function initScreenshotsService(locale: AppLocale): Screenshots {
     lang: SCREENSHOT_LANG[locale],
     singleWindow: true,
   })
+
+  bindScreenshotLifecycle(instance)
 
   instance.on('windowCreated', () => {
     mainLog.debug('[screenshots] window created')
@@ -79,11 +132,23 @@ export async function openScreenshotCapture(): Promise<void> {
   if (!instance) {
     throw new Error('SCREENSHOTS_NOT_INITIALIZED')
   }
-  await instance.startCapture()
+
+  hideMainWindowForCapture()
+  if (didHideMainForCapture) {
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+
+  try {
+    await instance.startCapture()
+  } catch (err) {
+    restoreMainWindowAfterCapture()
+    throw err
+  }
 }
 
 export async function closeScreenshotCapture(): Promise<void> {
   await instance?.endCapture()
+  restoreMainWindowAfterCapture()
 }
 
 export async function disposeScreenshotsService(): Promise<void> {
@@ -93,6 +158,7 @@ export async function disposeScreenshotsService(): Promise<void> {
   } catch {
     // ignore
   }
+  restoreMainWindowAfterCapture()
   if (instance.$win && !instance.$win.isDestroyed()) {
     instance.$win.destroy()
   }

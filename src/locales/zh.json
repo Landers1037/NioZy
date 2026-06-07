@@ -350,6 +350,8 @@
       "connectivityCheckEnabledDesc": "关闭后隐藏顶部栏连通检测入口",
       "screenshotEnabled": "开启屏幕截图",
       "screenshotEnabledDesc": "关闭后隐藏顶部栏截图入口，并禁用截图功能",
+      "screenshotHideSelf": "屏幕截图是否隐藏自身",
+      "screenshotHideSelfDesc": "开启后，开始截图时会暂时隐藏 NioZy 主窗口，避免截到程序本身",
       "notesEnabled": "开启备忘录",
       "notesEnabledDesc": "开启时顶部栏显示备忘录按钮，可新增/编辑/删除备忘录（存储在配置目录 note.json）"
     },

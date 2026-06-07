@@ -350,6 +350,8 @@
       "connectivityCheckEnabledDesc": "When off, hide the connectivity check entry in the title bar",
       "screenshotEnabled": "Enable Screenshot",
       "screenshotEnabledDesc": "When off, hide the screenshot entry and disable screenshot capture",
+      "screenshotHideSelf": "Hide app during screenshot",
+      "screenshotHideSelfDesc": "When on, temporarily hide the NioZy main window while capturing so it is not included in the screenshot",
       "notesEnabled": "Enable Notes",
       "notesEnabledDesc": "Show Notes button and manage notes (stored at config directory note.json)"
     },

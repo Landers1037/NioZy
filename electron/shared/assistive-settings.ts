@@ -4,6 +4,8 @@ export interface AssistiveSettings {
   terminalSearchEnabled: boolean
   connectivityCheckEnabled: boolean
   screenshotEnabled: boolean
+  /** 截图时隐藏 NioZy 主窗口，避免截到自身 */
+  screenshotHideSelf: boolean
   notesEnabled: boolean
 }
 
@@ -13,6 +15,7 @@ export const DEFAULT_ASSISTIVE_SETTINGS: AssistiveSettings = {
   terminalSearchEnabled: true,
   connectivityCheckEnabled: true,
   screenshotEnabled: true,
+  screenshotHideSelf: false,
   notesEnabled: true,
 }
 
@@ -39,6 +42,10 @@ export function normalizeAssistiveSettings(value: unknown): AssistiveSettings {
     screenshotEnabled: normalizeBool(
       raw.screenshotEnabled,
       DEFAULT_ASSISTIVE_SETTINGS.screenshotEnabled,
+    ),
+    screenshotHideSelf: normalizeBool(
+      raw.screenshotHideSelf,
+      DEFAULT_ASSISTIVE_SETTINGS.screenshotHideSelf,
     ),
     notesEnabled: normalizeBool(raw.notesEnabled, DEFAULT_ASSISTIVE_SETTINGS.notesEnabled),
   }
