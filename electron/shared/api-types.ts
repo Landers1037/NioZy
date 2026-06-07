@@ -221,6 +221,8 @@ export interface AppSettings {
   }
   advanced: {
     hardwareAcceleration: boolean
+    /** 为 true 时在 Chromium 启用 WebGPU（须同时开启硬件加速） */
+    webGpuAcceleration: boolean
     /** 为 true 时关闭 renderer sandbox */
     disableSandbox: boolean
     transparency: number

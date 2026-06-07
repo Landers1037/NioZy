@@ -13,7 +13,7 @@ import { existsSync } from 'fs'
 import { readFile, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
-import { SettingsStore, isHardwareAccelerationEnabled } from '../settings-store'
+import { SettingsStore, isHardwareAccelerationEnabled, isWebGpuAccelerationEnabled } from '../settings-store'
 import { StatisticsStore } from '../statistics-store'
 import { ReminderStore } from '../reminder-store'
 import { ReminderScheduler } from '../reminder-scheduler'
@@ -39,6 +39,7 @@ import {
 import { containsVaultReference } from '../shared/vault-reference'
 import {
   applyChromiumPerformanceFlags,
+  applyWebGpuFlags,
   getOptimizedWebPreferences,
   syncInactiveTabSleepThrottling,
 } from '../chromium-tuning'
@@ -135,6 +136,8 @@ if (!gotSingleInstanceLock) {
 if (!isHardwareAccelerationEnabled()) {
   app.disableHardwareAcceleration()
 }
+
+applyWebGpuFlags(isWebGpuAccelerationEnabled())
 
 disableCrashReporting()
 const performanceSettingsAtLaunch = readPerformanceSettingsFromDisk()

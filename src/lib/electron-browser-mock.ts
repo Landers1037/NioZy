@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
   advanced: {
     hardwareAcceleration: true,
+    webGpuAcceleration: false,
     disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,

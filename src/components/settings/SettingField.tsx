@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 interface SettingFieldProps {
-  icon: LucideIcon
+  icon: LucideIcon | React.ComponentType<{ className?: string }>
   label: string
   description?: string
   children?: React.ReactNode
