@@ -109,6 +109,7 @@ import {
 } from '../app-log'
 import {
   closeScreenshotCapture,
+  configureScreenshotsService,
   disposeScreenshotsService,
   initScreenshotsService,
   openScreenshotCapture,
@@ -565,6 +566,10 @@ app.whenReady().then(async () => {
   syncStatisticsPolling()
   syncReminderScheduler()
   syncGlobalShortcuts(settingsStore, () => mainWindow)
+  configureScreenshotsService({
+    getMainWindow: () => mainWindow,
+    shouldHideSelf: () => settingsStore.get().assistive.screenshotHideSelf === true,
+  })
   initScreenshotsService(settingsStore.get().locale)
 
   if (settingsStore.get().advanced.shellContextMenu) {

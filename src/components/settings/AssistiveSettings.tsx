@@ -93,6 +93,22 @@ export function AssistiveSettings() {
           />
         </SettingField>
 
+        {assistive.screenshotEnabled !== false ? (
+          <div className="flex flex-col gap-6 pl-0 sm:pl-8">
+            <SettingField
+              icon={Crop}
+              label={t('settings.assistive.screenshotHideSelf')}
+              description={t('settings.assistive.screenshotHideSelfDesc')}
+              row
+            >
+              <Switch
+                checked={assistive.screenshotHideSelf === true}
+                onCheckedChange={(v) => patchAssistive({ screenshotHideSelf: v })}
+              />
+            </SettingField>
+          </div>
+        ) : null}
+
         <SettingField
           icon={NotebookPen}
           label={t('settings.assistive.notesEnabled')}
