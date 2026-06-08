@@ -183,6 +183,11 @@ const api: ElectronAPI = {
     pickImage: () => ipcRenderer.invoke('reminder:pickImage'),
     clearImage: () => ipcRenderer.invoke('reminder:clearImage'),
     getImageUrl: () => ipcRenderer.invoke('reminder:getImageUrl'),
+    listPets: () => ipcRenderer.invoke('reminder:listPets'),
+    importPet: (name) => ipcRenderer.invoke('reminder:importPet', name),
+    deletePet: (petId) => ipcRenderer.invoke('reminder:deletePet', petId),
+    listPetAnimationStates: (petId) => ipcRenderer.invoke('reminder:listPetAnimationStates', petId),
+    getPetPreviewUrl: (petId) => ipcRenderer.invoke('reminder:getPetPreviewUrl', petId),
     onDue: (cb) => onReminderDue(cb),
   },
   rdp: {

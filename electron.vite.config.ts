@@ -80,7 +80,10 @@ export default defineConfig(({ command }) => {
     build: {
       minify: 'esbuild',
       lib: {
-        entry: resolve('electron/preload/index.ts'),
+        entry: {
+          index: resolve('electron/preload/index.ts'),
+          'pet-preload': resolve('electron/preload/pet-preload.ts'),
+        },
         formats: ['es'],
       },
       rollupOptions: {
@@ -118,7 +121,10 @@ export default defineConfig(({ command }) => {
           moduleSideEffects: 'no-external',
           preset: 'recommended',
         },
-        input: resolve('index.html'),
+        input: {
+          main: resolve('index.html'),
+          pet: resolve('src/pet/index.html'),
+        },
         output: {
           manualChunks(id) {
             if (!id.includes('node_modules')) return

@@ -95,6 +95,8 @@ import {
   syncWebviewPreviewCustomHeaders,
   syncWebviewPreviewProxy,
 } from '../webview-preview-session'
+import { listPetReminderItems } from '../shared/pet-reminder-dto'
+import { getPetUiLabels } from '../shared/pet-ui-labels'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
 import { summarizeSettingsPatch } from '../settings-patch-log'
 import {
@@ -115,6 +117,22 @@ import {
   openScreenshotCapture,
   syncScreenshotsLang,
 } from '../screenshots-service'
+import {
+  configureDesktopPetService,
+  disposeDesktopPet,
+  notifyPetReminderDue,
+  onPetPointerDown,
+  onPetPointerMove,
+  onPetPointerUp,
+  onPetReady,
+  setPetWindowCompact,
+  setPetWindowDueAlert,
+  setPetWindowReminderAndDue,
+  setPetWindowReminderList,
+  onPetShowMenu,
+  onPetToggleMain,
+  syncDesktopPet,
+} from '../desktop-pet-service'
 
 registerLocalFileScheme()
 
@@ -252,7 +270,10 @@ const reminderStore = new ReminderStore()
 const reminderScheduler = new ReminderScheduler(
   reminderStore,
   settingsStore,
-  (win, payload) => sendToRenderer(win, 'reminder:due', payload),
+  (win, payload) => {
+    sendToRenderer(win, 'reminder:due', payload)
+    notifyPetReminderDue(payload)
+  },
   () => mainWindow,
 )
 const vaultStore = new VaultStore()
@@ -570,6 +591,12 @@ app.whenReady().then(async () => {
     getMainWindow: () => mainWindow,
     shouldHideSelf: () => settingsStore.get().assistive.screenshotHideSelf === true,
   })
+  configureDesktopPetService({
+    getMainWindow: () => mainWindow,
+    settingsStore,
+    requestNewTerminal: () => requestNewTerminalFromTray(),
+  })
+  syncDesktopPet()
   initScreenshotsService(settingsStore.get().locale)
 
   if (settingsStore.get().advanced.shellContextMenu) {
@@ -603,6 +630,7 @@ app.on('before-quit', () => {
   void vncProxyManager?.disposeAll()
   unregisterGlobalShortcuts()
   void disposeScreenshotsService()
+  disposeDesktopPet()
   systemStats.stop()
   statisticsStore.dispose()
   void disposeCopilotRuntime(true).catch((err) =>
@@ -616,6 +644,22 @@ app.on('will-quit', () => {
 })
 
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
+ipcMain.on('pet:ready', () => onPetReady())
+ipcMain.on('pet:pointerDown', (_, x: number, y: number) => {
+  if (typeof x === 'number' && typeof y === 'number') onPetPointerDown(x, y)
+})
+ipcMain.on('pet:pointerMove', (_, x: number, y: number) => {
+  if (typeof x === 'number' && typeof y === 'number') onPetPointerMove(x, y)
+})
+ipcMain.on('pet:pointerUp', (_, x: number, y: number) => {
+  if (typeof x === 'number' && typeof y === 'number') onPetPointerUp(x, y)
+})
+ipcMain.on('pet:toggleMain', () => onPetToggleMain())
+ipcMain.on('pet:showMenu', () => onPetShowMenu())
+ipcMain.on('pet:setWindowCompact', () => setPetWindowCompact())
+ipcMain.on('pet:setWindowReminderList', () => setPetWindowReminderList())
+ipcMain.on('pet:setWindowDueAlert', () => setPetWindowDueAlert())
+ipcMain.on('pet:setWindowReminderAndDue', () => setPetWindowReminderAndDue())
 ipcMain.on('window:maximize', () => {
   if (mainWindow?.isMaximized()) mainWindow.unmaximize()
   else mainWindow?.maximize()
@@ -914,6 +958,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   }
   if (partial.reminder !== undefined) {
     syncReminderScheduler()
+    syncDesktopPet()
   }
   return updated
 })
@@ -1018,6 +1063,97 @@ ipcMain.handle('reminder:getImageUrl', async () => {
   const url = getReminderImageUrlFromExt(ext)
   if (!url) return { ok: false as const, error: 'NOT_FOUND' }
   return { ok: true as const, url }
+})
+
+ipcMain.handle('reminder:listPets', async () => {
+  const { listPetIds } = await import('../pet-store')
+  return listPetIds()
+})
+
+ipcMain.handle('reminder:importPet', async (_, name: unknown) => {
+  const { pickAndImportPet } = await import('../pet-store')
+  const requestedName = typeof name === 'string' ? name : ''
+  const result = await pickAndImportPet(mainWindow, requestedName)
+  if (result.ok) {
+    settingsStore.update({
+      reminder: {
+        ...settingsStore.get().reminder,
+        desktopPetId: result.id,
+      },
+    })
+    syncDesktopPet()
+  }
+  return result
+})
+
+ipcMain.handle('reminder:getPetPreviewUrl', async (_, petId: unknown) => {
+  const { buildPetSpritesheetPreviewUrl } = await import('../pet-store')
+  if (typeof petId !== 'string' || !petId.trim()) {
+    return { ok: false as const, error: 'INVALID_ID' }
+  }
+  const url = buildPetSpritesheetPreviewUrl(petId.trim())
+  if (!url) return { ok: false as const, error: 'NOT_FOUND' }
+  return { ok: true as const, url }
+})
+
+ipcMain.handle('reminder:listPetAnimationStates', async (_, petId: unknown) => {
+  const { listPetAnimationStates } = await import('../pet-store')
+  if (typeof petId !== 'string' || !petId.trim()) return []
+  return listPetAnimationStates(petId.trim())
+})
+
+ipcMain.handle('reminder:deletePet', async (_, petId: unknown) => {
+  const { deletePet, listPetIds, resolveActivePetId } = await import('../pet-store')
+  if (typeof petId !== 'string' || !petId.trim()) {
+    return { ok: false as const, error: 'INVALID_ID' }
+  }
+  const id = petId.trim()
+  const result = await deletePet(id)
+  if (!result.ok) return result
+
+  const reminder = settingsStore.get().reminder
+  if (reminder.desktopPetId === id) {
+    const remaining = await listPetIds()
+    const nextId = resolveActivePetId(null, remaining)
+    settingsStore.update({
+      reminder: {
+        ...reminder,
+        desktopPetId: nextId,
+      },
+    })
+  }
+  syncDesktopPet()
+  return result
+})
+
+ipcMain.handle('pet:getSpriteConfig', async () => {
+  const { getDesktopPetSpriteConfig } = await import('../pet-store')
+  const reminder = settingsStore.get().reminder
+  return getDesktopPetSpriteConfig(
+    reminder.desktopPetEnabled,
+    reminder.desktopPetId,
+    reminder.desktopPetAnimationState,
+    reminder.desktopPetRandomState,
+  )
+})
+
+ipcMain.handle('pet:getLabels', () => getPetUiLabels(settingsStore.get().locale))
+
+ipcMain.handle('pet:listReminders', () => listPetReminderItems(reminderStore.list()))
+
+ipcMain.handle('pet:dismissReminders', (_, ids: unknown) => {
+  if (!Array.isArray(ids)) return
+  const validIds = ids.filter((id) => typeof id === 'string' && id.trim())
+  reminderStore.dismissItems(validIds)
+  reminderScheduler.reschedule()
+})
+
+ipcMain.handle('pet:snoozeReminders', (_, ids: unknown, minutes: unknown) => {
+  if (!Array.isArray(ids)) return
+  const validIds = ids.filter((id) => typeof id === 'string' && id.trim())
+  const mins = typeof minutes === 'number' && Number.isFinite(minutes) ? minutes : 0
+  reminderStore.snoozeItems(validIds, mins)
+  reminderScheduler.reschedule()
 })
 
 ipcMain.handle('update:check', () => checkForAppUpdate())

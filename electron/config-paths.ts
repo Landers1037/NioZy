@@ -80,3 +80,16 @@ export function ensureChatDir(): void {
   const dir = getChatDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
 }
+
+/** 桌面宠物目录：%USERPROFILE%/.config/NioZy/pets */
+export function getPetsDir(): string {
+  return join(getConfigDir(), 'pets')
+}
+
+export function getPetDir(petId: string): string {
+  return join(getPetsDir(), petId)
+}
+
+export function getPetSpritesheetPath(petId: string): string {
+  return join(getPetDir(petId), 'spritesheet.webp')
+}
