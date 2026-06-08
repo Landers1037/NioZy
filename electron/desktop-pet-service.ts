@@ -26,17 +26,18 @@ type DesktopPetHostContext = {
 let hostContext: DesktopPetHostContext | null = null
 let petWindow: BrowserWindow | null = null
 let mainWindowTopSyncHandler: (() => void) | null = null
-let savePositionTimer: ReturnType<typeof setTimeout> | null = null
+let dragPollTimer: ReturnType<typeof setInterval> | null = null
 let petInteraction: {
-  startX: number
-  startY: number
-  windowX: number
-  windowY: number
+  startCursorX: number
+  startCursorY: number
+  offsetX: number
+  offsetY: number
   dragging: boolean
 } | null = null
 
 const PET_ALWAYS_ON_TOP_LEVEL = 'pop-up-menu' as const
 const PET_CLICK_MOVE_THRESHOLD_PX = 6
+const PET_DRAG_POLL_MS = 16
 
 type PetMenuLabels = {
   hidePet: string
@@ -115,58 +116,113 @@ export function notifyPetReminderDue(payload: ReminderDuePayload): void {
   petWindow.webContents.send('pet:reminderDue', payload)
 }
 
-function scheduleSavePetPosition(): void {
-  if (savePositionTimer) clearTimeout(savePositionTimer)
-  savePositionTimer = setTimeout(() => {
-    savePositionTimer = null
-    if (!petWindow || petWindow.isDestroyed()) return
-    const { x, y } = petWindow.getBounds()
-    saveDesktopPetPosition(x, y)
-  }, 150)
+function stopDragPolling(): void {
+  if (dragPollTimer) {
+    clearInterval(dragPollTimer)
+    dragPollTimer = null
+  }
 }
 
-function setDesktopPetBounds(x: number, y: number): void {
-  if (!petWindow || petWindow.isDestroyed()) return
+/** 宠物精灵左下角在屏幕上的坐标（紧凑模式下等于窗口左上角） */
+function getPetScreenOrigin(bounds: { x: number; y: number; width: number; height: number }): DesktopPetPosition {
+  return {
+    x: bounds.x + bounds.width - PET_DISPLAY_WIDTH,
+    y: bounds.y + bounds.height - PET_DISPLAY_HEIGHT,
+  }
+}
+
+/** 已知宠物精灵位置，反推当前尺寸下窗口左上角 */
+function windowPositionFromPetOrigin(
+  petX: number,
+  petY: number,
+  width: number,
+  height: number,
+): DesktopPetPosition {
+  return {
+    x: Math.round(petX - width + PET_DISPLAY_WIDTH),
+    y: Math.round(petY - height + PET_DISPLAY_HEIGHT),
+  }
+}
+
+/** 拖拽过程中仅跟随光标，不做边界钳位 */
+function followCursorWhileDragging(): void {
+  if (!petInteraction || !petWindow || petWindow.isDestroyed()) return
+  const cursor = screen.getCursorScreenPoint()
   const bounds = petWindow.getBounds()
-  const next = clampPetWindowBounds(x, y, bounds.width, bounds.height)
-  petWindow.setBounds({
-    x: next.x,
-    y: next.y,
-    width: bounds.width,
-    height: bounds.height,
-  })
+  const petX = cursor.x - petInteraction.offsetX
+  const petY = cursor.y - petInteraction.offsetY
+  const win = windowPositionFromPetOrigin(petX, petY, bounds.width, bounds.height)
+  petWindow.setPosition(win.x, win.y)
+}
+
+function pollPetDrag(): void {
+  if (!petInteraction || !petWindow || petWindow.isDestroyed()) {
+    stopDragPolling()
+    return
+  }
+  const cursor = screen.getCursorScreenPoint()
+  const dx = cursor.x - petInteraction.startCursorX
+  const dy = cursor.y - petInteraction.startCursorY
+  if (!petInteraction.dragging) {
+    if (Math.hypot(dx, dy) < PET_CLICK_MOVE_THRESHOLD_PX) return
+    petInteraction.dragging = true
+  }
+  followCursorWhileDragging()
+}
+
+/** 松开时按宠物精灵位置钳位到工作区内，并持久化 */
+function finalizeDragPosition(): void {
+  if (!petInteraction || !petWindow || petWindow.isDestroyed()) return
+  const cursor = screen.getCursorScreenPoint()
+  const bounds = petWindow.getBounds()
+  const petX = cursor.x - petInteraction.offsetX
+  const petY = cursor.y - petInteraction.offsetY
+  const clampedPet = clampPetPosition(petX, petY)
+  const win = windowPositionFromPetOrigin(
+    clampedPet.x,
+    clampedPet.y,
+    bounds.width,
+    bounds.height,
+  )
+  petWindow.setPosition(win.x, win.y)
+  saveDesktopPetPosition(clampedPet.x, clampedPet.y)
   ensurePetWindowOnTop()
+}
+
+function startDragPolling(): void {
+  stopDragPolling()
+  dragPollTimer = setInterval(pollPetDrag, PET_DRAG_POLL_MS)
 }
 
 export function onPetReady(): void {
   mainLog.info('[desktop-pet] renderer ready')
 }
 
-export function onPetPointerDown(screenX: number, screenY: number): void {
+export function onPetPointerDown(): void {
   if (!petWindow || petWindow.isDestroyed()) return
+  const cursor = screen.getCursorScreenPoint()
   const bounds = petWindow.getBounds()
+  const pet = getPetScreenOrigin(bounds)
   petInteraction = {
-    startX: screenX,
-    startY: screenY,
-    windowX: bounds.x,
-    windowY: bounds.y,
+    startCursorX: cursor.x,
+    startCursorY: cursor.y,
+    offsetX: cursor.x - pet.x,
+    offsetY: cursor.y - pet.y,
     dragging: false,
   }
+  startDragPolling()
 }
 
-export function onPetPointerMove(screenX: number, screenY: number): void {
-  if (!petInteraction || !petWindow || petWindow.isDestroyed()) return
-  const dx = screenX - petInteraction.startX
-  const dy = screenY - petInteraction.startY
-  if (!petInteraction.dragging && Math.hypot(dx, dy) < PET_CLICK_MOVE_THRESHOLD_PX) return
-  petInteraction.dragging = true
-  setDesktopPetBounds(petInteraction.windowX + dx, petInteraction.windowY + dy)
+export function onPetPointerMove(): void {
+  // 拖拽由主进程轮询 screen.getCursorScreenPoint() 驱动，避免渲染层 pointermove 反馈环
 }
 
-export function onPetPointerUp(_screenX: number, _screenY: number): void {
-  if (!petInteraction) return
+export function onPetPointerUp(): void {
+  if (petInteraction?.dragging) {
+    finalizeDragPosition()
+  }
+  stopDragPolling()
   petInteraction = null
-  scheduleSavePetPosition()
 }
 
 export function onPetToggleMain(): void {
@@ -385,10 +441,7 @@ function showPetWindow(): void {
 
 function hidePetWindow(): void {
   unbindMainWindowTopSync()
-  if (savePositionTimer) {
-    clearTimeout(savePositionTimer)
-    savePositionTimer = null
-  }
+  stopDragPolling()
   petInteraction = null
   if (!petWindow || petWindow.isDestroyed()) {
     petWindow = null
@@ -425,6 +478,22 @@ export function syncDesktopPet(): void {
 export function disposeDesktopPet(): void {
   hidePetWindow()
   hostContext = null
+}
+
+/** 将当前窗口位置换算为紧凑模式下宠物精灵的屏幕坐标并持久化 */
+function persistDesktopPetPosition(): void {
+  if (!hostContext || !petWindow || petWindow.isDestroyed()) return
+  const bounds = petWindow.getBounds()
+  const petX = bounds.x + bounds.width - PET_DISPLAY_WIDTH
+  const petY = bounds.y + bounds.height - PET_DISPLAY_HEIGHT
+  const next = clampPetPosition(petX, petY)
+  const reminder = hostContext.settingsStore.get().reminder
+  hostContext.settingsStore.update({
+    reminder: {
+      ...reminder,
+      desktopPetPosition: next,
+    },
+  })
 }
 
 export function saveDesktopPetPosition(x: number, y: number): void {

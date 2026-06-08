@@ -9,9 +9,9 @@ const { contextBridge, ipcRenderer } = require('electron') as typeof import('ele
 
 export interface PetElectronAPI {
   ready: () => void
-  pointerDown: (screenX: number, screenY: number) => void
-  pointerMove: (screenX: number, screenY: number) => void
-  pointerUp: (screenX: number, screenY: number) => void
+  pointerDown: () => void
+  pointerMove: () => void
+  pointerUp: () => void
   toggleMainWindow: () => void
   showMenu: () => void
   getSpriteConfig: () => Promise<DesktopPetSpriteConfig>
@@ -29,9 +29,9 @@ export interface PetElectronAPI {
 
 const api: PetElectronAPI = {
   ready: () => ipcRenderer.send('pet:ready'),
-  pointerDown: (screenX, screenY) => ipcRenderer.send('pet:pointerDown', screenX, screenY),
-  pointerMove: (screenX, screenY) => ipcRenderer.send('pet:pointerMove', screenX, screenY),
-  pointerUp: (screenX, screenY) => ipcRenderer.send('pet:pointerUp', screenX, screenY),
+  pointerDown: () => ipcRenderer.send('pet:pointerDown'),
+  pointerMove: () => ipcRenderer.send('pet:pointerMove'),
+  pointerUp: () => ipcRenderer.send('pet:pointerUp'),
   toggleMainWindow: () => ipcRenderer.send('pet:toggleMain'),
   showMenu: () => ipcRenderer.send('pet:showMenu'),
   getSpriteConfig: () => ipcRenderer.invoke('pet:getSpriteConfig') as Promise<DesktopPetSpriteConfig>,

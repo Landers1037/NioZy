@@ -117,13 +117,12 @@ body.addEventListener('pointerdown', (event: PointerEvent) => {
   if (event.button !== 0 || activePointerId !== null) return
   activePointerId = event.pointerId
   body.setPointerCapture(event.pointerId)
-  window.petAPI.pointerDown(event.screenX, event.screenY)
+  window.petAPI.pointerDown()
 })
 
 body.addEventListener('pointermove', (event: PointerEvent) => {
   if (activePointerId !== event.pointerId) return
   body.classList.add('dragging')
-  window.petAPI.pointerMove(event.screenX, event.screenY)
 })
 
 function finishPointer(event: PointerEvent): void {
@@ -134,7 +133,7 @@ function finishPointer(event: PointerEvent): void {
   } catch {
     /* ignore */
   }
-  window.petAPI.pointerUp(event.screenX, event.screenY)
+  window.petAPI.pointerUp()
   activePointerId = null
 }
 

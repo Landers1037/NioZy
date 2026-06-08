@@ -645,15 +645,9 @@ app.on('will-quit', () => {
 
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
 ipcMain.on('pet:ready', () => onPetReady())
-ipcMain.on('pet:pointerDown', (_, x: number, y: number) => {
-  if (typeof x === 'number' && typeof y === 'number') onPetPointerDown(x, y)
-})
-ipcMain.on('pet:pointerMove', (_, x: number, y: number) => {
-  if (typeof x === 'number' && typeof y === 'number') onPetPointerMove(x, y)
-})
-ipcMain.on('pet:pointerUp', (_, x: number, y: number) => {
-  if (typeof x === 'number' && typeof y === 'number') onPetPointerUp(x, y)
-})
+ipcMain.on('pet:pointerDown', () => onPetPointerDown())
+ipcMain.on('pet:pointerMove', () => onPetPointerMove())
+ipcMain.on('pet:pointerUp', () => onPetPointerUp())
 ipcMain.on('pet:toggleMain', () => onPetToggleMain())
 ipcMain.on('pet:showMenu', () => onPetShowMenu())
 ipcMain.on('pet:setWindowCompact', () => setPetWindowCompact())
