@@ -785,14 +785,14 @@ ipcMain.handle('terminal:clearBackground', async () => {
 })
 
 ipcMain.handle('terminal:getBackgroundUrl', async (_, ext: string) => {
-  const { buildTerminalBackgroundPreviewUrl, terminalBackgroundExists } = await import(
-    '../terminal-background-service'
-  )
+  const { buildTerminalBackgroundPreviewUrlWithCacheBust, terminalBackgroundExists } =
+    await import('../terminal-background-service')
   const normalized = typeof ext === 'string' ? ext.replace(/^\./, '').toLowerCase() : ''
   if (!normalized || !terminalBackgroundExists(normalized)) {
     return { ok: false as const, error: 'NOT_FOUND' }
   }
-  return { ok: true as const, url: buildTerminalBackgroundPreviewUrl(normalized) }
+  const url = await buildTerminalBackgroundPreviewUrlWithCacheBust(normalized)
+  return { ok: true as const, url }
 })
 
 ipcMain.handle('files:pickPrivateKey', async (): Promise<string | null> => {
