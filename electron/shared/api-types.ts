@@ -496,6 +496,13 @@ export interface ElectronAPI {
       | { ok: true; url: string }
       | { ok: false; error: string }
     >
+    listPets: () => Promise<string[]>
+    importPet: (name: string) => Promise<import('../pet-store').PetImportResult>
+    deletePet: (petId: string) => Promise<import('../pet-store').PetDeleteResult>
+    listPetAnimationStates: (petId: string) => Promise<import('../pet-store').PetAnimationStateDto[]>
+    getPetPreviewUrl: (
+      petId: string,
+    ) => Promise<{ ok: true; url: string } | { ok: false; error: string }>
     onDue: (cb: (payload: import('./reminder-data').ReminderDuePayload) => void) => () => void
   }
   rdp: {

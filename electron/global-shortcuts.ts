@@ -1,10 +1,11 @@
 import { globalShortcut, BrowserWindow } from 'electron'
 import type { SettingsStore } from './settings-store'
+import { mainLog } from './app-log'
 
 let registeredAccelerator: string | null = null
 
 /** 窗口已可见、未最小化且拥有焦点，视为在前台展示 */
-function isWindowInForeground(win: BrowserWindow): boolean {
+export function isMainWindowInForeground(win: BrowserWindow): boolean {
   return win.isVisible() && !win.isMinimized() && win.isFocused()
 }
 
@@ -20,6 +21,42 @@ function showToForeground(win: BrowserWindow): void {
   if (!win.isVisible()) win.show()
   if (win.isMinimized()) win.restore()
   win.focus()
+}
+
+/** 与全局快捷键 showApp（默认 Ctrl+T）相同的隐藏/显示主窗口逻辑 */
+export function toggleMainWindowForeground(
+  getMainWindow: () => BrowserWindow | null,
+  settingsStore: SettingsStore,
+  source: 'shortcut' | 'pet' = 'shortcut',
+): void {
+  const win = getMainWindow()
+  if (!win || win.isDestroyed()) {
+    mainLog.info('[desktop-pet] toggleMainWindowForeground: no main window', { source })
+    return
+  }
+
+  const state = {
+    source,
+    isVisible: win.isVisible(),
+    isMinimized: win.isMinimized(),
+    isFocused: win.isFocused(),
+    inForeground: isMainWindowInForeground(win),
+    minimizeToTrayOnClose: settingsStore.get().system.minimizeToTrayOnClose,
+  }
+
+  if (isMainWindowInForeground(win)) {
+    mainLog.info('[desktop-pet] toggleMainWindowForeground: hide', state)
+    hideToBackground(win, settingsStore.get().system.minimizeToTrayOnClose)
+  } else {
+    mainLog.info('[desktop-pet] toggleMainWindowForeground: show', state)
+    showToForeground(win)
+    mainLog.info('[desktop-pet] toggleMainWindowForeground: after show', {
+      source,
+      isVisible: win.isVisible(),
+      isMinimized: win.isMinimized(),
+      isFocused: win.isFocused(),
+    })
+  }
 }
 
 export function syncGlobalShortcuts(
@@ -44,14 +81,7 @@ export function syncGlobalShortcuts(
   }
 
   const ok = globalShortcut.register(accelerator, () => {
-    const win = getMainWindow()
-    if (!win) return
-
-    if (isWindowInForeground(win)) {
-      hideToBackground(win, settingsStore.get().system.minimizeToTrayOnClose)
-    } else {
-      showToForeground(win)
-    }
+    toggleMainWindowForeground(getMainWindow, settingsStore, 'shortcut')
   })
 
   if (ok) registeredAccelerator = accelerator

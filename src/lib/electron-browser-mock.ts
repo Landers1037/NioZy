@@ -557,6 +557,11 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       pickImage: async () => ({ ok: false as const, canceled: true }),
       clearImage: async () => ({ ok: true as const }),
       getImageUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
+      listPets: async () => [],
+      importPet: async () => ({ ok: false as const, canceled: true }),
+      deletePet: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
+      listPetAnimationStates: async () => [],
+      getPetPreviewUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
       onDue: () => () => undefined,
     },
     repo: {
