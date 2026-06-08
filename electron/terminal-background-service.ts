@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir, unlink } from 'fs/promises'
+import { copyFile, mkdir, readdir, stat, unlink } from 'fs/promises'
 import { existsSync } from 'fs'
 import { extname, join } from 'path'
 import { dialog } from 'electron'
@@ -16,6 +16,20 @@ export function getTerminalBackgroundFilePath(ext: string): string {
 
 export function buildTerminalBackgroundPreviewUrl(ext: string): string {
   return buildLocalPreviewUrl(getTerminalBackgroundFilePath(ext))
+}
+
+function appendPreviewUrlCacheBust(url: string, mtimeMs: number): string {
+  const sep = url.includes('?') ? '&' : '?'
+  return `${url}${sep}v=${mtimeMs}`
+}
+
+/** 带文件 mtime 的预览 URL，避免同路径换图后浏览器仍显示旧缓存 */
+export async function buildTerminalBackgroundPreviewUrlWithCacheBust(
+  ext: string,
+): Promise<string> {
+  const filePath = getTerminalBackgroundFilePath(ext)
+  const st = await stat(filePath)
+  return appendPreviewUrlCacheBust(buildLocalPreviewUrl(filePath), st.mtimeMs)
 }
 
 async function ensureBackgroundDir(): Promise<void> {
@@ -73,7 +87,8 @@ export async function pickAndInstallTerminalBackground(
     await removeExistingBackgroundFiles()
     const destPath = getTerminalBackgroundFilePath(ext)
     await copyFile(sourcePath, destPath)
-    return { ok: true, ext, url: buildTerminalBackgroundPreviewUrl(ext) }
+    const url = await buildTerminalBackgroundPreviewUrlWithCacheBust(ext)
+    return { ok: true, ext, url }
   } catch (err) {
     return {
       ok: false,

@@ -26,6 +26,8 @@ export function TerminalBackgroundSettings() {
   const savedOpacity = settings?.terminal.backgroundOpacity ?? 100
   const [draftOpacity, setDraftOpacity] = useState(savedOpacity)
   const setPreviewOpacity = useTerminalBackgroundPreviewStore((s) => s.setPreviewOpacity)
+  const bumpImageRevision = useTerminalBackgroundPreviewStore((s) => s.bumpImageRevision)
+  const imageRevision = useTerminalBackgroundPreviewStore((s) => s.imageRevision)
   const hasImage = !!ext
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export function TerminalBackgroundSettings() {
     }
     const url = await fetchTerminalBackgroundUrl(ext)
     setPreviewUrl(url)
-  }, [ext])
+  }, [ext, imageRevision])
 
   useEffect(() => {
     void refreshPreview()
@@ -68,6 +70,7 @@ export function TerminalBackgroundSettings() {
           backgroundImageExt: res.ext,
         },
       })
+      bumpImageRevision()
       setPreviewUrl(res.url)
     } finally {
       setPicking(false)
@@ -88,6 +91,7 @@ export function TerminalBackgroundSettings() {
           backgroundImageExt: undefined,
         },
       })
+      bumpImageRevision()
       setPreviewUrl(null)
     } finally {
       setClearing(false)

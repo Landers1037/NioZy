@@ -17,6 +17,7 @@ type Props = {
 export function TerminalBackgroundLayer({ terminal, className }: Props) {
   const ext = terminal?.backgroundImageExt
   const previewOpacity = useTerminalBackgroundPreviewStore((s) => s.previewOpacity)
+  const imageRevision = useTerminalBackgroundPreviewStore((s) => s.imageRevision)
   const opacity = previewOpacity ?? getTerminalBackgroundOpacity(terminal)
   const chromeBackground = getTerminalChromeBackgroundColor(terminal)
   const [url, setUrl] = useState<string | null>(null)
@@ -33,7 +34,7 @@ export function TerminalBackgroundLayer({ terminal, className }: Props) {
     return () => {
       cancelled = true
     }
-  }, [ext])
+  }, [ext, imageRevision])
 
   if (!url) return null
 
