@@ -152,7 +152,6 @@ export function onPetPointerDown(screenX: number, screenY: number): void {
     windowY: bounds.y,
     dragging: false,
   }
-  mainLog.info('[desktop-pet] pointerDown', { screenX, screenY })
 }
 
 export function onPetPointerMove(screenX: number, screenY: number): void {
@@ -164,14 +163,9 @@ export function onPetPointerMove(screenX: number, screenY: number): void {
   setDesktopPetBounds(petInteraction.windowX + dx, petInteraction.windowY + dy)
 }
 
-export function onPetPointerUp(screenX: number, screenY: number): void {
+export function onPetPointerUp(_screenX: number, _screenY: number): void {
   if (!petInteraction) return
-  const dx = screenX - petInteraction.startX
-  const dy = screenY - petInteraction.startY
-  const distance = Math.hypot(dx, dy)
-  const wasDrag = petInteraction.dragging || distance >= PET_CLICK_MOVE_THRESHOLD_PX
   petInteraction = null
-  mainLog.info('[desktop-pet] pointerUp', { screenX, screenY, distance, wasDrag })
   scheduleSavePetPosition()
 }
 
