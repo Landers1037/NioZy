@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { P2pChatMessage, P2pFileProgress } from '../../../electron/shared/p2p-types'
+import { FilesystemImagePreviewDialog } from '@/components/filesystem/FilesystemImagePreviewDialog'
 import { getElectronAPI } from '@/lib/electron-client'
 import { cn } from '@/lib/utils'
 
@@ -11,7 +12,15 @@ interface ChatMessageListProps {
   emptyHint?: string
 }
 
-function ChatImagePreview({ message }: { message: P2pChatMessage }) {
+function ChatImagePreview({
+  message,
+  onPreview,
+  onImageLoad,
+}: {
+  message: P2pChatMessage
+  onPreview: (path: string, name: string) => void
+  onImageLoad?: () => void
+}) {
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -30,16 +39,37 @@ function ChatImagePreview({ message }: { message: P2pChatMessage }) {
 
   if (!url) return <span>{message.fileName}</span>
   return (
-    <img
-      src={url}
-      alt={message.fileName ?? 'image'}
-      className="max-h-48 max-w-full rounded-md object-contain"
-    />
+    <button
+      type="button"
+      className="block max-w-full cursor-zoom-in rounded-md border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={() => {
+        if (message.localPath) onPreview(message.localPath, message.fileName ?? 'image')
+      }}
+    >
+      <img
+        src={url}
+        alt={message.fileName ?? 'image'}
+        className="max-h-48 max-w-full rounded-md object-contain"
+        onLoad={onImageLoad}
+      />
+    </button>
   )
 }
 
 export function ChatMessageList({ messages, fileProgress, emptyHint }: ChatMessageListProps) {
   const { t } = useTranslation()
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [previewFile, setPreviewFile] = useState<{ path: string; name: string } | null>(null)
+
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, fileProgress, scrollToBottom])
 
   if (messages.length === 0) {
     return (
@@ -50,7 +80,8 @@ export function ChatMessageList({ messages, fileProgress, emptyHint }: ChatMessa
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+    <>
+      <div ref={scrollRef} className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
       {messages.map((message) => {
         const outbound = message.direction === 'outbound'
         const progress = fileProgress[message.id]
@@ -69,7 +100,11 @@ export function ChatMessageList({ messages, fileProgress, emptyHint }: ChatMessa
               {(message.type === 'file' || message.type === 'image') && (
                 <div className="flex flex-col gap-2">
                   {message.type === 'image' && message.localPath ? (
-                    <ChatImagePreview message={message} />
+                    <ChatImagePreview
+                      message={message}
+                      onPreview={(path, name) => setPreviewFile({ path, name })}
+                      onImageLoad={scrollToBottom}
+                    />
                   ) : (
                     <span>{message.fileName}</span>
                   )}
@@ -90,6 +125,15 @@ export function ChatMessageList({ messages, fileProgress, emptyHint }: ChatMessa
           </div>
         )
       })}
-    </div>
+      </div>
+
+      <FilesystemImagePreviewDialog
+        filePath={previewFile?.path ?? null}
+        fileName={previewFile?.name ?? ''}
+        onOpenChange={(open) => {
+          if (!open) setPreviewFile(null)
+        }}
+      />
+    </>
   )
 }
