@@ -20,6 +20,7 @@ import {
   handleTerminalRightClick,
 } from '@/lib/terminal-shortcut-actions'
 import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
+import { resolveTerminalFontFamilyCSSValue } from '../../../electron/shared/terminal-builtin-fonts'
 import {
   applyTerminalRuntimeOptions,
   buildTerminalOptions,
@@ -737,7 +738,7 @@ export function TerminalView({
       settings.terminal.colorScheme,
       settings.terminal,
     )
-    termRef.current.options.fontFamily = settings.terminal.fontFamily
+    termRef.current.options.fontFamily = resolveTerminalFontFamilyCSSValue(settings.terminal)
     termRef.current.options.fontSize = settings.terminal.fontSize
     termRef.current.options.fontWeight = settings.terminal.fontWeight
     termRef.current.options.fontWeightBold = settings.terminal.fontWeightBold

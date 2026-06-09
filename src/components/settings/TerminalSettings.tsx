@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { BuiltinTerminalFontPicker } from '@/components/settings/BuiltinTerminalFontPicker'
 import { FontFamilyPicker } from '@/components/settings/FontFamilyPicker'
 import {
   Select,
@@ -77,10 +78,33 @@ export function TerminalSettings() {
         <TerminalBackgroundSettings />
 
         <SettingField icon={Type} label={t('settings.terminal.fontFamily')}>
-          <FontFamilyPicker
-            value={settings.terminal.fontFamily}
-            onChange={(fontFamily) =>
-              patchSettings({ terminal: { ...settings.terminal, fontFamily } })
+          <div className="flex flex-wrap items-center gap-2">
+            <FontFamilyPicker
+              value={settings.terminal.fontFamily}
+              onChange={(fontFamily) =>
+                patchSettings({ terminal: { ...settings.terminal, fontFamily } })
+              }
+              className={cn(settings.terminal.useBuiltinFont && 'pointer-events-none opacity-50')}
+            />
+            <BuiltinTerminalFontPicker
+              value={settings.terminal.builtinFont}
+              onChange={(builtinFont) =>
+                patchSettings({ terminal: { ...settings.terminal, builtinFont } })
+              }
+            />
+          </div>
+        </SettingField>
+
+        <SettingField
+          icon={Type}
+          label={t('settings.terminal.useBuiltinFont')}
+          description={t('settings.terminal.useBuiltinFontDesc')}
+          row
+        >
+          <Switch
+            checked={settings.terminal.useBuiltinFont}
+            onCheckedChange={(useBuiltinFont) =>
+              patchSettings({ terminal: { ...settings.terminal, useBuiltinFont } })
             }
           />
         </SettingField>

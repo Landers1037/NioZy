@@ -382,6 +382,8 @@
       "description": "Color scheme, font, cursor, and renderer",
       "colorScheme": "Color scheme",
       "fontFamily": "Terminal font",
+      "useBuiltinFont": "Use built-in font",
+      "useBuiltinFontDesc": "When on, the built-in Nerd Font Mono overrides the system font above for terminal rendering",
       "fontWeight": "Regular weight",
       "fontWeightBold": "Bold weight",
       "fontSize": "Terminal font size",

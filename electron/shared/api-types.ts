@@ -191,6 +191,10 @@ export interface AppSettings {
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
+    /** 为 true 时用 builtinFont 覆盖 fontFamily 渲染终端 */
+    useBuiltinFont: boolean
+    /** 内置 Nerd Font Mono */
+    builtinFont: import('./terminal-builtin-fonts').TerminalBuiltinFontId
     fontSize: number
     /** 终端常规字重；未设置时使用终端默认 */
     fontWeight?: number

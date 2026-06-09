@@ -6,6 +6,7 @@ import {
   type TerminalColorScheme,
 } from '../../electron/shared/terminal-color-schemes'
 import { TERMINAL_THEMES, getThemePalette } from '@/lib/terminal-themes'
+import { formatTerminalFontFamilyCSSValue } from '../../electron/shared/terminal-builtin-fonts'
 
 /** 设置中的配色方案 ID，对应 wterm `theme` 与 `.wterm.theme-{id}` */
 export function getWtermThemeId(schemeId: string): TerminalColorScheme {
@@ -40,7 +41,7 @@ export function buildWtermFontStyle(
   fontWeightBold?: number,
 ): CSSProperties {
   return {
-    '--term-font-family': fontFamily,
+    '--term-font-family': formatTerminalFontFamilyCSSValue(fontFamily),
     '--term-font-size': `${fontSize}px`,
     ...(typeof fontWeight === 'number' ? { '--term-font-weight': `${fontWeight}` } : {}),
     ...(typeof fontWeightBold === 'number' ? { '--term-font-weight-bold': `${fontWeightBold}` } : {}),

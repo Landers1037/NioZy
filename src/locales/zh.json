@@ -382,6 +382,8 @@
       "description": "配色、背景、字体、光标与渲染方式",
       "colorScheme": "配色方案",
       "fontFamily": "终端字体",
+      "useBuiltinFont": "使用内置字体",
+      "useBuiltinFontDesc": "开启后使用内置 Nerd Font Mono 覆盖上方系统字体选择，用于终端渲染",
       "fontWeight": "常规字重",
       "fontWeightBold": "加粗字重",
       "fontSize": "终端字号",

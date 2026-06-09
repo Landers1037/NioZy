@@ -34,6 +34,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
+    useBuiltinFont: false,
+    builtinFont: '0xProtoNerd',
     fontSize: 13,
     renderer: 'webgl',
     cursorStyle: 'block',

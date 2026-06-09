@@ -311,6 +311,8 @@
       "description": "カラースキーム、フォント、カーソル、レンダラー",
       "colorScheme": "カラースキーム",
       "fontFamily": "ターミナルフォント",
+      "useBuiltinFont": "組み込みフォントを使用",
+      "useBuiltinFontDesc": "オン時、組み込み Nerd Font Mono が上のシステムフォントを上書きしてターミナルに適用されます",
       "fontSize": "ターミナルフォントサイズ",
       "cursorStyle": "カーソルスタイル",
       "cursorStyleAria": "カーソルスタイル",
