@@ -219,6 +219,48 @@ html.dark[data-ui-style='cyberpunk'] {
   --cyber-neon-purple: #bd00ff;
 }
 
+/* —— Liquid Glass（Apple 液态玻璃）—— */
+html[data-ui-style='liquid-glass'] {
+  --radius: 1rem;
+  --background: #e4ecf8;
+  --foreground: #1c1c1e;
+  --card: rgb(255 255 255 / 0.72);
+  --card-foreground: #1c1c1e;
+  --popover: rgb(255 255 255 / 0.82);
+  --popover-foreground: #1c1c1e;
+  --muted: rgb(255 255 255 / 0.45);
+  --muted-foreground: #636366;
+  --border: rgb(255 255 255 / 0.55);
+  --primary: #007aff;
+  --primary-foreground: #ffffff;
+  --accent: rgb(255 255 255 / 0.5);
+  --accent-foreground: #1c1c1e;
+  --destructive: #ff3b30;
+  --ring: #007aff;
+  --glass-highlight: rgb(255 255 255 / 0.65);
+  --glass-shadow: rgb(0 0 0 / 0.08);
+}
+
+html.dark[data-ui-style='liquid-glass'] {
+  --background: #0c0c14;
+  --foreground: #f5f5f7;
+  --card: rgb(44 44 52 / 0.62);
+  --card-foreground: #f5f5f7;
+  --popover: rgb(44 44 52 / 0.78);
+  --popover-foreground: #f5f5f7;
+  --muted: rgb(255 255 255 / 0.08);
+  --muted-foreground: #98989d;
+  --border: rgb(255 255 255 / 0.16);
+  --primary: #0a84ff;
+  --primary-foreground: #ffffff;
+  --accent: rgb(255 255 255 / 0.1);
+  --accent-foreground: #f5f5f7;
+  --destructive: #ff453a;
+  --ring: #0a84ff;
+  --glass-highlight: rgb(255 255 255 / 0.14);
+  --glass-shadow: rgb(0 0 0 / 0.45);
+}
+
 html.dark[data-ui-style='windows-classic'] {
   --background: #2a2a2a;
   --foreground: #ffffff;
@@ -318,6 +360,22 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='windows-classic'] h5,
   html[data-ui-style='windows-classic'] h6 {
     font-weight: var(--app-font-weight-bold, 700);
+  }
+
+  html[data-ui-style='liquid-glass'] body {
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Noto Sans SC', var(--font-sans);
+    letter-spacing: -0.01em;
+  }
+
+  html[data-ui-style='liquid-glass'] h1,
+  html[data-ui-style='liquid-glass'] h2,
+  html[data-ui-style='liquid-glass'] h3,
+  html[data-ui-style='liquid-glass'] h4,
+  html[data-ui-style='liquid-glass'] h5,
+  html[data-ui-style='liquid-glass'] h6 {
+    font-weight: var(--app-font-weight-bold, 600);
+    letter-spacing: -0.02em;
   }
 }
 
@@ -684,6 +742,144 @@ html[data-ui-style='cyberpunk'] .ui-slider-thumb {
 html.dark[data-ui-style='cyberpunk'] .ui-slider-thumb {
   border-color: var(--cyber-neon-yellow);
   box-shadow: 0 0 10px rgb(252 238 10 / 0.4);
+}
+
+/* Liquid Glass：渐变底纹、毛玻璃面板与高光描边 */
+html[data-ui-style='liquid-glass'] {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 10%, rgb(0 122 255 / 0.18), transparent 55%),
+    radial-gradient(ellipse 70% 55% at 85% 20%, rgb(175 82 222 / 0.14), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 50% 90%, rgb(52 199 89 / 0.1), transparent 45%),
+    linear-gradient(160deg, #dce8f8 0%, #e8eef6 40%, #f0f4fa 100%);
+}
+
+html.dark[data-ui-style='liquid-glass'] {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 15% 10%, rgb(10 132 255 / 0.22), transparent 55%),
+    radial-gradient(ellipse 70% 55% at 85% 20%, rgb(191 90 242 / 0.16), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 50% 90%, rgb(48 209 88 / 0.1), transparent 45%),
+    linear-gradient(160deg, #0a0a12 0%, #101018 40%, #0c0c14 100%);
+}
+
+html[data-ui-style='liquid-glass'] .ui-glass-titlebar {
+  box-shadow:
+    inset 0 -1px 0 var(--glass-highlight),
+    0 4px 24px var(--glass-shadow);
+}
+
+html[data-ui-style='liquid-glass'] .ui-glass-statusbar {
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+html[data-ui-style='liquid-glass'] .ui-glass-panel {
+  position: relative;
+}
+
+html[data-ui-style='liquid-glass'] .ui-glass-panel::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.35) 0%,
+    transparent 42%,
+    transparent 58%,
+    rgb(255 255 255 / 0.08) 100%
+  );
+}
+
+html.dark[data-ui-style='liquid-glass'] .ui-glass-panel::before {
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.1) 0%,
+    transparent 42%,
+    transparent 58%,
+    rgb(255 255 255 / 0.03) 100%
+  );
+}
+
+html[data-ui-style='liquid-glass'] .ui-glass-capsule {
+  border-radius: 9999px;
+}
+
+html[data-ui-style='liquid-glass'] .ui-card {
+  border-radius: 1rem;
+  border-color: var(--border);
+  background: var(--card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 4px 24px var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight);
+}
+
+html[data-ui-style='liquid-glass'] .ui-overlay-panel {
+  border: 1px solid var(--border);
+  background: var(--popover);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow:
+    0 12px 48px var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight);
+}
+
+html[data-ui-style='liquid-glass'] .ui-btn {
+  font-weight: var(--app-font-weight, 500);
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html[data-ui-style='liquid-glass'] .ui-btn.bg-primary {
+  box-shadow:
+    0 4px 16px color-mix(in srgb, var(--primary) 35%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+
+html[data-ui-style='liquid-glass'] .ui-btn.bg-primary:hover {
+  box-shadow:
+    0 6px 20px color-mix(in srgb, var(--primary) 45%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+
+html[data-ui-style='liquid-glass'] .ui-label {
+  font-weight: var(--app-font-weight, 500);
+}
+
+html[data-ui-style='liquid-glass'] .ui-card-title {
+  font-weight: var(--app-font-weight-bold, 600);
+  letter-spacing: -0.02em;
+}
+
+html[data-ui-style='liquid-glass'] .ui-switch-track {
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-ui-style='liquid-glass'] .ui-switch-track[data-state='checked'] {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+html[data-ui-style='liquid-glass'] .ui-switch-thumb {
+  box-shadow:
+    0 2px 8px var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight);
+  border-color: transparent;
+  background-color: #fff;
+}
+
+html.dark[data-ui-style='liquid-glass'] .ui-switch-thumb {
+  background-color: #f5f5f7;
+}
+
+html[data-ui-style='liquid-glass'] .ui-slider-thumb {
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+  box-shadow:
+    0 2px 10px color-mix(in srgb, var(--primary) 30%, transparent),
+    inset 0 1px 0 var(--glass-highlight);
 }
 
 @layer utilities {

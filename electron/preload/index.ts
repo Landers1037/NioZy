@@ -72,6 +72,8 @@ const api: ElectronAPI = {
     onMaximized: (cb) => onWindowMaximized(cb),
     snap: (layout) => ipcRenderer.send('window:snap', layout),
     toggleSnapRestore: () => ipcRenderer.invoke('window:toggleSnapRestore') as Promise<boolean>,
+    setTransparencyPreview: (transparency) =>
+      ipcRenderer.send('window:setTransparencyPreview', transparency),
   },
   settings: {
     getInitial: (): AppSettings | null => initialSettings,

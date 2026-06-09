@@ -205,6 +205,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       onMaximized: () => () => undefined,
       snap: () => undefined,
       toggleSnapRestore: async () => false,
+      setTransparencyPreview: () => undefined,
     },
     settings: {
       getInitial: () => structuredClone(mockSettings),

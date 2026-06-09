@@ -309,6 +309,10 @@
     "cyberpunk": {
       "label": "Cyberpunk",
       "description": "Neon cyberpunk: Cyber2077 yellow/cyan/magenta, dark grid backdrop, glow borders, uppercase headings"
+    },
+    "liquidGlass": {
+      "label": "Liquid Glass",
+      "description": "Apple liquid glass: frosted translucency, gradient mesh backdrop, specular edges, large pill controls, soft depth"
     }
   },
   "settings": {

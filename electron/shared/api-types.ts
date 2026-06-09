@@ -353,6 +353,8 @@ export interface ElectronAPI {
     ) => void
     /** 若窗口当前处于 Snap 分屏尺寸，则恢复到分屏前的 bounds；返回是否已恢复 */
     toggleSnapRestore: () => Promise<boolean>
+    /** 拖动透明度滑块时实时预览，不写盘 */
+    setTransparencyPreview: (transparency: number) => void
   }
   settings: {
     getInitial: () => AppSettings | null
