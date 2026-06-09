@@ -126,7 +126,7 @@ export function FilesystemSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 select-none">
           <FolderCode className="size-5" />
           {t('settings.filesystem.title')}
         </CardTitle>
