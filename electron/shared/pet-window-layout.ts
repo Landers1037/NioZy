@@ -1,26 +1,34 @@
-import { PET_DISPLAY_HEIGHT, PET_DISPLAY_WIDTH } from './pet-atlas'
-
-export const PET_WINDOW_COMPACT = {
-  width: PET_DISPLAY_WIDTH,
-  height: PET_DISPLAY_HEIGHT,
-} as const
+import { getPetDisplayDimensions } from './pet-atlas'
 
 export const PET_REMINDER_PANEL_WIDTH = 300
 export const PET_REMINDER_PANEL_HEIGHT = 220
 export const PET_DUE_ALERT_WIDTH = 260
 export const PET_DUE_ALERT_HEIGHT = 148
 
-export const PET_WINDOW_WITH_REMINDER_LIST = {
-  width: PET_REMINDER_PANEL_WIDTH,
-  height: PET_DISPLAY_HEIGHT + PET_REMINDER_PANEL_HEIGHT,
-} as const
+export function getPetWindowCompact(scale: number): { width: number; height: number } {
+  return getPetDisplayDimensions(scale)
+}
 
-export const PET_WINDOW_WITH_DUE_ALERT = {
-  width: Math.max(PET_DISPLAY_WIDTH, PET_DUE_ALERT_WIDTH),
-  height: PET_DISPLAY_HEIGHT + PET_DUE_ALERT_HEIGHT,
-} as const
+export function getPetWindowWithReminderList(scale: number): { width: number; height: number } {
+  const pet = getPetDisplayDimensions(scale)
+  return {
+    width: PET_REMINDER_PANEL_WIDTH,
+    height: pet.height + PET_REMINDER_PANEL_HEIGHT,
+  }
+}
 
-export const PET_WINDOW_WITH_BOTH = {
-  width: PET_REMINDER_PANEL_WIDTH,
-  height: PET_DISPLAY_HEIGHT + PET_REMINDER_PANEL_HEIGHT + PET_DUE_ALERT_HEIGHT,
-} as const
+export function getPetWindowWithDueAlert(scale: number): { width: number; height: number } {
+  const pet = getPetDisplayDimensions(scale)
+  return {
+    width: Math.max(pet.width, PET_DUE_ALERT_WIDTH),
+    height: pet.height + PET_DUE_ALERT_HEIGHT,
+  }
+}
+
+export function getPetWindowWithBoth(scale: number): { width: number; height: number } {
+  const pet = getPetDisplayDimensions(scale)
+  return {
+    width: PET_REMINDER_PANEL_WIDTH,
+    height: pet.height + PET_REMINDER_PANEL_HEIGHT + PET_DUE_ALERT_HEIGHT,
+  }
+}

@@ -560,6 +560,8 @@
       "enabledDesc": "开启后在顶栏显示提醒按钮，并可创建与管理提醒事项",
       "desktopPetEnabled": "开启桌面宠物",
       "desktopPetEnabledDesc": "在桌面显示悬浮宠物，可拖动位置；双击或右键菜单可显示/隐藏 NioZy 主窗口",
+      "petScale": "宠物大小",
+      "petScaleDesc": "调整桌面宠物显示缩放（25%–200%），50% 为默认大小（96×104 像素）",
       "petImport": "导入宠物",
       "petImportDesc": "导入 Petdex 格式 WebP 精灵图（1536×1872），保存到配置目录 pets 下；未填写名称时从 0 起自动编号",
       "petImportButton": "导入精灵图",

@@ -51,8 +51,6 @@ body.dragging {
 }
 
 .pet {
-  width: 96px;
-  height: 104px;
   flex-shrink: 0;
   background-repeat: no-repeat;
   image-rendering: pixelated;

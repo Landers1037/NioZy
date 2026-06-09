@@ -6,6 +6,7 @@ import {
   ImageIcon,
   MessageSquare,
   PawPrint,
+  Scaling,
   Shuffle,
   Timer,
   ToggleLeft,
@@ -13,12 +14,20 @@ import {
   Upload,
   Volume2,
 } from 'lucide-react'
+import {
+  PET_DISPLAY_SCALE_DEFAULT,
+  PET_DISPLAY_SCALE_MAX,
+  PET_DISPLAY_SCALE_MIN,
+  PET_DISPLAY_SCALE_STEP,
+  normalizePetDisplayScale,
+} from '../../../electron/shared/pet-atlas'
 import type { PetAnimationStateDto } from '../../../electron/pet-store'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Slider } from '@/components/ui/slider'
 import {
   Select,
   SelectContent,
@@ -55,6 +64,12 @@ export function ReminderSettings() {
   const [importingPet, setImportingPet] = useState(false)
   const [deletingPet, setDeletingPet] = useState(false)
   const [petStates, setPetStates] = useState<PetAnimationStateDto[]>([])
+  const savedPetScale = settings?.reminder.desktopPetScale ?? PET_DISPLAY_SCALE_DEFAULT
+  const [draftPetScale, setDraftPetScale] = useState(savedPetScale)
+
+  useEffect(() => {
+    setDraftPetScale(savedPetScale)
+  }, [savedPetScale])
 
   const refreshPreview = useCallback(async () => {
     const ext = settings?.reminder.customImageExt
@@ -256,6 +271,47 @@ export function ReminderSettings() {
             checked={reminder.desktopPetEnabled}
             onCheckedChange={(next) => patchReminder({ desktopPetEnabled: next })}
           />
+        </SettingField>
+
+        <SettingField
+          icon={Scaling}
+          label={t('settings.reminder.petScale')}
+          description={t('settings.reminder.petScaleDesc')}
+        >
+          <div className="flex max-w-md flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <Slider
+                className="flex-1"
+                min={PET_DISPLAY_SCALE_MIN}
+                max={PET_DISPLAY_SCALE_MAX}
+                step={PET_DISPLAY_SCALE_STEP}
+                value={[draftPetScale]}
+                disabled={!reminder.desktopPetEnabled}
+                onValueChange={(value) => {
+                  const next = value[0]
+                  if (next !== undefined) {
+                    setDraftPetScale(normalizePetDisplayScale(next))
+                  }
+                }}
+                onValueCommit={(value) => {
+                  const next = value[0]
+                  if (next === undefined) return
+                  const normalized = normalizePetDisplayScale(next)
+                  setDraftPetScale(normalized)
+                  if (normalized === reminder.desktopPetScale) return
+                  patchReminder({ desktopPetScale: normalized })
+                }}
+                aria-label={t('settings.reminder.petScale')}
+              />
+              <span className="w-12 shrink-0 text-right text-sm font-medium tabular-nums">
+                {Math.round(draftPetScale * 100)}%
+              </span>
+            </div>
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>{Math.round(PET_DISPLAY_SCALE_MIN * 100)}%</span>
+              <span>{Math.round(PET_DISPLAY_SCALE_MAX * 100)}%</span>
+            </div>
+          </div>
         </SettingField>
 
         <SettingField

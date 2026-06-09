@@ -174,7 +174,7 @@ export function resolveActivePetId(
 }
 
 export type DesktopPetSpriteConfig =
-  | { mode: 'placeholder' }
+  | { mode: 'placeholder'; displayScale: number }
   | {
       mode: 'sprite'
       spriteUrl: string
@@ -183,6 +183,7 @@ export type DesktopPetSpriteConfig =
       randomState: boolean
       randomIntervalMs: number
       states: PetAnimationStateDto[]
+      displayScale: number
     }
 
 export async function getDesktopPetSpriteConfig(
@@ -190,13 +191,14 @@ export async function getDesktopPetSpriteConfig(
   desktopPetId: string | null | undefined,
   desktopPetAnimationState: string | null | undefined,
   desktopPetRandomState: boolean,
+  desktopPetScale: number,
 ): Promise<DesktopPetSpriteConfig> {
-  if (!desktopPetEnabled) return { mode: 'placeholder' }
+  if (!desktopPetEnabled) return { mode: 'placeholder', displayScale: desktopPetScale }
   const ids = await listPetIds()
   const activeId = resolveActivePetId(desktopPetId, ids)
-  if (!activeId) return { mode: 'placeholder' }
+  if (!activeId) return { mode: 'placeholder', displayScale: desktopPetScale }
   const url = buildPetSpritesheetPreviewUrl(activeId)
-  if (!url) return { mode: 'placeholder' }
+  if (!url) return { mode: 'placeholder', displayScale: desktopPetScale }
 
   const states = await resolvePetAnimationStates(getPetDir(activeId))
   const stateIds = states.map((s) => s.id)
@@ -211,5 +213,6 @@ export async function getDesktopPetSpriteConfig(
     randomState: desktopPetRandomState === true,
     randomIntervalMs: PET_RANDOM_STATE_INTERVAL_MS,
     states: states.map(toPetAnimationStateDto),
+    displayScale: desktopPetScale,
   }
 }

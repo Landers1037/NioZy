@@ -1,4 +1,5 @@
 import { normalizePetAnimationStateId } from './pet-animation-states'
+import { normalizePetDisplayScale } from './pet-atlas'
 
 export type ReminderNotifyMode = 'toast' | 'dialog'
 
@@ -30,6 +31,8 @@ export interface ReminderSettings {
   desktopPetRandomState: boolean
   /** 桌面宠物上次位置（屏幕坐标），无则使用默认位置 */
   desktopPetPosition: DesktopPetPosition | null
+  /** 桌面宠物显示缩放（0.25–2，步长 0.01） */
+  desktopPetScale: number
 }
 
 export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
@@ -44,6 +47,7 @@ export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
   desktopPetAnimationState: 'idle',
   desktopPetRandomState: false,
   desktopPetPosition: null,
+  desktopPetScale: normalizePetDisplayScale(undefined),
 }
 
 const ALLOWED_NOTIFY_MODES = new Set<ReminderNotifyMode>(['toast', 'dialog'])
@@ -92,6 +96,7 @@ export function normalizeReminderSettings(
         ? stored.desktopPetRandomState
         : DEFAULT_REMINDER_SETTINGS.desktopPetRandomState,
     desktopPetPosition: normalizeDesktopPetPosition(stored?.desktopPetPosition),
+    desktopPetScale: normalizePetDisplayScale(stored?.desktopPetScale),
   }
 }
 
