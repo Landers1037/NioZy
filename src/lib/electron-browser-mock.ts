@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     builtinFont: '0xProtoNerd',
     fontSize: 13,
     renderer: 'webgl',
+    synchronizedOutputEnabled: true,
     cursorStyle: 'block',
     cursorBlink: true,
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,

@@ -209,6 +209,8 @@ export interface AppSettings {
     drawBoldTextInBrightColors: boolean
     /** 右键：有选区则复制，无选区则粘贴 */
     rightClickCopyPaste: boolean
+    /** xterm.js 6+ DEC 2026 同步输出（Wterm 不支持） */
+    synchronizedOutputEnabled: boolean
     /** 终端背景图扩展名（不含点），对应 background/bg.{ext} */
     backgroundImageExt?: string
     /** 终端背景图不透明度（0–100） */

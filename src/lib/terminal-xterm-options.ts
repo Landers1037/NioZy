@@ -27,6 +27,9 @@ export function buildTerminalOptions(
     ),
     rightClickSelectsWord: !normalizeRightClickCopyPaste(terminal?.rightClickCopyPaste),
     macOptionClickForcesSelection: true,
+    customGlyphs: true,
+    lineHeight: 1,
+    letterSpacing: 0,
     allowProposedApi,
     ...cursor,
   }
@@ -44,4 +47,7 @@ export function applyTerminalRuntimeOptions(
   term.options.macOptionClickForcesSelection = true
   term.options.fontWeight = terminal.fontWeight
   term.options.fontWeightBold = terminal.fontWeightBold
+  term.options.customGlyphs = true
+  term.options.lineHeight = 1
+  term.options.letterSpacing = 0
 }

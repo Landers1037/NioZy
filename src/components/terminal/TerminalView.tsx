@@ -1,10 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import type { Terminal, IDisposable } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
-import type { CanvasAddon } from '@xterm/addon-canvas'
 import type { WebglAddon } from '@xterm/addon-webgl'
 import { useAppStore } from '@/stores/app-store'
-import { resolveTerminalThemeWithBackground, hasTerminalBackgroundImage, getTerminalChromeBackgroundColor } from '@/lib/terminal-background'
+import { resolveTerminalThemeWithBackground, hasTerminalBackgroundImage, getTerminalChromeBackgroundColor, getTerminalCellBackgroundColor } from '@/lib/terminal-background'
 import type { TerminalViewProps } from './terminal-view-props'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
@@ -58,10 +57,32 @@ import {
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { getTerminalBufferText, restoreTerminalBufferText } from '@/lib/terminal-buffer'
+import { writeXtermOutput } from '@/lib/terminal-sync-output'
+import {
+  refreshWebglTextureAtlas,
+  scheduleWebglTextureAtlasRefresh,
+  waitForTerminalFonts,
+} from '@/lib/terminal-webgl-refresh'
+
 import {
   useAttachPtySessionStore,
   type AttachPtyCommittedSession,
 } from '@/stores/attach-pty-session-store'
+
+export type TerminalRuntimeRendererMode = 'dom' | 'webgl' | 'webgl-loading'
+
+function resolveDomFallbackReason(
+  preferDom: boolean,
+  superPowerSaving: boolean,
+  blocked: boolean,
+  explicit?: string,
+): string | undefined {
+  if (explicit) return explicit
+  if (superPowerSaving) return 'super-power-saving'
+  if (preferDom) return 'split-pane'
+  if (blocked) return 'webgl-context-lost'
+  return undefined
+}
 
 function hasLayout(el: HTMLElement): boolean {
   return el.clientWidth >= 2 && el.clientHeight >= 2
@@ -90,7 +111,6 @@ export function TerminalView({
   /** Attach 宿主 remount 后须为 null，否则会误判「已 attach」而跳过快照恢复 */
   const prevAttachSessionRef = useRef<AttachPtyCommittedSession | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
-  const canvasRef = useRef<CanvasAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
   const shellAddonsRef = useRef(createTerminalShellAddonState())
   const previewMouseRef = useRef<IDisposable[]>([])
@@ -98,6 +118,8 @@ export function TerminalView({
   const webglBlockedRef = useRef(false)
   const lastFitRef = useRef({ cols: 0, rows: 0, width: 0, height: 0 })
   const [termReady, setTermReady] = useState(false)
+  const [runtimeRenderer, setRuntimeRenderer] = useState<TerminalRuntimeRendererMode>('dom')
+  const [runtimeFallback, setRuntimeFallback] = useState<string | undefined>()
   const settings = useAppStore((s) => s.settings)
 
   useEffect(() => {
@@ -122,7 +144,7 @@ export function TerminalView({
   const terminalHasBackgroundImage = hasTerminalBackgroundImage(settings?.terminal)
   const activeRenderer = effectiveRenderer(
     rendererPreference,
-    preferDomRenderer || superPowerSavingDom || terminalHasBackgroundImage,
+    preferDomRenderer || superPowerSavingDom,
   )
 
   const safeFit = useCallback(
@@ -132,24 +154,44 @@ export function TerminalView({
       const term = termRef.current
       if (!el || !fit || !term || !hasLayout(el)) return false
 
+      const proposed = fit.proposeDimensions()
+      if (!proposed) return false
+
       const width = el.clientWidth
       const height = el.clientHeight
       const prev = lastFitRef.current
       const sizeUnchanged = prev.width === width && prev.height === height
 
-      if (!force && sizeUnchanged && term.cols === prev.cols && term.rows === prev.rows) {
-        return term.cols > 0 && term.rows > 0
+      if (
+        !force &&
+        sizeUnchanged &&
+        term.cols === proposed.cols &&
+        term.rows === proposed.rows
+      ) {
+        return true
       }
 
       try {
         fit.fit()
         const { cols, rows } = term
+        if (cols !== proposed.cols || rows !== proposed.rows) return false
         lastFitRef.current = { cols, rows, width, height }
         const terminalId = boundTerminalIdRef.current
         if (cols > 0 && rows > 0 && terminalId) {
           if (force || cols !== prev.cols || rows !== prev.rows) {
             getElectronAPI().terminal.resize(terminalId, cols, rows)
           }
+        }
+        const webgl = webglRef.current
+        if (
+          webgl &&
+          (force ||
+            cols !== prev.cols ||
+            rows !== prev.rows ||
+            width !== prev.width ||
+            height !== prev.height)
+        ) {
+          refreshWebglTextureAtlas(term, webgl)
         }
         return cols > 0 && rows > 0
       } catch {
@@ -163,7 +205,7 @@ export function TerminalView({
     (force = false) => {
       let attempts = 0
       const tryFit = () => {
-        if (safeFit(force) || attempts >= 12) return
+        if (safeFit(force) || attempts >= 48) return
         attempts += 1
         requestAnimationFrame(tryFit)
       }
@@ -172,20 +214,10 @@ export function TerminalView({
     [safeFit],
   )
 
-  const disposeCanvas = useCallback(() => {
-    const canvas = canvasRef.current
-    canvasRef.current = null
-    if (!canvas) return
-    try {
-      canvas.dispose()
-    } catch {
-      /* addon 已卸载时 dispose 可能报错 */
-    }
-  }, [])
-
   const disposeWebgl = useCallback(() => {
     const webgl = webglRef.current
     webglRef.current = null
+    setRuntimeRenderer('dom')
     if (!webgl) return
     try {
       webgl.dispose()
@@ -198,53 +230,44 @@ export function TerminalView({
     }
   }, [])
 
-  const loadCanvas = useCallback(async () => {
-    if (!termRef.current || canvasRef.current || activeRenderer !== 'canvas') return
-
-    try {
-      const { CanvasAddon } = await import('@xterm/addon-canvas')
-      if (!termRef.current || canvasRef.current || activeRenderer !== 'canvas') return
-
-      const canvas = new CanvasAddon()
-      canvasRef.current = canvas
-      termRef.current.loadAddon(canvas)
-      const appSettings = useAppStore.getState().settings
-      const shellAfterCanvas = appSettings?.shell ?? DEFAULT_SHELL_SETTINGS
-      const previewAfterCanvas = appSettings?.preview ?? DEFAULT_PREVIEW_SETTINGS
-      applyTerminalShellAddons(
-        termRef.current,
-        shellAddonsRef.current,
-        shellAfterCanvas,
-        previewAfterCanvas,
-      )
-      scheduleFit(true)
-    } catch {
-      disposeCanvas()
-    }
-  }, [activeRenderer, disposeCanvas, scheduleFit])
-
   const loadWebgl = useCallback(async () => {
     const terminalId = boundTerminalIdRef.current
     if (!termRef.current || !terminalId || webglRef.current) return
     if (webglBlockedRef.current || activeRenderer !== 'webgl') return
 
-    if (!tryAcquireWebglSlot(terminalId)) return
+    if (!tryAcquireWebglSlot(terminalId)) {
+      setRuntimeRenderer('dom')
+      setRuntimeFallback('webgl-slot-full')
+      return
+    }
+
+    setRuntimeRenderer('webgl-loading')
 
     try {
       const { WebglAddon } = await import('@xterm/addon-webgl')
-      if (!termRef.current || webglRef.current) {
+      const term = termRef.current
+      if (!term || webglRef.current) {
         if (terminalId && hasWebglSlot(terminalId)) {
           releaseWebglSlot(terminalId)
         }
+        setRuntimeRenderer('dom')
+        setRuntimeFallback('webgl-cancelled')
         return
       }
 
+      await waitForTerminalFonts()
+      // WebGL 纹理图集依赖准确的 deviceCell 尺寸；须先 fit 再挂载 addon
+      safeFit(true)
+
       const webgl = new WebglAddon()
       webglRef.current = webgl
-      termRef.current.loadAddon(webgl)
+      term.loadAddon(webgl)
       touchWebglSlot(terminalId)
+      setRuntimeRenderer('webgl')
+      setRuntimeFallback(undefined)
       webgl.onContextLoss(() => {
         webglBlockedRef.current = true
+        setRuntimeFallback('webgl-context-lost')
         disposeWebgl()
         scheduleFit(true)
       })
@@ -252,36 +275,47 @@ export function TerminalView({
       const shellAfterWebgl = appSettings?.shell ?? DEFAULT_SHELL_SETTINGS
       const previewAfterWebgl = appSettings?.preview ?? DEFAULT_PREVIEW_SETTINGS
       applyTerminalShellAddons(
-        termRef.current,
+        term,
         shellAddonsRef.current,
         shellAfterWebgl,
         previewAfterWebgl,
       )
-      scheduleFit(true)
+      scheduleWebglTextureAtlasRefresh(term, webgl, () => safeFit(true))
     } catch {
       webglBlockedRef.current = true
+      setRuntimeRenderer('dom')
+      setRuntimeFallback('webgl-load-failed')
       disposeWebgl()
     }
-  }, [activeRenderer, disposeWebgl, scheduleFit])
+  }, [activeRenderer, disposeWebgl, safeFit, scheduleFit])
 
   const applyRenderer = useCallback(() => {
     if (!termRef.current || !termReady) return
 
     if (activeRenderer === 'dom') {
-      disposeCanvas()
       disposeWebgl()
-      return
-    }
-    if (activeRenderer === 'canvas') {
-      disposeWebgl()
-      if (!canvasRef.current) void loadCanvas()
+      setRuntimeFallback(
+        resolveDomFallbackReason(
+          preferDomRenderer,
+          superPowerSavingDom,
+          webglBlockedRef.current,
+        ),
+      )
+      scheduleFit(true)
       return
     }
     if (activeRenderer === 'webgl') {
-      disposeCanvas()
       if (!webglRef.current && !webglBlockedRef.current) void loadWebgl()
     }
-  }, [activeRenderer, termReady, disposeCanvas, disposeWebgl, loadCanvas, loadWebgl])
+  }, [
+    activeRenderer,
+    termReady,
+    disposeWebgl,
+    loadWebgl,
+    scheduleFit,
+    preferDomRenderer,
+    superPowerSavingDom,
+  ])
 
   const detachAttachSession = useCallback(() => {
     const term = termRef.current
@@ -334,6 +368,7 @@ export function TerminalView({
     let onRightMouseUp: ((e: MouseEvent) => void) | undefined
     let onContextMenu: ((e: MouseEvent) => void) | undefined
     let stopInputA11y: (() => void) | undefined
+    let unsubRenderFit: IDisposable | undefined
     const captureOpts = { capture: true } as const
 
     void (async () => {
@@ -362,6 +397,12 @@ export function TerminalView({
       const fit = new FitAddon()
       term.loadAddon(fit)
       term.open(containerRef.current)
+      unsubRenderFit = term.onRender(() => {
+        if (safeFit(true)) {
+          unsubRenderFit?.dispose()
+          unsubRenderFit = undefined
+        }
+      })
       stopInputA11y = observeTerminalInputA11y(
         containerRef.current,
         i18n.t('terminal.inputAriaLabel'),
@@ -454,12 +495,18 @@ export function TerminalView({
       })
 
       unsubData = api.terminal.onData((id, data) => {
-        if (id === boundTerminalIdRef.current) term.write(data)
+        if (id === boundTerminalIdRef.current) {
+          writeXtermOutput(term, data, useAppStore.getState().settings)
+        }
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
-          term.write(formatTerminalExitMessage(code))
+          writeXtermOutput(
+            term,
+            formatTerminalExitMessage(code),
+            useAppStore.getState().settings,
+          )
           markSshTerminalDisconnected(id, tabRef.current)
         }
       })
@@ -475,7 +522,6 @@ export function TerminalView({
       setTermReady(false)
       webglBlockedRef.current = false
       lastFitRef.current = { cols: 0, rows: 0, width: 0, height: 0 }
-      disposeCanvas()
       disposeWebgl()
       if (termElement && onLeftMouseDown && onRightMouseUp && onContextMenu) {
         termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
@@ -483,6 +529,7 @@ export function TerminalView({
         termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
       }
       stopInputA11y?.()
+      unsubRenderFit?.dispose()
       unsubData?.()
       unsubExit?.()
       unsubLayoutFit?.()
@@ -495,7 +542,7 @@ export function TerminalView({
       termRef.current = null
       fitRef.current = null
     }
-  }, [tab.terminalId, scheduleFit, disposeCanvas, disposeWebgl, isAttachHost])
+  }, [tab.terminalId, scheduleFit, disposeWebgl, isAttachHost, safeFit])
 
   useEffect(() => {
     if (!isAttachHost || termRef.current || !containerRef.current) return
@@ -510,6 +557,7 @@ export function TerminalView({
     let onRightMouseUp: ((e: MouseEvent) => void) | undefined
     let onContextMenu: ((e: MouseEvent) => void) | undefined
     let stopInputA11y: (() => void) | undefined
+    let unsubRenderFit: IDisposable | undefined
     const captureOpts = { capture: true } as const
 
     void (async () => {
@@ -538,6 +586,12 @@ export function TerminalView({
       const fit = new FitAddon()
       term.loadAddon(fit)
       term.open(containerRef.current)
+      unsubRenderFit = term.onRender(() => {
+        if (safeFit(true)) {
+          unsubRenderFit?.dispose()
+          unsubRenderFit = undefined
+        }
+      })
       stopInputA11y = observeTerminalInputA11y(
         containerRef.current,
         i18n.t('terminal.inputAriaLabel'),
@@ -623,12 +677,18 @@ export function TerminalView({
       })
 
       unsubData = api.terminal.onData((id, data) => {
-        if (id === boundTerminalIdRef.current) term.write(data)
+        if (id === boundTerminalIdRef.current) {
+          writeXtermOutput(term, data, useAppStore.getState().settings)
+        }
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
-          term.write(formatTerminalExitMessage(code))
+          writeXtermOutput(
+            term,
+            formatTerminalExitMessage(code),
+            useAppStore.getState().settings,
+          )
           markSshTerminalDisconnected(id, tabRef.current)
         }
       })
@@ -645,7 +705,6 @@ export function TerminalView({
       detachAttachSession()
       webglBlockedRef.current = false
       lastFitRef.current = { cols: 0, rows: 0, width: 0, height: 0 }
-      disposeCanvas()
       disposeWebgl()
       if (termElement && onLeftMouseDown && onRightMouseUp && onContextMenu) {
         termElement.removeEventListener('mousedown', onLeftMouseDown, captureOpts)
@@ -653,6 +712,7 @@ export function TerminalView({
         termElement.removeEventListener('contextmenu', onContextMenu, captureOpts)
       }
       stopInputA11y?.()
+      unsubRenderFit?.dispose()
       unsubData?.()
       unsubExit?.()
       unsubLayoutFit?.()
@@ -662,7 +722,7 @@ export function TerminalView({
       termRef.current = null
       fitRef.current = null
     }
-  }, [isAttachHost, scheduleFit, disposeCanvas, disposeWebgl, detachAttachSession])
+  }, [isAttachHost, scheduleFit, disposeWebgl, detachAttachSession, safeFit, applyAttachSession])
 
   useEffect(() => {
     if (!isAttachHost || !termReady) return
@@ -746,6 +806,7 @@ export function TerminalView({
     termRef.current.options.cursorStyle = cursor.cursorStyle
     applyTerminalRuntimeOptions(termRef.current, settings.terminal)
     scheduleFit()
+    refreshWebglTextureAtlas(termRef.current, webglRef.current)
   }, [settings?.terminal, scheduleFit])
 
   useEffect(() => {
@@ -772,8 +833,6 @@ export function TerminalView({
         !webglBlockedRef.current
       ) {
         void loadWebgl()
-      } else if (activeRenderer === 'canvas' && !canvasRef.current) {
-        void loadCanvas()
       }
       return
     }
@@ -784,13 +843,12 @@ export function TerminalView({
     safeFit,
     effectiveTerminalId,
     loadWebgl,
-    loadCanvas,
     activeRenderer,
     tab.id,
   ])
 
   const chromeBackground = hasTerminalBackgroundImage(settings?.terminal)
-    ? 'transparent'
+    ? getTerminalCellBackgroundColor(settings?.terminal)
     : getTerminalChromeBackgroundColor(settings?.terminal)
 
   return (
@@ -805,6 +863,9 @@ export function TerminalView({
             ? 'niozy-terminal-host niozy-terminal-has-bg-image h-full w-full overflow-hidden'
             : 'niozy-terminal-host h-full w-full overflow-hidden'
         }
+        data-niozy-renderer={runtimeRenderer}
+        data-niozy-renderer-fallback={runtimeFallback ?? undefined}
+        data-niozy-renderer-preference={rendererPreference}
       />
       <SshReconnectHint terminalId={effectiveTerminalId ?? undefined} />
     </div>
