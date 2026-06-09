@@ -956,7 +956,11 @@
     "uploadSuccess": "上传成功",
     "downloadSuccess": "下载成功",
     "transferFailed": "传输失败",
-    "refreshAfterTransferFailed": "文件已上传，但刷新远程列表失败，请手动点刷新"
+    "refreshAfterTransferFailed": "文件已上传，但刷新远程列表失败，请手动点刷新",
+    "dropToUploadHint": "松开鼠标，上传到当前远程目录",
+    "dropDirectorySkipped": "暂不支持上传文件夹，已跳过：{{name}}",
+    "dropNoFiles": "未能识别拖入的文件路径",
+    "uploadBatchSuccess": "已成功上传 {{count}} 个文件"
   },
   "cursor": {
     "block": "方块",

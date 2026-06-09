@@ -848,7 +848,11 @@
     "uploadSuccess": "アップロード完了",
     "downloadSuccess": "ダウンロード完了",
     "transferFailed": "転送に失敗しました",
-    "refreshAfterTransferFailed": "アップロードは成功しましたがリモート一覧を更新できませんでした。「更新」をクリックしてください。"
+    "refreshAfterTransferFailed": "アップロードは成功しましたがリモート一覧を更新できませんでした。「更新」をクリックしてください。",
+    "dropToUploadHint": "離すと現在のリモートフォルダーにアップロード",
+    "dropDirectorySkipped": "フォルダーのアップロードは未対応です。スキップ: {{name}}",
+    "dropNoFiles": "ドロップしたファイルパスを読み取れませんでした",
+    "uploadBatchSuccess": "{{count}} 件のファイルをアップロードしました"
   },
   "cursor": {
     "block": "ブロック",
