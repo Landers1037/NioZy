@@ -560,6 +560,8 @@
       "enabledDesc": "Shows a reminder button in the title bar and enables scheduling",
       "desktopPetEnabled": "Enable desktop pet",
       "desktopPetEnabledDesc": "Show a floating pet on the desktop; drag to move. Double-click or right-click the menu to show/hide the main window",
+      "petScale": "Pet size",
+      "petScaleDesc": "Desktop pet display scale (25%–200%); 50% is the default size (96×104 px)",
       "petImport": "Import pet",
       "petImportDesc": "Import a Petdex WebP spritesheet (1536×1872) into the pets folder; auto-number from 0 if name is empty",
       "petImportButton": "Import spritesheet",

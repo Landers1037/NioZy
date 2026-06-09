@@ -1,4 +1,9 @@
-import { PET_ATLAS, PET_DISPLAY_SCALE } from '../../electron/shared/pet-atlas'
+import {
+  PET_ATLAS,
+  PET_DISPLAY_SCALE_DEFAULT,
+  getPetDisplayDimensions,
+  normalizePetDisplayScale,
+} from '../../electron/shared/pet-atlas'
 import type { PetAnimationStateDto } from '../../electron/pet-store'
 import { initPetReminderUi } from './pet-reminder-ui'
 import './pet.css'
@@ -18,6 +23,14 @@ let animationTimer: ReturnType<typeof setTimeout> | null = null
 let randomTimer: ReturnType<typeof setInterval> | null = null
 let allStates: PetAnimationStateDto[] = []
 let currentState: PetAnimationStateDto | null = null
+let displayScale = PET_DISPLAY_SCALE_DEFAULT
+
+function applyDisplayScale(scale: number): void {
+  displayScale = normalizePetDisplayScale(scale)
+  const { width, height } = getPetDisplayDimensions(displayScale)
+  petEl.style.width = `${width}px`
+  petEl.style.height = `${height}px`
+}
 
 function clearAnimationTimers(): void {
   if (animationTimer !== null) {
@@ -31,7 +44,7 @@ function clearAnimationTimers(): void {
 }
 
 function setFrame(col: number, row: number): void {
-  petEl.style.backgroundPosition = `-${col * PET_ATLAS.cellWidth * PET_DISPLAY_SCALE}px -${row * PET_ATLAS.cellHeight * PET_DISPLAY_SCALE}px`
+  petEl.style.backgroundPosition = `-${col * PET_ATLAS.cellWidth * displayScale}px -${row * PET_ATLAS.cellHeight * displayScale}px`
 }
 
 function scheduleNextFrame(): void {
@@ -70,7 +83,8 @@ function startRandomRotation(intervalMs: number, initialStateId: string): void {
   }, intervalMs)
 }
 
-function showPlaceholder(): void {
+function showPlaceholder(scale: number): void {
+  applyDisplayScale(scale)
   clearAnimationTimers()
   currentState = null
   petEl.classList.add('placeholder')
@@ -79,10 +93,11 @@ function showPlaceholder(): void {
 }
 
 function showSprite(config: Extract<Awaited<ReturnType<Window['petAPI']['getSpriteConfig']>>, { mode: 'sprite' }>): void {
+  applyDisplayScale(config.displayScale)
   petEl.classList.remove('placeholder')
   petEl.textContent = ''
   petEl.style.backgroundImage = `url(${config.spriteUrl})`
-  petEl.style.backgroundSize = `${PET_ATLAS.width * PET_DISPLAY_SCALE}px ${PET_ATLAS.height * PET_DISPLAY_SCALE}px`
+  petEl.style.backgroundSize = `${PET_ATLAS.width * displayScale}px ${PET_ATLAS.height * displayScale}px`
 
   allStates = config.states
   const initial = findStateById(config.animationStateId) ?? allStates[0]
@@ -100,7 +115,7 @@ async function initPetVisual(): Promise<void> {
   if (config.mode === 'sprite') {
     showSprite(config)
   } else {
-    showPlaceholder()
+    showPlaceholder(config.displayScale)
   }
 }
 

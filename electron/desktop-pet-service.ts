@@ -6,13 +6,13 @@ import { isMainWindowInForeground, toggleMainWindowForeground } from './global-s
 import type { SettingsStore } from './settings-store'
 import type { ReminderDuePayload } from './shared/reminder-data'
 import type { DesktopPetPosition } from './shared/reminder-settings'
-import { PET_DISPLAY_HEIGHT, PET_DISPLAY_WIDTH } from './shared/pet-atlas'
+import { getPetDisplayDimensions, normalizePetDisplayScale } from './shared/pet-atlas'
 import { getPetUiLabels } from './shared/pet-ui-labels'
 import {
-  PET_WINDOW_COMPACT,
-  PET_WINDOW_WITH_BOTH,
-  PET_WINDOW_WITH_DUE_ALERT,
-  PET_WINDOW_WITH_REMINDER_LIST,
+  getPetWindowCompact,
+  getPetWindowWithBoth,
+  getPetWindowWithDueAlert,
+  getPetWindowWithReminderList,
 } from './shared/pet-window-layout'
 import { mainLog } from './app-log'
 import { isElectronDev } from './shared/is-dev'
@@ -70,6 +70,14 @@ function getPetMenuLabels(): PetMenuLabels {
   }
 }
 
+function getPetScale(): number {
+  return normalizePetDisplayScale(hostContext?.settingsStore.get().reminder.desktopPetScale)
+}
+
+function getPetDisplaySize(): { width: number; height: number } {
+  return getPetDisplayDimensions(getPetScale())
+}
+
 function resizePetWindow(size: { width: number; height: number }): void {
   if (!petWindow || petWindow.isDestroyed()) return
   const bounds = petWindow.getBounds()
@@ -88,19 +96,19 @@ function resizePetWindow(size: { width: number; height: number }): void {
 }
 
 export function setPetWindowCompact(): void {
-  resizePetWindow(PET_WINDOW_COMPACT)
+  resizePetWindow(getPetWindowCompact(getPetScale()))
 }
 
 export function setPetWindowReminderList(): void {
-  resizePetWindow(PET_WINDOW_WITH_REMINDER_LIST)
+  resizePetWindow(getPetWindowWithReminderList(getPetScale()))
 }
 
 export function setPetWindowDueAlert(): void {
-  resizePetWindow(PET_WINDOW_WITH_DUE_ALERT)
+  resizePetWindow(getPetWindowWithDueAlert(getPetScale()))
 }
 
 export function setPetWindowReminderAndDue(): void {
-  resizePetWindow(PET_WINDOW_WITH_BOTH)
+  resizePetWindow(getPetWindowWithBoth(getPetScale()))
 }
 
 export function openPetReminders(): void {
@@ -125,9 +133,10 @@ function stopDragPolling(): void {
 
 /** 宠物精灵左下角在屏幕上的坐标（紧凑模式下等于窗口左上角） */
 function getPetScreenOrigin(bounds: { x: number; y: number; width: number; height: number }): DesktopPetPosition {
+  const pet = getPetDisplaySize()
   return {
-    x: bounds.x + bounds.width - PET_DISPLAY_WIDTH,
-    y: bounds.y + bounds.height - PET_DISPLAY_HEIGHT,
+    x: bounds.x + bounds.width - pet.width,
+    y: bounds.y + bounds.height - pet.height,
   }
 }
 
@@ -138,9 +147,10 @@ function windowPositionFromPetOrigin(
   width: number,
   height: number,
 ): DesktopPetPosition {
+  const pet = getPetDisplaySize()
   return {
-    x: Math.round(petX - width + PET_DISPLAY_WIDTH),
-    y: Math.round(petY - height + PET_DISPLAY_HEIGHT),
+    x: Math.round(petX - width + pet.width),
+    y: Math.round(petY - height + pet.height),
   }
 }
 
@@ -313,9 +323,10 @@ function getDefaultPetPosition(): DesktopPetPosition {
   const display = screen.getPrimaryDisplay()
   const { width, height } = display.workArea
   const margin = 24
+  const pet = getPetDisplaySize()
   return {
-    x: display.workArea.x + width - PET_DISPLAY_WIDTH - margin,
-    y: display.workArea.y + height - PET_DISPLAY_HEIGHT - margin,
+    x: display.workArea.x + width - pet.width - margin,
+    y: display.workArea.y + height - pet.height - margin,
   }
 }
 
@@ -336,7 +347,8 @@ function clampPetWindowBounds(
 }
 
 function clampPetPosition(x: number, y: number): DesktopPetPosition {
-  return clampPetWindowBounds(x, y, PET_DISPLAY_WIDTH, PET_DISPLAY_HEIGHT)
+  const pet = getPetDisplaySize()
+  return clampPetWindowBounds(x, y, pet.width, pet.height)
 }
 
 function resolveInitialPetPosition(): DesktopPetPosition {
@@ -362,9 +374,10 @@ function createPetWindow(): BrowserWindow {
     preloadExists: existsSync(preloadPath),
   })
 
+  const petSize = getPetDisplaySize()
   const win = new BrowserWindow({
-    width: PET_DISPLAY_WIDTH,
-    height: PET_DISPLAY_HEIGHT,
+    width: petSize.width,
+    height: petSize.height,
     x: pos.x,
     y: pos.y,
     frame: false,
@@ -469,7 +482,10 @@ export function syncDesktopPet(): void {
   if (enabled) {
     const hadWindow = Boolean(petWindow && !petWindow.isDestroyed())
     showPetWindow()
-    if (hadWindow) reloadPetWindowSprite()
+    if (hadWindow) {
+      resizePetWindow(getPetWindowCompact(getPetScale()))
+      reloadPetWindowSprite()
+    }
   } else {
     hidePetWindow()
   }
@@ -484,8 +500,9 @@ export function disposeDesktopPet(): void {
 function persistDesktopPetPosition(): void {
   if (!hostContext || !petWindow || petWindow.isDestroyed()) return
   const bounds = petWindow.getBounds()
-  const petX = bounds.x + bounds.width - PET_DISPLAY_WIDTH
-  const petY = bounds.y + bounds.height - PET_DISPLAY_HEIGHT
+  const pet = getPetDisplaySize()
+  const petX = bounds.x + bounds.width - pet.width
+  const petY = bounds.y + bounds.height - pet.height
   const next = clampPetPosition(petX, petY)
   const reminder = hostContext.settingsStore.get().reminder
   hostContext.settingsStore.update({

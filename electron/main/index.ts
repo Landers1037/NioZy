@@ -1128,6 +1128,7 @@ ipcMain.handle('pet:getSpriteConfig', async () => {
     reminder.desktopPetId,
     reminder.desktopPetAnimationState,
     reminder.desktopPetRandomState,
+    reminder.desktopPetScale,
   )
 })
 
