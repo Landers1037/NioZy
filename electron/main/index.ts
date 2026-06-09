@@ -643,6 +643,11 @@ app.on('will-quit', () => {
   unregisterGlobalShortcuts()
 })
 
+ipcMain.on('window:setTransparencyPreview', (_, transparency: number) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.setOpacity(transparencyToOpacity(transparency))
+})
+
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
 ipcMain.on('pet:ready', () => onPetReady())
 ipcMain.on('pet:pointerDown', () => onPetPointerDown())

@@ -92,7 +92,7 @@ function getTagVariants(theme: ThemeMode, uiStyle?: UiStyle): Record<StatusTagVa
 }
 
 function usesColoredStatusTags(uiStyle: UiStyle): boolean {
-  return uiStyle === 'niozy' || uiStyle === 'cyberpunk'
+  return uiStyle === 'niozy' || uiStyle === 'cyberpunk' || uiStyle === 'liquidGlass'
 }
 
 const metricTagVariantsLight =

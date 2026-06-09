@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Slider } from '@/components/ui/slider'
@@ -9,6 +10,9 @@ import { SettingField } from './SettingField'
 import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { getElectronAPI } from '@/lib/electron-client'
+
+const WINDOW_TRANSPARENCY_MIN = 70
+const WINDOW_TRANSPARENCY_MAX = 100
 
 function notifyWebGpuRestartRequired(t: (key: string) => string) {
   toast.info(t('toast.webGpuAccelerationRestart'), {
@@ -25,6 +29,46 @@ export function AdvancedSettings() {
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   const isWindows = getElectronAPI().system.platform === 'win32'
+  const savedTransparency = settings?.advanced.transparency ?? WINDOW_TRANSPARENCY_MAX
+  const [draftTransparency, setDraftTransparency] = useState(savedTransparency)
+  const previewRafRef = useRef<number | null>(null)
+  const pendingPreviewRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    setDraftTransparency(savedTransparency)
+  }, [savedTransparency])
+
+  const flushTransparencyPreview = useCallback((value: number) => {
+    pendingPreviewRef.current = null
+    if (previewRafRef.current !== null) {
+      cancelAnimationFrame(previewRafRef.current)
+      previewRafRef.current = null
+    }
+    getElectronAPI().window.setTransparencyPreview(value)
+  }, [])
+
+  const scheduleTransparencyPreview = useCallback(
+    (value: number) => {
+      pendingPreviewRef.current = value
+      if (previewRafRef.current !== null) return
+      previewRafRef.current = requestAnimationFrame(() => {
+        previewRafRef.current = null
+        const pending = pendingPreviewRef.current
+        if (pending !== null) getElectronAPI().window.setTransparencyPreview(pending)
+      })
+    },
+    [],
+  )
+
+  useEffect(
+    () => () => {
+      if (previewRafRef.current !== null) cancelAnimationFrame(previewRafRef.current)
+      const current = useAppStore.getState().settings?.advanced.transparency
+      if (current !== undefined) getElectronAPI().window.setTransparencyPreview(current)
+    },
+    [],
+  )
+
   if (!settings) return null
 
   return (
@@ -144,18 +188,24 @@ export function AdvancedSettings() {
         <SettingField
           icon={Droplets}
           label={t('settings.advanced.transparency', {
-            value: settings.advanced.transparency,
+            value: draftTransparency,
           })}
         >
           <Slider
             className="max-w-md"
-            min={70}
-            max={100}
+            min={WINDOW_TRANSPARENCY_MIN}
+            max={WINDOW_TRANSPARENCY_MAX}
             step={1}
-            value={[settings.advanced.transparency]}
-            onValueChange={([v]) =>
-              patchSettings({ advanced: { ...settings.advanced, transparency: v } })
-            }
+            value={[draftTransparency]}
+            onValueChange={([v]) => {
+              setDraftTransparency(v)
+              scheduleTransparencyPreview(v)
+            }}
+            onValueCommit={([v]) => {
+              flushTransparencyPreview(v)
+              if (v === savedTransparency) return
+              void patchSettings({ advanced: { ...settings.advanced, transparency: v } })
+            }}
           />
         </SettingField>
       </CardContent>
