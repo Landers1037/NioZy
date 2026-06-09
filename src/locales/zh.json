@@ -310,9 +310,9 @@
       "label": "Cyberpunk",
       "description": "赛博朋克霓虹：Cyber2077 经典黄/青/品红、暗色网格底纹、光晕边框与 uppercase 标题"
     },
-    "liquidGlass": {
-      "label": "Liquid Glass",
-      "description": "Apple 液态玻璃：半透明毛玻璃、渐变底纹、高光描边、大圆角胶囊控件与柔和景深"
+    "glass": {
+      "label": "玻璃",
+      "description": "半透明玻璃：磨砂透视面板、中性渐变底纹、细白描边与柔和景深"
     }
   },
   "settings": {
