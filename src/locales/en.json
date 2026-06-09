@@ -956,7 +956,11 @@
     "uploadSuccess": "Upload complete",
     "downloadSuccess": "Download complete",
     "transferFailed": "Transfer failed",
-    "refreshAfterTransferFailed": "Upload succeeded but could not refresh the remote list. Click Refresh."
+    "refreshAfterTransferFailed": "Upload succeeded but could not refresh the remote list. Click Refresh.",
+    "dropToUploadHint": "Release to upload to the current remote folder",
+    "dropDirectorySkipped": "Folders cannot be uploaded yet; skipped: {{name}}",
+    "dropNoFiles": "Could not read dropped file paths",
+    "uploadBatchSuccess": "Uploaded {{count}} files"
   },
   "cursor": {
     "block": "Block",

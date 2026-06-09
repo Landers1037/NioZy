@@ -32,6 +32,15 @@ import {
   parentScpLocalPath,
   SCP_LOCAL_ROOTS,
 } from '@/lib/scp-local-path'
+import { basenameFromPath } from '@/lib/path-utils'
+import {
+  buildRemoteUploadTarget,
+  isLocalDirectory,
+} from '@/lib/scp-transfer-actions'
+import {
+  getDroppedFilePaths,
+  hasExternalFileDrag,
+} from '@/lib/terminal-drop-actions'
 
 function formatTransferBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -57,6 +66,10 @@ function FileListPanel({
   onGoUp,
   onRefresh,
   canGoUp = true,
+  acceptFileDrop = false,
+  fileDropActive = false,
+  onFileDropActiveChange,
+  onFilesDrop,
 }: {
   title: string
   path: string
@@ -68,11 +81,55 @@ function FileListPanel({
   onGoUp: () => void
   onRefresh: () => void
   canGoUp?: boolean
+  acceptFileDrop?: boolean
+  fileDropActive?: boolean
+  onFileDropActiveChange?: (active: boolean) => void
+  onFilesDrop?: (paths: string[]) => void
 }) {
   const { t } = useTranslation()
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    if (!acceptFileDrop || !hasExternalFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    onFileDropActiveChange?.(true)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!acceptFileDrop || !hasExternalFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    onFileDropActiveChange?.(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!acceptFileDrop || !hasExternalFileDrag(e.dataTransfer)) return
+    const related = e.relatedTarget as Node | null
+    if (related && e.currentTarget.contains(related)) return
+    onFileDropActiveChange?.(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!acceptFileDrop || !hasExternalFileDrag(e.dataTransfer)) return
+    e.preventDefault()
+    e.stopPropagation()
+    onFileDropActiveChange?.(false)
+    const paths = getDroppedFilePaths(e.dataTransfer)
+    if (paths.length > 0) onFilesDrop?.(paths)
+  }
+
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col rounded-lg border border-border bg-muted/30">
+    <div
+      className={cn(
+        'relative flex min-h-0 min-w-0 flex-1 flex-col rounded-lg border border-border bg-muted/30',
+        acceptFileDrop && fileDropActive && 'ring-2 ring-primary/50',
+      )}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">{title}</span>
         <span className="min-w-0 flex-1 truncate font-mono text-xs" title={path}>
@@ -134,6 +191,11 @@ function FileListPanel({
           </ul>
         )}
       </div>
+      {acceptFileDrop && fileDropActive ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-primary/60 bg-primary/10">
+          <p className="px-4 text-center text-sm font-medium text-primary">{t('scp.dropToUploadHint')}</p>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -153,6 +215,7 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
   const [selectedRemote, setSelectedRemote] = useState<ScpFileEntry | null>(null)
   const [transferring, setTransferring] = useState(false)
   const [transferProgress, setTransferProgress] = useState<ScpTransferProgress | null>(null)
+  const [remoteDropActive, setRemoteDropActive] = useState(false)
   const remoteListQueue = useRef(Promise.resolve())
 
   const connection = getSshConnection(settings, tab.sshConnectionId)
@@ -277,32 +340,77 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
     return idx > 0 ? remotePath.slice(0, idx) : '/'
   }
 
+  const uploadLocalFile = useCallback(
+    async (localFilePath: string): Promise<boolean> => {
+      if (!connectionId) return false
+      const fileName = basenameFromPath(localFilePath)
+      const remoteTarget = buildRemoteUploadTarget(fileName, remotePath, selectedRemote)
+
+      const result = await getElectronAPI().ssh.upload(
+        connectionId,
+        localFilePath,
+        remoteTarget,
+        (p) => setTransferProgress(p),
+      )
+      if (!result.ok) {
+        toast.error(result.error ?? t('scp.transferFailed'))
+      }
+      return result.ok
+    },
+    [connectionId, remotePath, selectedRemote, t],
+  )
+
   const upload = async () => {
     if (!connectionId || !selectedLocal || selectedLocal.isDirectory) {
       toast.message(t('scp.selectLocalFile'))
       return
     }
-    const remoteTarget = selectedRemote?.isDirectory
-      ? `${selectedRemote.path.replace(/\/$/, '')}/${selectedLocal.name}`
-      : remotePath.endsWith('/')
-        ? `${remotePath}${selectedLocal.name}`
-        : `${remotePath}/${selectedLocal.name}`
 
     setTransferring(true)
     setTransferProgress(null)
-    const result = await getElectronAPI().ssh.upload(
-      connectionId,
-      selectedLocal.path,
-      remoteTarget,
-      (p) => setTransferProgress(p),
-    )
+    const ok = await uploadLocalFile(selectedLocal.path)
     setTransferring(false)
     setTransferProgress(null)
-    if (result.ok) {
+    if (ok) {
       toast.success(t('scp.uploadSuccess'))
       await loadRemote(remotePath, { afterTransfer: true })
-    } else {
-      toast.error(result.error ?? t('scp.transferFailed'))
+    }
+  }
+
+  const uploadDroppedFiles = async (paths: string[]) => {
+    if (!connectionId || transferring) return
+    if (paths.length === 0) {
+      toast.message(t('scp.dropNoFiles'))
+      return
+    }
+
+    const filePaths: string[] = []
+    for (const droppedPath of paths) {
+      if (await isLocalDirectory(droppedPath)) {
+        toast.message(t('scp.dropDirectorySkipped', { name: basenameFromPath(droppedPath) }))
+        continue
+      }
+      filePaths.push(droppedPath)
+    }
+    if (filePaths.length === 0) return
+
+    setTransferring(true)
+    let successCount = 0
+    try {
+      for (const localFilePath of filePaths) {
+        setTransferProgress(null)
+        if (await uploadLocalFile(localFilePath)) successCount++
+      }
+    } finally {
+      setTransferring(false)
+      setTransferProgress(null)
+    }
+
+    if (successCount > 0) {
+      toast.success(
+        successCount === 1 ? t('scp.uploadSuccess') : t('scp.uploadBatchSuccess', { count: successCount }),
+      )
+      await loadRemote(remotePath, { afterTransfer: true })
     }
   }
 
@@ -373,6 +481,10 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
             onEnterDir={(e) => void loadRemote(e.path)}
             onGoUp={() => void loadRemote(parentRemotePath())}
             onRefresh={() => void loadRemote(remotePath)}
+            acceptFileDrop={Boolean(connectionId) && !transferring}
+            fileDropActive={remoteDropActive}
+            onFileDropActiveChange={setRemoteDropActive}
+            onFilesDrop={(paths) => void uploadDroppedFiles(paths)}
           />
         </div>
 
