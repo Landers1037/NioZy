@@ -28,7 +28,7 @@ import {
   MIN_TERMINAL_SCROLLBACK,
   normalizeTerminalScrollback,
 } from '../../../electron/shared/terminal-xterm'
-import { Bold, Cpu, MousePointer2, Palette, ScrollText, TextCursor, Type } from 'lucide-react'
+import { Bold, Cpu, Layers, MousePointer2, Palette, ScrollText, TextCursor, Type } from 'lucide-react'
 import { isWtermEmulator } from '@/lib/terminal-emulator'
 
 export function TerminalSettings() {
@@ -253,6 +253,25 @@ export function TerminalSettings() {
         </SettingField>
 
         <SettingField
+          icon={Layers}
+          label={t('settings.terminal.synchronizedOutput')}
+          description={
+            useWterm
+              ? t('settings.terminal.synchronizedOutputWtermDesc')
+              : t('settings.terminal.synchronizedOutputDesc')
+          }
+          row
+        >
+          <Switch
+            checked={settings.terminal.synchronizedOutputEnabled}
+            disabled={useWterm}
+            onCheckedChange={(synchronizedOutputEnabled) =>
+              patchSettings({ terminal: { ...settings.terminal, synchronizedOutputEnabled } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
           icon={Cpu}
           label={t('settings.terminal.renderer')}
           description={
@@ -278,7 +297,6 @@ export function TerminalSettings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="dom">{t('settings.terminal.rendererDom')}</SelectItem>
-              <SelectItem value="canvas">{t('settings.terminal.rendererCanvas')}</SelectItem>
               <SelectItem value="webgl">{t('settings.terminal.rendererWebgl')}</SelectItem>
             </SelectContent>
           </Select>

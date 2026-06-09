@@ -58,7 +58,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const colorScheme = settings?.terminal.colorScheme ?? 'atom'
   const wtermThemeId = getWtermThemeId(colorScheme)
   const chromeBackground = hasTerminalBackgroundImage(settings?.terminal)
-    ? 'transparent'
+    ? getTerminalCellBackgroundColor(settings?.terminal)
     : getTerminalChromeBackgroundColor(settings?.terminal)
 
   const wtermFontStyle = settings

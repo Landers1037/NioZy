@@ -92,11 +92,7 @@ export function TitleBarTerminalControls() {
   const engineLabel =
     emulator === 'wterm' ? t('titleBar.engineWterm') : t('titleBar.engineXterm')
   const modeLabel =
-    renderer === 'dom'
-      ? t('titleBar.modeDom')
-      : renderer === 'canvas'
-        ? t('titleBar.modeCanvas')
-        : t('titleBar.modeWebgl')
+    renderer === 'dom' ? t('titleBar.modeDom') : t('titleBar.modeWebgl')
 
   const setEmulator = (next: TerminalEmulator) => {
     if (next === emulator) return
@@ -449,10 +445,6 @@ export function TitleBarTerminalControls() {
           <DropdownMenuItem onSelect={() => setRenderer('dom')}>
             <span className="flex-1">{t('titleBar.modeDom')}</span>
             {renderer === 'dom' ? <Check className="size-3.5" /> : null}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setRenderer('canvas')}>
-            <span className="flex-1">{t('titleBar.modeCanvas')}</span>
-            {renderer === 'canvas' ? <Check className="size-3.5" /> : null}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setRenderer('webgl')}>
             <span className="flex-1">{t('titleBar.modeWebgl')}</span>

@@ -47,6 +47,7 @@ import { DEFAULT_SIDEBAR_WIDTH, normalizeSidebarWidth } from './shared/sidebar-w
 import {
   normalizeDrawBoldTextInBrightColors,
   normalizeRightClickCopyPaste,
+  normalizeSynchronizedOutputEnabled,
   normalizeTerminalScrollback,
   DEFAULT_TERMINAL_SCROLLBACK,
 } from './shared/terminal-xterm'
@@ -113,6 +114,7 @@ export interface AppSettings {
     scrollback: number
     drawBoldTextInBrightColors: boolean
     rightClickCopyPaste: boolean
+    synchronizedOutputEnabled: boolean
     backgroundImageExt?: string
     backgroundOpacity: number
   }
@@ -212,6 +214,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
+    synchronizedOutputEnabled: true,
     backgroundOpacity: DEFAULT_TERMINAL_BACKGROUND_OPACITY,
   },
   connections: [],
@@ -289,6 +292,9 @@ function buildAppSettingsFromStored(
         stored.terminal?.drawBoldTextInBrightColors,
       ),
       rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
+      synchronizedOutputEnabled: normalizeSynchronizedOutputEnabled(
+        stored.terminal?.synchronizedOutputEnabled,
+      ),
       useBuiltinFont:
         typeof stored.terminal?.useBuiltinFont === 'boolean'
           ? stored.terminal.useBuiltinFont
