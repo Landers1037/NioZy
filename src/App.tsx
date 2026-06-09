@@ -28,6 +28,11 @@ import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
 import { cn } from '@/lib/utils'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
+import { AnimatedTabPanel } from '@/components/ui/animated-tab-panel'
+import {
+  AnimatedMinimalTabBar,
+  AnimatedSidebarSlot,
+} from '@/components/ui/animated-layout-chrome'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -280,9 +285,13 @@ export default function App() {
         </div>
       )}
       <TitleBar />
-      {minimalLayout && <MinimalTabBar />}
+      <AnimatedMinimalTabBar show={minimalLayout}>
+        <MinimalTabBar />
+      </AnimatedMinimalTabBar>
       <div className="flex min-h-0 flex-1">
-        {!minimalLayout && <Sidebar />}
+        <AnimatedSidebarSlot show={!minimalLayout}>
+          <Sidebar />
+        </AnimatedSidebarSlot>
         <main className="flex min-w-0 flex-1 flex-col bg-background p-2">
           <div
             className={cn(
@@ -299,69 +308,29 @@ export default function App() {
             ))}
             {showAttachPtyHost && <AttachPtyTerminalHost />}
             {hasSettingsTab && (
-              <div
-                className={cn(
-                  'absolute inset-0',
-                  !settingsTabActive && 'pointer-events-none invisible',
-                )}
-                {...(!settingsTabActive ? { inert: true } : {})}
-              >
-                <Suspense fallback={null}>
-                  <SettingsPanel />
-                </Suspense>
-              </div>
+              <AnimatedTabPanel active={settingsTabActive}>
+                <SettingsPanel />
+              </AnimatedTabPanel>
             )}
             {hasFilesystemTab && (
-              <div
-                className={cn(
-                  'absolute inset-0',
-                  !filesystemTabActive && 'pointer-events-none invisible',
-                )}
-                {...(!filesystemTabActive ? { inert: true } : {})}
-              >
-                <Suspense fallback={null}>
-                  <FilesystemPanel />
-                </Suspense>
-              </div>
+              <AnimatedTabPanel active={filesystemTabActive}>
+                <FilesystemPanel />
+              </AnimatedTabPanel>
             )}
             {hasSandboxTab && (
-              <div
-                className={cn(
-                  'absolute inset-0',
-                  !sandboxTabActive && 'pointer-events-none invisible',
-                )}
-                {...(!sandboxTabActive ? { inert: true } : {})}
-              >
-                <Suspense fallback={null}>
-                  <JsSandboxPanel />
-                </Suspense>
-              </div>
+              <AnimatedTabPanel active={sandboxTabActive}>
+                <JsSandboxPanel />
+              </AnimatedTabPanel>
             )}
             {hasChatTab && p2pChatEnabled && (
-              <div
-                className={cn(
-                  'absolute inset-0',
-                  !chatTabActive && 'pointer-events-none invisible',
-                )}
-                {...(!chatTabActive ? { inert: true } : {})}
-              >
-                <Suspense fallback={null}>
-                  <ChatPanel />
-                </Suspense>
-              </div>
+              <AnimatedTabPanel active={chatTabActive}>
+                <ChatPanel />
+              </AnimatedTabPanel>
             )}
             {hasRepoTab && (
-              <div
-                className={cn(
-                  'absolute inset-0',
-                  !repoTabActive && 'pointer-events-none invisible',
-                )}
-                {...(!repoTabActive ? { inert: true } : {})}
-              >
-                <Suspense fallback={null}>
-                  <RepoManagementPanel />
-                </Suspense>
-              </div>
+              <AnimatedTabPanel active={repoTabActive}>
+                <RepoManagementPanel />
+              </AnimatedTabPanel>
             )}
             {activeTab?.type === 'webview' && activeTab.webviewUrl && (
               <div className="absolute inset-0">

@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ import { SidebarTabList } from '@/components/layout/SidebarTabList'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
 import { DEFAULT_SIDEBAR_WIDTH } from '../../../electron/shared/sidebar-width'
 import { useUiClasses } from '@/lib/ui-style'
+import { sidebarWidthTransition, usePanelAnimationEnabled } from '@/lib/panel-animations'
 
 export function Sidebar() {
   const { t } = useTranslation()
@@ -42,6 +44,7 @@ export function Sidebar() {
   )
 
   const ui = useUiClasses()
+  const panelAnimate = usePanelAnimationEnabled()
 
   const { containerRef, displayWidth, isResizing, startResize } = useSidebarResize({
     width: storedWidth,
@@ -50,16 +53,19 @@ export function Sidebar() {
   })
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
-      className="relative flex h-full shrink-0"
-      style={{ width: displayWidth }}
+      className="relative flex h-full shrink-0 overflow-hidden"
+      initial={false}
+      animate={{ width: displayWidth }}
+      transition={
+        panelAnimate && !isResizing ? sidebarWidthTransition : { duration: 0 }
+      }
     >
       <aside
         className={cn(
           'flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-border',
           ui.sidebarBg,
-          !isResizing && 'transition-[width] duration-200',
         )}
       >
         <div className="flex items-center justify-between border-b border-border p-2 no-drag">
@@ -211,6 +217,6 @@ export function Sidebar() {
           onPointerDown={startResize}
         />
       )}
-    </div>
+    </motion.div>
   )
 }

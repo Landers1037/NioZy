@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AnimatedLoadingSwap } from '@/components/ui/animated-panel-section'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,28 +114,37 @@ export function RepoListView({ onOpenRepo }: RepoListViewProps) {
         </div>
       </div>
 
-      {loading ? (
-        <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
-      ) : repos.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-          <p>{t('repo.empty')}</p>
-          <Button onClick={() => void handleAdd()}>{t('repo.addFirst')}</Button>
-        </div>
-      ) : (
-        <div className="grid min-h-0 flex-1 auto-rows-min gap-4 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
-          {repos.map((repo) => (
-            <RepoCard
-              key={repo.id}
-              repo={repo}
-              busy={busyId === repo.id}
-              onOpen={() => onOpenRepo(repo.id)}
-              onPull={() => void handlePull(repo)}
-              onSwitchBranch={() => setBranchDialogRepoId(repo.id)}
-              onRemove={() => setRemoveTarget(repo)}
-            />
-          ))}
-        </div>
-      )}
+      <AnimatedLoadingSwap
+        loading={loading}
+        className="min-h-0"
+        loadingContent={
+          <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            {t('common.loading')}
+          </div>
+        }
+      >
+        {repos.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center text-muted-foreground">
+            <p>{t('repo.empty')}</p>
+            <Button onClick={() => void handleAdd()}>{t('repo.addFirst')}</Button>
+          </div>
+        ) : (
+          <div className="grid min-h-0 flex-1 auto-rows-min gap-4 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3">
+            {repos.map((repo) => (
+              <RepoCard
+                key={repo.id}
+                repo={repo}
+                busy={busyId === repo.id}
+                onOpen={() => onOpenRepo(repo.id)}
+                onPull={() => void handlePull(repo)}
+                onSwitchBranch={() => setBranchDialogRepoId(repo.id)}
+                onRemove={() => setRemoveTarget(repo)}
+              />
+            ))}
+          </div>
+        )}
+      </AnimatedLoadingSwap>
 
       <BranchSwitchDialog
         repoId={branchDialogRepoId ?? ''}
