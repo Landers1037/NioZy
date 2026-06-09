@@ -5,7 +5,7 @@ import { ShortcutInput } from './ShortcutInput'
 import { useAppStore } from '@/stores/app-store'
 import type { AppShortcuts } from '../../../electron/shared/api-types'
 import { formatAcceleratorForDisplay, isValidGlobalAccelerator } from '@/lib/shortcut-utils'
-import { Keyboard, Monitor, Terminal } from 'lucide-react'
+import { Crop, Keyboard, Monitor, Terminal } from 'lucide-react'
 import { toast } from 'sonner'
 
 const APP_SHORTCUT_KEYS = [
@@ -27,6 +27,7 @@ export function ShortcutSettings() {
   if (!settings) return null
 
   const shortcuts = settings.shortcuts
+  const screenshotEnabled = settings.assistive.screenshotEnabled !== false
 
   const patchApp = (key: keyof AppShortcuts['app'], value: string) => {
     patchSettings({
@@ -37,21 +38,21 @@ export function ShortcutSettings() {
     })
   }
 
-  const rejectInvalidGlobalShortcut = () => {
+  const rejectInvalidGlobalShortcut = (key: keyof AppShortcuts['global']) => {
     toast.error(t('settings.shortcuts.globalSingleKeyNotAllowed'))
     patchSettings({
       shortcuts: {
         ...shortcuts,
-        global: { showApp: '' },
+        global: { ...shortcuts.global, [key]: '' },
       },
     })
   }
 
-  const patchGlobalShowApp = (value: string) => {
+  const patchGlobal = (key: keyof AppShortcuts['global'], value: string) => {
     patchSettings({
       shortcuts: {
         ...shortcuts,
-        global: { showApp: value },
+        global: { ...shortcuts.global, [key]: value },
       },
     })
   }
@@ -76,11 +77,29 @@ export function ShortcutSettings() {
           <ShortcutInput
             className="max-w-md font-mono text-sm"
             value={shortcuts.global.showApp}
-            onChange={patchGlobalShowApp}
+            onChange={(v) => patchGlobal('showApp', v)}
             validate={isValidGlobalAccelerator}
-            onInvalid={rejectInvalidGlobalShortcut}
+            onInvalid={() => rejectInvalidGlobalShortcut('showApp')}
           />
         </SettingField>
+
+        {screenshotEnabled ? (
+          <SettingField
+            icon={Crop}
+            label={t('settings.shortcuts.globalScreenshot')}
+            description={t('settings.shortcuts.globalScreenshotDesc', {
+              current: formatAcceleratorForDisplay(shortcuts.global.screenshot),
+            })}
+          >
+            <ShortcutInput
+              className="max-w-md font-mono text-sm"
+              value={shortcuts.global.screenshot}
+              onChange={(v) => patchGlobal('screenshot', v)}
+              validate={isValidGlobalAccelerator}
+              onInvalid={() => rejectInvalidGlobalShortcut('screenshot')}
+            />
+          </SettingField>
+        ) : null}
 
         <div className="flex flex-col gap-4">
           <p className="flex items-center gap-2 text-sm font-bold">
