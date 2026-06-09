@@ -33,12 +33,12 @@ export const ACCENT_PRESETS_CYBERPUNK = [
   '#BD00FF',
   '#39FF14',
 ]
-export const ACCENT_PRESETS_LIQUID_GLASS = [
-  '#007AFF',
-  '#5856D6',
-  '#AF52DE',
-  '#FF2D55',
-  '#34C759',
+export const ACCENT_PRESETS_GLASS = [
+  '#4A7FD4',
+  '#6B8FAD',
+  '#5B8A72',
+  '#8B7BA8',
+  '#7A8B9C',
 ]
 
 export function getUiStyle(settings?: Pick<AppSettings, 'uiStyle'> | null): UiStyle {
@@ -50,7 +50,7 @@ export function getAccentPresets(style: UiStyle): string[] {
   if (style === 'windowsClassic') return ACCENT_PRESETS_WINDOWS_CLASSIC
   if (style === 'waFu') return ACCENT_PRESETS_WAFU
   if (style === 'cyberpunk') return ACCENT_PRESETS_CYBERPUNK
-  if (style === 'liquidGlass') return ACCENT_PRESETS_LIQUID_GLASS
+  if (style === 'glass') return ACCENT_PRESETS_GLASS
   return ACCENT_PRESETS_MINIMAL
 }
 
@@ -59,7 +59,7 @@ export function getTabCornerRadius(style: UiStyle): string {
   if (style === 'windowsClassic') return 'rounded-none'
   if (style === 'waFu') return 'rounded-md'
   if (style === 'cyberpunk') return 'rounded-sm'
-  if (style === 'liquidGlass') return 'rounded-2xl'
+  if (style === 'glass') return 'rounded-xl'
   return 'rounded-lg'
 }
 
@@ -185,41 +185,45 @@ export function getUiClasses(style: UiStyle): UiClassSet {
     }
   }
 
-  if (style === 'liquidGlass') {
+  if (style === 'glass') {
     return {
       segmentActive:
-        'ui-glass-capsule border border-white/50 bg-card/75 text-foreground shadow-[0_2px_12px_rgb(0_0_0/0.06),inset_0_1px_0_rgb(255_255_255/0.65)] backdrop-blur-2xl dark:border-white/18 dark:bg-card/55 dark:shadow-[0_2px_16px_rgb(0_0_0/0.35),inset_0_1px_0_rgb(255_255_255/0.12)]',
-      segmentInactive: 'text-muted-foreground hover:text-foreground hover:bg-card/35 backdrop-blur-sm',
+        'border border-white/45 bg-card/42 text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_2px_12px_rgb(0_0_0/0.05)] backdrop-blur-xl dark:border-white/14 dark:bg-card/38 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_2px_16px_rgb(0_0_0/0.28)]',
+      segmentInactive:
+        'text-muted-foreground hover:text-foreground hover:bg-card/22 backdrop-blur-md dark:hover:bg-card/18',
       tabActive:
-        'ui-glass-capsule border border-white/50 bg-card/75 text-foreground shadow-[0_2px_12px_rgb(0_0_0/0.06),inset_0_1px_0_rgb(255_255_255/0.65)] backdrop-blur-2xl dark:border-white/18 dark:bg-card/55 dark:shadow-[0_2px_16px_rgb(0_0_0/0.35),inset_0_1px_0_rgb(255_255_255/0.12)]',
+        'border border-white/45 bg-card/42 text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_2px_12px_rgb(0_0_0/0.05)] backdrop-blur-xl dark:border-white/14 dark:bg-card/38 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_2px_16px_rgb(0_0_0/0.28)]',
       tabActiveIcon:
-        'ui-glass-capsule border border-white/50 bg-card/75 text-foreground backdrop-blur-2xl dark:border-white/18 dark:bg-card/55',
-      tabInactive: 'text-muted-foreground hover:bg-card/40 hover:text-foreground backdrop-blur-sm',
+        'border border-white/45 bg-card/42 text-foreground backdrop-blur-xl dark:border-white/14 dark:bg-card/38',
+      tabInactive:
+        'text-muted-foreground hover:bg-card/28 hover:text-foreground backdrop-blur-md dark:hover:bg-card/20',
       tabInactiveIcon:
-        'text-muted-foreground hover:bg-card/40 hover:text-foreground backdrop-blur-sm',
-      sidebarBg: 'bg-transparent',
-      tabBarBg: 'bg-transparent',
+        'text-muted-foreground hover:bg-card/28 hover:text-foreground backdrop-blur-md dark:hover:bg-card/20',
+      sidebarBg:
+        'bg-card/22 backdrop-blur-xl border-r border-white/30 dark:bg-card/16 dark:border-white/10',
+      tabBarBg:
+        'bg-card/22 backdrop-blur-xl border-b border-white/30 dark:bg-card/16 dark:border-white/10',
       segmentGroupBg:
-        'rounded-2xl border border-white/35 bg-card/40 p-1 backdrop-blur-xl dark:border-white/12 dark:bg-card/30',
+        'rounded-xl border border-white/35 bg-card/28 p-1 backdrop-blur-xl dark:border-white/12 dark:bg-card/22',
       mainPanel:
-        'ui-glass-panel rounded-2xl border border-white/40 bg-card/60 shadow-[0_8px_32px_rgb(0_0_0/0.08),inset_0_1px_0_rgb(255_255_255/0.55)] backdrop-blur-2xl dark:border-white/15 dark:bg-card/45 dark:shadow-[0_8px_40px_rgb(0_0_0/0.45),inset_0_1px_0_rgb(255_255_255/0.1)]',
+        'ui-glass-panel rounded-xl border border-white/38 bg-card/40 shadow-[0_8px_28px_rgb(0_0_0/0.07),inset_0_1px_0_rgb(255_255_255/0.45)] backdrop-blur-xl dark:border-white/12 dark:bg-card/32 dark:shadow-[0_8px_36px_rgb(0_0_0/0.38),inset_0_1px_0_rgb(255_255_255/0.08)]',
       mainPanelTerminal:
-        'ui-glass-panel rounded-2xl border border-white/40 bg-card/35 shadow-[0_8px_32px_rgb(0_0_0/0.08),inset_0_1px_0_rgb(255_255_255/0.55)] backdrop-blur-2xl dark:border-white/15 dark:bg-card/25 dark:shadow-[0_8px_40px_rgb(0_0_0/0.45),inset_0_1px_0_rgb(255_255_255/0.1)]',
-      sidebarResizeHover: 'hover:bg-primary/15',
-      sidebarResizeActive: 'bg-primary/25',
+        'ui-glass-panel rounded-xl border border-white/38 bg-card/28 shadow-[0_8px_28px_rgb(0_0_0/0.07),inset_0_1px_0_rgb(255_255_255/0.45)] backdrop-blur-xl dark:border-white/12 dark:bg-card/22 dark:shadow-[0_8px_36px_rgb(0_0_0/0.38),inset_0_1px_0_rgb(255_255_255/0.08)]',
+      sidebarResizeHover: 'hover:bg-primary/12',
+      sidebarResizeActive: 'bg-primary/20',
       titleBar:
-        'ui-glass-titlebar h-10 border-b border-white/30 bg-card/50 backdrop-blur-2xl dark:border-white/12 dark:bg-card/35',
+        'ui-glass-titlebar h-10 border-b border-white/32 bg-card/38 backdrop-blur-xl dark:border-white/10 dark:bg-card/28',
       titleTagline: 'text-xs text-muted-foreground',
       titleWeight: 'font-app-bold',
-      windowControlBtn: 'rounded-full hover:bg-foreground/8 dark:hover:bg-white/10',
-      windowCloseBtn: 'rounded-full hover:bg-destructive hover:text-white',
+      windowControlBtn: 'rounded-lg hover:bg-foreground/6 dark:hover:bg-white/8',
+      windowCloseBtn: 'rounded-lg hover:bg-destructive hover:text-white',
       statusBar:
-        'ui-glass-statusbar h-8 border-t border-white/30 bg-card/50 px-3 gap-3 backdrop-blur-2xl dark:border-white/12 dark:bg-card/35',
+        'ui-glass-statusbar h-8 border-t border-white/32 bg-card/38 px-3 gap-3 backdrop-blur-xl dark:border-white/10 dark:bg-card/28',
       statusTag: '',
       connectionEditing:
-        'rounded-xl border border-primary/30 bg-primary/8 px-3 py-2 backdrop-blur-md shadow-[inset_0_1px_0_rgb(255_255_255/0.4)]',
+        'rounded-lg border border-primary/28 bg-primary/6 px-3 py-2 backdrop-blur-md shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]',
       fontPickerSelected:
-        'border border-primary/35 bg-card/70 font-app-bold backdrop-blur-md shadow-[inset_0_1px_0_rgb(255_255_255/0.45)]',
+        'border border-primary/30 bg-card/55 font-app-bold backdrop-blur-md shadow-[inset_0_1px_0_rgb(255_255_255/0.38)]',
     }
   }
 
