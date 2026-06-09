@@ -16,6 +16,10 @@ export type { UiStyle } from './shared/ui-style'
 import { normalizeUiStyle } from './shared/ui-style'
 export type { TerminalRenderer } from './shared/terminal-renderer'
 import { normalizeTerminalRenderer, type TerminalRenderer } from './shared/terminal-renderer'
+import {
+  DEFAULT_TERMINAL_BUILTIN_FONT,
+  normalizeTerminalBuiltinFont,
+} from './shared/terminal-builtin-fonts'
 import type { TerminalColorScheme } from './shared/terminal-color-schemes'
 import { normalizeTerminalColorScheme } from './shared/terminal-color-schemes'
 import {
@@ -98,6 +102,8 @@ export interface AppSettings {
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
+    useBuiltinFont: boolean
+    builtinFont: import('./shared/terminal-builtin-fonts').TerminalBuiltinFontId
     fontSize: number
     fontWeight?: number
     fontWeightBold?: number
@@ -197,6 +203,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
+    useBuiltinFont: false,
+    builtinFont: DEFAULT_TERMINAL_BUILTIN_FONT,
     fontSize: 13,
     renderer: 'webgl',
     cursorStyle: 'block',
@@ -281,6 +289,11 @@ function buildAppSettingsFromStored(
         stored.terminal?.drawBoldTextInBrightColors,
       ),
       rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
+      useBuiltinFont:
+        typeof stored.terminal?.useBuiltinFont === 'boolean'
+          ? stored.terminal.useBuiltinFont
+          : DEFAULT_SETTINGS.terminal.useBuiltinFont,
+      builtinFont: normalizeTerminalBuiltinFont(stored.terminal?.builtinFont),
       renderer: normalizeTerminalRenderer(stored.terminal?.renderer),
       backgroundImageExt: normalizeTerminalBackgroundImageExt(stored.terminal?.backgroundImageExt),
       backgroundOpacity: normalizeTerminalBackgroundOpacity(

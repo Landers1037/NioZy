@@ -15,6 +15,7 @@ import {
 } from '@/lib/js-sandbox-types'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/app-store'
+import { resolveTerminalFontFamily } from '../../../electron/shared/terminal-builtin-fonts'
 
 const INPUT_HISTORY_MAX = 50
 
@@ -33,7 +34,8 @@ function appendLines(
 
 export function JsSandboxPanel() {
   const { t } = useTranslation()
-  const fontFamily = useAppStore((s) => s.settings?.terminal.fontFamily)
+  const terminal = useAppStore((s) => s.settings?.terminal)
+  const fontFamily = terminal ? resolveTerminalFontFamily(terminal) : undefined
   const [input, setInput] = useState('')
   const [cursor, setCursor] = useState(0)
   const [lines, setLines] = useState<JsSandboxOutputLine[]>([])

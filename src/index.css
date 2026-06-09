@@ -11,6 +11,46 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'NioZy0xProtoNerdMono';
+  src: url('./fonts/0xProtoNerdFontMono-Italic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NioZy0xProtoNerdMono';
+  src: url('./fonts/0xProtoNerdFontMono-Italic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NioZyComicShannsNerdMono';
+  src: url('./fonts/ComicShannsMonoNerdFontMono-Regular.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NioZyDepartureNerdMono';
+  src: url('./fonts/DepartureMonoNerdFontMono-Regular.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NioZyUbuntuMonoNerdMono';
+  src: url('./fonts/UbuntuMonoNerdFontMono-Regular.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme inline {
   --font-sans:
     'Noto Sans SC', 'Segoe UI', system-ui, -apple-system, 'Microsoft YaHei', sans-serif;

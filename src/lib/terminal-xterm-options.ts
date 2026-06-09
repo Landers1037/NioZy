@@ -1,5 +1,6 @@
 import type { ITerminalOptions } from '@xterm/xterm'
 import type { AppSettings } from '../../electron/shared/api-types'
+import { resolveTerminalFontFamilyCSSValue } from '../../electron/shared/terminal-builtin-fonts'
 import {
   DEFAULT_TERMINAL_SCROLLBACK,
   normalizeDrawBoldTextInBrightColors,
@@ -15,7 +16,7 @@ export function buildTerminalOptions(
   allowProposedApi = false,
 ): ITerminalOptions {
   return {
-    fontFamily: terminal?.fontFamily ?? 'Consolas',
+    fontFamily: terminal ? resolveTerminalFontFamilyCSSValue(terminal) : 'Consolas',
     fontSize: terminal?.fontSize ?? 13,
     fontWeight: terminal?.fontWeight,
     fontWeightBold: terminal?.fontWeightBold,

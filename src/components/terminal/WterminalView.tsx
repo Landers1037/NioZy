@@ -6,6 +6,7 @@ import '@wterm/react/css'
 import wtermWasmUrl from '@wterm/core/wasm?url'
 import { useAppStore } from '@/stores/app-store'
 import { hasTerminalBackgroundImage, getTerminalChromeBackgroundColor, getTerminalCellBackgroundColor } from '@/lib/terminal-background'
+import { resolveTerminalFontFamily } from '../../../electron/shared/terminal-builtin-fonts'
 import { buildWtermFontStyle, getWtermThemeId } from '@/lib/wterm-theme'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
@@ -63,7 +64,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const wtermFontStyle = settings
     ? ({
         ...buildWtermFontStyle(
-          settings.terminal.fontFamily,
+          resolveTerminalFontFamily(settings.terminal),
           settings.terminal.fontSize,
           settings.terminal.fontWeight,
           settings.terminal.fontWeightBold,
