@@ -394,6 +394,93 @@ function requestOpenSettingsFromTray(): void {
   sendToRenderer(mainWindow, 'app:openSettings')
 }
 
+function notifyRendererSettingsChanged(): void {
+  sendToRenderer(mainWindow, 'settings:changed', settingsStore.get())
+}
+
+type TrayMenuLabels = {
+  newTerminal: string
+  openSettings: string
+  showApp: string
+  enableDesktopPet: string
+  disableDesktopPet: string
+  quit: string
+}
+
+function getTrayMenuLabels(): TrayMenuLabels {
+  const locale = settingsStore.get().locale ?? 'zh'
+  if (locale === 'en') {
+    return {
+      newTerminal: 'New terminal',
+      openSettings: 'Open settings',
+      showApp: 'Show NioZy',
+      enableDesktopPet: 'Enable desktop pet',
+      disableDesktopPet: 'Disable desktop pet',
+      quit: 'Quit',
+    }
+  }
+  if (locale === 'ja') {
+    return {
+      newTerminal: '新しいターミナル',
+      openSettings: '設定を開く',
+      showApp: 'NioZy を表示',
+      enableDesktopPet: 'デスクトップペットをオン',
+      disableDesktopPet: 'デスクトップペットをオフ',
+      quit: '終了',
+    }
+  }
+  return {
+    newTerminal: '新建终端',
+    openSettings: '打开设置',
+    showApp: '显示 NioZy',
+    enableDesktopPet: '打开桌面宠物',
+    disableDesktopPet: '关闭桌面宠物',
+    quit: '退出',
+  }
+}
+
+function toggleDesktopPetEnabled(): void {
+  const reminder = settingsStore.get().reminder
+  settingsStore.update({
+    reminder: {
+      ...reminder,
+      desktopPetEnabled: !reminder.desktopPetEnabled,
+    },
+  })
+  syncDesktopPet()
+  refreshTrayMenu()
+  notifyRendererSettingsChanged()
+}
+
+function buildTrayContextMenu(): Menu {
+  const labels = getTrayMenuLabels()
+  const petEnabled = settingsStore.get().reminder.desktopPetEnabled === true
+  return Menu.buildFromTemplate([
+    { label: labels.newTerminal, click: () => requestNewTerminalFromTray() },
+    { label: labels.openSettings, click: () => requestOpenSettingsFromTray() },
+    { type: 'separator' },
+    {
+      label: petEnabled ? labels.disableDesktopPet : labels.enableDesktopPet,
+      click: () => toggleDesktopPetEnabled(),
+    },
+    { type: 'separator' },
+    { label: labels.showApp, click: () => showMainWindow() },
+    { type: 'separator' },
+    {
+      label: labels.quit,
+      click: () => {
+        isQuitting = true
+        app.quit()
+      },
+    },
+  ])
+}
+
+function refreshTrayMenu(): void {
+  if (!tray) return
+  tray.setContextMenu(buildTrayContextMenu())
+}
+
 async function syncShellContextMenuRegistry(enabled: boolean): Promise<void> {
   if (!isWindowsShellContextMenuSupported()) return
   await setWindowsShellContextMenu(enabled)
@@ -515,21 +602,7 @@ function createWindow(): void {
 function createTray(): void {
   tray = new Tray(loadTrayIcon(__dirname))
   tray.setToolTip('NioZy')
-  const contextMenu = Menu.buildFromTemplate([
-    { label: '新建终端', click: () => requestNewTerminalFromTray() },
-    { label: '打开设置', click: () => requestOpenSettingsFromTray() },
-    { type: 'separator' },
-    { label: '显示 NioZy', click: () => showMainWindow() },
-    { type: 'separator' },
-    {
-      label: '退出',
-      click: () => {
-        isQuitting = true
-        app.quit()
-      },
-    },
-  ])
-  tray.setContextMenu(contextMenu)
+  refreshTrayMenu()
   tray.on('double-click', () => showMainWindow())
 }
 
@@ -595,6 +668,10 @@ app.whenReady().then(async () => {
     getMainWindow: () => mainWindow,
     settingsStore,
     requestNewTerminal: () => requestNewTerminalFromTray(),
+    onSettingsChanged: () => {
+      refreshTrayMenu()
+      notifyRendererSettingsChanged()
+    },
   })
   syncDesktopPet()
   initScreenshotsService(settingsStore.get().locale)
@@ -963,6 +1040,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.reminder !== undefined) {
     syncReminderScheduler()
     syncDesktopPet()
+    if (partial.reminder.desktopPetEnabled !== undefined) {
+      refreshTrayMenu()
+    }
   }
   return updated
 })

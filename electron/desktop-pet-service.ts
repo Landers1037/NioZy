@@ -21,6 +21,8 @@ type DesktopPetHostContext = {
   getMainWindow: () => BrowserWindow | null
   settingsStore: SettingsStore
   requestNewTerminal: () => void
+  /** 主进程直接改设置后同步渲染层 UI（如右键关闭宠物） */
+  onSettingsChanged?: () => void
 }
 
 let hostContext: DesktopPetHostContext | null = null
@@ -278,6 +280,7 @@ function popupPetContextMenu(win: BrowserWindow): void {
           },
         })
         syncDesktopPet()
+        ctx.onSettingsChanged?.()
       },
     },
   ])

@@ -12,6 +12,8 @@ export const GRAPH_LANE_COLORS = [
 ] as const
 
 export const GRAPH_ROW_HEIGHT = 36
+/** 提交列表表头高度，须与 GitCommitList 表头一致，用于时间线纵向对齐 */
+export const GRAPH_LIST_HEADER_HEIGHT = 33
 export const GRAPH_LANE_WIDTH = 18
 export const GRAPH_NODE_RADIUS = 5
 
