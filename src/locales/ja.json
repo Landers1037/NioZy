@@ -671,6 +671,8 @@
       "globalSingleKeyNotAllowed": "グローバルショートカットは単一キーにできません。Ctrl、Alt、Shift 等と組み合わせてください。",
       "globalShowApp": "NioZy の表示/非表示（グローバル）",
       "globalShowAppDesc": "フォーカス時はバックグラウンドへ、それ以外は表示（現在のページを維持）。現在: {{current}}",
+      "globalScreenshot": "スクリーンショット（グローバル）",
+      "globalScreenshotDesc": "バックグラウンドでも起動可能。補助機能でスクリーンショットを有効にする必要があります。空欄は未設定。現在: {{current}}",
       "inApp": "アプリ内ショートカット",
       "copyToClipboard": "クリップボードにコピー",
       "pasteFromClipboard": "クリップボードから貼り付け",

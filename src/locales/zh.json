@@ -775,6 +775,8 @@
       "globalSingleKeyNotAllowed": "全局快捷键不能仅为单个按键，请配合 Ctrl、Alt、Shift 等修饰键使用",
       "globalShowApp": "显示/隐藏 NioZy（全局）",
       "globalShowAppDesc": "已在前台则退到后台，否则显示到前台（保持当前页面）。当前：{{current}}",
+      "globalScreenshot": "屏幕截图（全局）",
+      "globalScreenshotDesc": "在后台也可触发截图；需在辅助功能中开启屏幕截图。清空表示未设置。当前：{{current}}",
       "inApp": "程序内快捷键",
       "copyToClipboard": "复制到剪贴板",
       "pasteFromClipboard": "从剪贴板粘贴",

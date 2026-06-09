@@ -2,6 +2,8 @@ export interface AppShortcuts {
   global: {
     /** 切换主窗口显示/隐藏：前台则退到后台，否则显示到前台（不改变当前标签页） */
     showApp: string
+    /** 打开屏幕截图（需辅助功能中开启屏幕截图；空字符串表示未设置） */
+    screenshot: string
   }
   app: {
     copyToClipboard: string
@@ -19,6 +21,7 @@ export interface AppShortcuts {
 export const DEFAULT_SHORTCUTS: AppShortcuts = {
   global: {
     showApp: 'CommandOrControl+T',
+    screenshot: '',
   },
   app: {
     copyToClipboard: 'CommandOrControl+Shift+C',

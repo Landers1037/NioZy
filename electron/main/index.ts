@@ -891,7 +891,8 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     settingsLog.info('Settings updated', changes)
   }
   const liveBefore = isStatusBarLiveStatsEnabled()
-  const shortcutBefore = settingsStore.get().shortcuts.global.showApp
+  const shortcutsBefore = settingsStore.get().shortcuts.global
+  const screenshotEnabledBefore = settingsStore.get().assistive.screenshotEnabled
   if (partial.advanced?.shellContextMenu !== undefined) {
     await syncShellContextMenuRegistry(partial.advanced.shellContextMenu)
   }
@@ -919,10 +920,14 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (partial.system?.launchOnStartup !== undefined) {
     app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
   }
-  if (
+  const globalShortcutsChanged =
     partial.shortcuts !== undefined &&
-    shortcutBefore !== updated.shortcuts.global.showApp
-  ) {
+    (shortcutsBefore.showApp !== updated.shortcuts.global.showApp ||
+      shortcutsBefore.screenshot !== updated.shortcuts.global.screenshot)
+  const screenshotEnabledChanged =
+    partial.assistive?.screenshotEnabled !== undefined &&
+    screenshotEnabledBefore !== updated.assistive.screenshotEnabled
+  if (globalShortcutsChanged || screenshotEnabledChanged) {
     syncGlobalShortcuts(settingsStore, () => mainWindow)
   }
   if (partial.advanced?.transparency !== undefined) {

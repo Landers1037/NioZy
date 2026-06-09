@@ -1,8 +1,11 @@
 import { globalShortcut, BrowserWindow } from 'electron'
 import type { SettingsStore } from './settings-store'
-import { mainLog } from './app-log'
+import { logErrorPayload, mainLog } from './app-log'
+import { openScreenshotCapture } from './screenshots-service'
 
-let registeredAccelerator: string | null = null
+type GlobalShortcutId = 'showApp' | 'screenshot'
+
+const registeredAccelerators: Partial<Record<GlobalShortcutId, string>> = {}
 
 /** 窗口已可见、未最小化且拥有焦点，视为在前台展示 */
 export function isMainWindowInForeground(win: BrowserWindow): boolean {
@@ -59,41 +62,63 @@ export function toggleMainWindowForeground(
   }
 }
 
+function unregisterGlobalShortcut(id: GlobalShortcutId): void {
+  const accelerator = registeredAccelerators[id]
+  if (!accelerator) return
+  try {
+    globalShortcut.unregister(accelerator)
+  } catch {
+    /* ignore */
+  }
+  delete registeredAccelerators[id]
+}
+
+function registerGlobalShortcut(id: GlobalShortcutId, accelerator: string, handler: () => void): void {
+  const current = registeredAccelerators[id]
+  if (current && current !== accelerator) {
+    unregisterGlobalShortcut(id)
+  }
+
+  if (!accelerator) {
+    unregisterGlobalShortcut(id)
+    return
+  }
+
+  if (current === accelerator) return
+
+  if (globalShortcut.isRegistered(accelerator)) {
+    registeredAccelerators[id] = accelerator
+    return
+  }
+
+  const ok = globalShortcut.register(accelerator, handler)
+  if (ok) registeredAccelerators[id] = accelerator
+}
+
 export function syncGlobalShortcuts(
   settingsStore: SettingsStore,
   getMainWindow: () => BrowserWindow | null,
 ): void {
-  const accelerator = settingsStore.get().shortcuts.global.showApp
-  if (registeredAccelerator && registeredAccelerator !== accelerator) {
-    try {
-      globalShortcut.unregister(registeredAccelerator)
-    } catch {
-      /* ignore */
-    }
-    registeredAccelerator = null
-  }
+  const settings = settingsStore.get()
 
-  if (!accelerator) return
-
-  if (globalShortcut.isRegistered(accelerator)) {
-    registeredAccelerator = accelerator
-    return
-  }
-
-  const ok = globalShortcut.register(accelerator, () => {
+  registerGlobalShortcut('showApp', settings.shortcuts.global.showApp, () => {
     toggleMainWindowForeground(getMainWindow, settingsStore, 'shortcut')
   })
 
-  if (ok) registeredAccelerator = accelerator
+  const screenshotEnabled = settings.assistive.screenshotEnabled !== false
+  const screenshotAccelerator = settings.shortcuts.global.screenshot
+  if (screenshotEnabled && screenshotAccelerator) {
+    registerGlobalShortcut('screenshot', screenshotAccelerator, () => {
+      void openScreenshotCapture().catch((err) => {
+        mainLog.error('Failed to start screenshot capture from global shortcut', logErrorPayload(err))
+      })
+    })
+  } else {
+    unregisterGlobalShortcut('screenshot')
+  }
 }
 
 export function unregisterGlobalShortcuts(): void {
-  if (registeredAccelerator) {
-    try {
-      globalShortcut.unregister(registeredAccelerator)
-    } catch {
-      /* ignore */
-    }
-    registeredAccelerator = null
-  }
+  unregisterGlobalShortcut('showApp')
+  unregisterGlobalShortcut('screenshot')
 }
