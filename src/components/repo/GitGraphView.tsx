@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { AnimatedLoadingSwap } from '@/components/ui/animated-panel-section'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
-import { computeGraphLayout, GRAPH_ROW_HEIGHT } from '@/lib/git-graph-layout'
+import { computeGraphLayout, GRAPH_LIST_HEADER_HEIGHT, GRAPH_ROW_HEIGHT } from '@/lib/git-graph-layout'
 import type { GitGraphCursor, GitGraphRow } from '../../../electron/shared/repo-types'
 import { GitCommitList } from './GitCommitList'
 import { GitGraphCanvas, graphCanvasWidth } from './GitGraphCanvas'
@@ -104,10 +104,10 @@ export function GitGraphView({
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-border bg-background">
         <div className="min-h-0 flex-1 overflow-auto">
-          <div className="relative min-w-max" style={{ minHeight: graphHeight }}>
+          <div className="relative min-w-max" style={{ minHeight: graphHeight + GRAPH_LIST_HEADER_HEIGHT }}>
             <div
-              className="pointer-events-none absolute left-0 top-0 z-0 px-1"
-              style={{ width: graphGutterWidth, height: graphHeight }}
+              className="pointer-events-none absolute left-0 z-0 px-1"
+              style={{ top: GRAPH_LIST_HEADER_HEIGHT, width: graphGutterWidth, height: graphHeight }}
             >
               <GitGraphCanvas layout={layout} accentColor={accent} className="shrink-0" />
             </div>

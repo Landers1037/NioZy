@@ -62,6 +62,7 @@ const onReminderDue = createIpcMultiplex<[import('../shared/reminder-data').Remi
   ipcRenderer,
   'reminder:due',
 )
+const onSettingsChanged = createIpcMultiplex<[AppSettings]>(ipcRenderer, 'settings:changed')
 
 const api: ElectronAPI = {
   window: {
@@ -79,6 +80,7 @@ const api: ElectronAPI = {
     getInitial: (): AppSettings | null => initialSettings,
     get: () => ipcRenderer.invoke('settings:get'),
     save: (partial) => ipcRenderer.invoke('settings:save', partial),
+    onChanged: (cb) => onSettingsChanged(cb),
     exportToFile: () =>
       ipcRenderer.invoke('settings:exportToFile') as Promise<SettingsFileResult>,
     importFromFile: () =>

@@ -217,6 +217,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         mockSettings = mergeSettings(partial)
         return structuredClone(mockSettings)
       },
+      onChanged: () => () => {},
       exportToFile: async (): Promise<SettingsFileResult> => {
         const blob = new Blob([JSON.stringify(mockSettings, null, 2)], {
           type: 'application/json',

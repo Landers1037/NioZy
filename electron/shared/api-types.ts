@@ -366,6 +366,8 @@ export interface ElectronAPI {
     getInitial: () => AppSettings | null
     get: () => Promise<AppSettings>
     save: (partial: Partial<AppSettings>) => Promise<AppSettings>
+    /** 主进程直接修改设置后推送（如托盘/宠物右键关闭） */
+    onChanged: (cb: (settings: AppSettings) => void) => () => void
     exportToFile: () => Promise<SettingsFileResult>
     importFromFile: () => Promise<SettingsFileResult>
   }

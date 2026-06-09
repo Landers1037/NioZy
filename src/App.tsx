@@ -99,6 +99,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false
     let unsubMax: (() => void) | undefined
+    let unsubSettings: (() => void) | undefined
 
     const setup = (): boolean => {
       if (cancelled || !isElectron()) return false
@@ -113,6 +114,12 @@ export default function App() {
         if (!cancelled) setWindowMaximized(v)
       })
       unsubMax = api.window.onMaximized(setWindowMaximized)
+      unsubSettings = api.settings.onChanged((s) => {
+        if (!cancelled) {
+          setSettings(s)
+          applyThemeToDocument(s)
+        }
+      })
 
       if (!booted.current) {
         booted.current = true
@@ -129,6 +136,7 @@ export default function App() {
       return () => {
         cancelled = true
         unsubMax?.()
+        unsubSettings?.()
       }
     }
 
@@ -142,6 +150,7 @@ export default function App() {
       window.clearInterval(timer)
       window.clearTimeout(timeout)
       unsubMax?.()
+      unsubSettings?.()
     }
   }, [setSettings, setSystemStats, setWindowMaximized])
 
