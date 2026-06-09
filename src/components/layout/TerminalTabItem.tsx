@@ -5,6 +5,7 @@ import {
   Columns2,
   Download,
   FolderOpen,
+  PackagePlus,
   ListX,
   Pencil,
   Shield,
@@ -65,6 +66,9 @@ import {
   getDroppedFilePaths,
   hasExternalFileDrag,
 } from '@/lib/terminal-drop-actions'
+import { AddToGroupDialog } from '@/components/layout/AddToGroupDialog'
+import { findGroupForTab } from '@/lib/tab-groups'
+import { useTabGroupStore } from '@/stores/tab-group-store'
 
 interface TerminalTabItemProps {
   tab: AppTab
@@ -111,8 +115,12 @@ export function TerminalTabItem({
   const removeTab = useAppStore((s) => s.removeTab)
   const setTabCustomTitle = useAppStore((s) => s.setTabCustomTitle)
 
+  const groups = useTabGroupStore((s) => s.groups)
+  const existingGroup = findGroupForTab(groups, tab.id)
+
   const [closeOpen, setCloseOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [addToGroupOpen, setAddToGroupOpen] = useState(false)
   const [editValue, setEditValue] = useState('')
   const [appElevated, setAppElevated] = useState(false)
   const [fileDragOver, setFileDragOver] = useState(false)
@@ -301,6 +309,10 @@ export function TerminalTabItem({
             </>
           ) : null}
           <ContextMenuSeparator />
+          <ContextMenuItem onSelect={() => setAddToGroupOpen(true)}>
+            <PackagePlus className="size-4 text-muted-foreground" />
+            {existingGroup ? t('tab.moveToGroup') : t('tab.addToGroup')}
+          </ContextMenuItem>
           <ContextMenuItem onSelect={openEditDialog}>
             <Pencil className="size-4 text-muted-foreground" />
             {t('tab.editTitle')}
@@ -331,6 +343,12 @@ export function TerminalTabItem({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AddToGroupDialog
+        tabId={tab.id}
+        open={addToGroupOpen}
+        onOpenChange={setAddToGroupOpen}
+      />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>

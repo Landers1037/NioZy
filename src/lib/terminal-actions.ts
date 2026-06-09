@@ -12,6 +12,7 @@ import type { TerminalCreateOptions } from '../../electron/shared/api-types'
 import type { TabTerminalSpawn } from '@/lib/terminal-tab-utils'
 import { connectionToTerminalSpawn } from '@/lib/terminal-tab-utils'
 import { requestTerminalFocus } from '@/lib/terminal-focus'
+import { useTabGroupStore } from '@/stores/tab-group-store'
 
 type ShellType = BuiltinShellType | 'custom' | 'ssh'
 
@@ -42,8 +43,9 @@ async function openTerminalTab(
   const result = await getElectronAPI().terminal.create(createPayload)
   setTerminalCwd(result.id, result.cwd)
   const terminalSpawn: TabTerminalSpawn = { create: createPayload, sshConnectionId }
+  const tabId = `tab-${result.id}`
   addTerminalTab({
-    id: `tab-${result.id}`,
+    id: tabId,
     type: 'terminal',
     title: result.name,
     terminalId: result.id,
@@ -51,6 +53,7 @@ async function openTerminalTab(
     sshConnectionId,
     terminalSpawn,
   })
+  useTabGroupStore.getState().addTabToActiveGroupIfAny(tabId)
   requestTerminalFocus(result.id)
 }
 

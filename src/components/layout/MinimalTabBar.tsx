@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
+import { ArrowLeft, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,12 +11,14 @@ import { useAppStore } from '@/stores/app-store'
 import { createTerminal } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SpecialTabItem } from '@/components/layout/SpecialTabItem'
+import { TabGroupItem } from '@/components/layout/TabGroupItem'
 import { useUiClasses } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
+import { useSidebarTabItems } from '@/hooks/useSidebarTabItems'
+import { useTabGroupStore } from '@/stores/tab-group-store'
 
 export function MinimalTabBar() {
   const { t } = useTranslation()
-  const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
@@ -30,6 +32,9 @@ export function MinimalTabBar() {
   const p2pChatEnabled = settings?.p2p.enabled === true
   const ui = useUiClasses()
 
+  const { sidebarItems, inGroupView } = useSidebarTabItems()
+  const exitGroup = useTabGroupStore((s) => s.exitGroup)
+
   return (
     <div
       className={cn(
@@ -37,21 +42,39 @@ export function MinimalTabBar() {
         ui.tabBarBg,
       )}
     >
+      {inGroupView ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-6 shrink-0"
+          title={t('tab.backToOuter')}
+          onClick={() => exitGroup()}
+        >
+          <ArrowLeft className="size-3" />
+        </Button>
+      ) : null}
       <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto py-px">
-        {tabs.map((tab) =>
-          tab.type === 'terminal' ? (
-            <TerminalTabItem
-              key={tab.id}
-              tab={tab}
+        {sidebarItems.map((item) =>
+          item.kind === 'group' ? (
+            <TabGroupItem
+              key={item.group.id}
+              group={item.group}
               iconOnly
-              isActive={activeTabId === tab.id}
+              isActive={false}
+            />
+          ) : item.tab.type === 'terminal' ? (
+            <TerminalTabItem
+              key={item.tab.id}
+              tab={item.tab}
+              iconOnly
+              isActive={activeTabId === item.tab.id}
             />
           ) : (
             <SpecialTabItem
-              key={tab.id}
-              tab={tab}
+              key={item.tab.id}
+              tab={item.tab}
               iconOnly
-              isActive={activeTabId === tab.id}
+              isActive={activeTabId === item.tab.id}
             />
           ),
         )}

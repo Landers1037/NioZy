@@ -829,7 +829,22 @@
     "openScpTransfer": "転送を開く",
     "restartAsAdmin": "管理者として再起動",
     "dropDirectoryFailed": "そのパスに切り替えできませんでした",
-    "dropDirectoryUnsupported": "SSH ターミナルにはローカルパスをドロップできません"
+    "dropDirectoryUnsupported": "SSH ターミナルにはローカルパスをドロップできません",
+    "addToGroup": "グループに追加",
+    "moveToGroup": "グループに移動",
+    "addToGroupDesc": "このターミナルタブをグループに整理します。既存のグループを選ぶか、新規作成してください。",
+    "selectGroup": "グループ",
+    "createNewGroup": "新規グループ…",
+    "groupName": "グループ名",
+    "groupNamePlaceholder": "グループ名を入力",
+    "groupTabCount": "{{count}}",
+    "backToOuter": "戻る",
+    "enterGroup": "グループを開く",
+    "editGroupName": "名前を編集",
+    "editGroupNameDesc": "サイドバーに表示するグループ名を変更します。",
+    "closeGroup": "閉じる",
+    "closeGroupTitle": "グループを閉じる",
+    "closeGroupDesc": "グループ「{{name}}」を閉じますか？含まれる {{count}} 個のターミナルタブがすべて閉じられ、プロセスが終了します。"
   },
   "scp": {
     "title": "SCP 転送 — {{title}}",

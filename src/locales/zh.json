@@ -937,7 +937,22 @@
     "openScpTransfer": "打开传输",
     "restartAsAdmin": "以管理员身份重启",
     "dropDirectoryFailed": "无法切换到该路径",
-    "dropDirectoryUnsupported": "SSH 终端不支持拖入本地路径"
+    "dropDirectoryUnsupported": "SSH 终端不支持拖入本地路径",
+    "addToGroup": "添加到分组",
+    "moveToGroup": "移动到分组",
+    "addToGroupDesc": "将终端 Tab 归入分组；已有分组时可选择目标，或新建分组。",
+    "selectGroup": "选择分组",
+    "createNewGroup": "新建分组…",
+    "groupName": "分组名称",
+    "groupNamePlaceholder": "输入分组名称",
+    "groupTabCount": "{{count}}",
+    "backToOuter": "返回",
+    "enterGroup": "进入分组",
+    "editGroupName": "编辑名称",
+    "editGroupNameDesc": "修改分组在侧边栏中显示的名称。",
+    "closeGroup": "关闭",
+    "closeGroupTitle": "关闭分组",
+    "closeGroupDesc": "确定要关闭分组「{{name}}」吗？其中 {{count}} 个终端 Tab 将全部关闭，终端进程将结束。"
   },
   "scp": {
     "title": "SCP 传输 — {{title}}",
