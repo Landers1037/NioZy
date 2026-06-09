@@ -16,6 +16,7 @@ import {
   getSettingsTabTitle,
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
+import { useTabGroupStore } from '@/stores/tab-group-store'
 
 export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat' | 'vnc' | 'repo'
 
@@ -295,6 +296,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (attachStore.committed && removedTabIds.includes(attachStore.committed.tabId)) {
           attachStore.setCommitted(null)
           attachStore.setPendingTabId(null)
+        }
+        for (const tabId of removedTabIds) {
+          useTabGroupStore.getState().removeTabFromAllGroups(tabId)
         }
       }
       return { tabs, activeTabId, terminalCwds, sshDisconnectedTerminalIds }
