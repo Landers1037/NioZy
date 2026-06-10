@@ -31,12 +31,28 @@ export function reloadSystemEnvironment(): ReloadEnvironmentResult {
 }
 
 function applyEnvBlock(block: Record<string, string>): number {
+  if (process.platform === 'win32') {
+    const mergedPath = block.Path ?? block.PATH
+    if (mergedPath !== undefined) {
+      delete block.Path
+      delete block.PATH
+      block.Path = mergedPath
+    }
+  }
+
   let count = 0
   for (const [key, value] of Object.entries(block)) {
     if (!key) continue
     process.env[key] = value
     count++
   }
+
+  if (process.platform === 'win32') {
+    const path = process.env.Path ?? process.env.PATH ?? ''
+    delete process.env.PATH
+    process.env.Path = path
+  }
+
   return count
 }
 
@@ -45,11 +61,16 @@ function reloadWindowsEnvironment(): number {
     '$out = @{}',
     "foreach ($scope in 'Machine','User') {",
     '  [Environment]::GetEnvironmentVariables($scope).GetEnumerator() | ForEach-Object {',
+    "    if ($_.Key -ieq 'Path') { return }",
     '    $out[$_.Key] = [string]$_.Value',
     '  }',
     '}',
+    "$mp = [Environment]::GetEnvironmentVariable('Path', 'Machine')",
+    "$up = [Environment]::GetEnvironmentVariable('Path', 'User')",
+    "$parts = @($mp, $up) | Where-Object { $_ }",
+    "if ($parts.Count -gt 0) { $out['Path'] = ($parts -join ';') }",
     '$out | ConvertTo-Json -Compress',
-  ].join(' ')
+  ].join('; ')
 
   const json = execFileSync(
     'powershell.exe',
