@@ -743,7 +743,7 @@
       "saveConnection": "接続を保存",
       "updateConnection": "変更を保存",
       "editCustomTitle": "接続を編集",
-      "editCustomDesc": "下のフォームを更新して保存済み接続を変更",
+      "editCustomDesc": "ダイアログ内で接続設定を変更して保存",
       "editSaved": "編集",
       "savedConnections": "保存済み接続",
       "noCustomConnections": "カスタム接続はまだありません",

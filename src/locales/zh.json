@@ -846,7 +846,7 @@
       "saveConnection": "保存连接",
       "updateConnection": "保存修改",
       "editCustomTitle": "编辑连接",
-      "editCustomDesc": "修改下方表单后保存，将更新已保存的连接配置",
+      "editCustomDesc": "在弹窗中修改连接配置后保存",
       "editSaved": "编辑",
       "savedConnections": "已保存连接",
       "noCustomConnections": "暂无自定义连接",
