@@ -28,6 +28,7 @@ import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, handleOpenDirectoryPayload } from '@/lib/terminal-actions'
+import { waitForTerminalFonts } from '@/lib/terminal-webgl-refresh'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
@@ -104,6 +105,7 @@ export default function App() {
   const minimalLayout = isMinimalLayout(settings)
 
   const booted = useRef(false)
+  const bootInFlight = useRef(false)
 
   useAppShortcuts()
   useSshDisconnectAlert()
@@ -124,12 +126,6 @@ export default function App() {
     const setup = (): boolean => {
       if (cancelled || !isElectron()) return false
       const api = getElectronAPI()
-      api.settings.get().then((s) => {
-        if (!cancelled) {
-          setSettings(s)
-          applyThemeToDocument(s)
-        }
-      })
       api.window.isMaximized().then((v) => {
         if (!cancelled) setWindowMaximized(v)
       })
@@ -141,23 +137,50 @@ export default function App() {
         }
       })
 
-      if (!booted.current) {
-        booted.current = true
+      if (!booted.current && !bootInFlight.current) {
+        bootInFlight.current = true
         void (async () => {
-          const pending = await api.app.getPendingOpenDirectory()
-          if (pending) await handleOpenDirectoryPayload(pending)
-          else await createTerminal()
+          try {
+            const s = await api.settings.get()
+            if (cancelled) return
+            setSettings(s)
+            applyThemeToDocument(s)
+
+            const [, pending] = await Promise.all([
+              s.terminal?.useBuiltinFont
+                ? waitForTerminalFonts(s.terminal)
+                : Promise.resolve(),
+              api.app.getPendingOpenDirectory(),
+            ])
+            if (cancelled) return
+            if (pending) await handleOpenDirectoryPayload(pending)
+            else await createTerminal()
+
+            if (!cancelled) booted.current = true
+          } finally {
+            bootInFlight.current = false
+          }
         })()
+      } else if (booted.current) {
+        void api.settings.get().then((s) => {
+          if (!cancelled) {
+            setSettings(s)
+            applyThemeToDocument(s)
+          }
+        })
       }
       return true
     }
 
+    const cleanupSetup = () => {
+      cancelled = true
+      if (!booted.current) bootInFlight.current = false
+      unsubMax?.()
+      unsubSettings?.()
+    }
+
     if (setup()) {
-      return () => {
-        cancelled = true
-        unsubMax?.()
-        unsubSettings?.()
-      }
+      return cleanupSetup
     }
 
     const timer = window.setInterval(() => {
@@ -166,11 +189,9 @@ export default function App() {
     const timeout = window.setTimeout(() => window.clearInterval(timer), 5000)
 
     return () => {
-      cancelled = true
       window.clearInterval(timer)
       window.clearTimeout(timeout)
-      unsubMax?.()
-      unsubSettings?.()
+      cleanupSetup()
     }
   }, [setSettings, setSystemStats, setWindowMaximized])
 
