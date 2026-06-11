@@ -1,4 +1,9 @@
-import type { ReminderItem } from './reminder-data'
+import {
+  getReminderNextRemindAt,
+  isReminderRepeating,
+  isRepeatOccurrenceDoneToday,
+  type ReminderItem,
+} from './reminder-data'
 
 export type PetReminderListItemDto = {
   id: string
@@ -6,19 +11,26 @@ export type PetReminderListItemDto = {
   content: string
   level: ReminderItem['level']
   remindAt: string
+  nextRemindAt: string
   repeat: ReminderItem['repeat']
   isDue: boolean
 }
 
 export function toPetReminderListItem(item: ReminderItem, now = Date.now()): PetReminderListItemDto {
   const at = Date.parse(item.remindAt)
-  const isDue = !item.dismissed && Number.isFinite(at) && at <= now
+  const repeating = isReminderRepeating(item)
+  const isDue =
+    !item.dismissed &&
+    Number.isFinite(at) &&
+    at <= now &&
+    !(repeating && isRepeatOccurrenceDoneToday(item, now))
   return {
     id: item.id,
     title: item.title,
     content: item.content,
     level: item.level,
     remindAt: item.remindAt,
+    nextRemindAt: getReminderNextRemindAt(item, now),
     repeat: item.repeat,
     isDue,
   }

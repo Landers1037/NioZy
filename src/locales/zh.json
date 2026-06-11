@@ -258,6 +258,7 @@
     "fieldRepeatDesc": "开启后按周期自动排下次提醒；今日触发后显示为已完成并保留",
     "fieldRepeatInterval": "重复周期",
     "repeatBadge": "重复提醒",
+    "nextRemindAt": "下次 {{time}}",
     "repeat": {
       "daily": "每天",
       "weekly": "每周",

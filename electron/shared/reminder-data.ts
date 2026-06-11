@@ -172,3 +172,19 @@ export function isReminderCompleted(item: ReminderItem, now = Date.now()): boole
   const at = Date.parse(item.remindAt)
   return Number.isFinite(at) && at <= now
 }
+
+/** 重复提醒的下次触发时间；非重复项返回 remindAt */
+export function getReminderNextRemindAt(item: ReminderItem, now = Date.now()): string {
+  if (!isReminderRepeating(item)) return item.remindAt
+  if (isRepeatOccurrenceDoneToday(item, now)) return item.remindAt
+  const at = Date.parse(item.remindAt)
+  if (!Number.isFinite(at)) return item.remindAt
+  if (at > now) return item.remindAt
+  return advanceRemindAt(item.remindAt, item.repeat)
+}
+
+/** 清除已完成时是否应移除此项（重复提醒保留） */
+export function shouldRemoveOnClearCompleted(item: ReminderItem, now = Date.now()): boolean {
+  if (isReminderRepeating(item)) return false
+  return isReminderCompleted(item, now)
+}
