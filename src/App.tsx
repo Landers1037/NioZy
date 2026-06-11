@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, lazy, Suspense, useState, type ComponentType } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  lazy,
+  Suspense,
+  useState,
+  type ComponentType,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { TitleBar } from '@/components/layout/TitleBar'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -193,59 +202,107 @@ export default function App() {
     }
   }, [setTerminalCwd, clearTerminalCwd])
 
+  const scpTransferTabId = useAppStore((s) => s.scpTransferTabId)
+  const setScpTransferTabId = useAppStore((s) => s.setScpTransferTabId)
+  const attachCommitted = useAttachPtySessionStore((s) => s.committed)
+  const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
+  const [AiCopilotRoot, setAiCopilotRoot] = useState<ComponentType | null>(null)
+  const [aiMountKey, setAiMountKey] = useState(0)
+
   const terminalTabs = useMemo(
     () => tabs.filter((t) => t.type === 'terminal' && getAllTerminalIds(t).length > 0),
     [tabs],
   )
 
-  if (!isElectron()) {
-    return null
-  }
+  const tabLayout = useMemo(() => {
+    const activeTab = tabs.find((t) => t.id === activeTabId)
+    const activeType = activeTab?.type
+    const scpTransferTab = scpTransferTabId
+      ? tabs.find((t) => t.id === scpTransferTabId)
+      : undefined
+    const attachTargetTab = resolveAttachPtyTargetTab(activeTabId, tabs)
+    const attachPtyMode = isAttachPtyRenderMode(settings)
 
-  const activeTab = tabs.find((t) => t.id === activeTabId)
-  const scpTransferTabId = useAppStore((s) => s.scpTransferTabId)
-  const setScpTransferTabId = useAppStore((s) => s.setScpTransferTabId)
-  const scpTransferTab = scpTransferTabId
-    ? tabs.find((t) => t.id === scpTransferTabId)
-    : undefined
+    return {
+      activeTab,
+      scpTransferTab,
+      terminalActive: activeType === 'terminal',
+      hasSettingsTab: tabs.some((t) => t.type === 'settings'),
+      settingsTabActive: activeType === 'settings',
+      hasFilesystemTab: tabs.some((t) => t.type === 'filesystem'),
+      filesystemTabActive: activeType === 'filesystem',
+      hasSandboxTab: tabs.some((t) => t.type === 'sandbox'),
+      sandboxTabActive: activeType === 'sandbox',
+      hasChatTab: tabs.some((t) => t.type === 'chat'),
+      chatTabActive: activeType === 'chat',
+      hasRepoTab: tabs.some((t) => t.type === 'repo'),
+      repoTabActive: activeType === 'repo',
+      hasExcalidrawTab: tabs.some((t) => t.type === 'excalidraw'),
+      excalidrawTabActive: activeType === 'excalidraw',
+      hasDrawioTab: tabs.some((t) => t.type === 'drawio'),
+      drawioTabActive: activeType === 'drawio',
+      excalidrawEnabled: settings?.drawing?.excalidrawEnabled === true,
+      drawioEnabled: settings?.drawing?.drawioEnabled === true,
+      p2pChatEnabled: settings?.p2p.enabled === true,
+      hasVncTab: tabs.some((t) => t.type === 'vnc'),
+      vncTabActive: activeType === 'vnc',
+      showAttachPtyHost:
+        attachPtyMode &&
+        !!attachCommitted &&
+        !attachPendingTabId &&
+        !!attachTargetTab &&
+        attachCommitted.tabId === attachTargetTab.id,
+      aiSidebarEnabled: settings?.experimental.aiSidebarEnabled === true,
+      aiSidebarWidthPx: resolveAiSidebarWidthPx(
+        settings?.experimental.aiSidebarWidth ?? 'default',
+      ),
+    }
+  }, [
+    tabs,
+    activeTabId,
+    scpTransferTabId,
+    settings,
+    attachCommitted,
+    attachPendingTabId,
+  ])
+
+  const {
+    activeTab,
+    scpTransferTab,
+    terminalActive,
+    hasSettingsTab,
+    settingsTabActive,
+    hasFilesystemTab,
+    filesystemTabActive,
+    hasSandboxTab,
+    sandboxTabActive,
+    hasChatTab,
+    chatTabActive,
+    hasRepoTab,
+    repoTabActive,
+    hasExcalidrawTab,
+    excalidrawTabActive,
+    hasDrawioTab,
+    drawioTabActive,
+    excalidrawEnabled,
+    drawioEnabled,
+    p2pChatEnabled,
+    hasVncTab,
+    vncTabActive,
+    showAttachPtyHost,
+    aiSidebarEnabled,
+    aiSidebarWidthPx,
+  } = tabLayout
+
   const browserDevPreview = isBrowserDevPreview()
-  const terminalActive = activeTab?.type === 'terminal'
-  const hasSettingsTab = tabs.some((t) => t.type === 'settings')
-  const settingsTabActive = activeTab?.type === 'settings'
-  const hasFilesystemTab = tabs.some((t) => t.type === 'filesystem')
-  const filesystemTabActive = activeTab?.type === 'filesystem'
-  const hasSandboxTab = tabs.some((t) => t.type === 'sandbox')
-  const sandboxTabActive = activeTab?.type === 'sandbox'
-  const hasChatTab = tabs.some((t) => t.type === 'chat')
-  const chatTabActive = activeTab?.type === 'chat'
-  const hasRepoTab = tabs.some((t) => t.type === 'repo')
-  const repoTabActive = activeTab?.type === 'repo'
-  const hasExcalidrawTab = tabs.some((t) => t.type === 'excalidraw')
-  const excalidrawTabActive = activeTab?.type === 'excalidraw'
-  const hasDrawioTab = tabs.some((t) => t.type === 'drawio')
-  const drawioTabActive = activeTab?.type === 'drawio'
-  const excalidrawEnabled = settings?.drawing?.excalidrawEnabled === true
-  const drawioEnabled = settings?.drawing?.drawioEnabled === true
-  const p2pChatEnabled = settings?.p2p.enabled === true
-  const hasVncTab = tabs.some((t) => t.type === 'vnc')
-  const vncTabActive = activeTab?.type === 'vnc'
-  const attachPtyMode = isAttachPtyRenderMode(settings)
-  const attachCommitted = useAttachPtySessionStore((s) => s.committed)
-  const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
-  const attachTargetTab = resolveAttachPtyTargetTab(activeTabId, tabs)
-  const showAttachPtyHost =
-    attachPtyMode &&
-    !!attachCommitted &&
-    !attachPendingTabId &&
-    !!attachTargetTab &&
-    attachCommitted.tabId === attachTargetTab.id
-  const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
-  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
-  const aiSidebarWidthPx = resolveAiSidebarWidthPx(
-    settings?.experimental.aiSidebarWidth ?? 'default',
+
+  const handleScpTransferOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) setScpTransferTabId(null)
+    },
+    [setScpTransferTabId],
   )
-  const [AiCopilotRoot, setAiCopilotRoot] = useState<ComponentType | null>(null)
-  const [aiMountKey, setAiMountKey] = useState(0)
 
   useEffect(() => {
     if (!aiSidebarEnabled) {
@@ -272,6 +329,10 @@ export default function App() {
       setAiMountKey((k) => k + 1)
     }
   }, [aiSidebarEnabled])
+
+  if (!isElectron()) {
+    return null
+  }
 
   return (
     <div
@@ -447,9 +508,7 @@ export default function App() {
           <ScpTransferDialog
             tab={scpTransferTab}
             open
-            onOpenChange={(open) => {
-              if (!open) setScpTransferTabId(null)
-            }}
+            onOpenChange={handleScpTransferOpenChange}
           />
         </Suspense>
       )}

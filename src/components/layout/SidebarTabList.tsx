@@ -108,7 +108,7 @@ export function SidebarTabList({ collapsed }: SidebarTabListProps) {
                   isDragging={isDragging}
                   dragModeActive={draggingTabId != null}
                   dragEnabled={dragEnabled}
-                  onDragPointerDown={(e) => onTabPointerDown(tab.id, e)}
+                  onDragPointerDown={onTabPointerDown}
                   onDragPointerMove={onTabPointerMove}
                   onDragPointerUp={onTabPointerUp}
                   onDragPointerCancel={onTabPointerCancel}

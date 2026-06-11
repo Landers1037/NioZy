@@ -1,8 +1,9 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { lazy, memo, Suspense, useMemo } from 'react'
 import type { AppTab } from '@/stores/app-store'
 import { useAppStore } from '@/stores/app-store'
 import { resolveInactiveTabPolicy } from '@/lib/inactive-tab-memory'
-import { tabUsesAttachPtyRender } from '@/lib/attach-pty-render'
+import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
+import { getSplitPanes } from '@/lib/terminal-tab-utils'
 import { useInactiveTabOptimizationTick } from '@/hooks/useInactiveTabOptimizationTick'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
 import { useSuperPowerSavingStore } from '@/stores/super-power-saving-store'
@@ -24,10 +25,21 @@ interface TerminalTabLayerProps {
   isTabActive: boolean
 }
 
-export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
-  const settings = useAppStore((s) => s.settings)
-  const performance = settings?.performance
-  const useAttachLayer = tabUsesAttachPtyRender(tab, settings)
+function terminalTabLayerPropsEqual(
+  prev: TerminalTabLayerProps,
+  next: TerminalTabLayerProps,
+): boolean {
+  return prev.isTabActive === next.isTabActive && prev.tab === next.tab
+}
+
+export const TerminalTabLayer = memo(function TerminalTabLayer({
+  tab,
+  isTabActive,
+}: TerminalTabLayerProps) {
+  const performance = useAppStore((s) => s.settings?.performance)
+  const terminalSettings = useAppStore((s) => s.settings?.terminal)
+  const attachPtyRenderMode = useAppStore((s) => isAttachPtyRenderMode(s.settings))
+  const useAttachLayer = attachPtyRenderMode && getSplitPanes(tab).length <= 1
   const pendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
   const committed = useAttachPtySessionStore((s) => s.committed)
   const ptySuspended = useSuperPowerSavingStore((s) => !!s.suspendedTabIds[tab.id])
@@ -88,10 +100,10 @@ export function TerminalTabLayer({ tab, isTabActive }: TerminalTabLayerProps) {
       {...(!isTabActive ? { inert: true } : {})}
     >
       <TerminalBackgroundLayer
-        terminal={settings?.terminal}
+        terminal={terminalSettings}
         className="pointer-events-none absolute inset-0 z-0"
       />
       <div className="relative z-10 h-full w-full">{terminalBody}</div>
     </div>
   )
-}
+}, terminalTabLayerPropsEqual)

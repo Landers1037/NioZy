@@ -1,4 +1,4 @@
-import { useState, type MouseEvent, type ReactNode } from 'react'
+import { memo, useCallback, useMemo, useState, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
@@ -272,43 +272,234 @@ function MetricButton({
   )
 }
 
-export function StatusBar() {
+const StatusBarLiveStats = memo(function StatusBarLiveStats({
+  onOpenMetrics,
+}: {
+  onOpenMetrics: () => void
+}) {
   const { t } = useTranslation()
-  const [metricsOpen, setMetricsOpen] = useState(false)
   const ui = useUiClasses()
   const uiStyle = useUiStyle()
   const stats = useAppStore((s) => s.systemStats)
-  const settings = useAppStore((s) => s.settings)
-  const theme: ThemeMode = settings?.theme ?? 'light'
-  const liveStats = settings?.advanced.statusBarLiveStats !== false
+  const theme: ThemeMode = useAppStore((s) => s.settings?.theme ?? 'light')
+  const liveStats = useAppStore((s) => s.settings?.advanced.statusBarLiveStats !== false)
+  const isClassic = uiStyle === 'windowsClassic'
+  const coloredTags = usesColoredStatusTags(uiStyle)
+  const fieldClass = ui.statusTag
+
+  const renderTag = useCallback(
+    (content: ReactNode, className?: string) => {
+      if (isClassic) {
+        return (
+          <ClassicStatusTag fieldClass={fieldClass} className={className}>
+            {content}
+          </ClassicStatusTag>
+        )
+      }
+      return <MinimalStatusTag className={className}>{content}</MinimalStatusTag>
+    },
+    [fieldClass, isClassic],
+  )
+
+  const memoryLabel = useMemo(
+    () =>
+      t('statusBar.memory', {
+        percent: stats.memoryPercent,
+        used: stats.memoryUsedMb,
+        total: stats.memoryTotalMb,
+      }),
+    [stats.memoryPercent, stats.memoryUsedMb, stats.memoryTotalMb, t],
+  )
+
+  if (!liveStats) {
+    if (coloredTags) {
+      return (
+        <NiozyStatusTag variant="off" theme={theme} uiStyle={uiStyle}>
+          <StatusTagLabel icon={EyeOff}>{t('statusBar.liveStatsOff')}</StatusTagLabel>
+        </NiozyStatusTag>
+      )
+    }
+    return renderTag(
+      <StatusTagLabel icon={EyeOff}>{t('statusBar.liveStatsOff')}</StatusTagLabel>,
+    )
+  }
+
+  if (coloredTags) {
+    return (
+      <>
+        <NiozyStatusTag variant="date" theme={theme} uiStyle={uiStyle}>
+          <StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>
+        </NiozyStatusTag>
+        <NiozyStatusTag variant="time" theme={theme} uiStyle={uiStyle}>
+          <StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>
+        </NiozyStatusTag>
+        <NiozyStatusTag variant="cpu" theme={theme} uiStyle={uiStyle}>
+          <StatusTagLabel icon={Cpu}>
+            {t('statusBar.cpu', { percent: stats.cpuPercent })}
+          </StatusTagLabel>
+        </NiozyStatusTag>
+        <NiozyStatusTag variant="memory" theme={theme} uiStyle={uiStyle} className="truncate">
+          <StatusTagLabel icon={MemoryStick} truncate>
+            {memoryLabel}
+          </StatusTagLabel>
+        </NiozyStatusTag>
+        <MetricButton
+          title={t('statusBar.metricTitle')}
+          theme={theme}
+          uiStyle={uiStyle}
+          isClassic={isClassic}
+          fieldClass={fieldClass}
+          renderTag={renderTag}
+          onClick={onOpenMetrics}
+        />
+      </>
+    )
+  }
+
+  return (
+    <>
+      {renderTag(<StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>)}
+      {renderTag(<StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>)}
+      {renderTag(
+        <StatusTagLabel icon={Cpu}>
+          {t('statusBar.cpu', { percent: stats.cpuPercent })}
+        </StatusTagLabel>,
+      )}
+      {renderTag(
+        <StatusTagLabel icon={MemoryStick} truncate>
+          {memoryLabel}
+        </StatusTagLabel>,
+        'truncate',
+      )}
+      <MetricButton
+        title={t('statusBar.metricTitle')}
+        theme={theme}
+        uiStyle={uiStyle}
+        isClassic={isClassic}
+        fieldClass={fieldClass}
+        renderTag={renderTag}
+        onClick={onOpenMetrics}
+      />
+    </>
+  )
+})
+
+const StatusBarTabInfo = memo(function StatusBarTabInfo() {
+  const { t } = useTranslation()
+  const ui = useUiClasses()
+  const uiStyle = useUiStyle()
+  const theme: ThemeMode = useAppStore((s) => s.settings?.theme ?? 'light')
   const tabs = useAppStore((s) => s.tabs)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const terminalCwds = useAppStore((s) => s.terminalCwds)
-  const activeTab = tabs.find((tab) => tab.id === activeTabId)
-  const activeTerminalId =
-    activeTab?.type === 'terminal' ? getActiveTerminalId(activeTab) : undefined
-  const activeCwd = activeTerminalId ? terminalCwds[activeTerminalId] : undefined
   const isDark = theme === 'dark'
   const coloredTags = usesColoredStatusTags(uiStyle)
   const isClassic = uiStyle === 'windowsClassic'
   const fieldClass = ui.statusTag
 
-  const renderTag = (content: ReactNode, className?: string) => {
-    if (isClassic) {
-      return (
-        <ClassicStatusTag fieldClass={fieldClass} className={className}>
-          {content}
-        </ClassicStatusTag>
-      )
+  const { activeTab, activeCwd, activeTabTitle } = useMemo(() => {
+    const tab = tabs.find((item) => item.id === activeTabId)
+    const terminalId = tab?.type === 'terminal' ? getActiveTerminalId(tab) : undefined
+    return {
+      activeTab: tab,
+      activeCwd: terminalId ? terminalCwds[terminalId] : undefined,
+      activeTabTitle: tab ? getTabDisplayTitle(tab) : t('common.none'),
     }
-    return <MinimalStatusTag className={className}>{content}</MinimalStatusTag>
-  }
+  }, [activeTabId, tabs, terminalCwds, t])
 
-  const memoryLabel = t('statusBar.memory', {
-    percent: stats.memoryPercent,
-    used: stats.memoryUsedMb,
-    total: stats.memoryTotalMb,
-  })
+  const renderTag = useCallback(
+    (content: ReactNode, className?: string) => {
+      if (isClassic) {
+        return (
+          <ClassicStatusTag fieldClass={fieldClass} className={className}>
+            {content}
+          </ClassicStatusTag>
+        )
+      }
+      return <MinimalStatusTag className={className}>{content}</MinimalStatusTag>
+    },
+    [fieldClass, isClassic],
+  )
+
+  return (
+    <>
+      {activeTab?.type === 'terminal' &&
+        (coloredTags ? (
+          <NiozyStatusTag variant="cwd" theme={theme} uiStyle={uiStyle} className="max-w-[min(50vw,320px)]">
+            <StatusTagIcon icon={FolderOpen} />
+            <span className={cn('shrink-0', isDark ? cwdLabelDark : cwdLabelLight)}>
+              {t('statusBar.cwd')}
+            </span>
+            <span className={cn('mx-1 shrink-0', isDark ? cwdDividerDark : cwdDividerLight)}>
+              ·
+            </span>
+            <span className="min-w-0 truncate" title={activeCwd}>
+              {activeCwd ?? t('statusBar.cwdUnknown')}
+            </span>
+          </NiozyStatusTag>
+        ) : isClassic ? (
+          renderTag(
+            <>
+              <StatusTagIcon icon={FolderOpen} />
+              <span className="shrink-0 text-muted-foreground">{t('statusBar.cwd')}</span>
+              <span className="mx-1 shrink-0 text-muted-foreground">·</span>
+              <span className="min-w-0 truncate" title={activeCwd}>
+                {activeCwd ?? t('statusBar.cwdUnknown')}
+              </span>
+            </>,
+            'max-w-[min(50vw,320px)]',
+          )
+        ) : (
+          <MinimalStatusTag className="max-w-[min(50vw,320px)]">
+            <StatusTagIcon icon={FolderOpen} />
+            <MinimalStatusLabel>{t('statusBar.cwd')}</MinimalStatusLabel>
+            <MinimalStatusDivider />
+            <span className="min-w-0 truncate" title={activeCwd}>
+              {activeCwd ?? t('statusBar.cwdUnknown')}
+            </span>
+          </MinimalStatusTag>
+        ))}
+      {coloredTags ? (
+        <NiozyStatusTag variant="tab" theme={theme} uiStyle={uiStyle} className="max-w-[160px] shrink-0">
+          <StatusTagIcon icon={SquareTerminal} />
+          <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
+            {t('statusBar.current')}
+          </span>
+          <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
+          <span className="min-w-0 truncate" title={activeTab ? activeTabTitle : undefined}>
+            {activeTabTitle}
+          </span>
+        </NiozyStatusTag>
+      ) : isClassic ? (
+        renderTag(
+          <>
+            <StatusTagIcon icon={SquareTerminal} />
+            <span className="shrink-0 text-muted-foreground">{t('statusBar.current')}</span>
+            <span className="mx-1 shrink-0 text-muted-foreground">·</span>
+            <span className="min-w-0 truncate" title={activeTab ? activeTabTitle : undefined}>
+              {activeTabTitle}
+            </span>
+          </>,
+          'max-w-[160px] shrink-0',
+        )
+      ) : (
+        <MinimalStatusTag className="max-w-[160px] shrink-0">
+          <StatusTagIcon icon={SquareTerminal} />
+          <MinimalStatusLabel>{t('statusBar.current')}</MinimalStatusLabel>
+          <MinimalStatusDivider />
+          <span className="min-w-0 truncate" title={activeTab ? activeTabTitle : undefined}>
+            {activeTabTitle}
+          </span>
+        </MinimalStatusTag>
+      )}
+    </>
+  )
+})
+
+export function StatusBar() {
+  const ui = useUiClasses()
+  const [metricsOpen, setMetricsOpen] = useState(false)
+  const openMetrics = useCallback(() => setMetricsOpen(true), [])
 
   return (
     <>
@@ -319,155 +510,11 @@ export function StatusBar() {
         )}
       >
         <div className="flex min-w-0 items-center gap-1">
-          {liveStats ? (
-            <>
-              {coloredTags ? (
-                <>
-                  <NiozyStatusTag variant="date" theme={theme} uiStyle={uiStyle}>
-                    <StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>
-                  </NiozyStatusTag>
-                  <NiozyStatusTag variant="time" theme={theme} uiStyle={uiStyle}>
-                    <StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>
-                  </NiozyStatusTag>
-                  <NiozyStatusTag variant="cpu" theme={theme} uiStyle={uiStyle}>
-                    <StatusTagLabel icon={Cpu}>
-                      {t('statusBar.cpu', { percent: stats.cpuPercent })}
-                    </StatusTagLabel>
-                  </NiozyStatusTag>
-                  <NiozyStatusTag variant="memory" theme={theme} uiStyle={uiStyle} className="truncate">
-                    <StatusTagLabel icon={MemoryStick} truncate>
-                      {memoryLabel}
-                    </StatusTagLabel>
-                  </NiozyStatusTag>
-                  <MetricButton
-                    title={t('statusBar.metricTitle')}
-                    theme={theme}
-                    uiStyle={uiStyle}
-                    isClassic={isClassic}
-                    fieldClass={fieldClass}
-                    renderTag={renderTag}
-                    onClick={() => setMetricsOpen(true)}
-                  />
-                </>
-              ) : (
-                <>
-                  {renderTag(
-                    <StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>,
-                  )}
-                  {renderTag(<StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>)}
-                  {renderTag(
-                    <StatusTagLabel icon={Cpu}>
-                      {t('statusBar.cpu', { percent: stats.cpuPercent })}
-                    </StatusTagLabel>,
-                  )}
-                  {renderTag(
-                    <StatusTagLabel icon={MemoryStick} truncate>
-                      {memoryLabel}
-                    </StatusTagLabel>,
-                    'truncate',
-                  )}
-                  <MetricButton
-                    title={t('statusBar.metricTitle')}
-                    theme={theme}
-                    uiStyle={uiStyle}
-                    isClassic={isClassic}
-                    fieldClass={fieldClass}
-                    renderTag={renderTag}
-                    onClick={() => setMetricsOpen(true)}
-                  />
-                </>
-              )}
-            </>
-          ) : coloredTags ? (
-          <NiozyStatusTag variant="off" theme={theme} uiStyle={uiStyle}>
-            <StatusTagLabel icon={EyeOff}>{t('statusBar.liveStatsOff')}</StatusTagLabel>
-          </NiozyStatusTag>
-        ) : (
-          renderTag(
-            <StatusTagLabel icon={EyeOff}>{t('statusBar.liveStatsOff')}</StatusTagLabel>,
-          )
-        )}
-      </div>
-      <div className="flex min-w-0 shrink items-center gap-1">
-        {activeTab?.type === 'terminal' &&
-          (coloredTags ? (
-            <NiozyStatusTag variant="cwd" theme={theme} uiStyle={uiStyle} className="max-w-[min(50vw,320px)]">
-              <StatusTagIcon icon={FolderOpen} />
-              <span className={cn('shrink-0', isDark ? cwdLabelDark : cwdLabelLight)}>
-                {t('statusBar.cwd')}
-              </span>
-              <span className={cn('mx-1 shrink-0', isDark ? cwdDividerDark : cwdDividerLight)}>
-                ·
-              </span>
-              <span className="min-w-0 truncate" title={activeCwd}>
-                {activeCwd ?? t('statusBar.cwdUnknown')}
-              </span>
-            </NiozyStatusTag>
-          ) : isClassic ? (
-            renderTag(
-              <>
-                <StatusTagIcon icon={FolderOpen} />
-                <span className="shrink-0 text-muted-foreground">{t('statusBar.cwd')}</span>
-                <span className="mx-1 shrink-0 text-muted-foreground">·</span>
-                <span className="min-w-0 truncate" title={activeCwd}>
-                  {activeCwd ?? t('statusBar.cwdUnknown')}
-                </span>
-              </>,
-              'max-w-[min(50vw,320px)]',
-            )
-          ) : (
-            <MinimalStatusTag className="max-w-[min(50vw,320px)]">
-              <StatusTagIcon icon={FolderOpen} />
-              <MinimalStatusLabel>{t('statusBar.cwd')}</MinimalStatusLabel>
-              <MinimalStatusDivider />
-              <span className="min-w-0 truncate" title={activeCwd}>
-                {activeCwd ?? t('statusBar.cwdUnknown')}
-              </span>
-            </MinimalStatusTag>
-          ))}
-        {coloredTags ? (
-          <NiozyStatusTag variant="tab" theme={theme} uiStyle={uiStyle} className="max-w-[160px] shrink-0">
-            <StatusTagIcon icon={SquareTerminal} />
-            <span className={cn('shrink-0', isDark ? tabLabelDark : tabLabelLight)}>
-              {t('statusBar.current')}
-            </span>
-            <span className={cn('mx-1 shrink-0', isDark ? tabDividerDark : tabDividerLight)}>·</span>
-            <span
-              className="min-w-0 truncate"
-              title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
-            >
-              {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
-            </span>
-          </NiozyStatusTag>
-        ) : isClassic ? (
-          renderTag(
-            <>
-              <StatusTagIcon icon={SquareTerminal} />
-              <span className="shrink-0 text-muted-foreground">{t('statusBar.current')}</span>
-              <span className="mx-1 shrink-0 text-muted-foreground">·</span>
-              <span
-                className="min-w-0 truncate"
-                title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
-              >
-                {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
-              </span>
-            </>,
-            'max-w-[160px] shrink-0',
-          )
-        ) : (
-          <MinimalStatusTag className="max-w-[160px] shrink-0">
-            <StatusTagIcon icon={SquareTerminal} />
-            <MinimalStatusLabel>{t('statusBar.current')}</MinimalStatusLabel>
-            <MinimalStatusDivider />
-            <span
-              className="min-w-0 truncate"
-              title={activeTab ? getTabDisplayTitle(activeTab) : undefined}
-            >
-              {activeTab ? getTabDisplayTitle(activeTab) : t('common.none')}
-            </span>
-          </MinimalStatusTag>
-        )}
-      </div>
+          <StatusBarLiveStats onOpenMetrics={openMetrics} />
+        </div>
+        <div className="flex min-w-0 shrink items-center gap-1">
+          <StatusBarTabInfo />
+        </div>
       </footer>
       <AppMetricsDialog open={metricsOpen} onOpenChange={setMetricsOpen} />
     </>
