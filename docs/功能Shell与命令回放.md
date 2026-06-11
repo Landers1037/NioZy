@@ -2,6 +2,8 @@
 
 终端内链接/emoji/换行行为、Tab 编号与拖拽，以及命令序列录制与一键重放。
 
+> **Oh My Posh / posh-git 内置美化**见 [功能增强SHELL.md](./功能增强SHELL.md)。
+
 ## 功能列表
 
 - Emoji Unicode 11 宽度表

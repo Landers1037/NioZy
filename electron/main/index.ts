@@ -1610,7 +1610,12 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
     }
   }
   try {
-    const session = terminalService.create(resolved)
+    const shellSettings = settingsStore.get().shell
+    const session = terminalService.create({
+      ...resolved,
+      ohMyPoshEnabled: shellSettings.ohMyPoshEnabled,
+      ohMyPoshTheme: shellSettings.ohMyPoshTheme,
+    })
     if (sshConn) {
       runSshConnectionStartupScript(session.id, sshConn)
     }

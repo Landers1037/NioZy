@@ -371,6 +371,10 @@
     "shell": {
       "title": "SHELL",
       "description": "ターミナルシェルの出力と操作（絵文字、リンクのハイライトと開く）",
+      "ohMyPoshEnabled": "Oh My Posh を有効化",
+      "ohMyPoshEnabledDesc": "pwsh ターミナルに同梱の Oh My Posh と posh-git を注入して美化",
+      "ohMyPoshTheme": "Oh My Posh テーマ",
+      "ohMyPoshThemeDesc": "同梱プロンプトテーマを選択。新しい pwsh ターミナルで反映",
       "emojiNativeRendering": "ネイティブ絵文字レンダリング",
       "emojiNativeRenderingDesc": "Unicode 11 幅テーブルで絵文字と全角文字を正しく表示",
       "highlightLinks": "リンクをハイライト",

@@ -1,5 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
@@ -11,7 +18,10 @@ import {
   CornerDownLeft,
   Hash,
   GripVertical,
+  Sparkles,
+  Palette,
 } from 'lucide-react'
+import { OH_MY_POSH_THEMES, type OhMyPoshThemeId } from '../../../electron/shared/oh-my-posh-themes'
 import { CommandReplaySettingsSection } from '@/components/command-replay/CommandReplaySettingsSection'
 
 export function ShellSettings() {
@@ -35,6 +45,41 @@ export function ShellSettings() {
         <CardDescription>{t('settings.shell.description')}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
+        <SettingField
+          icon={Sparkles}
+          label={t('settings.shell.ohMyPoshEnabled')}
+          description={t('settings.shell.ohMyPoshEnabledDesc')}
+          row
+        >
+          <Switch
+            checked={shell.ohMyPoshEnabled}
+            onCheckedChange={(v) => patchShell({ ohMyPoshEnabled: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Palette}
+          label={t('settings.shell.ohMyPoshTheme')}
+          description={t('settings.shell.ohMyPoshThemeDesc')}
+        >
+          <Select
+            value={shell.ohMyPoshTheme}
+            disabled={!shell.ohMyPoshEnabled}
+            onValueChange={(value) => patchShell({ ohMyPoshTheme: value as OhMyPoshThemeId })}
+          >
+            <SelectTrigger className="max-w-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {OH_MY_POSH_THEMES.map((theme) => (
+                <SelectItem key={theme.id} value={theme.id}>
+                  {theme.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SettingField>
+
         <SettingField
           icon={Smile}
           label={t('settings.shell.emojiNativeRendering')}

@@ -1,4 +1,5 @@
 import { normalizeCommandReplayList, type CommandReplayItem } from './command-replay'
+import { DEFAULT_OH_MY_POSH_THEME, normalizeOhMyPoshTheme, type OhMyPoshThemeId } from './oh-my-posh-themes'
 
 export type { CommandReplayItem }
 
@@ -15,6 +16,10 @@ export interface ShellSettings {
   showTerminalIndex: boolean
   /** 长按侧栏终端 Tab 2s 后可拖拽调整顺序 */
   enableTabDrag: boolean
+  /** 在 pwsh 会话中注入内置 Oh My Posh + posh-git（不修改用户 Profile） */
+  ohMyPoshEnabled: boolean
+  /** 内置 Oh My Posh 主题 */
+  ohMyPoshTheme: OhMyPoshThemeId
   /** 命令重放列表 */
   commandReplays: CommandReplayItem[]
 }
@@ -26,6 +31,8 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   shiftEnterNewline: false,
   showTerminalIndex: false,
   enableTabDrag: false,
+  ohMyPoshEnabled: false,
+  ohMyPoshTheme: DEFAULT_OH_MY_POSH_THEME,
   commandReplays: [],
 }
 
@@ -56,6 +63,11 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.enableTabDrag === 'boolean'
         ? v.enableTabDrag
         : DEFAULT_SHELL_SETTINGS.enableTabDrag,
+    ohMyPoshEnabled:
+      typeof v.ohMyPoshEnabled === 'boolean'
+        ? v.ohMyPoshEnabled
+        : DEFAULT_SHELL_SETTINGS.ohMyPoshEnabled,
+    ohMyPoshTheme: normalizeOhMyPoshTheme(v.ohMyPoshTheme),
     commandReplays: normalizeCommandReplayList(v.commandReplays),
   }
 }
