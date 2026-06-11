@@ -7,6 +7,7 @@ import {
   createReminderItem,
   isReminderCompleted,
   isReminderRepeating,
+  shouldRemoveOnClearCompleted,
   normalizeReminderData,
   type ReminderDataFile,
   type ReminderItem,
@@ -171,19 +172,13 @@ export class ReminderStore {
   dismissItems(ids: string[]): void {
     if (ids.length === 0) return
     const idSet = new Set(ids)
-    const repeatIds: string[] = []
     let changed = false
     for (const item of this.data.items) {
       if (!idSet.has(item.id)) continue
-      if (isReminderRepeating(item)) {
-        repeatIds.push(item.id)
-        continue
-      }
+      // 重复提醒在触发时已推进下次时间，关闭仅确认，勿再次推进
+      if (isReminderRepeating(item)) continue
       item.dismissed = true
       changed = true
-    }
-    if (repeatIds.length > 0) {
-      this.completeRepeatingOccurrences(repeatIds)
     }
     if (!changed) return
     this.persist()
@@ -192,7 +187,7 @@ export class ReminderStore {
 
   clearCompleted(now = Date.now()): number {
     const before = this.data.items.length
-    this.data.items = this.data.items.filter((item) => !isReminderCompleted(item, now))
+    this.data.items = this.data.items.filter((item) => !shouldRemoveOnClearCompleted(item, now))
     const removed = before - this.data.items.length
     if (removed === 0) return 0
     this.persist()

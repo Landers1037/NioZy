@@ -6,6 +6,7 @@ export type PetUiLabels = {
   viewReminders: string
   reminderListTitle: string
   reminderListEmpty: string
+  reminderNextAt: string
   reminderDueTitle: string
   dismiss: string
   snooze5: string
@@ -20,6 +21,7 @@ const LABELS: Record<AppLocale, PetUiLabels> = {
     viewReminders: '查看提醒',
     reminderListTitle: '提醒事项',
     reminderListEmpty: '暂无提醒事项',
+    reminderNextAt: '下次',
     reminderDueTitle: '提醒到点了',
     dismiss: '关闭提醒',
     snooze5: '推迟 5 分钟',
@@ -32,6 +34,7 @@ const LABELS: Record<AppLocale, PetUiLabels> = {
     viewReminders: 'View reminders',
     reminderListTitle: 'Reminders',
     reminderListEmpty: 'No reminders yet',
+    reminderNextAt: 'Next',
     reminderDueTitle: 'Reminder due',
     dismiss: 'Dismiss',
     snooze5: 'Snooze 5 min',
@@ -44,6 +47,7 @@ const LABELS: Record<AppLocale, PetUiLabels> = {
     viewReminders: 'リマインダーを表示',
     reminderListTitle: 'リマインダー',
     reminderListEmpty: 'リマインダーはありません',
+    reminderNextAt: '次回',
     reminderDueTitle: 'リマインダー時刻です',
     dismiss: '閉じる',
     snooze5: '5 分後に再通知',

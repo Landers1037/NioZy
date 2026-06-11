@@ -195,6 +195,7 @@
     "fieldRepeatDesc": "周期ごとに次回を自動設定。本日の通知後は完了表示のままリストに残ります",
     "fieldRepeatInterval": "繰り返し間隔",
     "repeatBadge": "繰り返しリマインダー",
+    "nextRemindAt": "次回 {{time}}",
     "repeat": {
       "daily": "毎日",
       "weekly": "毎週",

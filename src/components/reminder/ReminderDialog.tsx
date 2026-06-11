@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  getReminderNextRemindAt,
   isReminderCompleted,
   isReminderRepeating,
   isReminderUntriggered,
@@ -249,7 +250,13 @@ export function ReminderDialog({
                               </span>
                             </div>
                             <div className="flex items-center gap-1 text-xs leading-none text-muted-foreground">
-                              <span className="tabular-nums">{formatReminderDateTime(item.remindAt)}</span>
+                              <span className="tabular-nums">
+                                {isReminderRepeating(item)
+                                  ? t('reminder.nextRemindAt', {
+                                      time: formatReminderDateTime(getReminderNextRemindAt(item)),
+                                    })
+                                  : formatReminderDateTime(item.remindAt)}
+                              </span>
                               {isReminderRepeating(item) ? (
                                 <span title={t(`reminder.repeat.${item.repeat}`)}>
                                   <Repeat2

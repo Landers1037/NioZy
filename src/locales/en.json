@@ -258,6 +258,7 @@
     "fieldRepeatDesc": "Schedules the next reminder automatically; after today’s alert it shows as done and stays in the list",
     "fieldRepeatInterval": "Repeat interval",
     "repeatBadge": "Repeating reminder",
+    "nextRemindAt": "Next {{time}}",
     "repeat": {
       "daily": "Daily",
       "weekly": "Weekly",

@@ -66,16 +66,20 @@ export function initPetReminderUi(api: PetElectronAPI): void {
     }
 
     const rows = items
-      .map(
-        (item) => `
+      .map((item) => {
+        const timeLabel =
+          item.repeat !== 'none'
+            ? `${l.reminderNextAt} ${formatDateTime(item.nextRemindAt)}`
+            : formatDateTime(item.remindAt)
+        return `
         <li class="pet-reminder-item${item.isDue ? ' is-due' : ''}">
           <span class="pet-level-dot ${LEVEL_DOT_CLASS[item.level]}" title="${escapeHtml(l.level[item.level])}"></span>
           <div class="pet-reminder-meta">
-            <span class="pet-reminder-time">${escapeHtml(formatDateTime(item.remindAt))}</span>
+            <span class="pet-reminder-time">${escapeHtml(timeLabel)}</span>
             <span class="pet-reminder-title">${escapeHtml(item.title || '—')}</span>
           </div>
-        </li>`,
-      )
+        </li>`
+      })
       .join('')
 
     listEl.innerHTML = `
