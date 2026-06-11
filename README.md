@@ -10,7 +10,8 @@ Windows 多终端管理器 — 基于 Electron 的本地终端工作台，集成
 ### 终端与会话
 
 - **多 Tab 终端**：本地 PowerShell / CMD / pwsh，以及自定义连接与 SSH 会话
-- **双引擎渲染**：默认 xterm.js（DOM / Canvas / WebGL）；实验性 Wterm（WASM + Ghostty）
+- **双引擎渲染**：默认 xterm.js 6（DOM / WebGL）；实验性 Wterm（WASM + Ghostty，仅 DOM）
+- **同步渲染（DEC 2026）**：xterm 下可开关 TUI 原子帧刷新，减少闪烁（Wterm 不支持）
 - **终端拆分**：单 Tab 内最多 3  pane 分屏
 - **Shell 集成**：PowerShell 工作目录同步、右键菜单「在此处打开 NioZy」
 - **管理员重启**：支持以管理员身份重启本地终端进程
@@ -130,7 +131,7 @@ sequenceDiagram
 |------|------|
 | 桌面壳 | Electron 34、electron-vite、electron-builder |
 | 前端 | React 19、TypeScript、Tailwind CSS 4、shadcn/ui (Radix) |
-| 终端 | xterm.js、@wterm/*（实验性）、node-pty |
+| 终端 | xterm.js 6.0、@xterm/addon-webgl、@wterm/*（实验性）、node-pty |
 | 远程 | ssh2（SSH 会话与 SCP） |
 | 状态 | Zustand |
 | 国际化 | i18next |

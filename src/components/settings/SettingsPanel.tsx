@@ -43,6 +43,7 @@ import { ExperimentalSettings } from './ExperimentalSettings'
 import { PreviewSettings } from './PreviewSettings'
 import { P2pSettings } from './P2pSettings'
 import { DrawingSettings } from './DrawingSettings'
+import { AnimatedPanelSection } from '@/components/ui/animated-panel-section'
 
 const SECTION_DEFS = [
   { id: 'appearance', icon: Palette },
@@ -68,6 +69,49 @@ const SECTION_DEFS = [
 
 type SectionId = (typeof SECTION_DEFS)[number]['id']
 
+function SettingsSectionContent({ section }: { section: SectionId }) {
+  switch (section) {
+    case 'appearance':
+      return <AppearanceSettings />
+    case 'terminal':
+      return <TerminalSettings />
+    case 'ssh':
+      return <SshSettings />
+    case 'shell':
+      return <ShellSettings />
+    case 'preview':
+      return <PreviewSettings />
+    case 'performance':
+      return <PerformanceSettings />
+    case 'filesystem':
+      return <FilesystemSettings />
+    case 'drawing':
+      return <DrawingSettings />
+    case 'connections':
+      return <ConnectionSettings />
+    case 'vault':
+      return <VaultSettings />
+    case 'shortcuts':
+      return <ShortcutSettings />
+    case 'statistics':
+      return <StatisticsSettings />
+    case 'reminder':
+      return <ReminderSettings />
+    case 'assistive':
+      return <AssistiveSettings />
+    case 'system':
+      return <SystemSettings />
+    case 'p2p':
+      return <P2pSettings />
+    case 'logging':
+      return <LogSettings />
+    case 'advanced':
+      return <AdvancedSettings />
+    case 'experimental':
+      return <ExperimentalSettings />
+  }
+}
+
 export function SettingsPanel() {
   const { t } = useTranslation()
   const [section, setSection] = useState<SectionId>('appearance')
@@ -83,7 +127,7 @@ export function SettingsPanel() {
   )
 
   return (
-    <div className="flex h-full gap-4 overflow-hidden p-4">
+    <div className="flex h-full gap-4 overflow-hidden p-4 select-none">
       <nav className="flex w-44 shrink-0 flex-col gap-1 no-drag">
         {sections.map((s) => {
           const Icon = s.icon
@@ -105,27 +149,12 @@ export function SettingsPanel() {
           )
         })}
       </nav>
-      <div className="min-w-0 flex-1 overflow-y-auto no-drag select-none">
-        {section === 'appearance' && <AppearanceSettings />}
-        {section === 'terminal' && <TerminalSettings />}
-        {section === 'ssh' && <SshSettings />}
-        {section === 'shell' && <ShellSettings />}
-        {section === 'preview' && <PreviewSettings />}
-        {section === 'performance' && <PerformanceSettings />}
-        {section === 'filesystem' && <FilesystemSettings />}
-        {section === 'drawing' && <DrawingSettings />}
-        {section === 'connections' && <ConnectionSettings />}
-        {section === 'vault' && <VaultSettings />}
-        {section === 'shortcuts' && <ShortcutSettings />}
-        {section === 'statistics' && <StatisticsSettings />}
-        {section === 'reminder' && <ReminderSettings />}
-        {section === 'assistive' && <AssistiveSettings />}
-        {section === 'system' && <SystemSettings />}
-        {section === 'p2p' && <P2pSettings />}
-        {section === 'logging' && <LogSettings />}
-        {section === 'advanced' && <AdvancedSettings />}
-        {section === 'experimental' && <ExperimentalSettings />}
-      </div>
+      <AnimatedPanelSection
+        sectionKey={section}
+        className="min-w-0 flex-1 overflow-y-auto no-drag select-none"
+      >
+        <SettingsSectionContent section={section} />
+      </AnimatedPanelSection>
     </div>
   )
 }

@@ -332,7 +332,7 @@ export function FilesystemPanel() {
   if (!filesystem) return null
 
   return (
-    <div className="flex h-full flex-col overflow-hidden p-4 no-drag">
+    <div className="flex h-full flex-col overflow-hidden p-4 no-drag select-none">
       <h2 className="mb-3 shrink-0 text-sm font-semibold text-foreground">
         {t('filesystem.title')}
       </h2>

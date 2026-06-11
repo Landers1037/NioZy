@@ -288,7 +288,7 @@ export function ChatSessionList({ port }: ChatSessionListProps) {
   ]
 
   return (
-    <div className="flex h-full w-56 shrink-0 flex-col border-r border-border">
+    <div className="flex h-full w-56 shrink-0 flex-col border-r border-border select-none">
       <div className="flex flex-col gap-2 border-b border-border p-3">
         <Button type="button" variant="outline" size="sm" disabled={scanning} onClick={() => void handleScan()}>
           {scanning ? <Loader2 className="size-4 animate-spin" /> : <Radar className="size-4" />}
