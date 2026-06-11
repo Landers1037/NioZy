@@ -1119,6 +1119,9 @@
     "deleteConversationFailed": "删除对话失败",
     "conversationDeleted": "对话已删除"
   },
+  "connection": {
+    "invalidPort": "端口无效（须在 1–65535 之间），当前配置：{{port}}"
+  },
   "toast": {
     "terminalStartFailed": "终端启动失败",
     "selectTerminalFirst": "请先选中终端内容",

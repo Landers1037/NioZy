@@ -1,4 +1,9 @@
 import type { CustomConnection, PuttyProtocol } from '../../electron/shared/api-types'
+import {
+  formatPortReceived,
+  parseConnectionPort,
+} from '../../electron/shared/connection-port'
+import { DEFAULT_VNC_PORT } from '../../electron/shared/vnc-settings'
 import { formatEnvLines, parseEnvLines } from '@/lib/connection-env'
 
 export type ConnectionDraft = {
@@ -171,6 +176,39 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
   }
 }
 
+export type ConnectionDraftPortError = { code: 'port'; received: string }
+
+function connectionDraftPort(
+  draft: ConnectionDraft,
+): { value: unknown; defaultPort: number } | null {
+  switch (draft.type) {
+    case 'ssh':
+      return { value: draft.sshPort, defaultPort: 22 }
+    case 'rdp':
+      return { value: draft.rdpPort, defaultPort: 3389 }
+    case 'telnet':
+      return { value: draft.telnetPort, defaultPort: 23 }
+    case 'putty':
+      return { value: draft.puttyPort, defaultPort: defaultPuttyPort(draft.puttyProtocol) }
+    case 'vnc':
+      return { value: draft.vncPort, defaultPort: DEFAULT_VNC_PORT }
+    default:
+      return null
+  }
+}
+
+/** 连接草稿端口校验（SSH / RDP / VNC 等） */
+export function getConnectionDraftPortError(
+  draft: ConnectionDraft,
+): ConnectionDraftPortError | null {
+  const spec = connectionDraftPort(draft)
+  if (!spec) return null
+  if (parseConnectionPort(spec.value, spec.defaultPort) === null) {
+    return { code: 'port', received: formatPortReceived(spec.value) }
+  }
+  return null
+}
+
 /** 校验并生成连接；无效时返回 null */
 export function draftToConnection(
   draft: ConnectionDraft,
@@ -181,6 +219,8 @@ export function draftToConnection(
   switch (draft.type) {
     case 'ssh': {
       if (!draft.sshHost.trim() || !draft.sshUser.trim()) return null
+      if (getConnectionDraftPortError(draft)) return null
+      const sshPort = parseConnectionPort(draft.sshPort, 22)!
       return {
         id,
         name: draft.name.trim(),
@@ -191,7 +231,7 @@ export function draftToConnection(
         sshAuth: draft.sshAuth,
         sshUser: draft.sshUser.trim(),
         sshHost: draft.sshHost.trim(),
-        sshPort: draft.sshPort,
+        sshPort,
         sshPassword:
           draft.sshAuth === 'password' && draft.sshPassword.trim()
             ? draft.sshPassword.trim()
@@ -206,6 +246,8 @@ export function draftToConnection(
     }
     case 'rdp': {
       if (!draft.rdpHost.trim() || !draft.rdpUser.trim()) return null
+      if (getConnectionDraftPortError(draft)) return null
+      const rdpPort = parseConnectionPort(draft.rdpPort, 3389)!
       return {
         id,
         name: draft.name.trim(),
@@ -214,7 +256,7 @@ export function draftToConnection(
         args: [],
         env: {},
         rdpHost: draft.rdpHost.trim(),
-        rdpPort: draft.rdpPort > 0 ? draft.rdpPort : 3389,
+        rdpPort,
         rdpUser: draft.rdpUser.trim(),
         rdpPassword: draft.rdpPassword.trim() || undefined,
       }
@@ -231,6 +273,8 @@ export function draftToConnection(
       }
     case 'telnet': {
       if (!draft.telnetHost.trim()) return null
+      if (getConnectionDraftPortError(draft)) return null
+      const telnetPort = parseConnectionPort(draft.telnetPort, 23)!
       return {
         id,
         name: draft.name.trim(),
@@ -239,12 +283,14 @@ export function draftToConnection(
         args: [],
         env: {},
         telnetHost: draft.telnetHost.trim(),
-        telnetPort: draft.telnetPort > 0 ? draft.telnetPort : 23,
+        telnetPort,
       }
     }
     case 'putty': {
       if (!draft.puttyHost.trim()) return null
       const protocol = draft.puttyProtocol
+      if (getConnectionDraftPortError(draft)) return null
+      const puttyPort = parseConnectionPort(draft.puttyPort, defaultPuttyPort(protocol))!
       return {
         id,
         name: draft.name.trim(),
@@ -253,7 +299,7 @@ export function draftToConnection(
         args: [],
         env: {},
         puttyHost: draft.puttyHost.trim(),
-        puttyPort: draft.puttyPort > 0 ? draft.puttyPort : defaultPuttyPort(protocol),
+        puttyPort,
         puttyUser: draft.puttyUser.trim() || undefined,
         puttyPassword: draft.puttyPassword.trim() || undefined,
         puttyProtocol: protocol,
@@ -261,7 +307,8 @@ export function draftToConnection(
     }
     case 'vnc': {
       if (!draft.vncHost.trim()) return null
-      const port = draft.vncPort > 0 ? draft.vncPort : 5900
+      if (getConnectionDraftPortError(draft)) return null
+      const port = parseConnectionPort(draft.vncPort, DEFAULT_VNC_PORT)!
       return {
         id,
         name: draft.name.trim(),

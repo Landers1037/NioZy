@@ -32,6 +32,7 @@ import {
   connectionToDraft,
   draftToConnection,
   EMPTY_CONNECTION_DRAFT,
+  getConnectionDraftPortError,
   hasDuplicateShellContextMenuName,
   type ConnectionDraft,
 } from '@/lib/connection-draft'
@@ -155,6 +156,12 @@ export function ConnectionSettings() {
       hasDuplicateShellContextMenuName(settings.connections, draft.name, editingConnectionId)
     ) {
       toast.error(t('toast.shellContextMenuDuplicateName'))
+      return
+    }
+
+    const portError = getConnectionDraftPortError(draft)
+    if (portError) {
+      toast.error(t('connection.invalidPort', { port: portError.received }))
       return
     }
 
@@ -431,6 +438,8 @@ export function ConnectionSettings() {
                 <SettingField icon={Network} label={t('settings.connections.port')}>
                   <Input
                     type="number"
+                    min={1}
+                    max={65535}
                     value={draft.rdpPort}
                     onChange={(e) =>
                       setDraft({ ...draft, rdpPort: Number(e.target.value) || 3389 })
@@ -473,6 +482,8 @@ export function ConnectionSettings() {
                 <SettingField icon={Network} label={t('settings.connections.port')}>
                   <Input
                     type="number"
+                    min={1}
+                    max={65535}
                     value={draft.vncPort}
                     onChange={(e) =>
                       setDraft({ ...draft, vncPort: Number(e.target.value) || 5900 })
@@ -528,6 +539,8 @@ export function ConnectionSettings() {
                 <SettingField icon={Network} label={t('settings.connections.port')}>
                   <Input
                     type="number"
+                    min={1}
+                    max={65535}
                     value={draft.telnetPort}
                     onChange={(e) =>
                       setDraft({ ...draft, telnetPort: Number(e.target.value) || 23 })
@@ -575,6 +588,8 @@ export function ConnectionSettings() {
                 <SettingField icon={Network} label={t('settings.connections.port')}>
                   <Input
                     type="number"
+                    min={1}
+                    max={65535}
                     value={draft.puttyPort}
                     onChange={(e) =>
                       setDraft({
@@ -638,6 +653,8 @@ export function ConnectionSettings() {
                 <SettingField icon={Network} label={t('settings.connections.port')}>
                   <Input
                     type="number"
+                    min={1}
+                    max={65535}
                     value={draft.sshPort}
                     onChange={(e) => setDraft({ ...draft, sshPort: Number(e.target.value) })}
                   />

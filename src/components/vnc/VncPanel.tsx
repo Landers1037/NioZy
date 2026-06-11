@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { cn } from '@/lib/utils'
@@ -8,6 +9,10 @@ import {
   applyVncViewportOptions,
   installVncCanvasAccelHints,
 } from '@/lib/vnc-rfb-config'
+import {
+  assertValidVncPort,
+  parseVncInvalidPortMessage,
+} from '../../../electron/shared/vnc-settings'
 
 type RfbModule = typeof import('@novnc/novnc')
 
@@ -30,6 +35,27 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
     const c = settings?.connections.find((c) => c.id === connectionId)
     return c?.type === 'vnc' ? c : null
   }, [settings?.connections, connectionId])
+
+  const reportInvalidPort = useCallback(
+    (port: string) => {
+      const msg = t('connection.invalidPort', { port })
+      toast.error(msg)
+      setStatus('error')
+      setError(msg)
+    },
+    [t],
+  )
+
+  const resolvePortError = useCallback(
+    (err: unknown): boolean => {
+      const message = err instanceof Error ? err.message : String(err)
+      const received = parseVncInvalidPortMessage(message)
+      if (received === null) return false
+      reportInvalidPort(received)
+      return true
+    },
+    [reportInvalidPort],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -79,9 +105,17 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
       if (cancelled) return
 
       const host = (conn.vncHost ?? conn.command).trim()
-      const port = conn.vncPort ?? 5900
       const usernameRaw = conn.vncUsername ?? ''
       const passwordRaw = conn.vncPassword ?? ''
+
+      let port: number
+      try {
+        port = assertValidVncPort(conn.vncPort)
+      } catch (err) {
+        if (cancelled) return
+        if (resolvePortError(err)) return
+        throw err
+      }
 
       const [username, password] = await Promise.all([
         usernameRaw ? api.vault.resolve(usernameRaw) : Promise.resolve(''),
@@ -164,6 +198,7 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
       })
     })().catch((e) => {
       if (cancelled) return
+      if (resolvePortError(e)) return
       setStatus('error')
       setError(e instanceof Error ? e.message : String(e))
     })
@@ -180,6 +215,7 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
     vncEncoding,
     vncHardwareAccel,
     vncLocalCursor,
+    resolvePortError,
   ])
 
   const hint = (() => {
