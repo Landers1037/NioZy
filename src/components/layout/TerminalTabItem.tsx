@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftRight,
@@ -87,14 +87,34 @@ interface TerminalTabItemProps {
   dragModeActive?: boolean
   /** 是否启用长按拖拽 */
   dragEnabled?: boolean
-  onDragPointerDown?: (e: React.PointerEvent) => void
+  onDragPointerDown?: (tabId: string, e: React.PointerEvent) => void
   onDragPointerMove?: (e: React.PointerEvent) => void
   onDragPointerUp?: (e: React.PointerEvent) => void
   onDragPointerCancel?: (e: React.PointerEvent) => void
   shouldSuppressClick?: () => boolean
 }
 
-export function TerminalTabItem({
+function terminalTabItemPropsEqual(
+  prev: TerminalTabItemProps,
+  next: TerminalTabItemProps,
+): boolean {
+  if (prev.isActive !== next.isActive) return false
+  if (prev.collapsed !== next.collapsed) return false
+  if (prev.iconOnly !== next.iconOnly) return false
+  if (prev.terminalIndex !== next.terminalIndex) return false
+  if (prev.showTerminalIndex !== next.showTerminalIndex) return false
+  if (prev.isDragging !== next.isDragging) return false
+  if (prev.dragModeActive !== next.dragModeActive) return false
+  if (prev.dragEnabled !== next.dragEnabled) return false
+  if (prev.onDragPointerDown !== next.onDragPointerDown) return false
+  if (prev.onDragPointerMove !== next.onDragPointerMove) return false
+  if (prev.onDragPointerUp !== next.onDragPointerUp) return false
+  if (prev.onDragPointerCancel !== next.onDragPointerCancel) return false
+  if (prev.shouldSuppressClick !== next.shouldSuppressClick) return false
+  return prev.tab === next.tab
+}
+
+export const TerminalTabItem = memo(function TerminalTabItem({
   tab,
   collapsed = false,
   iconOnly = false,
@@ -165,6 +185,13 @@ export function TerminalTabItem({
 
   const compact = collapsed || iconOnly
 
+  const handleDragPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      onDragPointerDown?.(tab.id, e)
+    },
+    [onDragPointerDown, tab.id],
+  )
+
   const handleFileDragEnter = (e: React.DragEvent) => {
     if (!hasExternalFileDrag(e.dataTransfer)) return
     e.preventDefault()
@@ -218,7 +245,7 @@ export function TerminalTabItem({
       onDragOver={handleFileDragOver}
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
-      onPointerDown={dragEnabled ? onDragPointerDown : undefined}
+      onPointerDown={dragEnabled ? handleDragPointerDown : undefined}
       onPointerMove={dragEnabled ? onDragPointerMove : undefined}
       onPointerUp={dragEnabled ? onDragPointerUp : undefined}
       onPointerCancel={dragEnabled ? onDragPointerCancel : undefined}
@@ -377,4 +404,6 @@ export function TerminalTabItem({
       </Dialog>
     </>
   )
-}
+}, terminalTabItemPropsEqual)
+
+TerminalTabItem.displayName = 'TerminalTabItem'

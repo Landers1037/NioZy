@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { AppTab } from '@/stores/app-store'
 import { ChatTabItem } from '@/components/layout/ChatTabItem'
 import { FilesystemTabItem } from '@/components/layout/FilesystemTabItem'
@@ -16,8 +17,18 @@ interface SpecialTabItemProps {
   isActive: boolean
 }
 
+function specialTabItemPropsEqual(
+  prev: SpecialTabItemProps,
+  next: SpecialTabItemProps,
+): boolean {
+  if (prev.isActive !== next.isActive) return false
+  if (prev.collapsed !== next.collapsed) return false
+  if (prev.iconOnly !== next.iconOnly) return false
+  return prev.tab === next.tab
+}
+
 /** 非终端 Tab（设置、文件系统等） */
-export function SpecialTabItem(props: SpecialTabItemProps) {
+export const SpecialTabItem = memo(function SpecialTabItem(props: SpecialTabItemProps) {
   if (props.tab.type === 'filesystem') {
     return <FilesystemTabItem {...props} />
   }
@@ -43,4 +54,6 @@ export function SpecialTabItem(props: SpecialTabItemProps) {
     return <DrawioTabItem {...props} />
   }
   return <SettingsTabItem {...props} />
-}
+}, specialTabItemPropsEqual)
+
+SpecialTabItem.displayName = 'SpecialTabItem'
