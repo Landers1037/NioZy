@@ -756,6 +756,8 @@
       "shellContextMenuDesc": "在资源管理器的文件夹与空白处右键菜单中注册「使用 NioZy 打开」，并在该目录下新建 PowerShell 终端 Tab",
       "preserveWindowBounds": "保留当前设置的窗口大小",
       "preserveWindowBoundsDesc": "关闭窗口时记住大小与位置；若关闭时为最大化，下次启动将直接最大化",
+      "resourceAutoDegrade": "检测资源占用并自动降级",
+      "resourceAutoDegradeDesc": "开启后监测本程序 CPU 占用；超过 50% 时在右下角提示，可一键切换为 DOM 渲染、Attach-PTY 模式与非活动 Tab 优化",
       "transparency": "窗口透明度: {{value}}%"
     },
     "p2p": {
@@ -1164,6 +1166,10 @@
     "terminalEmulatorRestart": "终端模拟器已切换，请重启应用后生效",
     "ghosttyCoreRestart": "Ghostty Core 已修改，请重启应用后生效",
     "attachPtyRenderRestart": "Attach-PTY 渲染模式已修改，请重启应用后生效",
+    "resourceAutoDegradePrompt": "检测到本程序 CPU 占用约 {{percent}}%（超过 {{threshold}}%），建议开启性能降级以减轻卡顿",
+    "resourceAutoDegradeAction": "一键降级",
+    "resourceAutoDegradeApplied": "已切换为 DOM 渲染，并开启 Attach-PTY 与非活动 Tab 优化",
+    "resourceAutoDegradeFailed": "性能降级设置保存失败",
     "restartApp": "重启"
   },
   "terminal": {

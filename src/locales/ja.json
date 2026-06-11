@@ -653,6 +653,8 @@
       "shellContextMenuDesc": "フォルダーとフォルダー背景のコンテキストメニューに「NioZy で開く」を追加。そのディレクトリで新しい PowerShell タブを開く",
       "preserveWindowBounds": "ウィンドウサイズを記憶",
       "preserveWindowBoundsDesc": "閉じるときにサイズと位置を保存。最大化で閉じた場合は次回も最大化",
+      "resourceAutoDegrade": "リソース使用を検出して自動ダウングレード",
+      "resourceAutoDegradeDesc": "オン時、本アプリの CPU 使用率を監視。50% 超で右下に通知し、DOM レンダリング・Attach-PTY・非アクティブ Tab 最適化へワンクリック切替",
       "transparency": "ウィンドウ不透明度: {{value}}%"
     },
     "p2p": {
@@ -1054,6 +1056,10 @@
     "terminalEmulatorRestart": "ターミナルエミュレータを変更しました。反映にはアプリを再起動してください。",
     "ghosttyCoreRestart": "Ghostty Core を変更しました。反映にはアプリを再起動してください。",
     "attachPtyRenderRestart": "Attach-PTY レンダーモードを変更しました。反映にはアプリを再起動してください。",
+    "resourceAutoDegradePrompt": "本アプリの CPU 使用率が約 {{percent}}% です（{{threshold}}% 超）。カクつき軽減のためパフォーマンスダウングレードをおすすめします。",
+    "resourceAutoDegradeAction": "ダウングレード",
+    "resourceAutoDegradeApplied": "DOM レンダリングに切り替え、Attach-PTY と非アクティブ Tab 最適化を有効にしました。",
+    "resourceAutoDegradeFailed": "パフォーマンスダウングレード設定の保存に失敗しました。",
     "restartApp": "再起動"
   },
   "connection": {

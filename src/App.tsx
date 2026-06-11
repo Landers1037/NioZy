@@ -33,6 +33,7 @@ import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
 import { useAppShortcuts } from '@/hooks/useAppShortcuts'
 import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
+import { useResourceAutoDegradeMonitor } from '@/hooks/useResourceAutoDegradeMonitor'
 import { useReminderAlerts } from '@/hooks/useReminderAlerts'
 import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
 import { cn } from '@/lib/utils'
@@ -110,6 +111,7 @@ export default function App() {
   useAppShortcuts()
   useSshDisconnectAlert()
   useReminderAlerts()
+  useResourceAutoDegradeMonitor()
   useTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
   useAttachPtyTabSwitch(tabs, activeTabId)

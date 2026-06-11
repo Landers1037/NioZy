@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff } from 'lucide-react'
+import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff, TrendingDown } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { getElectronAPI } from '@/lib/electron-client'
 
@@ -181,6 +181,20 @@ export function AdvancedSettings() {
             checked={settings.advanced.statusBarLiveStats !== false}
             onCheckedChange={(v) =>
               patchSettings({ advanced: { ...settings.advanced, statusBarLiveStats: v } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={TrendingDown}
+          label={t('settings.advanced.resourceAutoDegrade')}
+          description={t('settings.advanced.resourceAutoDegradeDesc')}
+          row
+        >
+          <Switch
+            checked={settings.advanced.resourceAutoDegrade === true}
+            onCheckedChange={(v) =>
+              patchSettings({ advanced: { ...settings.advanced, resourceAutoDegrade: v } })
             }
           />
         </SettingField>
