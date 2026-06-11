@@ -833,6 +833,64 @@ ipcMain.handle(
   },
 )
 
+function drawingFileFilters(kind: 'excalidraw' | 'drawio') {
+  if (kind === 'excalidraw') {
+    return [{ name: 'Excalidraw', extensions: ['excalidraw', 'json'] }]
+  }
+  return [{ name: 'Draw.io', extensions: ['drawio', 'xml'] }]
+}
+
+ipcMain.handle('drawing:openFile', async (_, kind: 'excalidraw' | 'drawio') => {
+  const openOptions = {
+    title: kind === 'excalidraw' ? '打开 Excalidraw' : '打开 Draw.io',
+    properties: ['openFile'] as ('openFile')[],
+    filters: drawingFileFilters(kind),
+  }
+  const { canceled, filePaths } = mainWindow
+    ? await dialog.showOpenDialog(mainWindow, openOptions)
+    : await dialog.showOpenDialog(openOptions)
+  if (canceled || !filePaths[0]) return { ok: false, canceled: true as const }
+  try {
+    const content = await readFile(filePaths[0], 'utf8')
+    return { ok: true, path: filePaths[0], content }
+  } catch {
+    return { ok: false, error: 'READ_FAILED' as const }
+  }
+})
+
+ipcMain.handle(
+  'drawing:saveFile',
+  async (
+    _,
+    input: {
+      kind: 'excalidraw' | 'drawio'
+      content: string
+      defaultFileName: string
+      filePath?: string
+    },
+  ) => {
+    let targetPath = input.filePath?.trim()
+    if (!targetPath) {
+      const saveOptions = {
+        title: input.kind === 'excalidraw' ? '保存 Excalidraw' : '保存 Draw.io',
+        defaultPath: input.defaultFileName,
+        filters: drawingFileFilters(input.kind),
+      }
+      const { canceled, filePath } = mainWindow
+        ? await dialog.showSaveDialog(mainWindow, saveOptions)
+        : await dialog.showSaveDialog(saveOptions)
+      if (canceled || !filePath) return { ok: false, canceled: true as const }
+      targetPath = filePath
+    }
+    try {
+      await writeFile(targetPath, input.content, 'utf8')
+      return { ok: true, path: targetPath }
+    } catch {
+      return { ok: false, error: 'WRITE_FAILED' as const }
+    }
+  },
+)
+
 ipcMain.handle('settings:get', () => settingsStore.get())
 ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 

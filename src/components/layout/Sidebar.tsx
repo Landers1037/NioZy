@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -25,8 +25,12 @@ export function Sidebar() {
   const addRepoTab = useAppStore((s) => s.addRepoTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
+  const addExcalidrawTab = useAppStore((s) => s.addExcalidrawTab)
+  const addDrawioTab = useAppStore((s) => s.addDrawioTab)
   const settings = useAppStore((s) => s.settings)
   const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
+  const excalidrawEnabled = settings?.drawing?.excalidrawEnabled === true
+  const drawioEnabled = settings?.drawing?.drawioEnabled === true
   const localFilesystemEnabled = settings?.filesystem.localFilesystemEnabled !== false
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
@@ -179,6 +183,32 @@ export function Sidebar() {
                 <Braces className="size-4 shrink-0" />
                 {!collapsed && (
                   <span className="min-w-0 truncate">{t('sidebar.openJsSandbox')}</span>
+                )}
+              </Button>
+            )}
+            {excalidrawEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addExcalidrawTab()}
+              >
+                <PenTool className="size-4 shrink-0" />
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{t('sidebar.excalidraw')}</span>
+                )}
+              </Button>
+            )}
+            {drawioEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addDrawioTab()}
+              >
+                <LineSquiggle className="size-4 shrink-0" />
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{t('sidebar.drawio')}</span>
                 )}
               </Button>
             )}

@@ -6,7 +6,15 @@ export interface TabGroup {
   tabIds: string[]
 }
 
-const SINGLETON_TAB_TYPES: TabType[] = ['settings', 'filesystem', 'chat', 'sandbox', 'repo']
+const SINGLETON_TAB_TYPES: TabType[] = [
+  'settings',
+  'filesystem',
+  'chat',
+  'sandbox',
+  'repo',
+  'excalidraw',
+  'drawio',
+]
 
 export function isSingletonTabType(type: TabType): boolean {
   return SINGLETON_TAB_TYPES.includes(type)

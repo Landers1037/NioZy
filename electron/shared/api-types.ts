@@ -53,6 +53,11 @@ export {
   DEFAULT_FILESYSTEM_SETTINGS,
   normalizeFilesystemSettings,
 } from './filesystem-settings'
+export type { DrawingSettings } from './drawing-settings'
+export {
+  DEFAULT_DRAWING_SETTINGS,
+  normalizeDrawingSettings,
+} from './drawing-settings'
 export type { P2pSettings } from './p2p-settings'
 export { DEFAULT_P2P_SETTINGS, normalizeP2pSettings } from './p2p-settings'
 export type { AssistiveSettings } from './assistive-settings'
@@ -244,6 +249,7 @@ export interface AppSettings {
   shell: import('./shell-settings').ShellSettings
   performance: import('./performance-settings').PerformanceSettings
   filesystem: import('./filesystem-settings').FilesystemSettings
+  drawing: import('./drawing-settings').DrawingSettings
   preview: import('./preview-settings').PreviewSettings
   experimental: import('./experimental-settings').ExperimentalSettings
   statistics: import('./usage-statistics-settings').UsageStatisticsSettings
@@ -478,6 +484,14 @@ export interface ElectronAPI {
     ) => Promise<import('../fs-service').TerminalDropDirectoryResult>
     /** 选择 SSH 私钥文件；取消时返回 null */
     pickPrivateKey: () => Promise<string | null>
+  }
+  drawing: {
+    openFile: (
+      kind: import('./drawing-file-types').DrawingFileKind,
+    ) => Promise<import('./drawing-file-types').DrawingOpenFileResult>
+    saveFile: (
+      input: import('./drawing-file-types').DrawingSaveFileInput,
+    ) => Promise<import('./drawing-file-types').DrawingSaveFileResult>
   }
   logging: {
     /** 在资源管理器中打开日志文件所在目录 */

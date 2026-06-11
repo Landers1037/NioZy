@@ -15,6 +15,7 @@ import {
   Database,
   Keyboard,
   FolderCode,
+  PenTool,
   FlaskConical,
   Gauge,
   Eye,
@@ -41,6 +42,7 @@ import { ShortcutSettings } from './ShortcutSettings'
 import { ExperimentalSettings } from './ExperimentalSettings'
 import { PreviewSettings } from './PreviewSettings'
 import { P2pSettings } from './P2pSettings'
+import { DrawingSettings } from './DrawingSettings'
 
 const SECTION_DEFS = [
   { id: 'appearance', icon: Palette },
@@ -50,6 +52,7 @@ const SECTION_DEFS = [
   { id: 'preview', icon: Eye },
   { id: 'performance', icon: Gauge },
   { id: 'filesystem', icon: FolderCode },
+  { id: 'drawing', icon: PenTool },
   { id: 'connections', icon: Plug },
   { id: 'vault', icon: Database },
   { id: 'shortcuts', icon: Keyboard },
@@ -110,6 +113,7 @@ export function SettingsPanel() {
         {section === 'preview' && <PreviewSettings />}
         {section === 'performance' && <PerformanceSettings />}
         {section === 'filesystem' && <FilesystemSettings />}
+        {section === 'drawing' && <DrawingSettings />}
         {section === 'connections' && <ConnectionSettings />}
         {section === 'vault' && <VaultSettings />}
         {section === 'shortcuts' && <ShortcutSettings />}

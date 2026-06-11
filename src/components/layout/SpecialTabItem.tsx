@@ -6,6 +6,8 @@ import { SandboxTabItem } from '@/components/layout/SandboxTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { WebviewTabItem } from '@/components/layout/WebviewTabItem'
 import { VncTabItem } from '@/components/layout/VncTabItem'
+import { ExcalidrawTabItem } from '@/components/layout/ExcalidrawTabItem'
+import { DrawioTabItem } from '@/components/layout/DrawioTabItem'
 
 interface SpecialTabItemProps {
   tab: AppTab
@@ -33,6 +35,12 @@ export function SpecialTabItem(props: SpecialTabItemProps) {
   }
   if (props.tab.type === 'vnc') {
     return <VncTabItem {...props} />
+  }
+  if (props.tab.type === 'excalidraw') {
+    return <ExcalidrawTabItem {...props} />
+  }
+  if (props.tab.type === 'drawio') {
+    return <DrawioTabItem {...props} />
   }
   return <SettingsTabItem {...props} />
 }

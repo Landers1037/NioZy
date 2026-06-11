@@ -47,4 +47,12 @@ export function getRepoTabTitle(): string {
   return i18n.t('app.repoTabTitle')
 }
 
+export function getExcalidrawTabTitle(): string {
+  return i18n.t('app.excalidrawTabTitle')
+}
+
+export function getDrawioTabTitle(): string {
+  return i18n.t('app.drawioTabTitle')
+}
+
 export default i18n

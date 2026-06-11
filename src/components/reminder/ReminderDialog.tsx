@@ -251,11 +251,12 @@ export function ReminderDialog({
                             <div className="flex items-center gap-1 text-xs leading-none text-muted-foreground">
                               <span className="tabular-nums">{formatReminderDateTime(item.remindAt)}</span>
                               {isReminderRepeating(item) ? (
-                                <Repeat2
-                                  className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400"
-                                  aria-label={t('reminder.repeatBadge')}
-                                  title={t(`reminder.repeat.${item.repeat}`)}
-                                />
+                                <span title={t(`reminder.repeat.${item.repeat}`)}>
+                                  <Repeat2
+                                    className="size-3.5 shrink-0 text-sky-600 dark:text-sky-400"
+                                    aria-label={t('reminder.repeatBadge')}
+                                  />
+                                </span>
                               ) : null}
                             </div>
                           </div>

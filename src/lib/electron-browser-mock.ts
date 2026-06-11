@@ -12,6 +12,7 @@ import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS } from '../../electron/shared/shell-settings'
 import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-settings'
 import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
+import { DEFAULT_DRAWING_SETTINGS } from '../../electron/shared/drawing-settings'
 import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-statistics-settings'
@@ -72,6 +73,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   shell: { ...DEFAULT_SHELL_SETTINGS },
   performance: { ...DEFAULT_PERFORMANCE_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
+  drawing: { ...DEFAULT_DRAWING_SETTINGS },
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
@@ -167,6 +169,9 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
     preview: partial.preview
       ? { ...mockSettings.preview, ...partial.preview }
       : mockSettings.preview,
+    drawing: partial.drawing
+      ? { ...mockSettings.drawing, ...partial.drawing }
+      : mockSettings.drawing,
     experimental: partial.experimental
       ? { ...mockSettings.experimental, ...partial.experimental }
       : mockSettings.experimental,
@@ -505,6 +510,19 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return { ok: true, directory: trimmed.slice(0, idx) }
       },
       pickPrivateKey: async () => null,
+    },
+    drawing: {
+      openFile: async () => ({ ok: false, canceled: true as const }),
+      saveFile: async ({ content, defaultFileName }) => {
+        const blob = new Blob([content], { type: 'application/json;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = defaultFileName
+        a.click()
+        URL.revokeObjectURL(url)
+        return { ok: true, path: defaultFileName }
+      },
     },
     logging: {
       openLogDirectory: async () => undefined,

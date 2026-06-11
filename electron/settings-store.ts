@@ -38,6 +38,10 @@ import {
   normalizeFilesystemSettings,
 } from './shared/filesystem-settings'
 import {
+  DEFAULT_DRAWING_SETTINGS,
+  normalizeDrawingSettings,
+} from './shared/drawing-settings'
+import {
   DEFAULT_BUILTIN_CONNECTIONS,
   normalizeBuiltinConnections,
   normalizeDefaultTerminal,
@@ -237,6 +241,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shell: { ...DEFAULT_SHELL_SETTINGS },
   performance: { ...DEFAULT_PERFORMANCE_SETTINGS },
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
+  drawing: { ...DEFAULT_DRAWING_SETTINGS },
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
@@ -353,6 +358,7 @@ function buildAppSettingsFromStored(
     ),
     performance: normalizePerformanceSettings(stored.performance, stored.shell),
     filesystem: normalizeFilesystemSettings(stored.filesystem),
+    drawing: normalizeDrawingSettings(stored.drawing),
     preview: normalizePreviewSettings(stored.preview),
     builtinConnections: normalizeBuiltinConnections(
       (stored as Partial<AppSettings>).builtinConnections,

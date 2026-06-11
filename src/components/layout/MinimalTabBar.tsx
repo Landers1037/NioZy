@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch } from 'lucide-react'
+import { ArrowLeft, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -25,8 +25,12 @@ export function MinimalTabBar() {
   const addRepoTab = useAppStore((s) => s.addRepoTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
+  const addExcalidrawTab = useAppStore((s) => s.addExcalidrawTab)
+  const addDrawioTab = useAppStore((s) => s.addDrawioTab)
   const settings = useAppStore((s) => s.settings)
   const jsSandboxEnabled = settings?.experimental.jsSandboxEnabled === true
+  const excalidrawEnabled = settings?.drawing?.excalidrawEnabled === true
+  const drawioEnabled = settings?.drawing?.drawioEnabled === true
   const localFilesystemEnabled = settings?.filesystem.localFilesystemEnabled !== false
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
@@ -147,6 +151,28 @@ export function MinimalTabBar() {
             onClick={() => addSandboxTab()}
           >
             <Braces className="size-3" />
+          </Button>
+        )}
+        {excalidrawEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.excalidraw')}
+            onClick={() => addExcalidrawTab()}
+          >
+            <PenTool className="size-3" />
+          </Button>
+        )}
+        {drawioEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.drawio')}
+            onClick={() => addDrawioTab()}
+          >
+            <LineSquiggle className="size-3" />
           </Button>
         )}
         <Button
