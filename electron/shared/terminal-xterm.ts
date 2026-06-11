@@ -17,3 +17,8 @@ export function normalizeDrawBoldTextInBrightColors(value: unknown): boolean {
 export function normalizeRightClickCopyPaste(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }
+
+/** xterm.js 6+ DEC mode 2026 同步输出；Wterm 不支持 */
+export function normalizeSynchronizedOutputEnabled(value: unknown): boolean {
+  return typeof value === 'boolean' ? value : true
+}

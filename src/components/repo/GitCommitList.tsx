@@ -1,7 +1,7 @@
 import { GitBranch, Tag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { GitGraphRow } from '../../../electron/shared/repo-types'
-import { commitSubject, GRAPH_ROW_HEIGHT } from '@/lib/git-graph-layout'
+import { commitSubject, GRAPH_LIST_HEADER_HEIGHT, GRAPH_ROW_HEIGHT } from '@/lib/git-graph-layout'
 
 interface GitCommitListProps {
   rows: GitGraphRow[]
@@ -69,8 +69,8 @@ export function GitCommitList({
   return (
     <div className="relative min-w-0 flex-1">
       <div
-        className="sticky top-0 z-20 grid grid-cols-[minmax(120px,1fr)_minmax(0,2fr)_minmax(88px,120px)_minmax(120px,160px)_64px] gap-2 border-b border-border bg-muted/80 py-2 pl-3 pr-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm"
-        style={{ paddingLeft: graphGutterWidth + 12 }}
+        className="sticky top-0 z-20 grid grid-cols-[minmax(120px,1fr)_minmax(0,2fr)_minmax(88px,120px)_minmax(120px,160px)_64px] items-center gap-2 border-b border-border bg-muted/80 pl-3 pr-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm"
+        style={{ height: GRAPH_LIST_HEADER_HEIGHT, paddingLeft: graphGutterWidth + 12 }}
       >
         <span>分支 / 标签</span>
         <span>提交说明</span>

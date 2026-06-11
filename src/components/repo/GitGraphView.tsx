@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { AnimatedLoadingSwap } from '@/components/ui/animated-panel-section'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
-import { computeGraphLayout, GRAPH_ROW_HEIGHT } from '@/lib/git-graph-layout'
+import { computeGraphLayout, GRAPH_LIST_HEADER_HEIGHT, GRAPH_ROW_HEIGHT } from '@/lib/git-graph-layout'
 import type { GitGraphCursor, GitGraphRow } from '../../../electron/shared/repo-types'
 import { GitCommitList } from './GitCommitList'
 import { GitGraphCanvas, graphCanvasWidth } from './GitGraphCanvas'
@@ -79,61 +80,69 @@ export function GitGraphView({
     }
   }, [repoId, hasMore, loadingMore, cursorRef])
 
-  if (loading) {
+  const graphBody = () => {
+    if (loadError) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+          <AlertTriangle className="size-8 text-destructive" />
+          <p className="font-medium text-foreground">{t('repo.graphLoadError')}</p>
+          <p className="max-w-md text-xs">{loadError}</p>
+        </div>
+      )
+    }
+
+    if (rows.length === 0) {
+      return (
+        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          {t('repo.graphEmpty')}
+        </div>
+      )
+    }
+
+    const graphHeight = rows.length * GRAPH_ROW_HEIGHT
+
     return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-4 animate-spin" />
-        {t('repo.loadingGraph')}
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-border bg-background">
+        <div className="min-h-0 flex-1 overflow-auto">
+          <div className="relative min-w-max" style={{ minHeight: graphHeight + GRAPH_LIST_HEADER_HEIGHT }}>
+            <div
+              className="pointer-events-none absolute left-0 z-0 px-1"
+              style={{ top: GRAPH_LIST_HEADER_HEIGHT, width: graphGutterWidth, height: graphHeight }}
+            >
+              <GitGraphCanvas layout={layout} accentColor={accent} className="shrink-0" />
+            </div>
+            <GitCommitList
+              rows={rows}
+              selectedSha={selectedSha}
+              graphGutterWidth={graphGutterWidth}
+              onSelectCommit={onSelectCommit}
+            />
+          </div>
+          {hasMore ? (
+            <div className="sticky bottom-0 flex justify-center border-t border-border bg-background/95 py-3 backdrop-blur-sm">
+              <Button variant="outline" size="sm" disabled={loadingMore} onClick={() => void handleShowMore()}>
+                {loadingMore ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                {t('repo.loadMoreCommits')}
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </div>
     )
   }
-
-  if (loadError) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
-        <AlertTriangle className="size-8 text-destructive" />
-        <p className="font-medium text-foreground">{t('repo.graphLoadError')}</p>
-        <p className="max-w-md text-xs">{loadError}</p>
-      </div>
-    )
-  }
-
-  if (rows.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        {t('repo.graphEmpty')}
-      </div>
-    )
-  }
-
-  const graphHeight = rows.length * GRAPH_ROW_HEIGHT
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-border bg-background">
-      <div className="min-h-0 flex-1 overflow-auto">
-        <div className="relative min-w-max" style={{ minHeight: graphHeight }}>
-          <div
-            className="pointer-events-none absolute left-0 top-0 z-0 px-1"
-            style={{ width: graphGutterWidth, height: graphHeight }}
-          >
-            <GitGraphCanvas layout={layout} accentColor={accent} className="shrink-0" />
-          </div>
-          <GitCommitList
-            rows={rows}
-            selectedSha={selectedSha}
-            graphGutterWidth={graphGutterWidth}
-            onSelectCommit={onSelectCommit}
-          />
+    <AnimatedLoadingSwap
+      loading={loading}
+      className="h-full"
+      loadingContent={
+        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+          {t('repo.loadingGraph')}
         </div>
-        {hasMore ? (
-          <div className="sticky bottom-0 flex justify-center border-t border-border bg-background/95 py-3 backdrop-blur-sm">
-            <Button variant="outline" size="sm" disabled={loadingMore} onClick={() => void handleShowMore()}>
-              {loadingMore ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-              {t('repo.loadMoreCommits')}
-            </Button>
-          </div>
-        ) : null}
-      </div>
-    </div>
+      }
+    >
+      {graphBody()}
+    </AnimatedLoadingSwap>
   )
 }
