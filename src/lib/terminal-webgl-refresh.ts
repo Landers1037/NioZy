@@ -1,11 +1,40 @@
 import type { Terminal } from '@xterm/xterm'
 import type { WebglAddon } from '@xterm/addon-webgl'
+import type { AppSettings } from '../../electron/shared/api-types'
+import { resolveTerminalFontFamily } from '../../electron/shared/terminal-builtin-fonts'
 
-/** 内置 Nerd Font 未就绪时 WebGL 图集会按错误 metrics 缓存 Braille 字形 */
-export async function waitForTerminalFonts(timeoutMs = 4000): Promise<void> {
-  if (typeof document === 'undefined' || !document.fonts?.ready) return
-  await Promise.race([
+type TerminalFontWaitSettings = Pick<
+  AppSettings['terminal'],
+  'fontFamily' | 'useBuiltinFont' | 'builtinFont' | 'fontSize' | 'fontWeight' | 'fontWeightBold'
+>
+
+function fontLoadSpec(
+  family: string,
+  fontSize: number,
+  fontWeight: number | undefined,
+  fallback: number,
+): string {
+  return `${fontWeight ?? fallback} ${fontSize}px ${family}`
+}
+
+/** 内置 Nerd Font 未就绪时 WebGL 图集会按错误 metrics 缓存字形 */
+export async function waitForTerminalFonts(
+  terminal?: TerminalFontWaitSettings | null,
+  timeoutMs = 4000,
+): Promise<void> {
+  if (typeof document === 'undefined' || !document.fonts) return
+  if (!terminal?.useBuiltinFont) return
+
+  const fontSize = terminal.fontSize ?? 13
+  const family = resolveTerminalFontFamily(terminal)
+  const loads = [
     document.fonts.ready,
+    document.fonts.load(fontLoadSpec(family, fontSize, terminal.fontWeight, 400)),
+    document.fonts.load(fontLoadSpec(family, fontSize, terminal.fontWeightBold, 700)),
+  ]
+
+  await Promise.race([
+    Promise.all(loads),
     new Promise<void>((resolve) => {
       window.setTimeout(resolve, timeoutMs)
     }),

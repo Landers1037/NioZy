@@ -255,7 +255,8 @@ export function TerminalView({
         return
       }
 
-      await waitForTerminalFonts()
+      const appSettings = useAppStore.getState().settings
+      await waitForTerminalFonts(appSettings?.terminal)
       // WebGL 纹理图集依赖准确的 deviceCell 尺寸；须先 fit 再挂载 addon
       safeFit(true)
 
@@ -271,7 +272,6 @@ export function TerminalView({
         disposeWebgl()
         scheduleFit(true)
       })
-      const appSettings = useAppStore.getState().settings
       const shellAfterWebgl = appSettings?.shell ?? DEFAULT_SHELL_SETTINGS
       const previewAfterWebgl = appSettings?.preview ?? DEFAULT_PREVIEW_SETTINGS
       applyTerminalShellAddons(
@@ -381,6 +381,11 @@ export function TerminalView({
       if (disposed || !containerRef.current) return
 
       const s = useAppStore.getState().settings
+      if (s?.terminal?.useBuiltinFont) {
+        await waitForTerminalFonts(s.terminal)
+      }
+      if (disposed || !containerRef.current) return
+
       const scheme = s?.terminal.colorScheme ?? 'atom'
       const theme = resolveTerminalThemeWithBackground(scheme, s?.terminal)
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
@@ -570,6 +575,11 @@ export function TerminalView({
       if (disposed || !containerRef.current) return
 
       const s = useAppStore.getState().settings
+      if (s?.terminal?.useBuiltinFont) {
+        await waitForTerminalFonts(s.terminal)
+      }
+      if (disposed || !containerRef.current) return
+
       const scheme = s?.terminal.colorScheme ?? 'atom'
       const theme = resolveTerminalThemeWithBackground(scheme, s?.terminal)
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
