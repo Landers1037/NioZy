@@ -846,7 +846,7 @@
       "saveConnection": "Save connection",
       "updateConnection": "Save changes",
       "editCustomTitle": "Edit connection",
-      "editCustomDesc": "Update the form below to change this saved connection",
+      "editCustomDesc": "Update the connection settings in this dialog and save",
       "editSaved": "Edit",
       "savedConnections": "Saved connections",
       "noCustomConnections": "No custom connections yet",

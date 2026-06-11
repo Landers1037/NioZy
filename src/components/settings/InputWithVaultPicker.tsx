@@ -54,7 +54,7 @@ export function InputWithVaultPicker({
       <div className="relative min-w-0 flex-1">
         <Input
           type={isPassword && showPassword ? 'text' : type}
-          className={cn(className, isPassword && 'pr-9')}
+          className={cn(className, isPassword && 'pr-8')}
           placeholder={placeholder}
           value={value}
           onChange={(e) => {
@@ -72,7 +72,7 @@ export function InputWithVaultPicker({
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-0 top-0 size-9 shrink-0 text-muted-foreground hover:text-foreground"
+            className="absolute right-0 top-1/2 size-8 shrink-0 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             aria-label={
               showPassword ? t('common.hidePassword') : t('common.showPassword')
             }
