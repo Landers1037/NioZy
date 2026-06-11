@@ -24,6 +24,9 @@ export interface TerminalCreateOptions {
   rows?: number
   /** Windows：通过 UAC 以管理员权限启动（应用本身无需已提升） */
   elevated?: boolean
+  /** 为 pwsh 注入内置 Oh My Posh + posh-git（由主进程根据设置传入） */
+  ohMyPoshEnabled?: boolean
+  ohMyPoshTheme?: import('./shared/oh-my-posh-themes').OhMyPoshThemeId
 }
 
 interface TerminalSession {
@@ -74,9 +77,13 @@ export class TerminalService extends EventEmitter {
     let file: string
     let args: string[] = options.args ?? []
     const initialCwd = options.cwd ?? process.env.USERPROFILE ?? process.cwd()
+    const shellIntegrationOptions = {
+      ohMyPoshEnabled: options.ohMyPoshEnabled === true,
+      ohMyPoshTheme: options.ohMyPoshTheme,
+    }
     const env = {
       ...process.env,
-      ...getShellIntegrationEnv(options.shell),
+      ...getShellIntegrationEnv(options.shell, shellIntegrationOptions),
       ...options.env,
     } as Record<string, string>
 
@@ -113,7 +120,7 @@ export class TerminalService extends EventEmitter {
           }
         }
       } else {
-        args = mergeShellIntegrationArgs(options.shell, args)
+        args = mergeShellIntegrationArgs(options.shell, args, shellIntegrationOptions)
       }
     }
 

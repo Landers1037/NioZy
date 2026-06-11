@@ -29,6 +29,16 @@ extraResources:
   # PowerShell 无法读取 app.asar 内脚本，须放在 resources 根目录
   - from: out/main/scripts/shell-integration.ps1
     to: shell-integration.ps1
+  - from: out/main/scripts/omp-bootstrap.ps1
+    to: omp-bootstrap.ps1
+  - from: vendor/oh-my-posh
+    to: oh-my-posh
+    filter:
+      - '**/*'
+  - from: vendor/posh-git
+    to: posh-git
+    filter:
+      - '**/*'
 win:
   target:
     - nsis

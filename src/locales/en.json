@@ -443,6 +443,10 @@
     "shell": {
       "title": "SHELL",
       "description": "Terminal shell output and interaction (emoji, link highlight, and open)",
+      "ohMyPoshEnabled": "Enable Oh My Posh",
+      "ohMyPoshEnabledDesc": "Inject bundled Oh My Posh and posh-git into pwsh for prompt styling",
+      "ohMyPoshTheme": "Oh My Posh theme",
+      "ohMyPoshThemeDesc": "Choose a bundled prompt theme; applies to new pwsh terminals",
       "emojiNativeRendering": "Native emoji rendering",
       "emojiNativeRenderingDesc": "Uses the Unicode 11 width table so emoji and wide characters render correctly in the terminal",
       "highlightLinks": "Highlight links",

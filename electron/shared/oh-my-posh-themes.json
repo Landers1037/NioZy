@@ -1,0 +1,21 @@
+[
+  { "id": "jandedobbeleer", "file": "jandedobbeleer.omp.json", "label": "Jan De Dobbeleer" },
+  { "id": "powerlevel10k_modern", "file": "powerlevel10k_modern.omp.json", "label": "Powerlevel10k Modern" },
+  { "id": "powerlevel10k_lean", "file": "powerlevel10k_lean.omp.json", "label": "Powerlevel10k Lean" },
+  { "id": "powerlevel10k_rainbow", "file": "powerlevel10k_rainbow.omp.json", "label": "Powerlevel10k Rainbow" },
+  { "id": "agnoster", "file": "agnoster.omp.json", "label": "Agnoster" },
+  { "id": "paradox", "file": "paradox.omp.json", "label": "Paradox" },
+  { "id": "pure", "file": "pure.omp.json", "label": "Pure" },
+  { "id": "dracula", "file": "dracula.omp.json", "label": "Dracula" },
+  { "id": "catppuccin_mocha", "file": "catppuccin_mocha.omp.json", "label": "Catppuccin Mocha" },
+  { "id": "catppuccin_latte", "file": "catppuccin_latte.omp.json", "label": "Catppuccin Latte" },
+  { "id": "gruvbox", "file": "gruvbox.omp.json", "label": "Gruvbox" },
+  { "id": "night-owl", "file": "night-owl.omp.json", "label": "Night Owl" },
+  { "id": "tokyo", "file": "tokyo.omp.json", "label": "Tokyo" },
+  { "id": "tokyonight_storm", "file": "tokyonight_storm.omp.json", "label": "Tokyo Night Storm" },
+  { "id": "spaceship", "file": "spaceship.omp.json", "label": "Spaceship" },
+  { "id": "robbyrussell", "file": "robbyrussell.omp.json", "label": "Robby Russell" },
+  { "id": "atomic", "file": "atomic.omp.json", "label": "Atomic" },
+  { "id": "cobalt2", "file": "cobalt2.omp.json", "label": "Cobalt2" },
+  { "id": "material", "file": "material.omp.json", "label": "Material" }
+]
