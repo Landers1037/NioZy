@@ -243,6 +243,8 @@ export interface AppSettings {
     shellContextMenu: boolean
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
     preserveWindowBounds: boolean
+    /** 检测本程序 CPU 占用并在过高时提示性能降级 */
+    resourceAutoDegrade: boolean
     lastWindowState?: import('./window-state').SavedWindowState
   }
   logging: import('./logging-settings').LoggingSettings

@@ -63,6 +63,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     statusBarLiveStats: true,
     shellContextMenu: false,
     preserveWindowBounds: false,
+    resourceAutoDegrade: false,
   },
   logging: {
     enabled: false,

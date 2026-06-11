@@ -756,6 +756,8 @@
       "shellContextMenuDesc": "Adds “Open with NioZy” to folder and folder-background context menus, opening a new PowerShell tab in that directory",
       "preserveWindowBounds": "Remember window size",
       "preserveWindowBoundsDesc": "Saves size and position when you close the window; if maximized on close, starts maximized next time",
+      "resourceAutoDegrade": "Detect resource usage and suggest downgrade",
+      "resourceAutoDegradeDesc": "When on, monitors this app's CPU usage; shows a bottom-right prompt above 50% with a one-click switch to DOM rendering, Attach-PTY mode, and inactive tab optimization",
       "transparency": "Window opacity: {{value}}%"
     },
     "p2p": {
@@ -1164,6 +1166,10 @@
     "terminalEmulatorRestart": "Terminal emulator changed. Restart the app for it to take effect.",
     "ghosttyCoreRestart": "Ghostty Core changed. Restart the app for it to take effect.",
     "attachPtyRenderRestart": "Attach-PTY render mode changed. Restart the app for it to take effect.",
+    "resourceAutoDegradePrompt": "This app is using about {{percent}}% CPU (above {{threshold}}%). Consider performance downgrade to reduce lag.",
+    "resourceAutoDegradeAction": "Downgrade",
+    "resourceAutoDegradeApplied": "Switched to DOM rendering with Attach-PTY and inactive tab optimization enabled.",
+    "resourceAutoDegradeFailed": "Failed to save performance downgrade settings.",
     "restartApp": "Restart"
   },
   "terminal": {

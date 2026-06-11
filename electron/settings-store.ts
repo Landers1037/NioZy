@@ -142,6 +142,8 @@ export interface AppSettings {
     shellContextMenu: boolean
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
     preserveWindowBounds: boolean
+    /** 检测本程序 CPU 占用并在过高时提示性能降级 */
+    resourceAutoDegrade: boolean
     /** preserveWindowBounds 为 true 时由主进程写入 */
     lastWindowState?: SavedWindowState
   }
@@ -237,6 +239,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     statusBarLiveStats: true,
     shellContextMenu: false,
     preserveWindowBounds: false,
+    resourceAutoDegrade: false,
   },
   logging: { ...DEFAULT_LOGGING_SETTINGS },
   shortcuts: { ...DEFAULT_SHORTCUTS },
@@ -340,6 +343,10 @@ function buildAppSettingsFromStored(
         typeof stored.advanced?.preserveWindowBounds === 'boolean'
           ? stored.advanced.preserveWindowBounds
           : DEFAULT_SETTINGS.advanced.preserveWindowBounds,
+      resourceAutoDegrade:
+        typeof stored.advanced?.resourceAutoDegrade === 'boolean'
+          ? stored.advanced.resourceAutoDegrade
+          : DEFAULT_SETTINGS.advanced.resourceAutoDegrade,
       lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
     },
     logging: normalizeLoggingSettings(
