@@ -14,11 +14,23 @@ import {
   getSandboxTabTitle,
   getRepoTabTitle,
   getSettingsTabTitle,
+  getExcalidrawTabTitle,
+  getDrawioTabTitle,
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 
-export type TabType = 'terminal' | 'settings' | 'filesystem' | 'webview' | 'sandbox' | 'chat' | 'vnc' | 'repo'
+export type TabType =
+  | 'terminal'
+  | 'settings'
+  | 'filesystem'
+  | 'webview'
+  | 'sandbox'
+  | 'chat'
+  | 'vnc'
+  | 'repo'
+  | 'excalidraw'
+  | 'drawio'
 
 export interface AppTab {
   id: string
@@ -71,6 +83,10 @@ interface AppState {
   addSettingsTab: () => void
   addFilesystemTab: () => void
   closeFilesystemTabIfPresent: () => void
+  addExcalidrawTab: () => void
+  closeExcalidrawTabIfPresent: () => void
+  addDrawioTab: () => void
+  closeDrawioTabIfPresent: () => void
   addRepoTab: () => void
   closeRepoTabIfPresent: () => void
   addChatTab: () => void
@@ -163,6 +179,48 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   closeFilesystemTabIfPresent: () => {
     const existing = get().tabs.find((t) => t.type === 'filesystem')
+    if (!existing) return
+    get().removeTab(existing.id)
+  },
+  addExcalidrawTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'excalidraw')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'excalidraw',
+      type: 'excalidraw',
+      title: getExcalidrawTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  closeExcalidrawTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'excalidraw')
+    if (!existing) return
+    get().removeTab(existing.id)
+  },
+  addDrawioTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'drawio')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'drawio',
+      type: 'drawio',
+      title: getDrawioTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  closeDrawioTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'drawio')
     if (!existing) return
     get().removeTab(existing.id)
   },
@@ -346,6 +404,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (t.type === 'repo') return { ...t, title: getRepoTabTitle() }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
+        if (t.type === 'excalidraw') return { ...t, title: getExcalidrawTabTitle() }
+        if (t.type === 'drawio') return { ...t, title: getDrawioTabTitle() }
         return t
       }),
     })
@@ -363,6 +423,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (t.type === 'repo') return { ...t, title: getRepoTabTitle() }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
+        if (t.type === 'excalidraw') return { ...t, title: getExcalidrawTabTitle() }
+        if (t.type === 'drawio') return { ...t, title: getDrawioTabTitle() }
         return t
       }),
     })

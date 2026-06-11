@@ -166,6 +166,10 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('fs:resolveTerminalDropDirectory', filePath),
     pickPrivateKey: () => ipcRenderer.invoke('files:pickPrivateKey') as Promise<string | null>,
   },
+  drawing: {
+    openFile: (kind) => ipcRenderer.invoke('drawing:openFile', kind),
+    saveFile: (input) => ipcRenderer.invoke('drawing:saveFile', input),
+  },
   logging: {
     openLogDirectory: () => ipcRenderer.invoke('logging:openLogDirectory') as Promise<void>,
   },

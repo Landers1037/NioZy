@@ -28,6 +28,7 @@ import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
 import { cn } from '@/lib/utils'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
+import { DrawingPanelFallback } from '@/components/drawing/DrawingPanelFallback'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -62,6 +63,16 @@ const VncPanel = lazy(() =>
 const RepoManagementPanel = lazy(() =>
   import('@/components/repo/RepoManagementPanel').then((m) => ({
     default: m.RepoManagementPanel,
+  })),
+)
+const ExcalidrawPanel = lazy(() =>
+  import('@/components/drawing/ExcalidrawPanel').then((m) => ({
+    default: m.ExcalidrawPanel,
+  })),
+)
+const DrawioPanel = lazy(() =>
+  import('@/components/drawing/DrawioPanel').then((m) => ({
+    default: m.DrawioPanel,
   })),
 )
 export default function App() {
@@ -209,6 +220,12 @@ export default function App() {
   const chatTabActive = activeTab?.type === 'chat'
   const hasRepoTab = tabs.some((t) => t.type === 'repo')
   const repoTabActive = activeTab?.type === 'repo'
+  const hasExcalidrawTab = tabs.some((t) => t.type === 'excalidraw')
+  const excalidrawTabActive = activeTab?.type === 'excalidraw'
+  const hasDrawioTab = tabs.some((t) => t.type === 'drawio')
+  const drawioTabActive = activeTab?.type === 'drawio'
+  const excalidrawEnabled = settings?.drawing?.excalidrawEnabled === true
+  const drawioEnabled = settings?.drawing?.drawioEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
   const hasVncTab = tabs.some((t) => t.type === 'vnc')
   const vncTabActive = activeTab?.type === 'vnc'
@@ -360,6 +377,32 @@ export default function App() {
               >
                 <Suspense fallback={null}>
                   <RepoManagementPanel />
+                </Suspense>
+              </div>
+            )}
+            {hasExcalidrawTab && excalidrawEnabled && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !excalidrawTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!excalidrawTabActive ? { inert: true } : {})}
+              >
+                <Suspense fallback={<DrawingPanelFallback />}>
+                  <ExcalidrawPanel />
+                </Suspense>
+              </div>
+            )}
+            {hasDrawioTab && drawioEnabled && (
+              <div
+                className={cn(
+                  'absolute inset-0',
+                  !drawioTabActive && 'pointer-events-none invisible',
+                )}
+                {...(!drawioTabActive ? { inert: true } : {})}
+              >
+                <Suspense fallback={<DrawingPanelFallback />}>
+                  <DrawioPanel />
                 </Suspense>
               </div>
             )}

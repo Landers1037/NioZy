@@ -23,7 +23,9 @@
     "filesystemTabTitle": "文件系统",
     "chatTabTitle": "加密聊天",
     "sandboxTabTitle": "JS 沙箱",
-    "repoTabTitle": "仓库管理"
+    "repoTabTitle": "仓库管理",
+    "excalidrawTabTitle": "Excalidraw",
+    "drawioTabTitle": "Draw.io"
   },
   "sandbox": {
     "title": "JS 沙箱",
@@ -329,6 +331,7 @@
       "preview": "预览",
       "performance": "性能",
       "filesystem": "文件系统",
+      "drawing": "绘图功能",
       "connections": "连接设置",
       "vault": "存储库",
       "shortcuts": "快捷键",
@@ -503,6 +506,14 @@
       "inactiveTabSleepDesc": "开启后启用 Chromium 后台节流，并对非活动 Tab 暂停实时推流以降低占用；切回当前 Tab 时恢复推流（修改此项后建议重启应用以完全生效命令行级节流）",
       "superPowerSaving": "超级省电",
       "superPowerSavingDesc": "仅保留当前 Tab 的终端实例；Xterm 临时使用 DOM 渲染。非活动 Tab 将结束 PTY 并卸载视图，切回时按原配置重建（本地 Shell 会话会重新开始，SSH 需重新连接）"
+    },
+    "drawing": {
+      "title": "绘图功能",
+      "description": "在侧栏启用 Excalidraw 与 Draw.io 绘图入口",
+      "excalidrawEnabled": "开启 Excalidraw 绘图",
+      "excalidrawEnabledDesc": "开启后在左侧边栏显示 Excalidraw 按钮，点击后在右侧区域编辑绘图",
+      "drawioEnabled": "开启 Draw.io",
+      "drawioEnabledDesc": "开启后在左侧边栏显示 Draw.io 按钮，点击后在右侧区域编辑流程图（离线可用）"
     },
     "filesystem": {
       "title": "文件系统",
@@ -922,7 +933,23 @@
     "repoManagement": "仓库管理",
     "openChat": "加密通信",
     "openJsSandbox": "打开沙箱",
+    "excalidraw": "Excalidraw",
+    "drawio": "Draw.io",
     "newPowerShell": "新建 PowerShell"
+  },
+  "drawing": {
+    "loading": "正在加载绘图组件…",
+    "new": "新建",
+    "open": "打开",
+    "save": "保存",
+    "saveAs": "另存为",
+    "unsaved": "未命名",
+    "modified": "已修改",
+    "saveSuccess": "已保存",
+    "saveFailed": "保存失败",
+    "openFailed": "无法打开文件",
+    "closeTitle": "关闭绘图",
+    "closeDesc": "「{{title}}」有未保存的修改，确定要关闭吗？"
   },
   "tab": {
     "closeAria": "关闭 {{title}}",

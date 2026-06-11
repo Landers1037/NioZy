@@ -23,7 +23,9 @@
     "filesystemTabTitle": "File system",
     "chatTabTitle": "Encrypted chat",
     "sandboxTabTitle": "JS Sandbox",
-    "repoTabTitle": "Repositories"
+    "repoTabTitle": "Repositories",
+    "excalidrawTabTitle": "Excalidraw",
+    "drawioTabTitle": "Draw.io"
   },
   "sandbox": {
     "title": "JS Sandbox",
@@ -329,6 +331,7 @@
       "preview": "Preview",
       "performance": "Performance",
       "filesystem": "File system",
+      "drawing": "Drawing",
       "connections": "Connections",
       "vault": "Vault",
       "shortcuts": "Shortcuts",
@@ -503,6 +506,14 @@
       "inactiveTabSleepDesc": "When enabled, turns on Chromium background throttling and pauses live PTY streaming for inactive tabs to reduce usage. Switching back resumes streaming (restart the app for full command-line throttling effect)",
       "superPowerSaving": "Super power saving",
       "superPowerSavingDesc": "Keeps only the active tab's terminal mounted; Xterm temporarily uses DOM rendering. Inactive tabs end their PTY and unmount the view; switching back respawns from saved options (local shell sessions restart; SSH reconnects)"
+    },
+    "drawing": {
+      "title": "Drawing",
+      "description": "Enable Excalidraw and Draw.io entries in the sidebar",
+      "excalidrawEnabled": "Enable Excalidraw",
+      "excalidrawEnabledDesc": "Show an Excalidraw button in the sidebar; opens the editor in the main panel",
+      "drawioEnabled": "Enable Draw.io",
+      "drawioEnabledDesc": "Show a Draw.io button in the sidebar; opens the offline diagram editor in the main panel"
     },
     "filesystem": {
       "title": "File system",
@@ -922,7 +933,23 @@
     "repoManagement": "Repositories",
     "openChat": "Encrypted communication",
     "openJsSandbox": "Open sandbox",
+    "excalidraw": "Excalidraw",
+    "drawio": "Draw.io",
     "newPowerShell": "New PowerShell"
+  },
+  "drawing": {
+    "loading": "Loading drawing editor…",
+    "new": "New",
+    "open": "Open",
+    "save": "Save",
+    "saveAs": "Save as",
+    "unsaved": "Untitled",
+    "modified": "Modified",
+    "saveSuccess": "Saved",
+    "saveFailed": "Save failed",
+    "openFailed": "Could not open file",
+    "closeTitle": "Close drawing",
+    "closeDesc": "\"{{title}}\" has unsaved changes. Close anyway?"
   },
   "tab": {
     "closeAria": "Close {{title}}",
