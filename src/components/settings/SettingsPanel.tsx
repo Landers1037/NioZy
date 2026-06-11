@@ -128,7 +128,7 @@ export function SettingsPanel() {
 
   return (
     <div className="flex h-full gap-4 overflow-hidden p-4 select-none">
-      <nav className="flex w-44 shrink-0 flex-col gap-1 no-drag">
+      <nav className="flex min-h-0 w-44 shrink-0 flex-col gap-1 overflow-y-auto no-drag">
         {sections.map((s) => {
           const Icon = s.icon
           return (
