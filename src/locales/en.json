@@ -1119,6 +1119,9 @@
     "deleteConversationFailed": "Failed to delete conversation",
     "conversationDeleted": "Conversation deleted"
   },
+  "connection": {
+    "invalidPort": "Invalid port (must be 1–65535). Configured value: {{port}}"
+  },
   "toast": {
     "terminalStartFailed": "Failed to start terminal",
     "selectTerminalFirst": "Select terminal content first",

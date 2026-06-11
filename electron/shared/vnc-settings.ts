@@ -1,3 +1,34 @@
+import {
+  assertValidConnectionPort,
+  formatPortReceived,
+  MAX_CONNECTION_PORT,
+  MIN_CONNECTION_PORT,
+  parseConnectionPort,
+  parseInvalidConnectionPortMessage,
+  VNC_INVALID_PORT_PREFIX,
+} from './connection-port'
+
+export const DEFAULT_VNC_PORT = 5900
+
+export { MIN_CONNECTION_PORT as MIN_VNC_PORT, MAX_CONNECTION_PORT as MAX_VNC_PORT }
+export { VNC_INVALID_PORT_PREFIX }
+
+export const formatVncPortReceived = formatPortReceived
+
+export function parseVncPort(value: unknown): number | null {
+  return parseConnectionPort(value, DEFAULT_VNC_PORT)
+}
+
+export function normalizeVncPort(value: unknown): number {
+  return parseVncPort(value) ?? DEFAULT_VNC_PORT
+}
+
+export function assertValidVncPort(value: unknown): number {
+  return assertValidConnectionPort(value, DEFAULT_VNC_PORT)
+}
+
+export const parseVncInvalidPortMessage = parseInvalidConnectionPortMessage
+
 /** VNC 画面编码（与 noVNC encodings.js 一致，不含 H.264 / Zlib） */
 export const VNC_ENCODING_VALUES = [
   'raw',

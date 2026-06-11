@@ -2,6 +2,7 @@ import { createServer, type Server as HttpServer } from 'node:http'
 import net from 'node:net'
 import type { AddressInfo } from 'node:net'
 import { WebSocketServer, type WebSocket } from 'ws'
+import { assertValidVncPort } from './shared/vnc-settings'
 
 type ProxyKey = string
 
@@ -23,9 +24,9 @@ export class VncWsProxyManager {
   async start(input: { tabId: string; host: string; port: number }): Promise<{ wsUrl: string }> {
     const tabId = input.tabId
     const host = input.host.trim()
-    const port = Math.max(1, Math.floor(input.port || 5900))
     if (!tabId) throw new Error('TAB_ID_REQUIRED')
     if (!host) throw new Error('HOST_REQUIRED')
+    const port = assertValidVncPort(input.port)
 
     const key: ProxyKey = tabId
     await this.stop({ tabId })

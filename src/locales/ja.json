@@ -1056,6 +1056,9 @@
     "attachPtyRenderRestart": "Attach-PTY レンダーモードを変更しました。反映にはアプリを再起動してください。",
     "restartApp": "再起動"
   },
+  "connection": {
+    "invalidPort": "ポートが無効です（1–65535）。設定値: {{port}}"
+  },
   "terminal": {
     "processExited": "[プロセス終了]",
     "processExitedWithCode": "[プロセス終了、コード {{code}}]",
