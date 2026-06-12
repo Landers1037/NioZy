@@ -346,7 +346,18 @@
       "backgroundOpacity": "背景の不透明度：{{value}}%",
       "backgroundPickNotImage": "有効な画像ファイルを選択してください",
       "backgroundPickFailed": "背景画像を設定できませんでした",
-      "backgroundClearFailed": "背景画像をクリアできませんでした"
+      "backgroundClearFailed": "背景画像をクリアできませんでした",
+      "idleAnimation": "ターミナル待機アニメーション",
+      "idleAnimationDesc": "入力がない状態が続くと画面アニメーションを再生します。BlackHole は WebGL レンダラーで最も効果的です。",
+      "idleAnimationWtermDesc": "Wterm では待機アニメーションに未対応です。Xterm に戻すと有効にできます。",
+      "idleAnimationEnabled": "待機アニメーションを有効化",
+      "idleAnimationModeAria": "待機アニメーションの種類",
+      "idleAnimationDelayUnit": "秒後に開始",
+      "idleAnimationMode": {
+        "blackHole": "BlackHole",
+        "pacman": "Pacman",
+        "typeWriter": "TypeWriter"
+      }
     },
     "ssh": {
       "title": "SSH",

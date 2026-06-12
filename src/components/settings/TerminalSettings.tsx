@@ -28,8 +28,15 @@ import {
   MIN_TERMINAL_SCROLLBACK,
   normalizeTerminalScrollback,
 } from '../../../electron/shared/terminal-xterm'
-import { Bold, Cpu, Layers, MousePointer2, Palette, ScrollText, TextCursor, Type } from 'lucide-react'
+import { Bold, Cpu, Layers, MousePointer2, Palette, ScrollText, Sparkles, TextCursor, Type } from 'lucide-react'
 import { isWtermEmulator } from '@/lib/terminal-emulator'
+import type { TerminalIdleAnimationMode } from '../../../electron/shared/terminal-idle-animation'
+import {
+  DEFAULT_TERMINAL_IDLE_DELAY_MS,
+  MAX_TERMINAL_IDLE_DELAY_MS,
+  MIN_TERMINAL_IDLE_DELAY_MS,
+  normalizeTerminalIdleDelayMs,
+} from '../../../electron/shared/terminal-idle-animation'
 
 export function TerminalSettings() {
   const { t } = useTranslation()
@@ -41,6 +48,8 @@ export function TerminalSettings() {
   const scheme = settings.terminal.colorScheme
   const cursorOptions = getCursorStyleOptions(t)
   const useWterm = isWtermEmulator(settings)
+  const idleAnimation = settings.terminal.idleAnimation
+  const idleAnimationModes: TerminalIdleAnimationMode[] = ['blackHole', 'pacman', 'typeWriter']
 
   return (
     <Card>
@@ -300,6 +309,122 @@ export function TerminalSettings() {
               <SelectItem value="webgl">{t('settings.terminal.rendererWebgl')}</SelectItem>
             </SelectContent>
           </Select>
+        </SettingField>
+
+        <SettingField
+          icon={Sparkles}
+          label={t('settings.terminal.idleAnimation')}
+          description={
+            useWterm
+              ? t('settings.terminal.idleAnimationWtermDesc')
+              : t('settings.terminal.idleAnimationDesc')
+          }
+        >
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-muted-foreground">
+                {t('settings.terminal.idleAnimationEnabled')}
+              </span>
+              <Switch
+                checked={idleAnimation.enabled}
+                disabled={useWterm}
+                onCheckedChange={(enabled) =>
+                  patchSettings({
+                    terminal: {
+                      ...settings.terminal,
+                      idleAnimation: { ...idleAnimation, enabled },
+                    },
+                  })
+                }
+              />
+            </div>
+
+            <div
+              className={cn(
+                'inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border p-1',
+                ui.segmentGroupBg,
+                (!idleAnimation.enabled || useWterm) && 'pointer-events-none opacity-50',
+              )}
+              role="tablist"
+              aria-label={t('settings.terminal.idleAnimationModeAria')}
+            >
+              {idleAnimationModes.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  role="tab"
+                  aria-selected={idleAnimation.mode === mode}
+                  className={cn(
+                    'rounded-md px-3 py-1.5 text-sm transition-colors',
+                    idleAnimation.mode === mode
+                      ? cn(ui.segmentActive, 'font-app-bold')
+                      : cn(ui.segmentInactive, 'font-app-regular'),
+                  )}
+                  disabled={useWterm}
+                  onClick={() =>
+                    patchSettings({
+                      terminal: {
+                        ...settings.terminal,
+                        idleAnimation: { ...idleAnimation, mode },
+                      },
+                    })
+                  }
+                >
+                  {t(`settings.terminal.idleAnimationMode.${mode}`)}
+                </button>
+              ))}
+            </div>
+
+            <div
+              className={cn(
+                'flex items-center gap-2',
+                (!idleAnimation.enabled || useWterm) && 'pointer-events-none opacity-50',
+              )}
+            >
+              <Input
+                type="number"
+                min={MIN_TERMINAL_IDLE_DELAY_MS / 1000}
+                max={MAX_TERMINAL_IDLE_DELAY_MS / 1000}
+                step={1}
+                className="max-w-[120px]"
+                disabled={useWterm}
+                value={Math.round(idleAnimation.idleDelayMs / 1000)}
+                onChange={(e) => {
+                  const sec = Number.parseInt(e.target.value, 10)
+                  if (!Number.isNaN(sec)) {
+                    patchSettings({
+                      terminal: {
+                        ...settings.terminal,
+                        idleAnimation: {
+                          ...idleAnimation,
+                          idleDelayMs: normalizeTerminalIdleDelayMs(sec * 1000),
+                        },
+                      },
+                    })
+                  }
+                }}
+                onBlur={(e) => {
+                  const sec = Number.parseInt(e.target.value, 10)
+                  patchSettings({
+                    terminal: {
+                      ...settings.terminal,
+                      idleAnimation: {
+                        ...idleAnimation,
+                        idleDelayMs: normalizeTerminalIdleDelayMs(
+                          Number.isNaN(sec)
+                            ? DEFAULT_TERMINAL_IDLE_DELAY_MS
+                            : sec * 1000,
+                        ),
+                      },
+                    },
+                  })
+                }}
+              />
+              <span className="text-sm text-muted-foreground">
+                {t('settings.terminal.idleAnimationDelayUnit')}
+              </span>
+            </div>
+          </div>
         </SettingField>
       </CardContent>
     </Card>

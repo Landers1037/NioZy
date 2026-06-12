@@ -56,6 +56,10 @@ import {
   DEFAULT_TERMINAL_SCROLLBACK,
 } from './shared/terminal-xterm'
 import {
+  DEFAULT_TERMINAL_IDLE_ANIMATION,
+  normalizeTerminalIdleAnimation,
+} from './shared/terminal-idle-animation'
+import {
   normalizeSavedWindowState,
   type SavedWindowState,
 } from './shared/window-state'
@@ -121,6 +125,7 @@ export interface AppSettings {
     synchronizedOutputEnabled: boolean
     backgroundImageExt?: string
     backgroundOpacity: number
+    idleAnimation: import('./shared/terminal-idle-animation').TerminalIdleAnimationSettings
   }
   connections: CustomConnection[]
   builtinConnections: BuiltinConnections
@@ -222,6 +227,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     rightClickCopyPaste: true,
     synchronizedOutputEnabled: true,
     backgroundOpacity: DEFAULT_TERMINAL_BACKGROUND_OPACITY,
+    idleAnimation: { ...DEFAULT_TERMINAL_IDLE_ANIMATION },
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
@@ -313,6 +319,7 @@ function buildAppSettingsFromStored(
       backgroundOpacity: normalizeTerminalBackgroundOpacity(
         stored.terminal?.backgroundOpacity ?? DEFAULT_SETTINGS.terminal.backgroundOpacity,
       ),
+      idleAnimation: normalizeTerminalIdleAnimation(stored.terminal?.idleAnimation),
     },
     advanced: {
       ...DEFAULT_SETTINGS.advanced,

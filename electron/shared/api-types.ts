@@ -226,6 +226,8 @@ export interface AppSettings {
     backgroundImageExt?: string
     /** 终端背景图不透明度（0–100） */
     backgroundOpacity: number
+    /** 终端闲置时的屏幕动画 */
+    idleAnimation: import('./terminal-idle-animation').TerminalIdleAnimationSettings
   }
   connections: CustomConnection[]
   builtinConnections: import('./builtin-shells').BuiltinConnections
