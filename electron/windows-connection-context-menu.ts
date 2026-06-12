@@ -3,7 +3,7 @@ import { promisify } from 'util'
 import { app } from 'electron'
 import type { CustomConnection } from './shared/api-types'
 import { resolveShellContextMenuIconPath } from './shell-context-menu-icon'
-import { CONNECTION_ARG_PREFIX } from './open-directory'
+import { CONNECTION_ARG_PREFIX, OPEN_DIRECTORY_ARG_PREFIX } from './open-directory'
 
 const execFileAsync = promisify(execFile)
 
@@ -36,7 +36,7 @@ function buildMenuLabel(connectionName: string): string {
 }
 
 function buildOpenCommand(exePath: string, connectionId: string): string {
-  return `"${exePath}" ${CONNECTION_ARG_PREFIX}${connectionId} "%V"`
+  return `"${exePath}" ${CONNECTION_ARG_PREFIX}${connectionId} ${OPEN_DIRECTORY_ARG_PREFIX}"%V"`
 }
 
 async function runReg(args: string[]): Promise<void> {

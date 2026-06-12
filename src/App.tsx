@@ -17,6 +17,7 @@ import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
 import { useAttachPtyTabSwitch } from '@/hooks/useAttachPtyTabSwitch'
+import { useResumeTermSessionSync } from '@/hooks/useResumeTermSessionSync'
 import { isAttachPtyRenderMode, resolveAttachPtyTargetTab } from '@/lib/attach-pty-render'
 import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { AttachPtyTerminalHost } from '@/components/terminal/AttachPtyTerminalHost'
@@ -28,6 +29,8 @@ import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, handleOpenDirectoryPayload } from '@/lib/terminal-actions'
+import { restoreTerminalSessionFromDisk, markResumeTermBootComplete } from '@/lib/resume-term-session'
+import { resumeTermLog } from '@/lib/resume-term-log'
 import { waitForTerminalFonts } from '@/lib/terminal-webgl-refresh'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI, isBrowserDevPreview, isElectron } from '@/lib/electron-client'
@@ -115,6 +118,7 @@ export default function App() {
   useTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
   useAttachPtyTabSwitch(tabs, activeTabId)
+  useResumeTermSessionSync()
 
   useEffect(() => {
     if (activeTabId) touchTabActivity(activeTabId)
@@ -155,12 +159,25 @@ export default function App() {
               api.app.getPendingOpenDirectory(),
             ])
             if (cancelled) return
-            if (pending) await handleOpenDirectoryPayload(pending)
-            else await createTerminal()
+            if (pending) {
+              resumeTermLog.info('boot: pending open directory, skip session restore', pending)
+              await handleOpenDirectoryPayload(pending)
+            } else if (s.shell.restoreTerminalSessionOnRestart) {
+              resumeTermLog.info('boot: attempting session restore')
+              const restored = await restoreTerminalSessionFromDisk()
+              if (!restored) {
+                resumeTermLog.warn('boot: restore failed, creating default terminal')
+                await createTerminal()
+              }
+            } else {
+              resumeTermLog.info('boot: restore disabled, creating default terminal')
+              await createTerminal()
+            }
 
             if (!cancelled) booted.current = true
           } finally {
             bootInFlight.current = false
+            if (!cancelled) markResumeTermBootComplete()
           }
         })()
       } else if (booted.current) {

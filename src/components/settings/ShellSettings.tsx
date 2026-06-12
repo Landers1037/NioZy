@@ -20,6 +20,7 @@ import {
   GripVertical,
   Sparkles,
   Palette,
+  History,
 } from 'lucide-react'
 import { OH_MY_POSH_THEMES, type OhMyPoshThemeId } from '../../../electron/shared/oh-my-posh-themes'
 import { CommandReplaySettingsSection } from '@/components/command-replay/CommandReplaySettingsSection'
@@ -149,6 +150,18 @@ export function ShellSettings() {
           <Switch
             checked={shell.enableTabDrag}
             onCheckedChange={(v) => patchShell({ enableTabDrag: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={History}
+          label={t('settings.shell.restoreTerminalSessionOnRestart')}
+          description={t('settings.shell.restoreTerminalSessionOnRestartDesc')}
+          row
+        >
+          <Switch
+            checked={shell.restoreTerminalSessionOnRestart}
+            onCheckedChange={(v) => patchShell({ restoreTerminalSessionOnRestart: v })}
           />
         </SettingField>
 

@@ -651,6 +651,11 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       clearBackground: async () => ({ ok: true as const }),
       getBackgroundUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
     },
+    resumeTerm: {
+      load: async () => null,
+      save: async () => undefined,
+      clear: async () => undefined,
+    },
   }
 }
 

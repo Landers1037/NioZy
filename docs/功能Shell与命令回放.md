@@ -2,7 +2,8 @@
 
 终端内链接/emoji/换行行为、Tab 编号与拖拽，以及命令序列录制与一键重放。
 
-> **Oh My Posh / posh-git 内置美化**见 [功能增强SHELL.md](./功能增强SHELL.md)。
+> **Oh My Posh / posh-git 内置美化**见 [功能增强SHELL.md](./功能增强SHELL.md)。  
+> **重启恢复终端会话**见 [SHELL.md](./SHELL.md)。
 
 ## 功能列表
 
@@ -11,6 +12,7 @@
 - Shift+Enter 等映射为换行（交互式 CLI）
 - 侧栏终端 Tab 编号
 - 长按 2s 拖拽排序 Tab
+- **重启恢复终端会话**：关闭时保存 Tab 结构与连接，下次启动恢复（见 [SHELL.md](./SHELL.md)）
 - **命令回放**：录制终端输入序列、命名保存、标题栏一键播放
 
 ## 进程归属
@@ -84,6 +86,7 @@ sequenceDiagram
     "shiftEnterNewline": false,
     "showTerminalIndex": false,
     "enableTabDrag": false,
+    "restoreTerminalSessionOnRestart": false,
     "commandReplays": [
       { "id": "uuid", "name": "deploy", "command": "npm run build\r" }
     ]
@@ -109,6 +112,7 @@ export interface ShellSettings {
   shiftEnterNewline: boolean
   showTerminalIndex: boolean
   enableTabDrag: boolean
+  restoreTerminalSessionOnRestart: boolean
   commandReplays: CommandReplayItem[]
 }
 ```

@@ -459,6 +459,8 @@
       "showTerminalIndexDesc": "When enabled, shows an index number to the left of each terminal tab name in the sidebar",
       "enableTabDrag": "Enable drag reorder",
       "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically",
+      "restoreTerminalSessionOnRestart": "Restore last terminal session on restart",
+      "restoreTerminalSessionOnRestartDesc": "Saves terminal tab layout and connection settings when the app closes and restores them on the next launch. Turning this off deletes the saved data",
       "commandReplayList": "Command replay list",
       "commandReplayListDesc": "Save terminal input sequences for one-click replay from the title bar command panel"
     },

@@ -39,6 +39,12 @@ export {
 } from './ssh-kex-algorithms'
 export type { ShellSettings } from './shell-settings'
 export { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shell-settings'
+export type {
+  ResumeTermSession,
+  SavedTerminalTab,
+  SavedTerminalPane,
+} from './resume-term-session'
+export { RESUME_TERM_SESSION_VERSION, normalizeResumeTermSession } from './resume-term-session'
 export type { CommandReplayItem } from './command-replay'
 export type { PerformanceSettings } from './performance-settings'
 export {
@@ -428,6 +434,11 @@ export interface ElectronAPI {
       | { ok: true; url: string }
       | { ok: false; error: string }
     >
+  }
+  resumeTerm: {
+    load: () => Promise<import('./resume-term-session').ResumeTermSession | null>
+    save: (session: import('./resume-term-session').ResumeTermSession) => Promise<void>
+    clear: () => Promise<void>
   }
   vault: {
     list: () => Promise<VaultVariablePublic[]>
