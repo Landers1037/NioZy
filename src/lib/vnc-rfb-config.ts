@@ -7,12 +7,22 @@ import {
 
 type RfbInstance = InstanceType<typeof RFB>
 
+/** noVNC 默认 17ms 节流鼠标事件；TigerVNC 等场景下会明显感到不跟手 */
+const VNC_MOUSE_MOVE_DELAY_MS = 8
+
 type RfbInternal = RfbInstance & {
   _sendEncodings: () => void
+  _refreshCursor: () => void
+  _handleMouseMove: (x: number, y: number) => void
   _sock: unknown
   _fbDepth: number
   _qualityLevel: number
   _compressionLevel: number
+  _mousePos: { x: number; y: number }
+  _mouseButtonMask: number
+  _mouseMoveTimer: ReturnType<typeof setTimeout> | null
+  _mouseLastMoveTime: number
+  _sendMouse: (x: number, y: number, mask: number) => void
 }
 
 export interface VncRfbExperimentalOptions {
@@ -96,6 +106,48 @@ function maySupportH264(): boolean {
   return typeof VideoDecoder !== 'undefined'
 }
 
+/**
+ * 连接建立后刷新本地光标。noVNC 初始为透明光标（cursor: none），在服务端下发光标形状前
+ * 用户可能只能看到 framebuffer 里延迟绘制的远程光标；开启 showDotCursor 可先显示本地指示点。
+ */
+export function primeVncLocalCursor(rfb: RfbInstance, localCursor: boolean): void {
+  if (!localCursor) return
+  const internal = rfb as RfbInternal
+  try {
+    internal._refreshCursor()
+  } catch {
+    // ignore
+  }
+}
+
+/** 降低鼠标事件发送间隔（noVNC 内置 17ms），改善远程悬停/拖拽反馈 */
+export function patchVncMouseMoveThrottle(rfb: RfbInstance): void {
+  const internal = rfb as RfbInternal
+  internal._handleMouseMove = function patchedHandleMouseMove(x: number, y: number) {
+    internal._mousePos = { x, y }
+    if (internal._mouseMoveTimer != null) return
+
+    const elapsed = Date.now() - internal._mouseLastMoveTime
+    if (elapsed > VNC_MOUSE_MOVE_DELAY_MS) {
+      internal._sendMouse(x, y, internal._mouseButtonMask)
+      internal._mouseLastMoveTime = Date.now()
+      return
+    }
+
+    internal._mouseMoveTimer = setTimeout(() => {
+      internal._mouseMoveTimer = null
+      internal._sendMouse(internal._mousePos.x, internal._mousePos.y, internal._mouseButtonMask)
+      internal._mouseLastMoveTime = Date.now()
+    }, VNC_MOUSE_MOVE_DELAY_MS - elapsed)
+  }
+}
+
+/** TigerVNC 等：略降压缩、提高画质，减少编码延迟 */
+export function applyVncLatencyTuning(rfb: RfbInstance): void {
+  rfb.compressionLevel = 1
+  rfb.qualityLevel = 8
+}
+
 /** 覆盖 noVNC 内部 _sendEncodings，以应用首选编码与本地光标设置 */
 export function applyVncRfbExperimentalOptions(
   rfb: RfbInstance,
@@ -104,6 +156,9 @@ export function applyVncRfbExperimentalOptions(
   const internal = rfb as RfbInternal
   const { localCursor, encoding } = options
   const preferredOrder = buildVnc24BitEncodingOrder(encoding)
+
+  // 服务端未及时下发光标形状时，用本地圆点代替不可见的透明光标
+  rfb.showDotCursor = localCursor
 
   internal._sendEncodings = function patchedSendEncodings() {
     const encs: number[] = []
