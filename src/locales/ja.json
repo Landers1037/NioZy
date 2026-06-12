@@ -387,6 +387,8 @@
       "showTerminalIndexDesc": "有効時、サイドバーの各ターミナルタブ名の左に番号を表示",
       "enableTabDrag": "ドラッグ並べ替えを有効化",
       "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能",
+      "restoreTerminalSessionOnRestart": "再起動後に前回のターミナルセッションを復元",
+      "restoreTerminalSessionOnRestartDesc": "アプリ終了時にターミナルタブの構成と接続設定を保存し、次回起動時に復元します。このオプションをオフにすると保存データを削除します",
       "commandReplayList": "コマンドリプレイ一覧",
       "commandReplayListDesc": "よく使うターミナル入力を保存し、タイトルバーのコマンドパネルから録画またはワンクリック再生"
     },

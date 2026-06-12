@@ -125,6 +125,11 @@ const api: ElectronAPI = {
     clearBackground: () => ipcRenderer.invoke('terminal:clearBackground'),
     getBackgroundUrl: (ext) => ipcRenderer.invoke('terminal:getBackgroundUrl', ext),
   },
+  resumeTerm: {
+    load: () => ipcRenderer.invoke('resumeTerm:load'),
+    save: (session) => ipcRenderer.invoke('resumeTerm:save', session),
+    clear: () => ipcRenderer.invoke('resumeTerm:clear'),
+  },
   vault: {
     list: () => ipcRenderer.invoke('vault:list'),
     getKeys: () => ipcRenderer.invoke('vault:getKeys'),

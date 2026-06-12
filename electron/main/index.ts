@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled, isWebGpuAccelerationEnabled } from '../settings-store'
 import { StatisticsStore } from '../statistics-store'
+import { resumeTermStore } from '../resume-term-store'
 import { ReminderStore } from '../reminder-store'
 import { ReminderScheduler } from '../reminder-scheduler'
 import { SystemStats } from '../system-stats'
@@ -47,8 +48,7 @@ import { readPerformanceSettingsFromDisk } from '../performance-settings-disk'
 import { configureSessionPrivacy, disableCrashReporting } from '../session-privacy'
 import {
   flushPendingOpenDirectory,
-  parseDirectoryFromArgv,
-  parseConnectionIdFromArgv,
+  parseOpenRequestFromArgv,
   queueOpenDirectory,
   setInitialOpenDirectoryFromArgv,
   takePendingOpenDirectory,
@@ -630,13 +630,12 @@ function createTray(): void {
 
 if (gotSingleInstanceLock) {
   app.on('second-instance', (_event, argv) => {
-    const directory = parseDirectoryFromArgv(argv)
-    const connectionId = parseConnectionIdFromArgv(argv)
+    const request = parseOpenRequestFromArgv(argv)
     mainLog.info('Second instance', {
-      directory: directory ?? null,
-      connectionId: connectionId ?? null,
+      directory: request?.directory ?? null,
+      connectionId: request?.connectionId ?? null,
     })
-    if (directory) handleOpenDirectoryRequest(directory, connectionId)
+    if (request) handleOpenDirectoryRequest(request.directory, request.connectionId)
     else showMainWindow()
   })
 }
@@ -1126,10 +1125,26 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
       refreshTrayMenu()
     }
   }
+  if (partial.shell?.restoreTerminalSessionOnRestart === false) {
+    resumeTermStore.clear()
+  }
   return updated
 })
 
 ipcMain.handle('preview:clearWebviewBrowsingData', () => clearWebviewPreviewBrowsingData())
+
+ipcMain.handle('resumeTerm:load', () => {
+  terminalLog.info('[ResumeTerm] IPC load')
+  return resumeTermStore.load()
+})
+ipcMain.handle('resumeTerm:save', (_, session: import('../shared/resume-term-session').ResumeTermSession) => {
+  terminalLog.info('[ResumeTerm] IPC save', { tabCount: session?.tabs?.length ?? 0 })
+  resumeTermStore.save(session)
+})
+ipcMain.handle('resumeTerm:clear', () => {
+  terminalLog.info('[ResumeTerm] IPC clear')
+  resumeTermStore.clear()
+})
 
 ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 ipcMain.handle('app:getVersion', () => app.getVersion())

@@ -2,6 +2,7 @@ import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { app } from 'electron'
 import { resolveShellContextMenuIconPath } from './shell-context-menu-icon'
+import { OPEN_DIRECTORY_ARG_PREFIX } from './open-directory'
 
 const execFileAsync = promisify(execFile)
 
@@ -22,7 +23,7 @@ function getExecutablePath(): string {
 }
 
 function buildOpenCommand(exePath: string): string {
-  return `"${exePath}" "%V"`
+  return `"${exePath}" ${OPEN_DIRECTORY_ARG_PREFIX}"%V"`
 }
 
 async function runReg(args: string[]): Promise<void> {

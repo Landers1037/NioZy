@@ -16,6 +16,7 @@
 | [功能预览与WebView.md](./功能预览与WebView.md) | 设置 · 预览 |
 | [功能外观与布局.md](./功能外观与布局.md) | 设置 · 外观 |
 | [功能Shell与命令回放.md](./功能Shell与命令回放.md) | 设置 · Shell（链接/emoji/命令回放等） |
+| [SHELL.md](./SHELL.md) | 设置 · Shell · 重启恢复终端会话 |
 | [功能增强SHELL.md](./功能增强SHELL.md) | 设置 · Shell · Oh My Posh / posh-git |
 | [功能快捷键.md](./功能快捷键.md) | 设置 · 快捷键 |
 | [功能使用统计.md](./功能使用统计.md) | 设置 · 使用统计 |

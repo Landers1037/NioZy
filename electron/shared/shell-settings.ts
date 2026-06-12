@@ -22,6 +22,8 @@ export interface ShellSettings {
   ohMyPoshTheme: OhMyPoshThemeId
   /** 命令重放列表 */
   commandReplays: CommandReplayItem[]
+  /** 重启后恢复上次终端 Tab 结构与连接配置 */
+  restoreTerminalSessionOnRestart: boolean
 }
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
@@ -34,6 +36,7 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   ohMyPoshEnabled: false,
   ohMyPoshTheme: DEFAULT_OH_MY_POSH_THEME,
   commandReplays: [],
+  restoreTerminalSessionOnRestart: false,
 }
 
 export function normalizeShellSettings(value: unknown): ShellSettings {
@@ -69,5 +72,9 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
         : DEFAULT_SHELL_SETTINGS.ohMyPoshEnabled,
     ohMyPoshTheme: normalizeOhMyPoshTheme(v.ohMyPoshTheme),
     commandReplays: normalizeCommandReplayList(v.commandReplays),
+    restoreTerminalSessionOnRestart:
+      typeof v.restoreTerminalSessionOnRestart === 'boolean'
+        ? v.restoreTerminalSessionOnRestart
+        : DEFAULT_SHELL_SETTINGS.restoreTerminalSessionOnRestart,
   }
 }

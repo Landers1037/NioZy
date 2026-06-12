@@ -459,6 +459,8 @@
       "showTerminalIndexDesc": "开启后在左侧边栏终端 Tab 名称左侧显示序号",
       "enableTabDrag": "启用拖拽",
       "enableTabDragDesc": "开启后长按左侧边栏终端 Tab 2 秒进入拖拽模式，可上下拖动调整顺序",
+      "restoreTerminalSessionOnRestart": "重启后恢复上次终端会话",
+      "restoreTerminalSessionOnRestartDesc": "关闭程序时保存终端 Tab 结构与连接配置，下次启动时恢复。关闭此选项将删除已保存的数据",
       "commandReplayList": "命令重放列表",
       "commandReplayListDesc": "保存常用终端输入序列，可在顶部栏命令面板中录制或一键重放"
     },
