@@ -377,11 +377,31 @@ function persistWindowBoundsIfEnabled(): void {
   })
 }
 
+function destroyTray(): void {
+  if (!tray) return
+  tray.destroy()
+  tray = null
+}
+
 function showMainWindow(): void {
-  if (!mainWindow) return
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    if (!isQuitting) createWindow()
+    return
+  }
   if (mainWindow.isMinimized()) mainWindow.restore()
   mainWindow.show()
   mainWindow.focus()
+}
+
+function quitAppFromUserClose(): void {
+  if (isQuitting) return
+  isQuitting = true
+  disposeDesktopPet()
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.closeDevTools()
+  }
+  destroyTray()
+  app.quit()
 }
 
 function requestNewTerminalFromTray(): void {
@@ -589,7 +609,9 @@ function createWindow(): void {
     if (s.system.minimizeToTrayOnClose) {
       e.preventDefault()
       mainWindow?.hide()
+      return
     }
+    quitAppFromUserClose()
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
@@ -694,13 +716,15 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     const s = settingsStore.get()
-    if (!s.system.minimizeToTrayOnClose) app.quit()
+    if (!s.system.minimizeToTrayOnClose) quitAppFromUserClose()
   }
 })
 
 app.on('before-quit', () => {
+  isQuitting = true
   mainLog.info('Application quitting')
   persistWindowBoundsIfEnabled()
+  destroyTray()
   linkPreviewManager?.closeAll()
   terminalOutputFlusher.dispose()
   terminalService.disposeAll()
