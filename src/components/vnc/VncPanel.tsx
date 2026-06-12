@@ -5,9 +5,12 @@ import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { cn } from '@/lib/utils'
 import {
+  applyVncLatencyTuning,
   applyVncRfbExperimentalOptions,
   applyVncViewportOptions,
   installVncCanvasAccelHints,
+  patchVncMouseMoveThrottle,
+  primeVncLocalCursor,
 } from '@/lib/vnc-rfb-config'
 import {
   assertValidVncPort,
@@ -150,6 +153,8 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
         localCursor: vncLocalCursor,
         encoding: vncEncoding,
       })
+      applyVncLatencyTuning(rfb)
+      patchVncMouseMoveThrottle(rfb)
       applyVncViewportOptions(rfb, vncAdaptiveScale)
 
       if (typeof ResizeObserver !== 'undefined') {
@@ -168,6 +173,7 @@ export function VncPanel({ tabId, connectionId }: { tabId: string; connectionId:
 
       rfb.addEventListener('connect', () => {
         if (cancelled) return
+        primeVncLocalCursor(rfb, vncLocalCursor)
         setStatus('connected')
       })
       rfb.addEventListener('disconnect', (ev: unknown) => {
