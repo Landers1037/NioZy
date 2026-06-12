@@ -418,7 +418,18 @@
       "backgroundOpacity": "Background opacity: {{value}}%",
       "backgroundPickNotImage": "Please choose a valid image file",
       "backgroundPickFailed": "Could not set background image",
-      "backgroundClearFailed": "Could not clear background image"
+      "backgroundClearFailed": "Could not clear background image",
+      "idleAnimation": "Idle animation",
+      "idleAnimationDesc": "Play a screen animation after the terminal has been idle; BlackHole works best with the WebGL renderer.",
+      "idleAnimationWtermDesc": "Idle animations are not supported for Wterm; switch back to Xterm to enable.",
+      "idleAnimationEnabled": "Enable idle animation",
+      "idleAnimationModeAria": "Idle animation type",
+      "idleAnimationDelayUnit": "seconds before trigger",
+      "idleAnimationMode": {
+        "blackHole": "BlackHole",
+        "pacman": "Pacman",
+        "typeWriter": "TypeWriter"
+      }
     },
     "ssh": {
       "title": "SSH",

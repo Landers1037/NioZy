@@ -63,6 +63,8 @@ import {
   scheduleWebglTextureAtlasRefresh,
   waitForTerminalFonts,
 } from '@/lib/terminal-webgl-refresh'
+import { useTerminalIdleAnimation } from '@/hooks/useTerminalIdleAnimation'
+import { TerminalIdleAnimationOverlay } from '@/components/terminal/TerminalIdleAnimationOverlay'
 
 import {
   useAttachPtySessionStore,
@@ -103,6 +105,7 @@ export function TerminalView({
 }: TerminalViewProps) {
   const isAttachHost = attachSession !== undefined
   const containerRef = useRef<HTMLDivElement>(null)
+  const terminalHostRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const tabRef = useRef(tab)
   const boundTerminalIdRef = useRef<string | null>(
@@ -142,6 +145,7 @@ export function TerminalView({
     settings?.performance.superPowerSaving === true &&
     settings.experimental?.terminalEmulator !== 'wterm'
   const terminalHasBackgroundImage = hasTerminalBackgroundImage(settings?.terminal)
+  const idleAnimationSettings = settings?.terminal.idleAnimation
   const activeRenderer = effectiveRenderer(
     rendererPreference,
     preferDomRenderer || superPowerSavingDom,
@@ -857,6 +861,16 @@ export function TerminalView({
     tab.id,
   ])
 
+  const getIdleAnimationTerm = useCallback(() => termRef.current, [])
+
+  const { active: idleAnimationActive } = useTerminalIdleAnimation({
+    enabled: idleAnimationSettings?.enabled === true,
+    idleDelayMs: idleAnimationSettings?.idleDelayMs ?? 5000,
+    getTerm: getIdleAnimationTerm,
+    termReady,
+    isFocused,
+  })
+
   const chromeBackground = hasTerminalBackgroundImage(settings?.terminal)
     ? getTerminalCellBackgroundColor(settings?.terminal)
     : getTerminalChromeBackgroundColor(settings?.terminal)
@@ -866,17 +880,27 @@ export function TerminalView({
       className="absolute inset-0 overflow-hidden p-[10px]"
       style={{ backgroundColor: chromeBackground }}
     >
-      <div
-        ref={containerRef}
-        className={
-          terminalHasBackgroundImage
-            ? 'niozy-terminal-host niozy-terminal-has-bg-image h-full w-full overflow-hidden'
-            : 'niozy-terminal-host h-full w-full overflow-hidden'
-        }
-        data-niozy-renderer={runtimeRenderer}
-        data-niozy-renderer-fallback={runtimeFallback ?? undefined}
-        data-niozy-renderer-preference={rendererPreference}
-      />
+      <div ref={terminalHostRef} className="relative h-full w-full">
+        <div
+          ref={containerRef}
+          className={
+            terminalHasBackgroundImage
+              ? 'niozy-terminal-host niozy-terminal-has-bg-image h-full w-full overflow-hidden'
+              : 'niozy-terminal-host h-full w-full overflow-hidden'
+          }
+          data-niozy-renderer={runtimeRenderer}
+          data-niozy-renderer-fallback={runtimeFallback ?? undefined}
+          data-niozy-renderer-preference={rendererPreference}
+        />
+        {termReady && termRef.current && idleAnimationSettings?.enabled && (
+          <TerminalIdleAnimationOverlay
+            term={termRef.current}
+            mode={idleAnimationSettings.mode}
+            enabled={idleAnimationActive}
+            hostRef={terminalHostRef}
+          />
+        )}
+      </div>
       <SshReconnectHint terminalId={effectiveTerminalId ?? undefined} />
     </div>
   )

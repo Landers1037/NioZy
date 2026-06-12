@@ -46,6 +46,11 @@ const DEFAULT_SETTINGS: AppSettings = {
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
     backgroundOpacity: 100,
+    idleAnimation: {
+      enabled: false,
+      mode: 'blackHole',
+      idleDelayMs: 5000,
+    },
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },

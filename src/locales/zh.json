@@ -418,7 +418,18 @@
       "backgroundOpacity": "背景透明度：{{value}}%",
       "backgroundPickNotImage": "请选择有效的图片文件",
       "backgroundPickFailed": "无法设置背景图片",
-      "backgroundClearFailed": "无法清除背景图片"
+      "backgroundClearFailed": "无法清除背景图片",
+      "idleAnimation": "终端闲置动画",
+      "idleAnimationDesc": "终端无输入一段时间后播放屏幕动画；BlackHole 在 WebGL 渲染下效果最佳。",
+      "idleAnimationWtermDesc": "Wterm 终端暂不支持闲置动画；切换回 Xterm 后可启用。",
+      "idleAnimationEnabled": "启用闲置动画",
+      "idleAnimationModeAria": "闲置动画类型",
+      "idleAnimationDelayUnit": "秒后触发",
+      "idleAnimationMode": {
+        "blackHole": "BlackHole",
+        "pacman": "Pacman",
+        "typeWriter": "TypeWriter"
+      }
     },
     "ssh": {
       "title": "SSH 设置",
