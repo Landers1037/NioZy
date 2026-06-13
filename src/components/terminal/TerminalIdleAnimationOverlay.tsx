@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Terminal } from '@xterm/xterm'
 import type { TerminalIdleAnimationMode } from '../../../electron/shared/terminal-idle-animation'
-import {
-  BLACK_HOLE_CANVAS_SIZE_PX,
-  BlackHoleRenderer,
-} from '@/lib/terminal-idle-animation/black-hole-renderer'
+import { BlackHoleRenderer } from '@/lib/terminal-idle-animation/black-hole-renderer'
+import { LogoIdleAnimation } from '@/components/terminal/idle-animation/LogoIdleAnimation'
+import { PacmanIdleAnimation } from '@/components/terminal/idle-animation/PacmanIdleAnimation'
 
 interface TerminalIdleAnimationOverlayProps {
   term: Terminal
@@ -20,28 +19,25 @@ type ScreenBox = {
   height: number
 }
 
-function PacmanPlaceholder({ box }: { box: ScreenBox }) {
+function IdleAnimationLayer({
+  box,
+  children,
+}: {
+  box: ScreenBox
+  children: React.ReactNode
+}) {
   return (
     <div
-      className="pointer-events-none absolute z-[999] flex items-center justify-center"
-      style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
+      className="pointer-events-none absolute z-[999] overflow-hidden"
+      style={{
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        height: box.height,
+      }}
+      aria-hidden
     >
-      <div className="rounded-lg border border-dashed border-yellow-500/40 bg-yellow-500/5 px-4 py-2 text-sm text-yellow-200/80">
-        Pac-Man
-      </div>
-    </div>
-  )
-}
-
-function TypeWriterPlaceholder({ box }: { box: ScreenBox }) {
-  return (
-    <div
-      className="pointer-events-none absolute z-[999] flex items-center justify-center"
-      style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
-    >
-      <div className="rounded-lg border border-dashed border-muted-foreground/40 bg-muted/20 px-4 py-2 font-mono text-sm text-muted-foreground">
-        TypeWriter...
-      </div>
+      {children}
     </div>
   )
 }
@@ -128,10 +124,6 @@ export function TerminalIdleAnimationOverlay({
 
     const tick = () => {
       const frame = renderer.getFrame(screenBox.width, screenBox.height)
-      canvas.style.left = `${screenBox.left + frame.left}px`
-      canvas.style.top = `${screenBox.top + frame.top}px`
-      canvas.style.width = `${frame.size}px`
-      canvas.style.height = `${frame.size}px`
       renderer.render(term, frame, { width: screenBox.width, height: screenBox.height })
       rafRef.current = requestAnimationFrame(tick)
     }
@@ -146,20 +138,29 @@ export function TerminalIdleAnimationOverlay({
 
   if (!enabled || !screenBox) return null
 
-  if (mode === 'pacman') return <PacmanPlaceholder box={screenBox} />
-  if (mode === 'typeWriter') return <TypeWriterPlaceholder box={screenBox} />
+  if (mode === 'pacman') {
+    return (
+      <IdleAnimationLayer box={screenBox}>
+        <PacmanIdleAnimation width={screenBox.width} height={screenBox.height} />
+      </IdleAnimationLayer>
+    )
+  }
+
+  if (mode === 'logo') {
+    return (
+      <IdleAnimationLayer box={screenBox}>
+        <LogoIdleAnimation width={screenBox.width} height={screenBox.height} />
+      </IdleAnimationLayer>
+    )
+  }
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none absolute z-[999]"
-      style={{
-        left: screenBox.left,
-        top: screenBox.top,
-        width: BLACK_HOLE_CANVAS_SIZE_PX,
-        height: BLACK_HOLE_CANVAS_SIZE_PX,
-      }}
-      aria-hidden
-    />
+    <IdleAnimationLayer box={screenBox}>
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 h-full w-full"
+        style={{ background: 'transparent' }}
+      />
+    </IdleAnimationLayer>
   )
 }

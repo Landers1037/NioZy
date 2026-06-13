@@ -1,0 +1,117 @@
+.pacman-idle {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.pacman-idle__actor {
+  position: absolute;
+  will-change: left, top, transform;
+}
+
+.pacman-idle__pacman {
+  --mouth-top: 14px;
+  --mouth-bottom: 14px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: #ffcc00;
+  border-right-color: transparent;
+  border-top-width: var(--mouth-top);
+  border-bottom-width: var(--mouth-bottom);
+  border-left-width: 14px;
+  border-right-width: 14px;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 4px rgba(255, 204, 0, 0.45));
+  animation: pacman-idle-chomp 0.32s ease-in-out infinite;
+}
+
+/* 嘴朝 +X（右），配合 rotate(0/90/180/270) 对齐运动方向 */
+@keyframes pacman-idle-chomp {
+  0%,
+  100% {
+    --mouth-top: 14px;
+    --mouth-bottom: 14px;
+  }
+  50% {
+    --mouth-top: 2px;
+    --mouth-bottom: 2px;
+  }
+}
+
+.pacman-idle__ghost {
+  width: 26px;
+  height: 30px;
+  border-radius: 13px 13px 4px 4px;
+  position: relative;
+  animation: pacman-idle-ghost-bob 0.55s ease-in-out infinite;
+}
+
+.pacman-idle__ghost-eye {
+  position: absolute;
+  top: 8px;
+  width: 8px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.pacman-idle__ghost-eye--left {
+  left: 4px;
+}
+
+.pacman-idle__ghost-eye--right {
+  right: 4px;
+}
+
+.pacman-idle__ghost-pupil {
+  position: absolute;
+  width: 4px;
+  height: 5px;
+  border-radius: 50%;
+  background: #1a2a6c;
+  top: 2px;
+}
+
+.pacman-idle__ghost--0 {
+  background: #69d2ff;
+  animation-delay: 0s;
+}
+
+.pacman-idle__ghost--1 {
+  background: #ffb347;
+  animation-delay: 0.12s;
+}
+
+.pacman-idle__ghost--2 {
+  background: #ff5a5a;
+  animation-delay: 0.24s;
+}
+
+@keyframes pacman-idle-ghost-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.logo-idle {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.logo-idle__logo {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+  will-change: left, top;
+  user-select: none;
+  pointer-events: none;
+}

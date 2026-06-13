@@ -49,7 +49,7 @@ export function TerminalSettings() {
   const cursorOptions = getCursorStyleOptions(t)
   const useWterm = isWtermEmulator(settings)
   const idleAnimation = settings.terminal.idleAnimation
-  const idleAnimationModes: TerminalIdleAnimationMode[] = ['blackHole', 'pacman', 'typeWriter']
+  const idleAnimationModes: TerminalIdleAnimationMode[] = ['blackHole', 'pacman', 'logo']
 
   return (
     <Card>
