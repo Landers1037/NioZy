@@ -18,6 +18,31 @@ export function normalizeRightClickCopyPaste(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }
 
+export function normalizeAdvancedRightClickMenu(value: unknown): boolean {
+  return value === true
+}
+
+/** 右键复制/粘贴与高级右键菜单互斥；两者同时为 true 时保留复制/粘贴。 */
+export function normalizeTerminalRightClickSettings(stored: {
+  rightClickCopyPaste?: unknown
+  advancedRightClickMenu?: unknown
+}): { rightClickCopyPaste: boolean; advancedRightClickMenu: boolean } {
+  const rightClickCopyPaste = normalizeRightClickCopyPaste(stored.rightClickCopyPaste)
+  const advancedRightClickMenu = normalizeAdvancedRightClickMenu(stored.advancedRightClickMenu)
+  if (rightClickCopyPaste && advancedRightClickMenu) {
+    return { rightClickCopyPaste: true, advancedRightClickMenu: false }
+  }
+  return { rightClickCopyPaste, advancedRightClickMenu }
+}
+
+export function resolveRightClickSelectsWord(stored: {
+  rightClickCopyPaste?: unknown
+  advancedRightClickMenu?: unknown
+}): boolean {
+  const { rightClickCopyPaste, advancedRightClickMenu } = normalizeTerminalRightClickSettings(stored)
+  return !rightClickCopyPaste && !advancedRightClickMenu
+}
+
 /** xterm.js 6+ DEC mode 2026 同步输出；Wterm 不支持 */
 export function normalizeSynchronizedOutputEnabled(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true

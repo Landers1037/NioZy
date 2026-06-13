@@ -39,6 +39,7 @@ import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
 import { useResourceAutoDegradeMonitor } from '@/hooks/useResourceAutoDegradeMonitor'
 import { useReminderAlerts } from '@/hooks/useReminderAlerts'
 import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
+import { TerminalContextMenuHost } from '@/components/terminal/TerminalContextMenuHost'
 import { cn } from '@/lib/utils'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
@@ -516,6 +517,7 @@ export default function App() {
       <StatusBar />
       <FilePreviewDialog />
       <ReminderDueDialog />
+      <TerminalContextMenuHost />
       {aiSidebarEnabled && AiCopilotRoot && (
         <Suspense key={aiMountKey} fallback={null}>
           <AiCopilotRoot />

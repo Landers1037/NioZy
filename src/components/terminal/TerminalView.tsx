@@ -34,7 +34,11 @@ import { writeTerminalInput } from '@/lib/terminal-write'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
 import { bindXtermTerminalPreview } from '@/lib/terminal-preview-mouse'
-import { normalizeRightClickCopyPaste } from '../../../electron/shared/terminal-xterm'
+import {
+  isTerminalAdvancedRightClickMenuEnabled,
+  isTerminalRightClickCopyPasteEnabled,
+  openTerminalAdvancedContextMenu,
+} from '@/lib/terminal-advanced-context-menu'
 import type { TerminalRenderer } from '../../../electron/shared/api-types'
 import {
   isLayoutResizing,
@@ -463,12 +467,21 @@ export function TerminalView({
 
       termElement = term.element ?? undefined
 
+      const readTerminalSettings = () => useAppStore.getState().settings?.terminal
+
       const isRightClickCopyPasteEnabled = () => {
-        const terminalSettings = useAppStore.getState().settings?.terminal
+        const terminalSettings = readTerminalSettings()
         return (
           !!boundTerminalIdRef.current &&
-          !!terminalSettings &&
-          normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
+          isTerminalRightClickCopyPasteEnabled(terminalSettings)
+        )
+      }
+
+      const isAdvancedRightClickMenuEnabled = () => {
+        const terminalSettings = readTerminalSettings()
+        return (
+          !!boundTerminalIdRef.current &&
+          isTerminalAdvancedRightClickMenuEnabled(terminalSettings)
         )
       }
 
@@ -484,9 +497,14 @@ export function TerminalView({
       }
 
       onContextMenu = (e: MouseEvent) => {
-        if (!isRightClickCopyPasteEnabled()) return
-        e.preventDefault()
-        e.stopPropagation()
+        const terminalId = boundTerminalIdRef.current
+        if (isRightClickCopyPasteEnabled()) {
+          e.preventDefault()
+          e.stopPropagation()
+          return
+        }
+        if (!terminalId || !isAdvancedRightClickMenuEnabled()) return
+        openTerminalAdvancedContextMenu(e, terminalId, tabRef.current.id, term)
       }
 
       termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)
@@ -650,12 +668,21 @@ export function TerminalView({
 
       termElement = term.element ?? undefined
 
+      const readTerminalSettings = () => useAppStore.getState().settings?.terminal
+
       const isRightClickCopyPasteEnabled = () => {
-        const terminalSettings = useAppStore.getState().settings?.terminal
+        const terminalSettings = readTerminalSettings()
         return (
           !!boundTerminalIdRef.current &&
-          !!terminalSettings &&
-          normalizeRightClickCopyPaste(terminalSettings.rightClickCopyPaste)
+          isTerminalRightClickCopyPasteEnabled(terminalSettings)
+        )
+      }
+
+      const isAdvancedRightClickMenuEnabled = () => {
+        const terminalSettings = readTerminalSettings()
+        return (
+          !!boundTerminalIdRef.current &&
+          isTerminalAdvancedRightClickMenuEnabled(terminalSettings)
         )
       }
 
@@ -671,9 +698,14 @@ export function TerminalView({
       }
 
       onContextMenu = (e: MouseEvent) => {
-        if (!isRightClickCopyPasteEnabled()) return
-        e.preventDefault()
-        e.stopPropagation()
+        const terminalId = boundTerminalIdRef.current
+        if (isRightClickCopyPasteEnabled()) {
+          e.preventDefault()
+          e.stopPropagation()
+          return
+        }
+        if (!terminalId || !isAdvancedRightClickMenuEnabled()) return
+        openTerminalAdvancedContextMenu(e, terminalId, tabRef.current.id, term)
       }
 
       termElement?.addEventListener('mousedown', onLeftMouseDown, captureOpts)

@@ -2,7 +2,6 @@ import type { WTerm } from '@wterm/dom'
 import type { ShellSettings } from '../../electron/shared/shell-settings'
 import type { PreviewSettings } from '../../electron/shared/preview-settings'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
-import { normalizeRightClickCopyPaste } from '../../electron/shared/terminal-xterm'
 import {
   escapeHtml,
   lineTextHasUrl,
@@ -14,6 +13,11 @@ import {
 } from '@/lib/terminal-interactive-cli'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
+import {
+  isTerminalAdvancedRightClickMenuEnabled,
+  isTerminalRightClickCopyPasteEnabled,
+  openTerminalAdvancedContextMenu,
+} from '@/lib/terminal-advanced-context-menu'
 import { isWtermNearBottom, queueWtermScrollToBottom } from '@/lib/wterm-scroll'
 import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
 import { bindDomTerminalPreview } from '@/lib/terminal-preview-mouse'
@@ -23,7 +27,9 @@ const PROCESSED_ATTR = 'data-niozy-links'
 
 export interface WtermDomShellOptions {
   terminalId: string
+  tabId: string
   rightClickCopyPaste: boolean
+  advancedRightClickMenu: boolean
   shell: ShellSettings
   preview?: PreviewSettings
   isSsh?: boolean
@@ -118,27 +124,38 @@ function refreshLinkHighlights(
   }
 }
 
-function bindRightClickCopyPaste(
+function bindRightClickBehavior(
   root: HTMLElement,
-  terminalId: string,
-  enabled: boolean,
+  options: Pick<WtermDomShellOptions, 'terminalId' | 'tabId' | 'rightClickCopyPaste' | 'advancedRightClickMenu'>,
   listeners: Array<() => void>,
 ): void {
-  if (!enabled) return
+  const terminalSettings = {
+    rightClickCopyPaste: options.rightClickCopyPaste,
+    advancedRightClickMenu: options.advancedRightClickMenu,
+  }
+  const copyPasteEnabled = isTerminalRightClickCopyPasteEnabled(terminalSettings)
+  const advancedMenuEnabled = isTerminalAdvancedRightClickMenuEnabled(terminalSettings)
+  if (!copyPasteEnabled && !advancedMenuEnabled) return
+
   const captureOpts = { capture: true } as const
 
   const onRightMouseUp = (e: MouseEvent) => {
-    if (e.button !== 2) return
+    if (e.button !== 2 || !copyPasteEnabled) return
     handleTerminalRightClickCopyPaste(
-      terminalId,
+      options.terminalId,
       () => readTerminalSelectionText(),
       e,
     )
   }
 
   const onContextMenu = (e: MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    if (copyPasteEnabled) {
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
+    if (!advancedMenuEnabled) return
+    openTerminalAdvancedContextMenu(e, options.terminalId, options.tabId)
   }
 
   root.addEventListener('mouseup', onRightMouseUp, captureOpts)
@@ -190,11 +207,9 @@ export function attachWtermDomShellFeatures(
   let highlightFrame = 0
   let observer: MutationObserver | null = null
 
-  const rightClickEnabled = normalizeRightClickCopyPaste(options.rightClickCopyPaste)
+  bindRightClickBehavior(root, options, listeners)
   const { highlightLinks, clickToOpenLinks, shiftEnterNewline } = options.shell
   const preview = options.preview ?? DEFAULT_PREVIEW_SETTINGS
-
-  bindRightClickCopyPaste(root, options.terminalId, rightClickEnabled, listeners)
   if (clickToOpenLinks || isAnyPreviewEnabled(preview)) {
     bindDomTerminalPreview(
       root,

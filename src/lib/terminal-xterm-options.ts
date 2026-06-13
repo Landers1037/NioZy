@@ -4,8 +4,8 @@ import { resolveTerminalFontFamilyCSSValue } from '../../electron/shared/termina
 import {
   DEFAULT_TERMINAL_SCROLLBACK,
   normalizeDrawBoldTextInBrightColors,
-  normalizeRightClickCopyPaste,
   normalizeTerminalScrollback,
+  resolveRightClickSelectsWord,
 } from '../../electron/shared/terminal-xterm'
 
 export function buildTerminalOptions(
@@ -25,7 +25,7 @@ export function buildTerminalOptions(
     drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
       terminal?.drawBoldTextInBrightColors,
     ),
-    rightClickSelectsWord: !normalizeRightClickCopyPaste(terminal?.rightClickCopyPaste),
+    rightClickSelectsWord: resolveRightClickSelectsWord(terminal ?? {}),
     macOptionClickForcesSelection: true,
     customGlyphs: true,
     lineHeight: 1,
@@ -43,7 +43,7 @@ export function applyTerminalRuntimeOptions(
   term.options.drawBoldTextInBrightColors = normalizeDrawBoldTextInBrightColors(
     terminal.drawBoldTextInBrightColors,
   )
-  term.options.rightClickSelectsWord = !normalizeRightClickCopyPaste(terminal.rightClickCopyPaste)
+  term.options.rightClickSelectsWord = resolveRightClickSelectsWord(terminal)
   term.options.macOptionClickForcesSelection = true
   term.options.fontWeight = terminal.fontWeight
   term.options.fontWeightBold = terminal.fontWeightBold

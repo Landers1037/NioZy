@@ -410,6 +410,8 @@
       "drawBoldBrightDesc": "对应 xterm drawBoldTextInBrightColors",
       "rightClickCopyPaste": "右键复制/粘贴",
       "rightClickCopyPasteDesc": "有选区时复制到剪贴板，无选区时从剪贴板粘贴",
+      "advancedRightClickMenu": "高级右键菜单",
+      "advancedRightClickMenuDesc": "右键展示终端上下文菜单（复制、粘贴、搜索、导出、重放等）；与「右键复制/粘贴」互斥，只能开启其一",
       "background": "背景设置",
       "backgroundDesc": "为终端设置本地背景图；图片保存在配置目录 background 下，文件名为 bg.扩展名",
       "backgroundPick": "选择图片",
@@ -1199,7 +1201,19 @@
     "superPowerSavingResuming": "正在恢复终端会话…",
     "inputAriaLabel": "终端输入",
     "sshReconnectHint": "使用 Enter 键重新尝试连接",
-    "sshReconnectFailed": "SSH 重连"
+    "sshReconnectFailed": "SSH 重连",
+    "contextMenu": {
+      "copy": "复制文本",
+      "paste": "粘贴文本",
+      "copyAndPaste": "复制并粘贴",
+      "search": "搜索终端",
+      "export": "导出终端",
+      "replayList": "重放列表",
+      "replayEmpty": "暂无重放命令",
+      "appearance": "终端外观",
+      "zoomIn": "放大字体",
+      "zoomOut": "缩小字体"
+    }
   },
   "electron": {
     "preloadMissing": "未检测到 Electron 预加载 API。请使用 npm run start 启动桌面应用，不要直接在浏览器中打开 Vite 地址。"

@@ -50,7 +50,9 @@ import { DEFAULT_LOCALE, normalizeLocale } from './shared/locale'
 import { DEFAULT_SIDEBAR_WIDTH, normalizeSidebarWidth } from './shared/sidebar-width'
 import {
   normalizeDrawBoldTextInBrightColors,
+  normalizeAdvancedRightClickMenu,
   normalizeRightClickCopyPaste,
+  normalizeTerminalRightClickSettings,
   normalizeSynchronizedOutputEnabled,
   normalizeTerminalScrollback,
   DEFAULT_TERMINAL_SCROLLBACK,
@@ -122,6 +124,7 @@ export interface AppSettings {
     scrollback: number
     drawBoldTextInBrightColors: boolean
     rightClickCopyPaste: boolean
+    advancedRightClickMenu: boolean
     synchronizedOutputEnabled: boolean
     backgroundImageExt?: string
     backgroundOpacity: number
@@ -225,6 +228,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
+    advancedRightClickMenu: false,
     synchronizedOutputEnabled: true,
     backgroundOpacity: DEFAULT_TERMINAL_BACKGROUND_OPACITY,
     idleAnimation: { ...DEFAULT_TERMINAL_IDLE_ANIMATION },
@@ -305,7 +309,7 @@ function buildAppSettingsFromStored(
       drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
         stored.terminal?.drawBoldTextInBrightColors,
       ),
-      rightClickCopyPaste: normalizeRightClickCopyPaste(stored.terminal?.rightClickCopyPaste),
+      ...normalizeTerminalRightClickSettings(stored.terminal ?? {}),
       synchronizedOutputEnabled: normalizeSynchronizedOutputEnabled(
         stored.terminal?.synchronizedOutputEnabled,
       ),

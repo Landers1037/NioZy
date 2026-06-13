@@ -32,6 +32,7 @@ import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import type { TerminalRenderer } from '../../../electron/shared/api-types'
 import { TerminalSearchDialog } from '@/components/layout/TerminalSearchDialog'
+import { useTerminalUiStore } from '@/stores/terminal-ui-store'
 import { UsageStatisticsDialog } from '@/components/layout/UsageStatisticsDialog'
 import { PomodoroDialog } from '@/components/layout/PomodoroDialog'
 import { ReminderDialog } from '@/components/reminder/ReminderDialog'
@@ -67,6 +68,11 @@ export function TitleBarTerminalControls() {
   const [snapOpen, setSnapOpen] = useState(false)
   const snapRootRef = useRef<HTMLDivElement | null>(null)
   const snapCloseTimerRef = useRef<number | null>(null)
+  const searchOpenNonce = useTerminalUiStore((s) => s.searchOpenNonce)
+
+  useEffect(() => {
+    if (searchOpenNonce > 0) setSearchOpen(true)
+  }, [searchOpenNonce])
 
   if (!settings) return null
 
