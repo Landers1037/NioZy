@@ -7,8 +7,7 @@ type Point = {
 }
 
 export const BLACK_HOLE_EFFECT_RADIUS_PX = 200
-export const BLACK_HOLE_CANVAS_SIZE_PX = BLACK_HOLE_EFFECT_RADIUS_PX * 2
-const BLACK_HOLE_CORE_RADIUS_PX = 76
+const BLACK_HOLE_CORE_RADIUS_PX = 65
 
 function parseHexColor(hex: string): [number, number, number] {
   const normalized = hex.replace('#', '')
@@ -166,24 +165,39 @@ export class BlackHoleMotion {
   private segments: CurveSegment[] = []
   private initialized = false
 
-  getPosition(elapsedSec: number, width: number, height: number, coreRadiusPx: number): Point {
-    this.ensurePath(elapsedSec, width, height, coreRadiusPx)
+  getPosition(elapsedSec: number, width: number, height: number, canvasHalfPx: number): Point {
+    this.ensurePath(elapsedSec, width, height, canvasHalfPx)
     const segment = this.findSegment(elapsedSec)
     const rawT = clamp((elapsedSec - segment.startSec) / segment.durationSec, 0, 1)
     return cubicBezier(segment.p0, segment.p1, segment.p2, segment.p3, smoothstep(rawT))
   }
 
-  private ensurePath(nowSec: number, width: number, height: number, coreRadiusPx: number): void {
+  private getBounds(width: number, height: number, canvasHalfPx: number) {
+    const minX = canvasHalfPx
+    const maxX = width - canvasHalfPx
+    const minY = canvasHalfPx
+    const maxY = height - canvasHalfPx
+    return {
+      minX,
+      maxX: Math.max(minX, maxX),
+      minY,
+      maxY: Math.max(minY, maxY),
+      centerX: width / 2,
+      centerY: height / 2,
+    }
+  }
+
+  private ensurePath(nowSec: number, width: number, height: number, canvasHalfPx: number): void {
     if (!this.initialized) {
-      const start = this.randomPoint(width, height, coreRadiusPx)
-      this.segments = [this.createSegment(start, nowSec, width, height, coreRadiusPx)]
+      const start = this.randomPoint(width, height, canvasHalfPx)
+      this.segments = [this.createSegment(start, nowSec, width, height, canvasHalfPx)]
       this.initialized = true
     }
 
     while (this.lastSegmentEndSec() < nowSec + 20) {
       const prev = this.segments[this.segments.length - 1]!
       this.segments.push(
-        this.createSegment(prev.p3, prev.startSec + prev.durationSec, width, height, coreRadiusPx),
+        this.createSegment(prev.p3, prev.startSec + prev.durationSec, width, height, canvasHalfPx),
       )
     }
 
@@ -210,10 +224,16 @@ export class BlackHoleMotion {
     startSec: number,
     width: number,
     height: number,
-    coreRadiusPx: number,
+    canvasHalfPx: number,
   ): CurveSegment {
-    const end = this.randomPoint(width, height, coreRadiusPx)
-    const controlDistance = Math.hypot(end.x - start.x, end.y - start.y) * (0.35 + Math.random() * 0.5)
+    const end = this.randomPoint(width, height, canvasHalfPx)
+    const bounds = this.getBounds(width, height, canvasHalfPx)
+    const spanX = Math.max(bounds.maxX - bounds.minX, 1)
+    const spanY = Math.max(bounds.maxY - bounds.minY, 1)
+    const controlDistance =
+      Math.hypot((end.x - start.x) / spanX, (end.y - start.y) / spanY) *
+      Math.hypot(spanX, spanY) *
+      (0.35 + Math.random() * 0.5)
     const p1 = this.clampPoint(
       {
         x: start.x + Math.cos(Math.random() * Math.PI * 2) * controlDistance,
@@ -221,7 +241,7 @@ export class BlackHoleMotion {
       },
       width,
       height,
-      coreRadiusPx,
+      canvasHalfPx,
     )
     const p2 = this.clampPoint(
       {
@@ -230,7 +250,7 @@ export class BlackHoleMotion {
       },
       width,
       height,
-      coreRadiusPx,
+      canvasHalfPx,
     )
 
     return {
@@ -243,19 +263,25 @@ export class BlackHoleMotion {
     }
   }
 
-  private randomPoint(width: number, height: number, coreRadiusPx: number): Point {
-    const margin = coreRadiusPx * 3.2
+  private randomPoint(width: number, height: number, canvasHalfPx: number): Point {
+    const bounds = this.getBounds(width, height, canvasHalfPx)
     return {
-      x: lerp(margin, Math.max(margin, width - margin), Math.random()),
-      y: lerp(margin, Math.max(margin, height - margin), Math.random()),
+      x:
+        bounds.maxX > bounds.minX
+          ? lerp(bounds.minX, bounds.maxX, Math.random())
+          : bounds.centerX,
+      y:
+        bounds.maxY > bounds.minY
+          ? lerp(bounds.minY, bounds.maxY, Math.random())
+          : bounds.centerY,
     }
   }
 
-  private clampPoint(point: Point, width: number, height: number, coreRadiusPx: number): Point {
-    const margin = coreRadiusPx * 2.7
+  private clampPoint(point: Point, width: number, height: number, canvasHalfPx: number): Point {
+    const bounds = this.getBounds(width, height, canvasHalfPx)
     return {
-      x: clamp(point.x, margin, Math.max(margin, width - margin)),
-      y: clamp(point.y, margin, Math.max(margin, height - margin)),
+      x: clamp(point.x, bounds.minX, bounds.maxX),
+      y: clamp(point.y, bounds.minY, bounds.maxY),
     }
   }
 }
@@ -269,72 +295,89 @@ void main() {
 }
 `
 
+// 效果半径与核心半径的比值，用于在 shader 内换算（随 DPR 一起缩放）
+const _LENS_RATIO = BLACK_HOLE_EFFECT_RADIUS_PX / BLACK_HOLE_CORE_RADIUS_PX
+
 const FRAGMENT_SHADER = `#version 300 es
 precision highp float;
 in vec2 v_uv;
 out vec4 outColor;
 uniform sampler2D u_terminal;
-uniform float u_coreRadiusPx;
-uniform vec2 u_resolution;
-uniform vec2 u_sourceResolution;
-uniform vec2 u_viewportOriginPx;
+uniform float u_coreRadiusPx;   // 核心半径（device px，已乘 DPR）
+uniform vec2 u_resolution;      // 渲染目标大小（device px）
+uniform vec2 u_sourceResolution; // 终端截图大小（device px）
+uniform vec2 u_bhCenterPx;      // 黑洞圆心（device px，y 向下）
 uniform float u_time;
 
+// 采样终端截图：y 向下坐标系
+vec3 sampleTerm(vec2 px) {
+  // 截图上传时未翻转（UNPACK_FLIP_Y=false），uv.y=0 对应图像顶部
+  vec2 uv = clamp(px / u_sourceResolution, 0.001, 0.999);
+  return texture(u_terminal, uv).rgb;
+}
+
 void main() {
-  vec2 uv = v_uv;
-  vec2 px = vec2(uv.x * u_resolution.x, uv.y * u_resolution.y);
-  vec2 terminalPx = u_viewportOriginPx + px;
-  vec2 center = u_resolution * 0.5;
-  vec2 dPx = px - center;
-  float distPx = length(dPx);
-  float r = distPx / u_coreRadiusPx;
-  vec2 dirPx = dPx / max(distPx, 0.001);
+  // fragPx：device px，左上原点，y 向下（与截图坐标一致）
+  vec2 fragPx = vec2(v_uv.x, 1.0 - v_uv.y) * u_resolution;
 
-  vec2 baseUv = clamp(terminalPx / u_sourceResolution, 0.0, 1.0);
-  vec3 base = texture(u_terminal, baseUv).rgb;
-  float lensMask = 1.0 - smoothstep(u_coreRadiusPx * 0.9, ${BLACK_HOLE_EFFECT_RADIUS_PX.toFixed(1)}, distPx);
+  vec2 d = fragPx - u_bhCenterPx;
+  float dist = length(d);
+  vec2 dir  = dist > 0.5 ? d / dist : vec2(1.0, 0.0);
+  float r   = dist / u_coreRadiusPx;
 
-  // 玻璃折射：扭曲强度从黑洞中心向边缘逐渐减弱，外缘完全回到原图。
-  float bendStrength = pow(lensMask, 1.7);
-  float sourceRadiusPx =
-    distPx +
-    u_coreRadiusPx * bendStrength * (1.55 / max(r, 0.22)) +
-    u_coreRadiusPx * exp(-pow((r - 1.28) / 0.58, 2.0)) * 0.42;
-  float sourceAngle =
-    atan(dPx.y, dPx.x) +
-    bendStrength * 0.34 +
-    sin(r * 4.2 + u_time * 0.22) * bendStrength * 0.045;
-  vec2 samplePx = u_viewportOriginPx + center + vec2(cos(sourceAngle), sin(sourceAngle)) * sourceRadiusPx;
+  // 效果外缘（随 DPR 一起缩放）
+  float outerPx = u_coreRadiusPx * ${_LENS_RATIO.toFixed(6)};
+  float fade    = 1.0 - smoothstep(outerPx * 0.86, outerPx, dist);
+  if (fade < 0.004) discard;
 
-  // 切向拉伸让经过的文字沿边缘弯曲，而不是只做简单缩放。
-  vec2 tangentPx = vec2(-sin(sourceAngle), cos(sourceAngle));
-  samplePx += tangentPx * sin(r * 7.0 + u_time * 0.18) * bendStrength * u_coreRadiusPx * 0.11;
-  vec2 sampleUv = clamp(samplePx / u_sourceResolution, 0.0, 1.0);
+  // ── 事件视界：纯黑实心核 ──────────────────────────────────────
+  float core = 1.0 - smoothstep(0.50, 0.95, r);
+  if (core > 0.998) {
+    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
 
-  // 轻微色散，仅用于强化玻璃边缘，不改变为发光光晕。
-  vec2 chroma = dirPx * bendStrength * 2.2 / u_resolution;
-  vec3 refracted;
-  refracted.r = texture(u_terminal, clamp(sampleUv + chroma, 0.0, 1.0)).r;
-  refracted.g = texture(u_terminal, sampleUv).g;
-  refracted.b = texture(u_terminal, clamp(sampleUv - chroma, 0.0, 1.0)).b;
-  vec3 col = mix(base, refracted, lensMask);
+  // ── 引力透镜：极坐标反向映射 ──────────────────────────────────
+  // 真实引力透镜原理：我们观测到的位置 (dist, theta) 处的光，
+  // 实际来自更远处 (srcDist, srcTheta)。
+  // 近似公式：srcDist = dist + C1/r + C2/r²
+  //           srcTheta = theta + A1/r + A2/r²
+  float rLens = max(r, 1.01); // 光子球以内直接变黑，不做透镜采样
 
-  // 只有中心事件视界是黑色，其余区域都保持“透明玻璃”。
-  float core = 1.0 - smoothstep(0.94, 1.02, r);
+  float radShift =
+    u_coreRadiusPx * (2.8 / rLens + 0.85 / (rLens * rLens));
+
+  float angShift =
+    0.52 / rLens + 0.14 / (rLens * rLens)
+    + 0.025 * sin(r * 5.2 + u_time * 0.26); // 轻微时间扰动
+
+  float srcAngle = atan(d.y, d.x) + angShift;
+  float srcDist  = dist + radShift;
+  vec2 srcPx = u_bhCenterPx + srcDist * vec2(cos(srcAngle), sin(srcAngle));
+
+  // ── 色散：模拟引力彩虹（RGB 沿径向微错开）──────────────────────
+  float chromaPx = clamp(radShift * 0.06, 0.5, 9.0);
+  vec3 col;
+  col.r = sampleTerm(srcPx + dir * chromaPx * 2.0).r;
+  col.g = sampleTerm(srcPx).g;
+  col.b = sampleTerm(srcPx - dir * chromaPx * 1.7).b;
+
+  // ── 事件视界渐黑 ──────────────────────────────────────────────
   col = mix(col, vec3(0.0), core);
 
-  // 细白边只定义黑洞核心轮廓，不制造黑色外圈。
-  float rim = exp(-pow((r - 1.03) / 0.032, 2.0)) * (1.0 - core);
-  col = mix(col, vec3(1.0), clamp(rim, 0.0, 0.92));
+  // ── 光子环：核心外缘细亮弧 ────────────────────────────────────
+  float photon = exp(-pow((r - 1.0) / 0.07, 2.0)) * (1.0 - core);
+  col += vec3(0.88, 0.94, 1.0) * photon * 0.25;
 
-  // 非发光的玻璃高光，帮助读出透镜形状。
-  float glassSpec =
-    exp(-pow((r - 1.7) / 0.5, 2.0)) *
-    max(dot(dirPx, normalize(vec2(-0.7, 0.55))), 0.0) *
-    lensMask;
-  col += vec3(1.0) * glassSpec * 0.1;
+  // ── 圆盘透明度：内核边缘 50% 不透明 → 外缘 100% 透明 ─────────
+  float innerEdge = u_coreRadiusPx * 0.92;
+  float outerEdge = outerPx * 0.86;
+  float diskT = 1.0 - smoothstep(innerEdge, outerEdge, dist);
+  float diskAlpha = mix(0.25, 0.95, diskT);
+  float alpha = diskAlpha * fade;
+  alpha = max(alpha, core);
 
-  outColor = vec4(col, 1.0);
+  outColor = vec4(col, alpha);
 }
 `
 
@@ -370,9 +413,8 @@ function createProgram(gl: WebGL2RenderingContext): WebGLProgram {
 }
 
 export interface BlackHoleFrameState {
-  left: number
-  top: number
-  size: number
+  centerX: number
+  centerY: number
 }
 
 export class BlackHoleRenderer {
@@ -384,16 +426,18 @@ export class BlackHoleRenderer {
   private uCoreRadiusPx: WebGLUniformLocation
   private uResolution: WebGLUniformLocation
   private uSourceResolution: WebGLUniformLocation
-  private uViewportOriginPx: WebGLUniformLocation
+  private uBhCenterPx: WebGLUniformLocation
   private uTime: WebGLUniformLocation
   private uTerminal: WebGLUniformLocation
   private motion = new BlackHoleMotion()
   private startMs = performance.now()
 
   constructor(private canvas: HTMLCanvasElement) {
-    const gl = canvas.getContext('webgl2', { alpha: false, antialias: false })
+    const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: false })
     if (!gl) throw new Error('WebGL2 not available')
     this.gl = gl
+    gl.enable(gl.BLEND)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     this.program = createProgram(gl)
     this.captureCanvas = document.createElement('canvas')
 
@@ -401,7 +445,7 @@ export class BlackHoleRenderer {
     this.uCoreRadiusPx = gl.getUniformLocation(this.program, 'u_coreRadiusPx')!
     this.uResolution = gl.getUniformLocation(this.program, 'u_resolution')!
     this.uSourceResolution = gl.getUniformLocation(this.program, 'u_sourceResolution')!
-    this.uViewportOriginPx = gl.getUniformLocation(this.program, 'u_viewportOriginPx')!
+    this.uBhCenterPx = gl.getUniformLocation(this.program, 'u_bhCenterPx')!
     this.uTime = gl.getUniformLocation(this.program, 'u_time')!
     this.uTerminal = gl.getUniformLocation(this.program, 'u_terminal')!
 
@@ -434,13 +478,9 @@ export class BlackHoleRenderer {
   }
 
   computeFrameState(elapsedSec: number, width: number, height: number): BlackHoleFrameState {
-    const size = BLACK_HOLE_CANVAS_SIZE_PX
-    const { x, y } = this.motion.getPosition(elapsedSec, width, height, BLACK_HOLE_EFFECT_RADIUS_PX)
-    return {
-      left: clamp(x - size / 2, 0, Math.max(0, width - size)),
-      top: clamp(y - size / 2, 0, Math.max(0, height - size)),
-      size,
-    }
+    const margin = BLACK_HOLE_EFFECT_RADIUS_PX
+    const { x, y } = this.motion.getPosition(elapsedSec, width, height, margin)
+    return { centerX: x, centerY: y }
   }
 
   getFrame(width: number, height: number): BlackHoleFrameState {
@@ -458,8 +498,8 @@ export class BlackHoleRenderer {
     const { gl, program, texture } = this
     const scaleX = source.width / Math.max(1, sourceCssSize.width)
     const scaleY = source.height / Math.max(1, sourceCssSize.height)
-    const width = Math.max(1, Math.round(frame.size * scaleX))
-    const height = Math.max(1, Math.round(frame.size * scaleY))
+    const width = Math.max(1, Math.round(sourceCssSize.width * scaleX))
+    const height = Math.max(1, Math.round(sourceCssSize.height * scaleY))
     this.resize(width, height)
     if (width <= 0 || height <= 0) return false
 
@@ -467,9 +507,8 @@ export class BlackHoleRenderer {
 
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.bindTexture(gl.TEXTURE_2D, texture)
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source)
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source)
 
     gl.useProgram(program)
     gl.activeTexture(gl.TEXTURE0)
@@ -479,7 +518,7 @@ export class BlackHoleRenderer {
     gl.uniform1f(this.uCoreRadiusPx, BLACK_HOLE_CORE_RADIUS_PX * Math.max(scaleX, scaleY))
     gl.uniform2f(this.uResolution, width, height)
     gl.uniform2f(this.uSourceResolution, source.width, source.height)
-    gl.uniform2f(this.uViewportOriginPx, frame.left * scaleX, frame.top * scaleY)
+    gl.uniform2f(this.uBhCenterPx, frame.centerX * scaleX, frame.centerY * scaleY)
     gl.uniform1f(this.uTime, elapsedSec)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     return true

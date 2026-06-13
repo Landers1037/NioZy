@@ -356,7 +356,7 @@
       "idleAnimationMode": {
         "blackHole": "BlackHole",
         "pacman": "Pacman",
-        "typeWriter": "TypeWriter"
+        "logo": "Logo"
       }
     },
     "ssh": {
