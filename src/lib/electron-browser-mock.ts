@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
+    advancedRightClickMenu: false,
     backgroundOpacity: 100,
     idleAnimation: {
       enabled: false,

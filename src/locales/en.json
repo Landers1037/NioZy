@@ -410,6 +410,8 @@
       "drawBoldBrightDesc": "Maps to xterm drawBoldTextInBrightColors",
       "rightClickCopyPaste": "Right-click copy / paste",
       "rightClickCopyPasteDesc": "Copy when text is selected; paste when nothing is selected",
+      "advancedRightClickMenu": "Advanced right-click menu",
+      "advancedRightClickMenuDesc": "Show a terminal context menu on right-click (copy, paste, search, export, replay, etc.). Mutually exclusive with right-click copy/paste",
       "background": "Background",
       "backgroundDesc": "Set a local image as the terminal background. The file is stored as bg.<ext> in the background folder under your NioZy config directory.",
       "backgroundPick": "Choose image",
@@ -1199,7 +1201,19 @@
     "superPowerSavingResuming": "Restoring terminal session…",
     "inputAriaLabel": "Terminal input",
     "sshReconnectHint": "Press Enter to reconnect",
-    "sshReconnectFailed": "SSH reconnect"
+    "sshReconnectFailed": "SSH reconnect",
+    "contextMenu": {
+      "copy": "Copy",
+      "paste": "Paste",
+      "copyAndPaste": "Copy and paste",
+      "search": "Search terminal",
+      "export": "Export terminal",
+      "replayList": "Command replay",
+      "replayEmpty": "No saved commands",
+      "appearance": "Appearance",
+      "zoomIn": "Increase font size",
+      "zoomOut": "Decrease font size"
+    }
   },
   "electron": {
     "preloadMissing": "Electron preload API not found. Run npm run start instead of opening the Vite URL in a browser."

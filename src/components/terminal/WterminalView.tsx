@@ -94,7 +94,9 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
       listeners.push(
         attachWtermDomShellFeatures(instance, {
           terminalId,
+          tabId: tab.id,
           rightClickCopyPaste: settings.terminal.rightClickCopyPaste,
+          advancedRightClickMenu: settings.terminal.advancedRightClickMenu,
           shell: settings.shell ?? DEFAULT_SHELL_SETTINGS,
           preview: settings.preview ?? DEFAULT_PREVIEW_SETTINGS,
           isSsh: !!tab.sshConnectionId,
@@ -184,6 +186,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     if (instance) attachShellFeatures(instance)
   }, [
     settings?.terminal.rightClickCopyPaste,
+    settings?.terminal.advancedRightClickMenu,
     settings?.shell?.clickToOpenLinks,
     settings?.shell?.highlightLinks,
     settings?.shell?.shiftEnterNewline,

@@ -338,6 +338,8 @@
       "drawBoldBrightDesc": "xterm の drawBoldTextInBrightColors に対応",
       "rightClickCopyPaste": "右クリックでコピー / 貼り付け",
       "rightClickCopyPasteDesc": "選択時はコピー、未選択時は貼り付け",
+      "advancedRightClickMenu": "高度な右クリックメニュー",
+      "advancedRightClickMenuDesc": "右クリックでターミナルコンテキストメニューを表示（コピー、貼り付け、検索、エクスポート、リプレイなど）。「右クリックでコピー/貼り付け」と排他的",
       "background": "背景",
       "backgroundDesc": "ターミナルの背景画像を設定します。画像は NioZy 設定ディレクトリの background フォルダに bg.拡張子 として保存されます。",
       "backgroundPick": "画像を選択",
@@ -1092,7 +1094,19 @@
     "superPowerSavingResuming": "ターミナルセッションを復元しています…",
     "inputAriaLabel": "ターミナル入力",
     "sshReconnectHint": "Enter キーで再接続",
-    "sshReconnectFailed": "SSH 再接続"
+    "sshReconnectFailed": "SSH 再接続",
+    "contextMenu": {
+      "copy": "テキストをコピー",
+      "paste": "テキストを貼り付け",
+      "copyAndPaste": "コピーして貼り付け",
+      "search": "ターミナルを検索",
+      "export": "ターミナルをエクスポート",
+      "replayList": "コマンドリプレイ",
+      "replayEmpty": "保存されたコマンドがありません",
+      "appearance": "ターミナル外観",
+      "zoomIn": "フォントを拡大",
+      "zoomOut": "フォントを縮小"
+    }
   },
   "electron": {
     "preloadMissing": "Electron プリロード API が見つかりません。Vite URL をブラウザで開かず npm run start で起動してください。"

@@ -256,7 +256,37 @@ export function TerminalSettings() {
           <Switch
             checked={settings.terminal.rightClickCopyPaste}
             onCheckedChange={(rightClickCopyPaste) =>
-              patchSettings({ terminal: { ...settings.terminal, rightClickCopyPaste } })
+              patchSettings({
+                terminal: {
+                  ...settings.terminal,
+                  rightClickCopyPaste,
+                  advancedRightClickMenu: rightClickCopyPaste
+                    ? false
+                    : settings.terminal.advancedRightClickMenu,
+                },
+              })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={MousePointer2}
+          label={t('settings.terminal.advancedRightClickMenu')}
+          description={t('settings.terminal.advancedRightClickMenuDesc')}
+          row
+        >
+          <Switch
+            checked={settings.terminal.advancedRightClickMenu}
+            onCheckedChange={(advancedRightClickMenu) =>
+              patchSettings({
+                terminal: {
+                  ...settings.terminal,
+                  advancedRightClickMenu,
+                  rightClickCopyPaste: advancedRightClickMenu
+                    ? false
+                    : settings.terminal.rightClickCopyPaste,
+                },
+              })
             }
           />
         </SettingField>
