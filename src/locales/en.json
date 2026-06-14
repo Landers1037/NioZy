@@ -16,7 +16,7 @@
     "hidePassword": "Hide password"
   },
   "app": {
-    "tagline": "Multi-terminal manager",
+    "tagline": "Terminal workbench with built-in AI copilot",
     "emptyHint": "Click \"New terminal\" to get started",
     "browserDevPreview": "Browser dev preview (mock Electron API). Use DevTools for styling; run",
     "settingsTabTitle": "Settings",
@@ -686,7 +686,7 @@
       "manualUpdate": "Download manually",
       "about": "About NioZy",
       "version": "Version {{version}}",
-      "aboutDesc": "Multi-terminal manager — Electron, React, xterm.js, and Windows ConPTY.",
+      "aboutDesc": "Terminal workbench with built-in AI copilot — Electron, React, xterm.js, and Windows ConPTY.",
       "cardDescription": "Proxy, startup, tray, and about"
     },
     "ai": {
