@@ -337,6 +337,11 @@ html.dark[data-ui-style='windows-classic'] {
     transition: none !important;
   }
 
+  /* Sidebar is z-1200; CopilotKit attachment dropdown defaults to z-50 and renders behind it. */
+  [data-copilotkit][data-slot='dropdown-menu-content'] {
+    z-index: 1300 !important;
+  }
+
   body {
     font-weight: var(--app-font-weight, 400);
   }
