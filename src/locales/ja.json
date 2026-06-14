@@ -16,7 +16,7 @@
     "hidePassword": "パスワードを非表示"
   },
   "app": {
-    "tagline": "マルチターミナルマネージャー",
+    "tagline": "内蔵 AI コパイロット付きターミナルワークベンチ",
     "emptyHint": "「新しいターミナル」をクリックして開始",
     "browserDevPreview": "ブラウザ開発プレビュー（Electron API モック）。スタイルは DevTools で確認し、実行は",
     "settingsTabTitle": "設定",
@@ -607,7 +607,7 @@
       "manualUpdate": "手動でダウンロード",
       "about": "NioZy について",
       "version": "バージョン {{version}}",
-      "aboutDesc": "マルチターミナルマネージャー — Electron、React、xterm.js、Windows ConPTY。",
+      "aboutDesc": "内蔵 AI コパイロット付きターミナルワークベンチ — Electron、React、xterm.js、Windows ConPTY。",
       "cardDescription": "プロキシ、起動、トレイ、について"
     },
     "ai": {

@@ -16,7 +16,7 @@
     "hidePassword": "隐藏密码"
   },
   "app": {
-    "tagline": "多终端管理器",
+    "tagline": "内置 AI 协作者的终端工作台",
     "emptyHint": "点击「新建终端」开始",
     "browserDevPreview": "浏览器开发预览（模拟 Electron API）— 可用开发者工具检查样式；真实终端请用",
     "settingsTabTitle": "设置",
@@ -686,7 +686,7 @@
       "manualUpdate": "手动更新",
       "about": "关于 NioZy",
       "version": "版本 {{version}}",
-      "aboutDesc": "多终端管理器 — 基于 Electron、React、xterm.js 与 Windows ConPTY。",
+      "aboutDesc": "内置 AI 协作者的终端工作台 — 基于 Electron、React、xterm.js 与 Windows ConPTY。",
       "cardDescription": "代理、启动项、托盘与关于"
     },
     "ai": {
