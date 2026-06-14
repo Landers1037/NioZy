@@ -519,6 +519,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return { ok: true, directory: trimmed.slice(0, idx) }
       },
       pickPrivateKey: async () => null,
+      pickAiAttachments: async () => [],
     },
     drawing: {
       openFile: async () => ({ ok: false, canceled: true as const }),

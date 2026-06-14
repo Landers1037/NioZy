@@ -281,7 +281,9 @@
     "welcomeNoKey": "Configure an API key under Settings → AI features.",
     "configureKey": "Configure your OpenAI API key in Settings → AI features first",
     "inputPlaceholder": "Type a message…",
-    "addAttachment": "Add attachment"
+    "addAttachment": "Add attachment",
+    "addAttachmentDialogTitle": "Select attachments",
+    "attachmentInputNotReady": "Attachment input is not ready. Reopen the AI sidebar and try again."
   },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },

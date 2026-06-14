@@ -505,6 +505,8 @@ export interface ElectronAPI {
     ) => Promise<import('../fs-service').TerminalDropDirectoryResult>
     /** 选择 SSH 私钥文件；取消时返回 null */
     pickPrivateKey: () => Promise<string | null>
+    /** 选择 AI 边栏附件（多选）；取消时返回空数组 */
+    pickAiAttachments: (dialogTitle?: string) => Promise<import('./ai-attachment-types').AiAttachmentPickFile[]>
   }
   drawing: {
     openFile: (
