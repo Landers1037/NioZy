@@ -13,7 +13,12 @@ export function TitleBar() {
   const ui = useUiClasses()
 
   return (
-    <header className={cn('drag-region flex shrink-0 select-none items-center', ui.titleBar)}>
+    <header
+      className={cn(
+        'drag-region relative z-50 flex shrink-0 select-none items-center',
+        ui.titleBar,
+      )}
+    >
       <div className="flex items-center gap-2 px-2">
         <img src={logoUrl} alt="NioZy" className="size-8 object-contain" draggable={false} />
         {showAppTitle && (
