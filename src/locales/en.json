@@ -318,6 +318,10 @@
     "glass": {
       "label": "Glass",
       "description": "Semi-transparent glass: frosted see-through panels, neutral gradient backdrop, fine light borders, soft depth"
+    },
+    "claude": {
+      "label": "Claude",
+      "description": "Claude editorial style: warm cream #F4F1EA, coral accent, global Noto Serif UI font, 12px radius"
     }
   },
   "settings": {
