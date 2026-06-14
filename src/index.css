@@ -12,6 +12,17 @@
 }
 
 @font-face {
+  font-family: 'Noto Serif';
+  src: url('./fonts/NotoSerif-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
   font-family: 'NioZy0xProtoNerdMono';
   src: url('./fonts/0xProtoNerdFontMono-Italic.ttf') format('truetype');
   font-weight: 100 900;
@@ -303,6 +314,51 @@ html.dark[data-ui-style='glass'] {
   --glass-blur: 20px;
 }
 
+/* —— Claude：暖奶油白、珊瑚橙强调、全局 Noto Serif（终端除外）—— */
+html[data-ui-style='claude'] {
+  --radius: 0.75rem;
+  --background: #f4f1ea;
+  --foreground: #1a1816;
+  --card: #fdfcfa;
+  --card-foreground: #1a1816;
+  --popover: #ffffff;
+  --popover-foreground: #1a1816;
+  --muted: #ede8df;
+  --muted-foreground: #6b6560;
+  --border: #e5dfd4;
+  --primary: #d97757;
+  --primary-foreground: #ffffff;
+  --accent: #ede8df;
+  --accent-foreground: #1a1816;
+  --destructive: #c45c5c;
+  --ring: #d97757;
+  --claude-font: 'Noto Serif', 'Noto Sans SC', Georgia, 'Times New Roman', serif;
+  --font-sans: var(--claude-font);
+  --font-serif: var(--claude-font);
+  --claude-coral: #d97757;
+  --claude-ink: #1a1816;
+}
+
+html.dark[data-ui-style='claude'] {
+  --background: #1c1a17;
+  --foreground: #f4f1ea;
+  --card: #262320;
+  --card-foreground: #f4f1ea;
+  --popover: #2a2622;
+  --popover-foreground: #f4f1ea;
+  --muted: #2e2b27;
+  --muted-foreground: #a8a29c;
+  --border: #3d3832;
+  --primary: #e89578;
+  --primary-foreground: #1c1a17;
+  --accent: #2e2b27;
+  --accent-foreground: #f4f1ea;
+  --destructive: #e07a7a;
+  --ring: #e89578;
+  --claude-coral: #e89578;
+  --claude-ink: #f4f1ea;
+}
+
 html.dark[data-ui-style='windows-classic'] {
   --background: #2a2a2a;
   --foreground: #ffffff;
@@ -422,6 +478,22 @@ html.dark[data-ui-style='windows-classic'] {
   html[data-ui-style='glass'] h5,
   html[data-ui-style='glass'] h6 {
     font-weight: var(--app-font-weight-bold, 600);
+    letter-spacing: -0.01em;
+  }
+
+  html[data-ui-style='claude'] body {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+  }
+
+  html[data-ui-style='claude'] h1,
+  html[data-ui-style='claude'] h2,
+  html[data-ui-style='claude'] h3,
+  html[data-ui-style='claude'] h4,
+  html[data-ui-style='claude'] h5,
+  html[data-ui-style='claude'] h6 {
+    font-family: var(--font-sans);
+    font-weight: var(--app-font-weight-bold, 400);
     letter-spacing: -0.01em;
   }
 }
@@ -923,6 +995,98 @@ html[data-ui-style='glass'] .ui-slider-thumb {
   box-shadow:
     0 2px 8px color-mix(in srgb, var(--primary) 24%, transparent),
     inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Claude：12px 圆角、白卡片、黑色主按钮、衬线标题 */
+html[data-ui-style='claude'] .ui-claude-display {
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+}
+
+html[data-ui-style='claude'] .ui-card {
+  border-radius: 0.75rem;
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+  box-shadow: 0 2px 8px rgb(26 24 22 / 0.04);
+}
+
+html.dark[data-ui-style='claude'] .ui-card {
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.22);
+}
+
+html[data-ui-style='claude'] .ui-overlay-panel {
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  box-shadow:
+    0 8px 24px rgb(26 24 22 / 0.08),
+    0 2px 8px rgb(26 24 22 / 0.04);
+}
+
+html.dark[data-ui-style='claude'] .ui-overlay-panel {
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.32),
+    0 2px 8px rgb(0 0 0 / 0.18);
+}
+
+html[data-ui-style='claude'] .ui-btn {
+  font-weight: var(--app-font-weight, 500);
+  border-radius: 0.75rem;
+}
+
+html[data-ui-style='claude'] .ui-btn.bg-primary {
+  background-color: var(--claude-ink);
+  color: #ffffff;
+}
+
+html[data-ui-style='claude'] .ui-btn.bg-primary:hover {
+  background-color: color-mix(in srgb, var(--claude-ink) 88%, #ffffff);
+}
+
+html[data-ui-style='claude'] .ui-label {
+  font-weight: var(--app-font-weight, 500);
+}
+
+html[data-ui-style='claude'] .ui-card-title {
+  font-family: var(--font-sans);
+  font-weight: var(--app-font-weight-bold, 400);
+  letter-spacing: -0.01em;
+}
+
+html[data-ui-style='claude'] .ui-setting-heading {
+  font-family: var(--font-sans);
+  font-weight: var(--app-font-weight-bold, 400);
+}
+
+html[data-ui-style='claude'] .ui-setting-subheading {
+  font-weight: var(--app-font-weight, 500);
+}
+
+html[data-ui-style='claude'] .ui-switch-track {
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+html[data-ui-style='claude'] .ui-switch-track[data-state='checked'] {
+  background-color: color-mix(in srgb, var(--primary) 18%, var(--muted));
+}
+
+html[data-ui-style='claude'] .ui-switch-thumb {
+  border-radius: 9999px;
+  box-shadow: 0 1px 4px rgb(26 24 22 / 0.1);
+  border-color: transparent;
+  background-color: #ffffff;
+}
+
+html.dark[data-ui-style='claude'] .ui-switch-thumb {
+  background-color: rgb(244 241 234 / 0.96);
+}
+
+html[data-ui-style='claude'] .ui-slider-thumb {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+/* Claude 风格下终端区域沿用终端设置字体，不继承全局 Noto Serif */
+html[data-ui-style='claude'] .niozy-terminal-host .wterm {
+  font-family: var(--term-font-family, ui-monospace, monospace);
 }
 
 @layer utilities {

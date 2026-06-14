@@ -1,6 +1,6 @@
 type ThemeMode = 'light' | 'dark'
 
-/** minimal：暖中性灰极简；niozy：原版 NioZy；windowsClassic：Windows XP 怀旧；waFu：日式传统和风；cyberpunk：赛博朋克霓虹；glass：半透明玻璃 */
+/** minimal：暖中性灰极简；niozy：原版 NioZy；windowsClassic：Windows XP 怀旧；waFu：日式传统和风；cyberpunk：赛博朋克霓虹；glass：半透明玻璃；claude：Claude 暖奶油白编辑风 */
 export type UiStyle =
   | 'minimal'
   | 'niozy'
@@ -8,6 +8,7 @@ export type UiStyle =
   | 'waFu'
   | 'cyberpunk'
   | 'glass'
+  | 'claude'
 
 export const UI_STYLE_VALUES: UiStyle[] = [
   'minimal',
@@ -16,6 +17,7 @@ export const UI_STYLE_VALUES: UiStyle[] = [
   'waFu',
   'cyberpunk',
   'glass',
+  'claude',
 ]
 
 export function normalizeUiStyle(value: unknown): UiStyle {
@@ -24,6 +26,7 @@ export function normalizeUiStyle(value: unknown): UiStyle {
   if (value === 'waFu') return 'waFu'
   if (value === 'cyberpunk') return 'cyberpunk'
   if (value === 'glass' || value === 'liquidGlass') return 'glass'
+  if (value === 'claude') return 'claude'
   return 'minimal'
 }
 
@@ -34,6 +37,7 @@ export function uiStyleToDataAttribute(style: UiStyle): string {
   if (style === 'waFu') return 'wa-fu'
   if (style === 'cyberpunk') return 'cyberpunk'
   if (style === 'glass') return 'glass'
+  if (style === 'claude') return 'claude'
   return 'minimal'
 }
 
@@ -44,6 +48,7 @@ const WINDOW_BG: Record<UiStyle, Record<ThemeMode, string>> = {
   waFu: { light: '#F5F0E6', dark: '#1C1814' },
   cyberpunk: { light: '#E4E0F0', dark: '#0B0B14' },
   glass: { light: '#E8EBF0', dark: '#12141A' },
+  claude: { light: '#F4F1EA', dark: '#1C1A17' },
 }
 
 export function getWindowBackgroundColor(theme: ThemeMode, uiStyle: UiStyle): string {

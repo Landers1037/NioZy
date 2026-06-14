@@ -318,6 +318,10 @@
     "glass": {
       "label": "玻璃",
       "description": "半透明玻璃：磨砂透视面板、中性渐变底纹、细白描边与柔和景深"
+    },
+    "claude": {
+      "label": "Claude",
+      "description": "Claude 编辑风：暖奶油白底 #F4F1EA、珊瑚橙强调、全局 Noto Serif 界面字体、12px 圆角"
     }
   },
   "settings": {

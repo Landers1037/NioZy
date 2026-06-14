@@ -289,3 +289,108 @@ html[data-ui-style='glass']
   border-radius: inherit;
   background: transparent;
 }
+
+/* —— Claude：暖奶油底、白卡片输入、衬线标题、珊瑚强调 —— */
+html[data-ui-style='claude'] .niozy-ai-copilot-scope [data-copilotkit] {
+  --cpk-theme-background: var(--background);
+  --cpk-theme-foreground: var(--foreground);
+  --cpk-theme-card: var(--card);
+  --cpk-theme-card-foreground: var(--card-foreground);
+  --cpk-theme-popover: var(--popover);
+  --cpk-theme-popover-foreground: var(--popover-foreground);
+  --cpk-theme-primary: var(--primary);
+  --cpk-theme-primary-foreground: var(--primary-foreground);
+  --cpk-theme-muted: var(--muted);
+  --cpk-theme-muted-foreground: var(--muted-foreground);
+  --cpk-theme-accent: var(--accent);
+  --cpk-theme-accent-foreground: var(--accent-foreground);
+  --cpk-theme-destructive: var(--destructive);
+  --cpk-theme-border: var(--border);
+  --cpk-theme-ring: var(--ring);
+  --cpk-theme-radius: 0.75rem;
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+
+html[data-ui-style='claude'] .niozy-ai-copilot-scope [data-copilot-sidebar] {
+  border-left-color: color-mix(in srgb, var(--border) 85%, transparent);
+  background: var(--background);
+}
+
+html[data-ui-style='claude'] .niozy-ai-copilot-scope .copilotKitHeader {
+  font-family: var(--font-sans);
+  font-weight: var(--app-font-weight-bold, 400);
+  letter-spacing: -0.01em;
+  background: var(--background);
+  border-bottom-color: color-mix(in srgb, var(--border) 85%, transparent);
+}
+
+html[data-ui-style='claude'] .niozy-ai-copilot-scope .copilotKitMessages,
+html[data-ui-style='claude'] .niozy-ai-copilot-scope .copilotKitChat {
+  background: var(--background);
+}
+
+html[data-ui-style='claude']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  background: var(--card) !important;
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  border-radius: 0.75rem !important;
+  box-shadow: 0 2px 8px rgb(26 24 22 / 0.06);
+}
+
+html.dark[data-ui-style='claude']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.22);
+}
+
+html[data-ui-style='claude']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitAssistantMessage {
+  font-family: var(--font-sans);
+}
+
+html[data-ui-style='claude'] .niozy-ai-copilot-scope .copilotKitInput {
+  border-radius: 0.75rem !important;
+  border-color: color-mix(in srgb, var(--border) 90%, transparent);
+  background-color: var(--card) !important;
+  box-shadow: 0 2px 8px rgb(26 24 22 / 0.05);
+}
+
+html.dark[data-ui-style='claude'] .niozy-ai-copilot-scope .copilotKitInput {
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.2);
+}
+
+html[data-ui-style='claude']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-chat-input'].copilotKitInput,
+html[data-ui-style='claude']
+  [data-testid='copilot-chat-input'].copilotKitInput {
+  border-radius: 0.75rem !important;
+  border-color: color-mix(in srgb, var(--border) 90%, transparent);
+  background: var(--card) !important;
+  box-shadow: 0 2px 8px rgb(26 24 22 / 0.05);
+}
+
+html[data-ui-style='claude']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-add-menu-button'],
+html[data-ui-style='claude']
+  [data-testid='copilot-add-menu-button'] {
+  border-radius: 0.75rem;
+  color: var(--claude-coral, var(--primary));
+}
+
+html[data-ui-style='claude']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-add-menu-button']:hover,
+html[data-ui-style='claude']
+  [data-testid='copilot-add-menu-button']:hover {
+  background: color-mix(in srgb, var(--primary) 10%, var(--muted));
+}

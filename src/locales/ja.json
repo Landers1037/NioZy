@@ -255,6 +255,10 @@
     "glass": {
       "label": "ガラス",
       "description": "半透明ガラス：すりガラス調の透過パネル、中性グラデーション背景、細い光の縁取り、柔らかな奥行き"
+    },
+    "claude": {
+      "label": "Claude",
+      "description": "Claude 編集スタイル：暖かいクリーム #F4F1EA、コーラルアクセント、全体 Noto Serif UI フォント、12px 角丸"
     }
   },
   "settings": {
