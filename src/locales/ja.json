@@ -1109,7 +1109,8 @@
       "replayEmpty": "保存されたコマンドがありません",
       "appearance": "ターミナル外観",
       "zoomIn": "フォントを拡大",
-      "zoomOut": "フォントを縮小"
+      "zoomOut": "フォントを縮小",
+      "addToAiSidebar": "AI サイドバーに追加"
     }
   },
   "electron": {

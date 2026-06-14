@@ -1216,7 +1216,8 @@
       "replayEmpty": "No saved commands",
       "appearance": "Appearance",
       "zoomIn": "Increase font size",
-      "zoomOut": "Decrease font size"
+      "zoomOut": "Decrease font size",
+      "addToAiSidebar": "Add to AI sidebar"
     }
   },
   "electron": {

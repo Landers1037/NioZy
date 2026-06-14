@@ -2,6 +2,7 @@ import { toast } from 'sonner'
 import i18n from '@/lib/i18n'
 import { getElectronAPI } from '@/lib/electron-client'
 import { useAppStore } from '@/stores/app-store'
+import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import { getTerminal } from '@/lib/terminal-registry'
 import { getTerminalBufferText } from '@/lib/terminal-buffer'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
@@ -90,4 +91,16 @@ export function adjustTerminalFontSizeFromContextMenu(delta: number): void {
   )
   if (next === current) return
   void patchSettings({ terminal: { ...settings.terminal, fontSize: next } })
+}
+
+export function addTerminalSelectionToAiSidebarFromContextMenu(): void {
+  const menu = useTerminalUiStore.getState().contextMenu
+  if (!menu) return
+  const term = getTerminal(menu.terminalId)
+  const text = readTerminalSelectionText(term)
+  if (!text.trim()) {
+    toast.message(i18n.t('toast.selectTerminalFirst'))
+    return
+  }
+  useAiSidebarStore.getState().queueInputAppend(text)
 }

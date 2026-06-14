@@ -1216,7 +1216,8 @@
       "replayEmpty": "暂无重放命令",
       "appearance": "终端外观",
       "zoomIn": "放大字体",
-      "zoomOut": "缩小字体"
+      "zoomOut": "缩小字体",
+      "addToAiSidebar": "添加到 AI 边栏"
     }
   },
   "electron": {
