@@ -1,5 +1,6 @@
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useState, type ButtonHTMLAttributes } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Plus } from 'lucide-react'
 import { CopilotKit } from '@copilotkit/react-core'
 import { CopilotSidebar, useCopilotChatConfiguration } from '@copilotkit/react-core/v2'
 import '@copilotkit/react-core/v2/styles.css'
@@ -9,6 +10,32 @@ import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import { buildAiRuntimeConfig } from '../../../electron/shared/experimental-settings'
 import { aiProviderNeedsApiKey, isAiApiKeyConfigured } from '@/lib/ai-provider-options'
 import { getElectronAPI } from '@/lib/electron-client'
+import { clickCopilotFileInput } from '@/lib/click-copilot-file-input'
+
+type AiAddAttachmentButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  onAddFile?: () => void
+}
+
+/** Skip CopilotKit's dropdown; open the file picker on + click (Electron-safe). */
+function AiAddAttachmentButton({
+  onAddFile,
+  disabled,
+  className = '',
+  ...props
+}: AiAddAttachmentButtonProps) {
+  return (
+    <button
+      type="button"
+      data-testid="copilot-add-menu-button"
+      disabled={disabled || !onAddFile}
+      onClick={() => onAddFile?.()}
+      className={`cpk:ml-1 cpk:inline-flex cpk:size-9 cpk:shrink-0 cpk:items-center cpk:justify-center cpk:rounded-full cpk:text-muted-foreground cpk:transition-colors hover:cpk:bg-muted disabled:cpk:pointer-events-none disabled:cpk:opacity-50 ${className}`.trim()}
+      {...props}
+    >
+      <Plus className="cpk:size-[20px]" aria-hidden />
+    </button>
+  )
+}
 
 function AiSidebarModalBridge() {
   const isOpen = useAiSidebarStore((s) => s.isOpen)
@@ -60,6 +87,10 @@ export function AiCopilotRoot() {
   const [runtimeUrl, setRuntimeUrl] = useState<string | null>(null)
   const [configured, setConfigured] = useState(false)
   const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
+
+  const handleAddFile = useCallback(() => {
+    clickCopilotFileInput()
+  }, [])
 
   useEffect(() => {
     if (!aiRuntime) {
@@ -161,6 +192,11 @@ export function AiCopilotRoot() {
           chatInputToolbarAddButtonLabel: t('aiSidebar.addAttachment'),
         }}
         attachments={aiAttachmentsEnabled ? { enabled: true } : undefined}
+        input={
+          aiAttachmentsEnabled
+            ? { onAddFile: handleAddFile, addMenuButton: AiAddAttachmentButton }
+            : undefined
+        }
       />
     </CopilotKit>
   )
