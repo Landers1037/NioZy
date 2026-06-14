@@ -13,6 +13,7 @@ import { aiProviderNeedsApiKey, isAiApiKeyConfigured } from '@/lib/ai-provider-o
 import { getElectronAPI } from '@/lib/electron-client'
 import { clickCopilotFileInput } from '@/lib/click-copilot-file-input'
 import { appendCopilotChatInput } from '@/lib/append-copilot-chat-input'
+import { AiCopilotContextBridge } from './AiCopilotContextBridge'
 
 type AiAddAttachmentButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   onAddFile?: () => void
@@ -217,6 +218,7 @@ export function AiCopilotRoot() {
     >
       {/* 主题作用域 wrapper，与 CopilotKit 官方 CSS 自定义示例一致 */}
       <div className="niozy-ai-copilot-scope">
+        <AiCopilotContextBridge />
         <AiSidebarInputBridge />
         <CopilotSidebar
           defaultOpen={false}

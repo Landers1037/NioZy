@@ -285,6 +285,15 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     copilot: {
       getRuntimeUrl: async () => null,
     },
+    aiContext: {
+      listRules: async () => [],
+      readRule: async () => null,
+      saveRule: async () => undefined,
+      deleteRule: async () => undefined,
+      listSkills: async () => [],
+      getChatContext: async () => ({ rules: [], skills: [] }),
+      openSkillsDirectory: async () => undefined,
+    },
     system: {
       platform: 'win32',
       isProcessElevated: async () => false,

@@ -392,6 +392,15 @@ export interface ElectronAPI {
   copilot: {
     getRuntimeUrl: () => Promise<string | null>
   }
+  aiContext: {
+    listRules: () => Promise<import('./ai-context-types').AiRuleSummary[]>
+    readRule: (id: string) => Promise<string | null>
+    saveRule: (input: { id: string; content: string }) => Promise<void>
+    deleteRule: (id: string) => Promise<void>
+    listSkills: () => Promise<import('./ai-context-types').AiSkillSummary[]>
+    getChatContext: () => Promise<import('./ai-context-types').AiChatContextPayload>
+    openSkillsDirectory: () => Promise<void>
+  }
   fonts: {
     list: () => Promise<string[]>
   }

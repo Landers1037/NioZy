@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
+import { AiContextSettings } from './AiContextSettings'
 import { Brain, Network, Paperclip } from 'lucide-react'
 import type { AiProvider } from '../../../electron/shared/ai-provider-settings'
 import type { AiSidebarWidthPreset } from '@/lib/ai-sidebar-width'
@@ -315,6 +316,8 @@ export function AiSettings() {
             </SettingField>
           </>
         )}
+
+        {ai.aiSidebarEnabled === true && <AiContextSettings />}
       </CardContent>
     </Card>
   )
