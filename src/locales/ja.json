@@ -215,8 +215,8 @@
   "aiSidebar": {
     "title": "AI アシスタント",
     "welcome": "何かお手伝いできることはありますか？",
-    "welcomeNoKey": "設定 → 実験的 → AI 機能で API キーを設定してください。",
-    "configureKey": "先に設定 → 実験的で OpenAI API キーを設定してください",
+    "welcomeNoKey": "設定 → AI 機能で API キーを設定してください。",
+    "configureKey": "先に設定 → AI 機能で OpenAI API キーを設定してください",
     "inputPlaceholder": "メッセージを入力…",
     "addAttachment": "添付を追加"
   },
@@ -273,6 +273,7 @@
       "assistive": "補助機能",
       "system": "システム",
       "p2p": "暗号化通信",
+      "ai": "AI 機能",
       "logging": "ログ",
       "advanced": "詳細",
       "experimental": "実験的"
@@ -603,6 +604,44 @@
       "aboutDesc": "マルチターミナルマネージャー — Electron、React、xterm.js、Windows ConPTY。",
       "cardDescription": "プロキシ、起動、トレイ、について"
     },
+    "ai": {
+      "title": "AI 機能",
+      "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは平文または ${OPENAI_API_KEY} などのストア変数参照（密文推奨）。",
+      "sidebarEnabled": "AI チャットサイドバーを有効化",
+      "sidebarEnabledDesc": "右側に AI チャットサイドバーを表示。メッセージ送信には選択したプロバイダーの API キーが必要（ローカル Ollama は任意）。",
+      "attachmentsEnabled": "添付ファイルを有効化",
+      "attachmentsEnabledDesc": "オンにすると、AI サイドバーの「+」からローカルの画像やファイルを追加できます（ドラッグ＆ドロップ・貼り付けも可）。ビジョン／マルチモーダル対応モデルが必要です。",
+      "sidebarWidth": "サイドバー幅",
+      "sidebarWidthDesc": "AI チャットサイドバーの幅。変更後すぐに反映されます。",
+      "sidebarWidths": {
+        "narrow": "狭い（{{px}}px）",
+        "default": "標準（{{px}}px）",
+        "wide": "広い（{{px}}px）"
+      },
+      "runtimePort": "Runtime ポート",
+      "runtimePortDesc": "127.0.0.1 上のローカル Copilot Runtime 待受ポート（既定 6173）。変更後は AI サイドバーを再接続してください。",
+      "provider": "AI プロバイダ",
+      "providerDesc": "接続する AI サービスを選択します。",
+      "providers": {
+        "openai": "OpenAI",
+        "anthropic": "Claude (Anthropic)",
+        "deepseek": "DeepSeek",
+        "ollama": "Ollama（ローカル）",
+        "openai-compatible": "OpenAI 互換"
+      },
+      "model": "モデル",
+      "modelDesc": "よく使うモデルを選ぶか、下の欄にカスタムモデル名を入力してください（API ドキュメントに合わせる）。",
+      "modelPresetPlaceholder": "よく使うモデル（任意）",
+      "modelCustomPlaceholder": "カスタムモデル名（例: qwen-plus）",
+      "baseUrl": "Base URL",
+      "baseUrlDesc": "API のベース URL。プロバイダ切替時に既定値が入ります。必要に応じて変更してください。",
+      "baseUrlOpenAiCompatiblePlaceholder": "https://your-gateway.example.com/v1",
+      "apiKey": "API キー",
+      "apiKeyDesc": "API キー、または 設定 → ストア の ${変数}（右の DB アイコンで挿入）。Runtime 起動時に解決されます。",
+      "apiKeyOptionalDesc": "ローカル Ollama では通常 API キーは不要です。",
+      "apiKeyPlaceholder": "sk-...",
+      "apiKeyOptionalPlaceholder": "任意（Ollama は空欄可）"
+    },
     "experimental": {
       "title": "実験的",
       "description": "不安定で変更または削除される可能性がある機能",
@@ -612,44 +651,6 @@
       "terminalEmulatorWterm": "Wterm（実験的）",
       "jsSandboxEnabled": "JS サンドボックス",
       "jsSandboxEnabledDesc": "サイドバーに「サンドボックスを開く」を表示。QuickJS WASM の隔離環境で JavaScript を実行（Node.js ではなく、ファイルシステム・ネットワーク不可）。",
-      "ai": {
-        "title": "AI 機能",
-        "description": "AI チャットサイドバーとモデルプロバイダーを設定。Runtime は 127.0.0.1 のみで待受。API キーは平文または ${OPENAI_API_KEY} などのストア変数参照（密文推奨）。",
-        "sidebarEnabled": "AI チャットサイドバーを有効化",
-        "sidebarEnabledDesc": "右側に AI チャットサイドバーを表示。メッセージ送信には選択したプロバイダーの API キーが必要（ローカル Ollama は任意）。",
-        "attachmentsEnabled": "添付ファイルを有効化",
-        "attachmentsEnabledDesc": "オンにすると、AI サイドバーの「+」からローカルの画像やファイルを追加できます（ドラッグ＆ドロップ・貼り付けも可）。ビジョン／マルチモーダル対応モデルが必要です。",
-        "sidebarWidth": "サイドバー幅",
-        "sidebarWidthDesc": "AI チャットサイドバーの幅。変更後すぐに反映されます。",
-        "sidebarWidths": {
-          "narrow": "狭い（{{px}}px）",
-          "default": "標準（{{px}}px）",
-          "wide": "広い（{{px}}px）"
-        },
-        "runtimePort": "Runtime ポート",
-        "runtimePortDesc": "127.0.0.1 上のローカル Copilot Runtime 待受ポート（既定 6173）。変更後は AI サイドバーを再接続してください。",
-        "provider": "AI プロバイダ",
-        "providerDesc": "接続する AI サービスを選択します。",
-        "providers": {
-          "openai": "OpenAI",
-          "anthropic": "Claude (Anthropic)",
-          "deepseek": "DeepSeek",
-          "ollama": "Ollama（ローカル）",
-          "openai-compatible": "OpenAI 互換"
-        },
-        "model": "モデル",
-        "modelDesc": "よく使うモデルを選ぶか、下の欄にカスタムモデル名を入力してください（API ドキュメントに合わせる）。",
-        "modelPresetPlaceholder": "よく使うモデル（任意）",
-        "modelCustomPlaceholder": "カスタムモデル名（例: qwen-plus）",
-        "baseUrl": "Base URL",
-        "baseUrlDesc": "API のベース URL。プロバイダ切替時に既定値が入ります。必要に応じて変更してください。",
-        "baseUrlOpenAiCompatiblePlaceholder": "https://your-gateway.example.com/v1",
-        "apiKey": "API キー",
-        "apiKeyDesc": "API キー、または 設定 → ストア の ${変数}（右の DB アイコンで挿入）。Runtime 起動時に解決されます。",
-        "apiKeyOptionalDesc": "ローカル Ollama では通常 API キーは不要です。",
-        "apiKeyPlaceholder": "sk-...",
-        "apiKeyOptionalPlaceholder": "任意（Ollama は空欄可）"
-      },
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "libghostty WASM ビルドを Wterm の VT パーサーとして使用（書記素クラスタ、完全 SGR 等）。切り替え後は開いているターミナルタブを再起動してください。",
       "ghosttyScrollbackLimit": "Ghostty スクロールバック行数",

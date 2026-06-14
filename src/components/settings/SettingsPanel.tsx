@@ -22,6 +22,7 @@ import {
   BarChart3,
   MessageSquare,
   Bell,
+  Brain,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -40,6 +41,7 @@ import { LogSettings } from './LogSettings'
 import { VaultSettings } from './VaultSettings'
 import { ShortcutSettings } from './ShortcutSettings'
 import { ExperimentalSettings } from './ExperimentalSettings'
+import { AiSettings } from './AiSettings'
 import { PreviewSettings } from './PreviewSettings'
 import { P2pSettings } from './P2pSettings'
 import { DrawingSettings } from './DrawingSettings'
@@ -62,6 +64,7 @@ const SECTION_DEFS = [
   { id: 'assistive', icon: Accessibility },
   { id: 'system', icon: Settings2 },
   { id: 'p2p', icon: MessageSquare },
+  { id: 'ai', icon: Brain },
   { id: 'logging', icon: ScrollText },
   { id: 'advanced', icon: SlidersHorizontal },
   { id: 'experimental', icon: FlaskConical },
@@ -103,6 +106,8 @@ function SettingsSectionContent({ section }: { section: SectionId }) {
       return <SystemSettings />
     case 'p2p':
       return <P2pSettings />
+    case 'ai':
+      return <AiSettings />
     case 'logging':
       return <LogSettings />
     case 'advanced':
