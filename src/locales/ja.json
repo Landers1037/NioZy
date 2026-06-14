@@ -920,6 +920,7 @@
   "tab": {
     "closeAria": "{{title}} を閉じる",
     "closeOther": "他を閉じる",
+    "cloneTerminal": "ターミナルを複製",
     "splitTerminal": "ターミナルを分割",
     "closeSplitPaneAria": "分割ペインを閉じる",
     "exportTerminal": "ターミナルをエクスポート",
@@ -1121,6 +1122,7 @@
     "scpTransferDisabled": "先に 設定 → SSH で SCP 転送を有効にしてください",
     "splitTerminalMax": "各ターミナルタブは最大 3 ペインまで",
     "splitTerminalUnknown": "分割できません: 再利用する起動オプションがありません",
+    "cloneTerminalUnknown": "複製できません: 再利用する起動オプションがありません",
     "restartAsAdminUnsupported": "管理者として再起動はローカルの PowerShell、CMD、pwsh タブのみ",
     "terminalEmulatorRestart": "ターミナルエミュレータを変更しました。反映にはアプリを再起動してください。",
     "ghosttyCoreRestart": "Ghostty Core を変更しました。反映にはアプリを再起動してください。",

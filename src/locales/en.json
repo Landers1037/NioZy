@@ -1027,6 +1027,7 @@
   "tab": {
     "closeAria": "Close {{title}}",
     "closeOther": "Close others",
+    "cloneTerminal": "Clone terminal",
     "splitTerminal": "Split terminal",
     "closeSplitPaneAria": "Close split pane",
     "exportTerminal": "Export terminal",
@@ -1231,6 +1232,7 @@
     "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first",
     "splitTerminalMax": "Each terminal tab can have at most 3 panes",
     "splitTerminalUnknown": "Cannot split: missing spawn options to reuse",
+    "cloneTerminalUnknown": "Cannot clone: missing spawn options to reuse",
     "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs",
     "terminalEmulatorRestart": "Terminal emulator changed. Restart the app for it to take effect.",
     "ghosttyCoreRestart": "Ghostty Core changed. Restart the app for it to take effect.",

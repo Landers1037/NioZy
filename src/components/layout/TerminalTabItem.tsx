@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftRight,
   Columns2,
+  Copy,
   Download,
   FolderOpen,
   PackagePlus,
@@ -61,6 +62,7 @@ import {
   canShowRestartAsAdminMenu,
   restartTerminalTabAsAdmin,
 } from '@/lib/terminal-restart-actions'
+import { cloneTerminalTab } from '@/lib/terminal-clone-actions'
 import {
   changeTerminalTabDirectory,
   getDroppedFilePaths,
@@ -301,6 +303,10 @@ export const TerminalTabItem = memo(function TerminalTabItem({
           <ContextMenuItem onSelect={() => closeOtherTerminalTabs(tab.id)}>
             <ListX className="size-4 text-muted-foreground" />
             {t('tab.closeOther')}
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => void cloneTerminalTab(tab.id)}>
+            <Copy className="size-4 text-muted-foreground" />
+            {t('tab.cloneTerminal')}
           </ContextMenuItem>
           <ContextMenuItem
             disabled={!canSplit}

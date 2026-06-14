@@ -1027,6 +1027,7 @@
   "tab": {
     "closeAria": "关闭 {{title}}",
     "closeOther": "关闭其他",
+    "cloneTerminal": "复制终端",
     "splitTerminal": "拆分终端",
     "closeSplitPaneAria": "关闭拆分终端",
     "exportTerminal": "导出终端",
@@ -1231,6 +1232,7 @@
     "scpTransferDisabled": "请先在设置 → SSH 中开启 SCP 传输",
     "splitTerminalMax": "每个终端 Tab 最多拆分 3 个",
     "splitTerminalUnknown": "无法拆分：缺少可复用的启动参数",
+    "cloneTerminalUnknown": "无法复制：缺少可复用的启动参数",
     "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启",
     "terminalEmulatorRestart": "终端模拟器已切换，请重启应用后生效",
     "ghosttyCoreRestart": "Ghostty Core 已修改，请重启应用后生效",
