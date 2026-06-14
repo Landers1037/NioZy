@@ -16,6 +16,7 @@ import { focusTerminal } from '@/lib/terminal-focus'
 import { useTerminalUiStore } from '@/stores/terminal-ui-store'
 import {
   adjustTerminalFontSizeFromContextMenu,
+  addTerminalSelectionToAiSidebarFromContextMenu,
   copyAndPasteToTerminalFromContextMenu,
   copyTerminalSelectionFromContextMenu,
   exportTerminalFromContextMenu,
@@ -38,6 +39,7 @@ export function TerminalContextMenuHost() {
   const fontSize = settings?.terminal.fontSize ?? 13
   const canZoomIn = fontSize < TERMINAL_FONT_SIZE_MAX
   const canZoomOut = fontSize > TERMINAL_FONT_SIZE_MIN
+  const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
   const contextTerminalIdRef = useRef<string | null>(null)
   const skipCloseRefocusRef = useRef(false)
 
@@ -99,6 +101,17 @@ export function TerminalContextMenuHost() {
         >
           {t('terminal.contextMenu.copyAndPaste')}
         </DropdownMenuItem>
+        {aiSidebarEnabled ? (
+          <DropdownMenuItem
+            disabled={!contextMenu?.hasSelection}
+            onSelect={() => {
+              skipCloseRefocusRef.current = true
+              addTerminalSelectionToAiSidebarFromContextMenu()
+            }}
+          >
+            {t('terminal.contextMenu.addToAiSidebar')}
+          </DropdownMenuItem>
+        ) : null}
         {showTerminalSearch ? (
           <DropdownMenuItem
             onSelect={() => {

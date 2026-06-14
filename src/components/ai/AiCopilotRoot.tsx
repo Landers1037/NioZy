@@ -12,6 +12,7 @@ import { buildAiRuntimeConfig } from '../../../electron/shared/experimental-sett
 import { aiProviderNeedsApiKey, isAiApiKeyConfigured } from '@/lib/ai-provider-options'
 import { getElectronAPI } from '@/lib/electron-client'
 import { clickCopilotFileInput } from '@/lib/click-copilot-file-input'
+import { appendCopilotChatInput } from '@/lib/append-copilot-chat-input'
 
 type AiAddAttachmentButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   onAddFile?: () => void
@@ -62,6 +63,41 @@ function AiSidebarModalBridge() {
     if (config?.isModalOpen !== false) return
     if (isOpen) setOpen(false)
   }, [config?.isModalOpen, isOpen, setOpen])
+
+  return null
+}
+
+/** 将终端右键菜单排队的文本写入 Copilot 输入框（边栏打开后重试直至 textarea 就绪）。 */
+function AiSidebarInputBridge() {
+  const pendingInputAppend = useAiSidebarStore((s) => s.pendingInputAppend)
+  const clearPendingInputAppend = useAiSidebarStore((s) => s.clearPendingInputAppend)
+  const isOpen = useAiSidebarStore((s) => s.isOpen)
+
+  useEffect(() => {
+    if (!pendingInputAppend || !isOpen) return
+
+    let cancelled = false
+    let attempts = 0
+
+    const tryAppend = () => {
+      if (cancelled) return
+      if (appendCopilotChatInput(pendingInputAppend)) {
+        clearPendingInputAppend()
+        return
+      }
+      attempts += 1
+      if (attempts < 24) {
+        window.setTimeout(tryAppend, 50)
+      } else {
+        clearPendingInputAppend()
+      }
+    }
+
+    tryAppend()
+    return () => {
+      cancelled = true
+    }
+  }, [pendingInputAppend, isOpen, clearPendingInputAppend])
 
   return null
 }
@@ -181,6 +217,7 @@ export function AiCopilotRoot() {
     >
       {/* 主题作用域 wrapper，与 CopilotKit 官方 CSS 自定义示例一致 */}
       <div className="niozy-ai-copilot-scope">
+        <AiSidebarInputBridge />
         <CopilotSidebar
           defaultOpen={false}
           position="right"
