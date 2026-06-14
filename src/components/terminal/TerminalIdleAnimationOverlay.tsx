@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Terminal } from '@xterm/xterm'
 import type { TerminalIdleAnimationMode } from '../../../electron/shared/terminal-idle-animation'
 import { BlackHoleRenderer } from '@/lib/terminal-idle-animation/black-hole-renderer'
+import { BlackHole2Renderer } from '@/lib/terminal-idle-animation/black-hole2-renderer'
 import { LogoIdleAnimation } from '@/components/terminal/idle-animation/LogoIdleAnimation'
 import { PacmanIdleAnimation } from '@/components/terminal/idle-animation/PacmanIdleAnimation'
 
@@ -66,7 +67,7 @@ export function TerminalIdleAnimationOverlay({
   hostRef,
 }: TerminalIdleAnimationOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const rendererRef = useRef<BlackHoleRenderer | null>(null)
+  const rendererRef = useRef<BlackHoleRenderer | BlackHole2Renderer | null>(null)
   const rafRef = useRef<number | null>(null)
   const [screenBox, setScreenBox] = useState<ScreenBox | null>(null)
 
@@ -109,16 +110,19 @@ export function TerminalIdleAnimationOverlay({
   }, [term, enabled, hostRef])
 
   useEffect(() => {
-    if (mode !== 'blackHole' || !enabled || !screenBox) return
+    const isBlackHoleMode = mode === 'blackHole' || mode === 'blackHole2'
+    if (!isBlackHoleMode || !enabled || !screenBox) return
 
     const canvas = canvasRef.current
     if (!canvas) return
 
-    let renderer: BlackHoleRenderer
+    let renderer: BlackHoleRenderer | BlackHole2Renderer
     try {
-      renderer = new BlackHoleRenderer(canvas)
+      renderer =
+        mode === 'blackHole2' ? new BlackHole2Renderer(canvas) : new BlackHoleRenderer(canvas)
       rendererRef.current = renderer
-    } catch {
+    } catch (error) {
+      console.error('[TerminalIdleAnimation] renderer init failed:', error)
       return
     }
 

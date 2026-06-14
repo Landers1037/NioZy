@@ -357,6 +357,7 @@
       "idleAnimationDelayUnit": "秒後に開始",
       "idleAnimationMode": {
         "blackHole": "BlackHole",
+        "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
         "logo": "Logo"
       }
