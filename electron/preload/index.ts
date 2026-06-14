@@ -172,6 +172,10 @@ const api: ElectronAPI = {
     resolveTerminalDropDirectory: (filePath) =>
       ipcRenderer.invoke('fs:resolveTerminalDropDirectory', filePath),
     pickPrivateKey: () => ipcRenderer.invoke('files:pickPrivateKey') as Promise<string | null>,
+    pickAiAttachments: (dialogTitle?: string) =>
+      ipcRenderer.invoke('files:pickAiAttachments', dialogTitle) as Promise<
+        import('../shared/ai-attachment-types').AiAttachmentPickFile[]
+      >,
   },
   drawing: {
     openFile: (kind) => ipcRenderer.invoke('drawing:openFile', kind),

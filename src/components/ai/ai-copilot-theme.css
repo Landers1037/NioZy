@@ -1,0 +1,291 @@
+/*
+ * NioZy AI 侧边栏主题 — 参考 CopilotKit 官方 CSS 自定义示例，作用域限定在
+ * `.niozy-ai-copilot-scope`，避免污染应用其余 UI。
+ *
+ * v2 组件同时支持 shadcn 设计 token（[data-copilotkit]）与内置类名（.copilotKit*）。
+ * https://docs.copilotkit.ai/built-in-agent/custom-look-and-feel/css
+ */
+
+/* —— 基础：同步应用 html 上的主题变量 —— */
+.niozy-ai-copilot-scope [data-copilotkit] {
+  --background: var(--cpk-theme-background);
+  --foreground: var(--cpk-theme-foreground);
+  --card: var(--cpk-theme-card);
+  --card-foreground: var(--cpk-theme-card-foreground);
+  --popover: var(--cpk-theme-popover);
+  --popover-foreground: var(--cpk-theme-popover-foreground);
+  --primary: var(--cpk-theme-primary);
+  --primary-foreground: var(--cpk-theme-primary-foreground);
+  --secondary: var(--cpk-theme-muted);
+  --secondary-foreground: var(--cpk-theme-foreground);
+  --muted: var(--cpk-theme-muted);
+  --muted-foreground: var(--cpk-theme-muted-foreground);
+  --accent: var(--cpk-theme-accent);
+  --accent-foreground: var(--cpk-theme-accent-foreground);
+  --destructive: var(--cpk-theme-destructive);
+  --border: var(--cpk-theme-border);
+  --input: var(--cpk-theme-border);
+  --ring: var(--cpk-theme-ring);
+  --radius: var(--cpk-theme-radius);
+  --sidebar: var(--cpk-theme-card);
+  --sidebar-foreground: var(--cpk-theme-foreground);
+  --sidebar-primary: var(--cpk-theme-primary);
+  --sidebar-primary-foreground: var(--cpk-theme-primary-foreground);
+  --sidebar-accent: var(--cpk-theme-accent);
+  --sidebar-accent-foreground: var(--cpk-theme-accent-foreground);
+  --sidebar-border: var(--cpk-theme-border);
+  --sidebar-ring: var(--cpk-theme-ring);
+
+  font-family: var(--font-sans);
+  font-size: var(--app-font-size);
+  font-weight: var(--app-font-weight, 400);
+}
+
+.niozy-ai-copilot-scope [data-copilot-sidebar] {
+  border-left: 1px solid var(--cpk-theme-border);
+  background: var(--cpk-theme-background);
+}
+
+/* 消息区 */
+.niozy-ai-copilot-scope .copilotKitMessages {
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.niozy-ai-copilot-scope .copilotKitChat {
+  background-color: var(--background);
+}
+
+/* 用户气泡（v2 气泡在内层 div） */
+.niozy-ai-copilot-scope .copilotKitMessage.copilotKitUserMessage > div > div:first-of-type {
+  background: var(--primary) !important;
+  color: var(--primary-foreground);
+  border: 1px solid color-mix(in srgb, var(--primary) 72%, var(--border));
+  border-radius: calc(var(--radius) + 6px) calc(var(--radius) + 6px) calc(var(--radius) - 2px)
+    calc(var(--radius) + 6px);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--primary) 18%, transparent);
+  font-weight: var(--app-font-weight, 400);
+}
+
+/* 助手消息 */
+.niozy-ai-copilot-scope .copilotKitMessage.copilotKitAssistantMessage {
+  color: var(--foreground);
+}
+
+.niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitAssistantMessage
+  .copilotKitMarkdown,
+.niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitAssistantMessage
+  .copilotKitMarkdown
+  p,
+.niozy-ai-copilot-scope .copilotKitMessage.copilotKitAssistantMessage p {
+  color: inherit;
+  font-family: inherit;
+}
+
+/* 顶栏 */
+.niozy-ai-copilot-scope .copilotKitHeader {
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border-bottom-color: var(--border);
+  color: var(--foreground);
+  font-weight: var(--app-font-weight-bold, 700);
+}
+
+/* 输入区 */
+.niozy-ai-copilot-scope .copilotKitInput {
+  font-family: var(--font-sans);
+  background-color: var(--card) !important;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 10px);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.niozy-ai-copilot-scope .copilotKitInput > textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--foreground);
+}
+
+.niozy-ai-copilot-scope .copilotKitInput > textarea::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* —— NioZy 原版 —— */
+html[data-ui-style='niozy'] .niozy-ai-copilot-scope .copilotKitHeader {
+  background: var(--card);
+  box-shadow: 0 1px 0 var(--border);
+}
+
+html[data-ui-style='niozy'] .niozy-ai-copilot-scope .copilotKitInput {
+  border-radius: 1.125rem;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+/* —— Windows Classic —— */
+html[data-ui-style='windows-classic'] .niozy-ai-copilot-scope [data-copilotkit] {
+  --radius: var(--cpk-theme-radius);
+  font-family: Tahoma, 'MS Sans Serif', 'Segoe UI', var(--font-sans);
+  font-size: 11px;
+}
+
+html[data-ui-style='windows-classic'] .niozy-ai-copilot-scope [data-copilot-sidebar] {
+  border-left: 2px solid var(--xp-3d-shadow, #808080);
+  background: var(--card);
+}
+
+html[data-ui-style='windows-classic'] .niozy-ai-copilot-scope .copilotKitHeader {
+  background: linear-gradient(180deg, var(--xp-3d-highlight, #fff) 0%, var(--xp-3d-face, #ece9d8) 100%);
+  border-bottom: 1px solid var(--xp-3d-shadow, #808080);
+  font-weight: var(--app-font-weight-bold, 700);
+}
+
+html[data-ui-style='windows-classic']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  border-radius: 0 !important;
+  border: 1px solid var(--xp-3d-shadow, #808080);
+  box-shadow:
+    inset 1px 1px 0 var(--xp-3d-highlight, #fff),
+    inset -1px -1px 0 var(--xp-3d-dark, #404040);
+}
+
+html[data-ui-style='windows-classic'] .niozy-ai-copilot-scope .copilotKitInput {
+  border-radius: 0 !important;
+  border: 2px solid;
+  border-color: var(--xp-3d-shadow, #808080) var(--xp-3d-highlight, #fff) var(--xp-3d-highlight, #fff)
+    var(--xp-3d-shadow, #808080);
+  box-shadow: inset 1px 1px 0 var(--xp-3d-dark, #404040);
+}
+
+/* —— 和风 —— */
+html[data-ui-style='wa-fu'] .niozy-ai-copilot-scope [data-copilotkit] {
+  font-family:
+    'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', 'Noto Sans JP', 'Noto Sans SC', var(--font-sans);
+  letter-spacing: 0.01em;
+}
+
+html[data-ui-style='wa-fu'] .niozy-ai-copilot-scope .copilotKitHeader {
+  letter-spacing: 0.02em;
+}
+
+html[data-ui-style='wa-fu']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+html[data-ui-style='wa-fu'] .niozy-ai-copilot-scope .copilotKitInput {
+  border-color: color-mix(in srgb, var(--primary) 22%, var(--border));
+  box-shadow: 0 1px 4px color-mix(in srgb, #3d3428 6%, transparent);
+}
+
+/* —— 赛博朋克 —— */
+html[data-ui-style='cyberpunk'] .niozy-ai-copilot-scope [data-copilotkit] {
+  letter-spacing: 0.02em;
+}
+
+html[data-ui-style='cyberpunk'] .niozy-ai-copilot-scope .copilotKitHeader {
+  border-bottom-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-ui-style='cyberpunk']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  border-radius: var(--radius) !important;
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+
+html.dark[data-ui-style='cyberpunk']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--cyber-neon-cyan, #00f0ff) 32%, transparent);
+}
+
+html[data-ui-style='cyberpunk'] .niozy-ai-copilot-scope .copilotKitInput {
+  border-radius: var(--radius);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+html.dark[data-ui-style='cyberpunk'] .niozy-ai-copilot-scope .copilotKitInput {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cyber-neon-cyan, #00f0ff) 12%, transparent);
+}
+
+/* —— 玻璃 —— */
+html[data-ui-style='glass'] .niozy-ai-copilot-scope [data-copilot-sidebar] {
+  background: var(--card);
+  backdrop-filter: blur(var(--glass-blur, 18px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px));
+  border-left-color: var(--border);
+  box-shadow:
+    inset 1px 0 0 var(--glass-highlight, rgb(255 255 255 / 0.52)),
+    -8px 0 28px var(--glass-shadow, rgb(15 23 42 / 0.08));
+}
+
+html[data-ui-style='glass'] .niozy-ai-copilot-scope .copilotKitHeader {
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(var(--glass-blur, 18px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px));
+  border-bottom-color: var(--border);
+  box-shadow: inset 0 -1px 0 var(--glass-highlight, rgb(255 255 255 / 0.52));
+}
+
+html[data-ui-style='glass'] .niozy-ai-copilot-scope .copilotKitMessages,
+html[data-ui-style='glass'] .niozy-ai-copilot-scope .copilotKitChat {
+  background: transparent;
+}
+
+html[data-ui-style='glass']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type {
+  backdrop-filter: blur(calc(var(--glass-blur, 18px) - 4px));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 18px) - 4px));
+  border-color: var(--border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight, rgb(255 255 255 / 0.52)),
+    0 4px 16px var(--glass-shadow, rgb(15 23 42 / 0.08));
+}
+
+html[data-ui-style='glass']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-chat-input'].copilotKitInput,
+html[data-ui-style='glass']
+  [data-testid='copilot-chat-input'].copilotKitInput {
+  border: 1px solid var(--border);
+  border-radius: var(--cpk-theme-radius, 0.75rem) !important;
+  overflow: hidden !important;
+  contain: none !important;
+  background: color-mix(in srgb, var(--card) 72%, transparent) !important;
+  backdrop-filter: blur(var(--glass-blur, 18px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 18px));
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight, rgb(255 255 255 / 0.52)),
+    0 4px 20px var(--glass-shadow, rgb(15 23 42 / 0.08));
+}
+
+html[data-ui-style='glass']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-chat-input'].copilotKitInput
+  > div,
+html[data-ui-style='glass']
+  [data-testid='copilot-chat-input'].copilotKitInput
+  > div {
+  border-radius: inherit;
+  background: transparent;
+}

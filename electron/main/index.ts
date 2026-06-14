@@ -917,6 +917,55 @@ ipcMain.handle('files:pickPrivateKey', async (): Promise<string | null> => {
 })
 
 ipcMain.handle(
+  'files:pickAiAttachments',
+  async (_, dialogTitle?: string): Promise<import('../shared/ai-attachment-types').AiAttachmentPickFile[]> => {
+    const {
+      MAX_AI_ATTACHMENT_BYTES,
+      guessAttachmentMimeType,
+    } = await import('../shared/ai-attachment-types')
+    const openOptions = {
+      title: dialogTitle?.trim() || '选择附件',
+      properties: ['openFile', 'multiSelections'] as ('openFile' | 'multiSelections')[],
+      filters: [
+        { name: '图片', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'] },
+        { name: '文档', extensions: ['pdf', 'txt', 'md', 'json'] },
+        { name: '所有文件', extensions: ['*'] },
+      ],
+    }
+    const { canceled, filePaths } = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, openOptions)
+      : await dialog.showOpenDialog(openOptions)
+    if (canceled || filePaths.length === 0) return []
+
+    const picked: import('../shared/ai-attachment-types').AiAttachmentPickFile[] = []
+    for (const filePath of filePaths) {
+      const buffer = await readFile(filePath)
+      if (buffer.byteLength > MAX_AI_ATTACHMENT_BYTES) {
+        const messageBoxOptions = {
+          type: 'warning' as const,
+          title: '附件过大',
+          message: `${filePath.split(/[/\\]/).pop() ?? filePath} 超过 20MB 上限，已跳过。`,
+        }
+        if (mainWindow) {
+          await dialog.showMessageBox(mainWindow, messageBoxOptions)
+        } else {
+          await dialog.showMessageBox(messageBoxOptions)
+        }
+        continue
+      }
+      const name = filePath.split(/[/\\]/).pop() ?? filePath
+      picked.push({
+        name,
+        mimeType: guessAttachmentMimeType(name),
+        base64: buffer.toString('base64'),
+        size: buffer.byteLength,
+      })
+    }
+    return picked
+  },
+)
+
+ipcMain.handle(
   'files:saveText',
   async (_, content: string, defaultFileName: string): Promise<boolean> => {
     const saveOptions = {

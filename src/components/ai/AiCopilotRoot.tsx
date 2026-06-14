@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { CopilotKit } from '@copilotkit/react-core'
 import { CopilotSidebar, useCopilotChatConfiguration } from '@copilotkit/react-core/v2'
 import '@copilotkit/react-core/v2/styles.css'
+import './ai-copilot-theme.css'
 import { useAppStore } from '@/stores/app-store'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
@@ -178,26 +179,29 @@ export function AiCopilotRoot() {
       useSingleEndpoint={false}
       enableInspector={false}
     >
-      <CopilotSidebar
-        defaultOpen={false}
-        position="right"
-        width={aiSidebarWidthPx}
-        toggleButton={HiddenAiSidebarToggle}
-        labels={{
-          modalHeaderTitle: t('aiSidebar.title'),
-          welcomeMessageText: configured
-            ? t('aiSidebar.welcome')
-            : t('aiSidebar.welcomeNoKey'),
-          chatInputPlaceholder: t('aiSidebar.inputPlaceholder'),
-          chatInputToolbarAddButtonLabel: t('aiSidebar.addAttachment'),
-        }}
-        attachments={aiAttachmentsEnabled ? { enabled: true } : undefined}
-        input={
-          aiAttachmentsEnabled
-            ? { onAddFile: handleAddFile, addMenuButton: AiAddAttachmentButton }
-            : undefined
-        }
-      />
+      {/* 主题作用域 wrapper，与 CopilotKit 官方 CSS 自定义示例一致 */}
+      <div className="niozy-ai-copilot-scope">
+        <CopilotSidebar
+          defaultOpen={false}
+          position="right"
+          width={aiSidebarWidthPx}
+          toggleButton={HiddenAiSidebarToggle}
+          labels={{
+            modalHeaderTitle: t('aiSidebar.title'),
+            welcomeMessageText: configured
+              ? t('aiSidebar.welcome')
+              : t('aiSidebar.welcomeNoKey'),
+            chatInputPlaceholder: t('aiSidebar.inputPlaceholder'),
+            chatInputToolbarAddButtonLabel: t('aiSidebar.addAttachment'),
+          }}
+          attachments={aiAttachmentsEnabled ? { enabled: true } : undefined}
+          input={
+            aiAttachmentsEnabled
+              ? { onAddFile: handleAddFile, addMenuButton: AiAddAttachmentButton }
+              : undefined
+          }
+        />
+      </div>
     </CopilotKit>
   )
 }

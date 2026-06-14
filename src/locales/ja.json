@@ -218,7 +218,9 @@
     "welcomeNoKey": "設定 → AI 機能で API キーを設定してください。",
     "configureKey": "先に設定 → AI 機能で OpenAI API キーを設定してください",
     "inputPlaceholder": "メッセージを入力…",
-    "addAttachment": "添付を追加"
+    "addAttachment": "添付を追加",
+    "addAttachmentDialogTitle": "添付ファイルを選択",
+    "attachmentInputNotReady": "添付入力の準備ができていません。AI サイドバーを開き直してから再試行してください。"
   },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },
