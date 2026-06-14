@@ -71,7 +71,14 @@ export function AppearanceSettings() {
                       ? cn(ui.segmentActive, 'font-app-bold')
                       : cn(ui.segmentInactive, 'font-app-regular'),
                   )}
-                  onClick={() => patchSettings({ uiStyle: opt.value as UiStyle })}
+                  onClick={() => {
+                    const nextStyle = opt.value as UiStyle
+                    if (nextStyle === settings.uiStyle) return
+                    patchSettings({
+                      uiStyle: nextStyle,
+                      accentColor: getAccentPresets(nextStyle)[0],
+                    })
+                  }}
                 >
                   {opt.label}
                 </button>
