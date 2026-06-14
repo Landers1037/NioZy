@@ -1,4 +1,5 @@
 appId: com.niozy.app
+afterPack: scripts/after-pack.mjs
 productName: NioZy
 copyright: Copyright © NioZy
 directories:
@@ -8,10 +9,14 @@ files:
   - out/**/*
   - package.json
   - '!node_modules/@copilotkit/**'
+  - '!node_modules/sass/**'
+  - '!node_modules/@excalidraw/excalidraw/dist/dev/**'
+  - '!node_modules/@jitl/quickjs-wasmfile-debug-*/**'
+  - '!node_modules/@jitl/quickjs-wasmfile-release-asyncify/**'
   - '!out/**/*.map'
   - '!**/{.DS_Store,thumbs.db}'
-  - '!**/{test,tests,__tests__,docs,doc,example,examples}/**'
-  - '!**/*.{md,markdown,map}'
+  - '!**/{test,tests,__tests__,docs,doc,example,examples,demo}/**'
+  - '!**/*.{md,markdown,map,d.ts,d.mts}'
 asar: true
 asarUnpack:
   - '**/node_modules/node-pty/**'

@@ -1,9 +1,9 @@
 import {
-  newQuickJSWASMModule,
+  newQuickJSWASMModuleFromVariant,
   newVariant,
-  RELEASE_SYNC,
   type QuickJSWASMModule,
-} from 'quickjs-emscripten'
+} from 'quickjs-emscripten-core'
+import RELEASE_SYNC from '@jitl/quickjs-wasmfile-release-sync'
 import quickjsWasmUrl from '@jitl/quickjs-wasmfile-release-sync/wasm?url'
 
 let modulePromise: Promise<QuickJSWASMModule> | null = null
@@ -31,7 +31,7 @@ export function loadQuickJsSandboxModule(): Promise<QuickJSWASMModule> {
   modulePromise ??= (async () => {
     const wasmBinary = await fetchWasmBinary()
     const variant = newVariant(RELEASE_SYNC, { wasmBinary })
-    return newQuickJSWASMModule(variant)
+    return newQuickJSWASMModuleFromVariant(variant)
   })()
   return modulePromise
 }
