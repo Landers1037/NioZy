@@ -97,3 +97,25 @@ export function getPetDir(petId: string): string {
 export function getPetSpritesheetPath(petId: string): string {
   return join(getPetDir(petId), 'spritesheet.webp')
 }
+
+/** AI 上下文目录：%USERPROFILE%/.config/NioZy/ai */
+export function getAiDir(): string {
+  return join(getConfigDir(), 'ai')
+}
+
+/** 用户规则（Markdown）：%USERPROFILE%/.config/NioZy/ai/rules */
+export function getAiRulesDir(): string {
+  return join(getAiDir(), 'rules')
+}
+
+/** 用户技能（含 SKILL.md 的子目录）：%USERPROFILE%/.config/NioZy/ai/skills */
+export function getAiSkillsDir(): string {
+  return join(getAiDir(), 'skills')
+}
+
+export function ensureAiDirs(): void {
+  ensureConfigDir()
+  for (const dir of [getAiDir(), getAiRulesDir(), getAiSkillsDir()]) {
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  }
+}

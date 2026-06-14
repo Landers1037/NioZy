@@ -22,6 +22,7 @@ import {
   normalizeAiRuntimePort,
   type AiProvider,
 } from './ai-provider-settings'
+import { normalizeAiRuleStates, type AiRuleStates } from './ai-context-types'
 
 /** Wterm 仅支持 DOM 渲染，对应 terminal.renderer = dom */
 export const WTERM_RENDERER: TerminalRenderer = 'dom'
@@ -74,6 +75,8 @@ export interface ExperimentalSettings {
   aiBaseUrl: string
   /** AI API Key；可为明文或存储库引用如 ${OPENAI_API_KEY} */
   aiApiKey: string
+  /** 已启用规则 id → true；未列入或 false 表示不注入对话上下文 */
+  aiRuleStates: AiRuleStates
   /** @deprecated 迁移至 aiApiKey */
   openAiApiKey?: string
   /** 启用 JS 沙箱（QuickJS WASM） */
@@ -99,6 +102,7 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   aiModel: DEFAULT_AI_MODEL,
   aiBaseUrl: normalizeAiBaseUrl(DEFAULT_AI_PROVIDER, undefined),
   aiApiKey: '',
+  aiRuleStates: {},
   jsSandboxEnabled: false,
 }
 
@@ -148,6 +152,7 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     aiModel: normalizeAiModel(provider, o.aiModel),
     aiBaseUrl: normalizeAiBaseUrl(provider, o.aiBaseUrl),
     aiApiKey,
+    aiRuleStates: normalizeAiRuleStates(o.aiRuleStates),
     jsSandboxEnabled: o.jsSandboxEnabled === true,
   }
 }
@@ -159,6 +164,9 @@ export {
   warnIfAiApiKeyUnresolved,
   type AiProvider,
 } from './ai-provider-settings'
+
+export { normalizeAiRuleStates, type AiRuleStates } from './ai-context-types'
+export type { AiRuleSummary, AiSkillSummary, AiChatContextPayload } from './ai-context-types'
 
 export {
   AI_SIDEBAR_WIDTH_PRESETS,

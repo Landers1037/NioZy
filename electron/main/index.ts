@@ -1043,6 +1043,37 @@ ipcMain.handle(
 ipcMain.handle('settings:get', () => settingsStore.get())
 ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 
+ipcMain.handle('aiContext:listRules', async () => {
+  const { listAiRules } = await import('../ai-context-store')
+  return listAiRules(settingsStore.get().experimental.aiRuleStates)
+})
+ipcMain.handle('aiContext:readRule', async (_, id: string) => {
+  const { readAiRule } = await import('../ai-context-store')
+  return readAiRule(id)
+})
+ipcMain.handle('aiContext:saveRule', async (_, input: { id: string; content: string }) => {
+  const { saveAiRule } = await import('../ai-context-store')
+  await saveAiRule(input.id, input.content)
+})
+ipcMain.handle('aiContext:deleteRule', async (_, id: string) => {
+  const { deleteAiRule } = await import('../ai-context-store')
+  await deleteAiRule(id)
+})
+ipcMain.handle('aiContext:listSkills', async () => {
+  const { listAiSkills } = await import('../ai-context-store')
+  return listAiSkills()
+})
+ipcMain.handle('aiContext:getChatContext', async () => {
+  const { buildAiChatContext } = await import('../ai-context-store')
+  return buildAiChatContext(settingsStore.get().experimental.aiRuleStates)
+})
+ipcMain.handle('aiContext:openSkillsDirectory', async (): Promise<void> => {
+  const { ensureAiSkillsDir } = await import('../ai-context-store')
+  const dir = await ensureAiSkillsDir()
+  const result = await shell.openPath(dir)
+  if (result) throw new Error(result)
+})
+
 ipcMain.handle('settings:exportToFile', async () => {
   const date = new Date().toISOString().slice(0, 10)
   const saveOptions = {

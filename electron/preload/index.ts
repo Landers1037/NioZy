@@ -89,6 +89,25 @@ const api: ElectronAPI = {
   copilot: {
     getRuntimeUrl: () => ipcRenderer.invoke('copilot:getRuntimeUrl') as Promise<string | null>,
   },
+  aiContext: {
+    listRules: () =>
+      ipcRenderer.invoke('aiContext:listRules') as Promise<
+        import('../shared/ai-context-types').AiRuleSummary[]
+      >,
+    readRule: (id) => ipcRenderer.invoke('aiContext:readRule', id) as Promise<string | null>,
+    saveRule: (input) => ipcRenderer.invoke('aiContext:saveRule', input) as Promise<void>,
+    deleteRule: (id) => ipcRenderer.invoke('aiContext:deleteRule', id) as Promise<void>,
+    listSkills: () =>
+      ipcRenderer.invoke('aiContext:listSkills') as Promise<
+        import('../shared/ai-context-types').AiSkillSummary[]
+      >,
+    getChatContext: () =>
+      ipcRenderer.invoke('aiContext:getChatContext') as Promise<
+        import('../shared/ai-context-types').AiChatContextPayload
+      >,
+    openSkillsDirectory: () =>
+      ipcRenderer.invoke('aiContext:openSkillsDirectory') as Promise<void>,
+  },
   fonts: {
     list: () => ipcRenderer.invoke('fonts:list'),
   },
