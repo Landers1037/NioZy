@@ -1,4 +1,4 @@
-import type { QuickJSContext, QuickJSWASMModule } from 'quickjs-emscripten'
+import type { QuickJSContext, QuickJSWASMModule } from 'quickjs-emscripten-core'
 import {
   disposeQuickJsSandboxModule,
   loadQuickJsSandboxModule,

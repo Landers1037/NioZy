@@ -46,10 +46,21 @@ function findWebappDir(extractedRoot) {
   return null
 }
 
+function stripServerOnlyDirs(base) {
+  for (const dir of ['WEB-INF', 'META-INF']) {
+    const p = join(base, dir)
+    if (existsSync(p)) {
+      rmSync(p, { recursive: true, force: true })
+      console.log(`[vendor-drawio] 已移除服务端目录 ${dir}/`)
+    }
+  }
+}
+
 async function main() {
   if (existsSync(marker)) {
     const version = await import('fs').then((fs) => fs.readFileSync(marker, 'utf8').trim())
     if (version === DRAWIO_VERSION && existsSync(join(dest, 'index.html'))) {
+      stripServerOnlyDirs(dest)
       console.log(`[vendor-drawio] 已存在 v${DRAWIO_VERSION}，跳过`)
       return
     }
@@ -85,6 +96,7 @@ async function main() {
   if (existsSync(dest)) rmSync(dest, { recursive: true, force: true })
   mkdirSync(dest, { recursive: true })
   cpSync(webapp, dest, { recursive: true })
+  stripServerOnlyDirs(dest)
   await import('fs').then((fs) =>
     fs.writeFileSync(marker, DRAWIO_VERSION, 'utf8'),
   )
