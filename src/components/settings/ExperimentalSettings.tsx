@@ -14,7 +14,6 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { ExperimentalAiSettings } from './ExperimentalAiSettings'
 import { Braces, Cpu, Link2, ScrollText, Terminal, Monitor, Zap, MousePointer2 } from 'lucide-react'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
@@ -258,8 +257,6 @@ export function ExperimentalSettings() {
             </>
           )}
         </div>
-
-        <ExperimentalAiSettings />
 
         <SettingField
           icon={Link2}
