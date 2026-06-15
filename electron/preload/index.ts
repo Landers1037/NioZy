@@ -180,6 +180,7 @@ const api: ElectronAPI = {
   files: {
     saveText: (content, defaultFileName) =>
       ipcRenderer.invoke('files:saveText', content, defaultFileName),
+    saveImage: (input) => ipcRenderer.invoke('files:saveImage', input),
     listRoots: () => ipcRenderer.invoke('fs:listRoots'),
     getImagePreviewUrl: (filePath) => ipcRenderer.invoke('fs:getImagePreviewUrl', filePath),
     getTerminalFilePreviewUrl: (filePath, kind) =>

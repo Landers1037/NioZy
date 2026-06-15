@@ -982,6 +982,46 @@ ipcMain.handle(
   },
 )
 
+function imageSaveFilters(defaultFileName: string) {
+  const ext = defaultFileName.split('.').pop()?.toLowerCase()
+  if (ext === 'jpg' || ext === 'jpeg') {
+    return [{ name: 'JPEG', extensions: ['jpg', 'jpeg'] }]
+  }
+  if (ext === 'svg') {
+    return [{ name: 'SVG', extensions: ['svg'] }]
+  }
+  return [{ name: 'PNG', extensions: ['png'] }]
+}
+
+ipcMain.handle(
+  'files:saveImage',
+  async (
+    _,
+    input: {
+      content: string
+      encoding: 'utf8' | 'base64'
+      defaultFileName: string
+      mimeType?: string
+    },
+  ): Promise<boolean> => {
+    const saveOptions = {
+      title: '导出终端截图',
+      defaultPath: input.defaultFileName,
+      filters: imageSaveFilters(input.defaultFileName),
+    }
+    const { canceled, filePath } = mainWindow
+      ? await dialog.showSaveDialog(mainWindow, saveOptions)
+      : await dialog.showSaveDialog(saveOptions)
+    if (canceled || !filePath) return false
+    if (input.encoding === 'base64') {
+      await writeFile(filePath, Buffer.from(input.content, 'base64'))
+    } else {
+      await writeFile(filePath, input.content, 'utf8')
+    }
+    return true
+  },
+)
+
 function drawingFileFilters(kind: 'excalidraw' | 'drawio') {
   if (kind === 'excalidraw') {
     return [{ name: 'Excalidraw', extensions: ['excalidraw', 'json'] }]
