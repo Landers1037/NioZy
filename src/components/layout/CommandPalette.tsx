@@ -7,6 +7,7 @@ import { getTabCornerRadius, useUiStyle } from '@/lib/ui-style'
 import {
   dialogContentClass,
   dialogOverlayClass,
+  UI_DIALOG_OVERLAY,
   useDialogAnimationEnabled,
 } from '@/lib/dialog-animations'
 import { Input } from '@/components/ui/input'
@@ -254,7 +255,7 @@ export function CommandPalette() {
         <div className="fixed inset-0 z-[60] no-drag">
           <button
             type="button"
-            className={cn('absolute inset-0 bg-black/50', dialogOverlayClass(animate))}
+            className={cn('absolute inset-0', UI_DIALOG_OVERLAY, dialogOverlayClass(animate))}
             aria-label={t('common.close')}
             onClick={() => closePalette()}
           />
