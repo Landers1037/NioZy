@@ -873,7 +873,8 @@
       "newTerminal": "New terminal",
       "openSettings": "Open settings",
       "prevTerminalTab": "Previous terminal tab",
-      "nextTerminalTab": "Next terminal tab"
+      "nextTerminalTab": "Next terminal tab",
+      "commandPalette": "Toggle command palette"
     },
     "vault": {
       "title": "Vault",
@@ -1066,7 +1067,31 @@
     "editGroupNameDesc": "Change how this group appears in the sidebar.",
     "closeGroup": "Close",
     "closeGroupTitle": "Close group",
-    "closeGroupDesc": "Close group \"{{name}}\"? All {{count}} terminal tab(s) in this group will be closed and their processes ended."
+    "closeGroupDesc": "Close group \"{{name}}\"? All {{count}} terminal tab(s) in this group will be closed and their processes ended.",
+    "removeFromGroup": "Remove from group"
+  },
+  "commandPalette": {
+    "title": "Command palette",
+    "placeholder": "Type a command… (help, /help, /all for all commands)",
+    "noResults": "No matching commands",
+    "recentHint": "Frequently used",
+    "helpTip": "Type help, /help, or /all to list all commands",
+    "allCommandsHint": "All commands",
+    "unavailable": "This command cannot run in the current context",
+    "unavailableShort": "Unavailable",
+    "commands": {
+      "newTerminal": "New terminal",
+      "editTabTitle": "Rename terminal tab",
+      "closeTerminalTab": "Close terminal tab",
+      "addTabToGroup": "Add terminal tab to group",
+      "removeTabFromGroup": "Remove terminal tab from group",
+      "cloneTerminalTab": "Clone terminal tab",
+      "splitTerminal": "Split terminal",
+      "exportTerminal": "Export terminal",
+      "terminalScreenshot": "Terminal screenshot",
+      "openSettings": "Open settings",
+      "toggleRenderMode": "Toggle render mode"
+    }
   },
   "scp": {
     "title": "SCP transfer — {{title}}",

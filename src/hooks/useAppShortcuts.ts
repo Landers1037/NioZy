@@ -12,6 +12,7 @@ import {
   isFormTypingTarget,
 } from '@/lib/app-shortcut-actions'
 import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
+import { useCommandPaletteStore } from '@/stores/command-palette-store'
 
 export function useAppShortcuts(): void {
   const shortcuts = useAppStore((s) => s.settings?.shortcuts)
@@ -21,9 +22,18 @@ export function useAppShortcuts(): void {
 
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null
-      if (isFormTypingTarget(target)) return
-
       const app = shortcuts.app
+
+      if (matchAccelerator(app.commandPalette, e)) {
+        e.preventDefault()
+        e.stopPropagation()
+        useCommandPaletteStore.getState().togglePalette()
+        return
+      }
+
+      if (useCommandPaletteStore.getState().open) return
+
+      if (isFormTypingTarget(target)) return
       const { tabs, activeTabId, addSettingsTab } = useAppStore.getState()
 
       if (matchAccelerator(app.openSettings, e)) {

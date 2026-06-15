@@ -873,7 +873,8 @@
       "newTerminal": "打开新的终端",
       "openSettings": "打开设置页面",
       "prevTerminalTab": "切换到上一个终端 Tab",
-      "nextTerminalTab": "切换到下一个终端 Tab"
+      "nextTerminalTab": "切换到下一个终端 Tab",
+      "commandPalette": "打开/关闭命令面板"
     },
     "vault": {
       "title": "存储库",
@@ -1066,7 +1067,31 @@
     "editGroupNameDesc": "修改分组在侧边栏中显示的名称。",
     "closeGroup": "关闭",
     "closeGroupTitle": "关闭分组",
-    "closeGroupDesc": "确定要关闭分组「{{name}}」吗？其中 {{count}} 个终端 Tab 将全部关闭，终端进程将结束。"
+    "closeGroupDesc": "确定要关闭分组「{{name}}」吗？其中 {{count}} 个终端 Tab 将全部关闭，终端进程将结束。",
+    "removeFromGroup": "移出分组"
+  },
+  "commandPalette": {
+    "title": "命令面板",
+    "placeholder": "输入命令名称…（help、/help、/all 查看全部）",
+    "noResults": "未找到匹配的命令",
+    "recentHint": "常用命令",
+    "helpTip": "输入 help、/help 或 /all 查看全部命令",
+    "allCommandsHint": "全部命令",
+    "unavailable": "当前条件下无法执行此命令",
+    "unavailableShort": "不可用",
+    "commands": {
+      "newTerminal": "新建终端",
+      "editTabTitle": "修改终端 Tab 标题",
+      "closeTerminalTab": "关闭终端 Tab",
+      "addTabToGroup": "添加终端 Tab 到一个分组",
+      "removeTabFromGroup": "将终端 Tab 移出分组",
+      "cloneTerminalTab": "克隆终端 Tab",
+      "splitTerminal": "拆分终端",
+      "exportTerminal": "导出终端",
+      "terminalScreenshot": "终端截图",
+      "openSettings": "打开设置",
+      "toggleRenderMode": "切换渲染模式"
+    }
   },
   "scp": {
     "title": "SCP 传输 — {{title}}",

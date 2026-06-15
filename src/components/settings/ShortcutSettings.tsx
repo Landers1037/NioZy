@@ -18,6 +18,7 @@ const APP_SHORTCUT_KEYS = [
   'openSettings',
   'prevTerminalTab',
   'nextTerminalTab',
+  'commandPalette',
 ] as const satisfies ReadonlyArray<keyof AppShortcuts['app']>
 
 export function ShortcutSettings() {

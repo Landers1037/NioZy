@@ -40,6 +40,7 @@ import { useResourceAutoDegradeMonitor } from '@/hooks/useResourceAutoDegradeMon
 import { useReminderAlerts } from '@/hooks/useReminderAlerts'
 import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
 import { TerminalContextMenuHost } from '@/components/terminal/TerminalContextMenuHost'
+import { CommandPalette } from '@/components/layout/CommandPalette'
 import { cn } from '@/lib/utils'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
@@ -518,6 +519,7 @@ export default function App() {
       <FilePreviewDialog />
       <ReminderDueDialog />
       <TerminalContextMenuHost />
+      <CommandPalette />
       {aiSidebarEnabled && AiCopilotRoot && (
         <Suspense key={aiMountKey} fallback={null}>
           <AiCopilotRoot />
