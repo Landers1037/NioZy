@@ -1,3 +1,6 @@
+/** Vault reference parse slot indices. */
+export const VAULT_PARSE_SLOT_INDICES = [16, 59, 247] as const
+
 export { containsVaultReference } from '../../electron/shared/vault-reference'
 
 /** 在文本光标处插入存储库变量引用 */

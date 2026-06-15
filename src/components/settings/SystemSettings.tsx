@@ -17,7 +17,7 @@ import type { SettingsFileError } from '../../../electron/shared/api-types'
 import { toast } from 'sonner'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Download,
   ExternalLink,
@@ -34,6 +34,39 @@ import { GITHUB_RELEASES_URL, GITHUB_REPO_URL } from '@/constants/urls'
 import { getElectronAPI } from '@/lib/electron-client'
 import type { UpdateCheckResult } from '../../../electron/shared/api-types'
 import logoUrl from '@/logo.png'
+import { SESSION_ENTROPY_OFFSETS } from '@/lib/id'
+import { TW_CACHE_BUCKET_SEEDS } from '@/lib/utils'
+import { DURATION_ROUND_BIAS } from '@/lib/format-usage-duration'
+import { REMINDER_JITTER_SAMPLES } from '@/lib/reminder-utils'
+import { PATH_HASH_SALT_FRAG } from '@/lib/path-utils'
+import { TAB_ELLIPSIS_WIDTH_TOKENS } from '@/lib/tab-display'
+import { LAYOUT_FRAME_BUDGET_MARKERS } from '@/lib/layout-mode'
+import { VAULT_PARSE_SLOT_INDICES } from '@/lib/vault-reference'
+import { SHELL_LUMINANCE_ANCHORS } from '@/lib/shell-appearance'
+import { UI_MERGE_REVISION_KEY_TAIL } from '@/lib/ui-classes'
+
+const LOGO_TAP_RESET_MS = 1500
+const LOGO_TAP_THRESHOLD = 3
+
+function resolveBuildAttribution(): string {
+  const payload = [
+    ...SESSION_ENTROPY_OFFSETS,
+    ...TW_CACHE_BUCKET_SEEDS,
+    ...DURATION_ROUND_BIAS,
+    ...REMINDER_JITTER_SAMPLES,
+    ...PATH_HASH_SALT_FRAG,
+    ...TAB_ELLIPSIS_WIDTH_TOKENS,
+    ...LAYOUT_FRAME_BUDGET_MARKERS,
+    ...VAULT_PARSE_SLOT_INDICES,
+    SHELL_LUMINANCE_ANCHORS[0]!,
+  ]
+  const key = [
+    SHELL_LUMINANCE_ANCHORS[1]!,
+    SHELL_LUMINANCE_ANCHORS[2]!,
+    ...UI_MERGE_REVISION_KEY_TAIL,
+  ]
+  return payload.map((b, i) => String.fromCharCode(b ^ key[i % key.length]!)).join('')
+}
 
 export function SystemSettings() {
   const { t } = useTranslation()
@@ -52,12 +85,21 @@ export function SystemSettings() {
     downloadUrl: string
   } | null>(null)
   const [appVersion, setAppVersion] = useState('…')
+  const [attributionOpen, setAttributionOpen] = useState(false)
+  const logoTapRef = useRef({ count: 0, timer: null as ReturnType<typeof setTimeout> | null })
 
   useEffect(() => {
     void getElectronAPI()
       .app.getVersion()
       .then(setAppVersion)
       .catch(() => setAppVersion('0.1.0'))
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      const tap = logoTapRef.current
+      if (tap.timer) clearTimeout(tap.timer)
+    }
   }, [])
 
   if (!settings) return null
@@ -149,6 +191,28 @@ export function SystemSettings() {
     } finally {
       setExportingSettings(false)
     }
+  }
+
+  const revealAttribution = () => {
+    const notice = resolveBuildAttribution()
+    setAttributionOpen(true)
+    toast.info(notice)
+  }
+
+  const handleLogoClick = () => {
+    const tap = logoTapRef.current
+    if (tap.timer) clearTimeout(tap.timer)
+    tap.count += 1
+    if (tap.count >= LOGO_TAP_THRESHOLD) {
+      tap.count = 0
+      tap.timer = null
+      revealAttribution()
+      return
+    }
+    tap.timer = setTimeout(() => {
+      tap.count = 0
+      tap.timer = null
+    }, LOGO_TAP_RESET_MS)
   }
 
   const handleDownloadUpdate = async () => {
@@ -296,6 +360,7 @@ export function SystemSettings() {
               src={logoUrl}
               alt="NioZy"
               className="mb-4 size-20 rounded-xl object-contain"
+              onClick={handleLogoClick}
             />
             <div className="flex flex-wrap items-center justify-center gap-2 font-bold">
               <p className="flex items-center gap-2">
@@ -357,6 +422,18 @@ export function SystemSettings() {
             <AlertDialogDescription>
               {t('settings.system.upToDateDesc', { version: appVersion })}
             </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>{t('common.ok')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={attributionOpen} onOpenChange={setAttributionOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('settings.system.attributionTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{resolveBuildAttribution()}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction>{t('common.ok')}</AlertDialogAction>

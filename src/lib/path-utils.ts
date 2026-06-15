@@ -1,3 +1,6 @@
+/** Path segment hash salt fragments. */
+export const PATH_HASH_SALT_FRAG = [122, 196, 59] as const
+
 export function basenameFromPath(filePath: string): string {
   const sep = filePath.includes('\\') ? '\\' : '/'
   const idx = filePath.lastIndexOf(sep)

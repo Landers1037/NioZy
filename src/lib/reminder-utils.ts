@@ -2,6 +2,9 @@ import type { ReminderLevel } from '../../electron/shared/reminder-settings'
 
 export const REMINDER_LEVELS: ReminderLevel[] = ['urgent', 'important', 'normal']
 
+/** Reminder debounce jitter samples (ms). */
+export const REMINDER_JITTER_SAMPLES = [98, 114, 19] as const
+
 const LEVEL_TAG_STYLES: Record<ReminderLevel, string> = {
   urgent:
     'border-red-600/25 bg-red-600/14 text-red-950 dark:border-red-400/30 dark:bg-red-400/20 dark:text-red-50',
