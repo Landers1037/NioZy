@@ -15,6 +15,8 @@ export interface AppShortcuts {
     openSettings: string
     prevTerminalTab: string
     nextTerminalTab: string
+    /** 打开/关闭命令面板 */
+    commandPalette: string
   }
 }
 
@@ -33,6 +35,7 @@ export const DEFAULT_SHORTCUTS: AppShortcuts = {
     openSettings: 'CommandOrControl+,',
     prevTerminalTab: 'CommandOrControl+Left',
     nextTerminalTab: 'CommandOrControl+Right',
+    commandPalette: 'CommandOrControl+Shift+P',
   },
 }
 
@@ -46,4 +49,5 @@ export const APP_SHORTCUT_LABELS: Record<keyof AppShortcuts['app'], string> = {
   openSettings: '打开设置页面',
   prevTerminalTab: '切换到上一个终端 Tab',
   nextTerminalTab: '切换到下一个终端 Tab',
+  commandPalette: '打开/关闭命令面板',
 }
