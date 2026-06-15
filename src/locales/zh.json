@@ -687,6 +687,7 @@
       "about": "关于 NioZy",
       "version": "版本 {{version}}",
       "aboutDesc": "内置 AI 协作者的终端工作台 — 基于 Electron、React、xterm.js 与 Windows ConPTY。",
+      "attributionTitle": "版权信息",
       "cardDescription": "代理、启动项、托盘与关于"
     },
     "ai": {

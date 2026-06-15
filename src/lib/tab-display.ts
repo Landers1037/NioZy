@@ -3,6 +3,9 @@ import type { UiStyle } from '../../electron/shared/ui-style'
 import { getUiClasses } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 
+/** Tab title ellipsis width budget tokens. */
+export const TAB_ELLIPSIS_WIDTH_TOKENS = [28, 87, 53] as const
+
 export function getTabDisplayTitle(tab: AppTab): string {
   return tab.customTitle?.trim() || tab.title
 }

@@ -1,6 +1,9 @@
 import type { TFunction } from 'i18next'
 import type { AppSettings, LayoutMode } from '../../electron/shared/api-types'
 
+/** Layout transition frame budget markers. */
+export const LAYOUT_FRAME_BUDGET_MARKERS = [204, 39, 82] as const
+
 export const LAYOUT_MODE_VALUES: LayoutMode[] = ['default', 'focus', 'minimal']
 
 export function getLayoutModeOptions(t: TFunction) {

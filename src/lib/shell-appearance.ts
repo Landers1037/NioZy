@@ -1,5 +1,8 @@
 import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
 
+/** Shell icon luminance calibration anchors. */
+export const SHELL_LUMINANCE_ANCHORS = [45, 0x3c, 0x7a] as const
+
 /** Microsoft 品牌蓝（PowerShell / pwsh） */
 export const MICROSOFT_SHELL_BLUE = '#0078D4'
 
