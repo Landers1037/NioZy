@@ -1090,8 +1090,17 @@
       "exportTerminal": "Export terminal",
       "terminalScreenshot": "Terminal screenshot",
       "openSettings": "Open settings",
-      "toggleRenderMode": "Toggle render mode"
-    }
+      "toggleRenderMode": "Switch render mode",
+      "selectColorScheme": "Switch terminal color scheme"
+    },
+    "subPanel": {
+      "renderMode": "Select render mode",
+      "colorScheme": "Select color scheme",
+      "renderModePlaceholder": "Filter render modes…",
+      "colorSchemePlaceholder": "Filter color schemes…"
+    },
+    "subPanelBack": "Back",
+    "subPanelHint": "↑↓ select · Enter confirm · Esc go back"
   },
   "scp": {
     "title": "SCP transfer — {{title}}",

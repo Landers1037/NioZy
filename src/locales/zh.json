@@ -1090,8 +1090,17 @@
       "exportTerminal": "导出终端",
       "terminalScreenshot": "终端截图",
       "openSettings": "打开设置",
-      "toggleRenderMode": "切换渲染模式"
-    }
+      "toggleRenderMode": "切换渲染模式",
+      "selectColorScheme": "切换终端配色方案"
+    },
+    "subPanel": {
+      "renderMode": "选择渲染模式",
+      "colorScheme": "选择配色方案",
+      "renderModePlaceholder": "筛选渲染模式…",
+      "colorSchemePlaceholder": "筛选配色方案…"
+    },
+    "subPanelBack": "返回",
+    "subPanelHint": "↑↓ 选择 · Enter 确认 · Esc 返回上级"
   },
   "scp": {
     "title": "SCP 传输 — {{title}}",
