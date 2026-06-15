@@ -1,7 +1,7 @@
 import { useAppStore } from '@/stores/app-store'
 import type { AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
-import { toastTerminalError } from '@/lib/terminal-actions'
+import { toastTerminalError, applySshDynamicPasswordToCreateOptions } from '@/lib/terminal-actions'
 import {
   getAllTerminalIds,
   getSplitPanes,
@@ -62,9 +62,14 @@ export async function resumeTabPty(tab: AppTab): Promise<boolean> {
     const api = getElectronAPI()
     const newPanes: { terminalId: string }[] = []
     let lastShell = tab.shell
+    const createWithDynamic = await applySshDynamicPasswordToCreateOptions(
+      spawn.create,
+      spawn.sshConnectionId ?? tab.sshConnectionId,
+    )
+    if (!createWithDynamic) return false
 
     for (let i = 0; i < panes.length; i++) {
-      const result = await api.terminal.create(spawn.create)
+      const result = await api.terminal.create(createWithDynamic)
       lastShell = result.shell
       setTerminalCwd(result.id, result.cwd)
       newPanes.push({ terminalId: result.id })

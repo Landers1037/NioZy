@@ -39,6 +39,7 @@ import { useSshDisconnectAlert } from '@/hooks/useSshDisconnectAlert'
 import { useResourceAutoDegradeMonitor } from '@/hooks/useResourceAutoDegradeMonitor'
 import { useReminderAlerts } from '@/hooks/useReminderAlerts'
 import { ReminderDueDialog } from '@/components/reminder/ReminderDueDialog'
+import { SshDynamicPasswordDialog } from '@/components/ssh/SshDynamicPasswordDialog'
 import { TerminalContextMenuHost } from '@/components/terminal/TerminalContextMenuHost'
 import { CommandPalette } from '@/components/layout/CommandPalette'
 import { cn } from '@/lib/utils'
@@ -519,6 +520,7 @@ export default function App() {
       <StatusBar />
       <FilePreviewDialog />
       <ReminderDueDialog />
+      <SshDynamicPasswordDialog />
       <TerminalContextMenuHost />
       <CommandPalette />
       {aiSidebarEnabled && AiCopilotRoot && (

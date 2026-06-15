@@ -414,19 +414,45 @@ function ConnectionDraftFields({
       ) : draft.type === 'ssh' ? (
         <>
           <SettingField icon={Key} label={t('settings.connections.authMethod')}>
-            <Select
-              value={draft.sshAuth}
-              onValueChange={(v) => setDraft({ ...draft, sshAuth: v as 'password' | 'publickey' })}
-            >
-              <SelectTrigger className="max-w-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="password">{t('settings.connections.sshPasswordLogin')}</SelectItem>
-                <SelectItem value="publickey">{t('settings.connections.sshPublicKeyLogin')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-4">
+              <Select
+                value={draft.sshAuth}
+                onValueChange={(v) => {
+                  const sshAuth = v as 'password' | 'publickey'
+                  setDraft({
+                    ...draft,
+                    sshAuth,
+                    ...(sshAuth === 'publickey' ? { sshDynamicPassword: false } : {}),
+                  })
+                }}
+              >
+                <SelectTrigger className="max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="password">{t('settings.connections.sshPasswordLogin')}</SelectItem>
+                  <SelectItem value="publickey">{t('settings.connections.sshPublicKeyLogin')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor={`${fieldIdPrefix}ssh-dynamic-password`}
+                  className="whitespace-nowrap text-sm font-normal text-muted-foreground"
+                >
+                  {t('settings.connections.sshDynamicPassword')}
+                </Label>
+                <Switch
+                  id={`${fieldIdPrefix}ssh-dynamic-password`}
+                  checked={draft.sshDynamicPassword}
+                  disabled={draft.sshAuth !== 'password'}
+                  onCheckedChange={(sshDynamicPassword) => setDraft({ ...draft, sshDynamicPassword })}
+                />
+              </div>
+            </div>
           </SettingField>
+          {draft.sshDynamicPassword && draft.sshAuth === 'password' ? (
+            <p className="text-xs text-muted-foreground">{t('settings.connections.sshDynamicPasswordHint')}</p>
+          ) : null}
 
           <div className="grid grid-cols-2 gap-4">
             <SettingField icon={Server} label={t('settings.connections.host')}>

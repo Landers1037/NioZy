@@ -134,6 +134,8 @@ export interface CustomConnection {
   sshPort?: number
   /** 密码登录；支持 ${vaultKey} 引用存储库 */
   sshPassword?: string
+  /** 启用后连接时需手动输入动态密码，最终密码为 sshPassword + 动态密码 */
+  sshDynamicPassword?: boolean
   sshKeyPath?: string
   /** SSH 连接分组（仅展示与组织用） */
   sshGroup?: string
@@ -359,6 +361,8 @@ export interface TerminalCreateOptions {
   elevated?: boolean
   /** SSH 连接 id：主进程据此应用认证方式、密钥路径与 SSH_ASKPASS */
   sshConnectionId?: string
+  /** 动态密码后缀（仅连接时传入，不持久化） */
+  sshDynamicPasswordSuffix?: string
 }
 
 export interface SaveImageInput {

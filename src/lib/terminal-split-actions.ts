@@ -9,7 +9,7 @@ import {
   resolveTabTerminalSpawn,
   type TerminalSplitPane,
 } from '@/lib/terminal-tab-utils'
-import { toastTerminalError } from '@/lib/terminal-actions'
+import { toastTerminalError, applySshDynamicPasswordToCreateOptions } from '@/lib/terminal-actions'
 
 function updateTab(tabId: string, updater: (tab: import('@/stores/app-store').AppTab) => import('@/stores/app-store').AppTab): void {
   useAppStore.setState((s) => ({
@@ -36,7 +36,12 @@ export async function splitTerminalTab(tabId: string): Promise<void> {
 
   try {
     const { sshConnectionId, create: createOptions } = spawn
-    const result = await getElectronAPI().terminal.create(createOptions)
+    const createWithDynamic = await applySshDynamicPasswordToCreateOptions(
+      createOptions,
+      sshConnectionId,
+    )
+    if (!createWithDynamic) return
+    const result = await getElectronAPI().terminal.create(createWithDynamic)
     setTerminalCwd(result.id, result.cwd)
 
     const newPanes: TerminalSplitPane[] = [...panes, { terminalId: result.id }]

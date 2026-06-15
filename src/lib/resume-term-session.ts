@@ -6,7 +6,7 @@ import { RESUME_TERM_SESSION_VERSION } from '../../electron/shared/resume-term-s
 import type { AppTab } from '@/stores/app-store'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
-import { toastTerminalError } from '@/lib/terminal-actions'
+import { toastTerminalError, applySshDynamicPasswordToCreateOptions } from '@/lib/terminal-actions'
 import {
   getSplitPanes,
   normalizeTabAfterSplitChange,
@@ -153,10 +153,23 @@ async function restoreSingleTerminalTab(
   })
 
   try {
+    const connId =
+      saved.sshConnectionId ??
+      spawn.sshConnectionId ??
+      spawn.create.sshConnectionId
+    const baseCreate = {
+      ...spawn.create,
+    }
+    const createWithDynamic = await applySshDynamicPasswordToCreateOptions(baseCreate, connId)
+    if (!createWithDynamic) {
+      resumeTermLog.warn('restore tab skipped: dynamic password cancelled', { index, title: saved.title })
+      return null
+    }
+
     for (let i = 0; i < paneCount; i++) {
       const paneCwd = saved.panes?.[i]?.cwd
       const createPayload = {
-        ...spawn.create,
+        ...createWithDynamic,
         ...(paneCwd ? { cwd: paneCwd } : {}),
       }
       resumeTermLog.debug('create pane', { index, pane: i, shell: createPayload.shell, cwd: paneCwd })

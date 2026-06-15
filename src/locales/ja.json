@@ -861,6 +861,8 @@
       "authMethod": "認証",
       "authPassword": "パスワード",
       "authPublicKey": "公開鍵",
+      "sshDynamicPassword": "動的パスワード",
+      "sshDynamicPasswordHint": "接続時にサーバーの動的ランダムパスワードの入力が必要です。実際のログインパスワードは上記パスワードと入力値を連結したものです。",
       "host": "ホスト",
       "port": "ポート",
       "username": "ユーザー名",
@@ -1181,5 +1183,12 @@
   },
   "electron": {
     "preloadMissing": "Electron プリロード API が見つかりません。Vite URL をブラウザで開かず npm run start で起動してください。"
+  },
+  "ssh": {
+    "dynamicPasswordTitle": "動的パスワードを入力",
+    "dynamicPasswordDescription": "「{{name}}」への接続には、サーバーの現在の動的ランダムパスワードが必要です。",
+    "dynamicPasswordLabel": "動的パスワード",
+    "dynamicPasswordPlaceholder": "動的パスワードを入力",
+    "dynamicPasswordConnect": "接続"
   }
 }

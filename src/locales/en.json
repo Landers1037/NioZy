@@ -969,6 +969,8 @@
       "authMethod": "Authentication",
       "authPassword": "Password",
       "authPublicKey": "Public key",
+      "sshDynamicPassword": "Dynamic password",
+      "sshDynamicPasswordHint": "You must enter the server's current one-time password when connecting; the login password is the saved password above plus this value.",
       "host": "Host",
       "port": "Port",
       "username": "Username",
@@ -1323,5 +1325,12 @@
   },
   "electron": {
     "preloadMissing": "Electron preload API not found. Run npm run start instead of opening the Vite URL in a browser."
+  },
+  "ssh": {
+    "dynamicPasswordTitle": "Enter dynamic password",
+    "dynamicPasswordDescription": "Connecting to \"{{name}}\" requires the server's current one-time password.",
+    "dynamicPasswordLabel": "Dynamic password",
+    "dynamicPasswordPlaceholder": "Enter dynamic password",
+    "dynamicPasswordConnect": "Connect"
   }
 }

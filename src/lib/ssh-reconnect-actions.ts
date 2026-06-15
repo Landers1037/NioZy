@@ -3,7 +3,7 @@ import { useAppStore } from '@/stores/app-store'
 import type { AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
-import { toastTerminalError } from '@/lib/terminal-actions'
+import { toastTerminalError, applySshDynamicPasswordToCreateOptions } from '@/lib/terminal-actions'
 import {
   getSplitPanes,
   normalizeTabAfterSplitChange,
@@ -83,6 +83,15 @@ export async function reconnectSshTerminalPane(
     return
   }
 
+  const createWithDynamic = await applySshDynamicPasswordToCreateOptions(
+    spawn.create,
+    tab.sshConnectionId ?? spawn.sshConnectionId,
+  )
+  if (!createWithDynamic) {
+    reconnectingIds.delete(oldTerminalId)
+    return
+  }
+
   const panes = getSplitPanes(tab)
   const paneIndex = panes.findIndex((p) => p.terminalId === oldTerminalId)
   if (paneIndex < 0) {
@@ -99,7 +108,7 @@ export async function reconnectSshTerminalPane(
     }
     clearTerminalCwd(oldTerminalId)
 
-    const result = await getElectronAPI().terminal.create(spawn.create)
+    const result = await getElectronAPI().terminal.create(createWithDynamic)
     setTerminalCwd(result.id, result.cwd)
 
     const newPanes = panes.map((p, i) =>
