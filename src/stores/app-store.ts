@@ -66,6 +66,9 @@ interface AppState {
     memoryPercent: number
     memoryUsedMb: number
     memoryTotalMb: number
+    batteryPercent: number
+    batteryCharging: boolean
+    batteryHasBattery: boolean
   }
   windowMaximized: boolean
   /** 各终端 PTY 的当前工作目录（由主进程解析 OSC 序列更新） */
@@ -119,6 +122,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     memoryPercent: 0,
     memoryUsedMb: 0,
     memoryTotalMb: 0,
+    batteryPercent: 100,
+    batteryCharging: false,
+    batteryHasBattery: false,
   },
   windowMaximized: false,
   terminalCwds: {},

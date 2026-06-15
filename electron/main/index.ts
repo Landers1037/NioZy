@@ -347,9 +347,17 @@ function isStatusBarLiveStatsEnabled(): boolean {
   return settingsStore.get().advanced.statusBarLiveStats !== false
 }
 
+function isStatusBarBatteryEnabled(): boolean {
+  return settingsStore.get().advanced.statusBarBattery === true
+}
+
+function isSystemStatsPollingEnabled(): boolean {
+  return isStatusBarLiveStatsEnabled() || isStatusBarBatteryEnabled()
+}
+
 function syncSystemStatsPolling(): void {
   systemStats.stop()
-  if (!isStatusBarLiveStatsEnabled()) return
+  if (!isSystemStatsPollingEnabled()) return
   systemStats.start((stats) => {
     sendToRenderer(mainWindow, 'system:stats', stats)
   })
@@ -1169,6 +1177,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     settingsLog.info('Settings updated', changes)
   }
   const liveBefore = isStatusBarLiveStatsEnabled()
+  const batteryBefore = isStatusBarBatteryEnabled()
   const shortcutsBefore = settingsStore.get().shortcuts.global
   const screenshotEnabledBefore = settingsStore.get().assistive.screenshotEnabled
   if (partial.advanced?.shellContextMenu !== undefined) {
@@ -1192,7 +1201,12 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
       copilotLog.error('Failed to sync runtime after settings save', logErrorPayload(err))
     }
   }
-  if (partial.advanced?.statusBarLiveStats !== undefined && liveBefore !== isStatusBarLiveStatsEnabled()) {
+  if (
+    (partial.advanced?.statusBarLiveStats !== undefined &&
+      liveBefore !== isStatusBarLiveStatsEnabled()) ||
+    (partial.advanced?.statusBarBattery !== undefined &&
+      batteryBefore !== isStatusBarBatteryEnabled())
+  ) {
     syncSystemStatsPolling()
   }
   if (partial.system?.launchOnStartup !== undefined) {

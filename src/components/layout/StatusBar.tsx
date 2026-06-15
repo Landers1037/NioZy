@@ -17,6 +17,7 @@ import { useUiClasses, useUiStyle } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 import { AppMetricsDialog } from '@/components/layout/AppMetricsDialog'
+import { BatteryStatusIndicator } from '@/components/layout/BatteryStatusIndicator'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 import type { UiStyle } from '../../../electron/shared/ui-style'
 
@@ -283,6 +284,7 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
   const stats = useAppStore((s) => s.systemStats)
   const theme: ThemeMode = useAppStore((s) => s.settings?.theme ?? 'light')
   const liveStats = useAppStore((s) => s.settings?.advanced.statusBarLiveStats !== false)
+  const showBattery = useAppStore((s) => s.settings?.advanced.statusBarBattery === true)
   const isClassic = uiStyle === 'windowsClassic'
   const coloredTags = usesColoredStatusTags(uiStyle)
   const fieldClass = ui.statusTag
@@ -310,6 +312,19 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
       }),
     [stats.memoryPercent, stats.memoryUsedMb, stats.memoryTotalMb, t],
   )
+
+  const batteryIndicator =
+    showBattery && liveStats ? (
+      <BatteryStatusIndicator
+        percent={stats.batteryPercent}
+        isCharging={stats.batteryCharging}
+        theme={theme}
+        uiStyle={uiStyle}
+        isClassic={isClassic}
+        fieldClass={fieldClass}
+        renderTag={renderTag}
+      />
+    ) : null
 
   if (!liveStats) {
     if (coloredTags) {
@@ -343,6 +358,7 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
             {memoryLabel}
           </StatusTagLabel>
         </NiozyStatusTag>
+        {batteryIndicator}
         <MetricButton
           title={t('statusBar.metricTitle')}
           theme={theme}
@@ -371,6 +387,7 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
         </StatusTagLabel>,
         'truncate',
       )}
+      {batteryIndicator}
       <MetricButton
         title={t('statusBar.metricTitle')}
         theme={theme}

@@ -108,6 +108,7 @@ export default function App() {
   const settings = useAppStore((s) => s.settings)
   const ui = useUiClasses()
   const statusBarLiveStats = settings?.advanced.statusBarLiveStats !== false
+  const statusBarBattery = settings?.advanced.statusBarBattery === true
   const minimalLayout = isMinimalLayout(settings)
 
   const booted = useRef(false)
@@ -222,7 +223,7 @@ export default function App() {
     let cancelled = false
     let unsubStats: (() => void) | undefined
 
-    if (statusBarLiveStats) {
+    if (statusBarLiveStats || statusBarBattery) {
       api.system.getStats().then((stats) => {
         if (!cancelled) setSystemStats(stats)
       })
@@ -233,7 +234,7 @@ export default function App() {
       cancelled = true
       unsubStats?.()
     }
-  }, [statusBarLiveStats, setSystemStats])
+  }, [statusBarLiveStats, statusBarBattery, setSystemStats])
 
   useEffect(() => {
     if (!isElectron()) return

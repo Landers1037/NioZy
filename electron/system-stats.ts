@@ -7,6 +7,9 @@ export interface SystemStatsData {
   memoryPercent: number
   memoryUsedMb: number
   memoryTotalMb: number
+  batteryPercent: number
+  batteryCharging: boolean
+  batteryHasBattery: boolean
 }
 
 const EMPTY_STATS: SystemStatsData = {
@@ -16,6 +19,9 @@ const EMPTY_STATS: SystemStatsData = {
   memoryPercent: 0,
   memoryUsedMb: 0,
   memoryTotalMb: 0,
+  batteryPercent: 100,
+  batteryCharging: false,
+  batteryHasBattery: false,
 }
 
 export class SystemStats {
@@ -58,11 +64,21 @@ export class SystemStats {
   }
 
   private async buildStats(): Promise<SystemStatsData> {
-    const [load, mem] = await Promise.all([si.currentLoad(), si.mem()])
+    const [load, mem, battery] = await Promise.all([
+      si.currentLoad(),
+      si.mem(),
+      si.battery(),
+    ])
 
     const totalMem = mem.total
     const usedMem = mem.used
     const cpuPercent = Math.min(100, Math.max(0, Math.round(load.currentLoad)))
+    const hasBattery = battery.hasBattery === true
+    const batteryPercent = hasBattery
+      ? Math.min(100, Math.max(0, Math.round(battery.percent)))
+      : 100
+    const pluggedIn = battery.acConnected === true
+    const activelyCharging = battery.isCharging === true
 
     const now = new Date()
     return {
@@ -72,6 +88,10 @@ export class SystemStats {
       memoryPercent: totalMem > 0 ? Math.round((usedMem / totalMem) * 100) : 0,
       memoryUsedMb: Math.round(usedMem / 1024 / 1024),
       memoryTotalMb: Math.round(totalMem / 1024 / 1024),
+      batteryPercent,
+      // Windows 在满电插电时常报告 isCharging=false，但 acConnected=true
+      batteryCharging: hasBattery ? activelyCharging || pluggedIn : false,
+      batteryHasBattery: hasBattery,
     }
   }
 }
