@@ -7,6 +7,7 @@ import { buttonVariants } from '@/components/ui/button'
 import {
   dialogContentClass,
   dialogOverlayClass,
+  UI_DIALOG_OVERLAY,
   useDialogAnimationEnabled,
 } from '@/lib/dialog-animations'
 import { acquireLinkPreviewOverlaySuppression } from '@/lib/link-preview-overlay'
@@ -25,7 +26,8 @@ const DialogOverlay = React.forwardRef<
     <DialogPrimitive.Overlay
       ref={ref}
       className={cn(
-        'fixed inset-0 z-50 bg-black/50 no-drag',
+        'fixed inset-0 z-50 no-drag',
+        UI_DIALOG_OVERLAY,
         dialogOverlayClass(animate),
         className,
       )}

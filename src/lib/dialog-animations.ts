@@ -11,3 +11,6 @@ export function dialogOverlayClass(enabled: boolean): string | undefined {
 export function dialogContentClass(enabled: boolean): string | undefined {
   return enabled ? 'dialog-content-animate' : undefined
 }
+
+/** 弹框遮罩层；默认 50% 黑底，glass 风格见 index.css */
+export const UI_DIALOG_OVERLAY = 'ui-dialog-overlay'
