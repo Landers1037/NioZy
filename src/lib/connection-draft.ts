@@ -19,6 +19,7 @@ export type ConnectionDraft = {
   sshPort: number
   sshAuth: 'password' | 'publickey'
   sshPassword: string
+  sshDynamicPassword: boolean
   sshKeyPath: string
   sshGroup: string
   sshStartupScript: string
@@ -52,6 +53,7 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   sshPort: 22,
   sshAuth: 'password',
   sshPassword: '',
+  sshDynamicPassword: false,
   sshKeyPath: '',
   sshGroup: '',
   sshStartupScript: '',
@@ -119,6 +121,7 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
         sshPort: c.sshPort ?? 22,
         sshAuth: c.sshAuth ?? (c.sshKeyPath?.trim() ? 'publickey' : 'password'),
         sshPassword: c.sshPassword ?? '',
+        sshDynamicPassword: c.sshDynamicPassword === true,
         sshKeyPath: c.sshKeyPath ?? '',
         sshGroup: c.sshGroup ?? '',
         sshStartupScript: c.sshStartupScript ?? '',
@@ -236,6 +239,8 @@ export function draftToConnection(
           draft.sshAuth === 'password' && draft.sshPassword.trim()
             ? draft.sshPassword.trim()
             : undefined,
+        sshDynamicPassword:
+          draft.sshAuth === 'password' && draft.sshDynamicPassword ? true : undefined,
         sshKeyPath:
           draft.sshAuth === 'publickey' && draft.sshKeyPath.trim()
             ? draft.sshKeyPath.trim()

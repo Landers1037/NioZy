@@ -6,6 +6,7 @@
 
 - 保存 SSH 主机配置（在 `term.json` 连接列表，`type: 'ssh'`）
 - 密码 / 私钥 / 键盘交互认证（`ssh-askpass`）
+- **动态密码**（`sshDynamicPassword`）：密码认证时可启用；连接前弹框输入服务器当前随机密码，最终登录密码 = `sshPassword`（含 Vault 解析）+ 动态密码；后缀经 `TerminalCreateOptions.sshDynamicPasswordSuffix` 临时传入，不持久化
 - 交互式 Shell 会话（`TerminalService.createSsh2` 或系统 `ssh.exe`）
 - **连接后脚本**：`sshStartupScript` 多行 bash，连接成功后按行依次执行（见 [功能连接管理.md](./功能连接管理.md)）
 - SSH Tab 断开检测与告警（`useSshDisconnectAlert`）
@@ -18,8 +19,8 @@
 | 层级 | 文件 |
 |------|------|
 | **主进程** | `electron/ssh-service.ts`、`electron/ssh2-connect.ts`、`electron/ssh-terminal-spawn.ts`、`electron/ssh-auth.ts`、`electron/ssh-startup-script.ts` |
-| **渲染层** | `src/lib/ssh-connection.ts`、`src/hooks/useSshDisconnectAlert.ts` |
-| **设置 UI** | `src/components/settings/SshSettings.tsx` |
+| **渲染层** | `src/lib/ssh-connection.ts`、`src/lib/terminal-actions.ts`、`src/lib/ssh-dynamic-password-prompt.ts`、`src/lib/ssh-reconnect-actions.ts`、`src/hooks/useSshDisconnectAlert.ts` |
+| **设置 UI** | `src/components/settings/SshSettings.tsx`、`src/components/ssh/SshDynamicPasswordDialog.tsx` |
 
 ## 架构与数据流
 
@@ -28,7 +29,8 @@
 ```mermaid
 flowchart TB
   subgraph Renderer["渲染层"]
-    TA["terminal-actions.openSsh*"]
+    TA["terminal-actions.createConnection"]
+    Prompt["SshDynamicPasswordDialog"]
     Alert["useSshDisconnectAlert"]
     Store["app-store sshConnectionId"]
   end
@@ -46,6 +48,7 @@ flowchart TB
   vault[("vault resolve")]
 
   TA --> TS
+  TA --> Prompt
   termjson --> Conn
   vault --> Auth
   TS --> Alert
@@ -57,14 +60,21 @@ flowchart TB
 sequenceDiagram
   participant UI as ConnectionSettings / 侧栏
   participant TA as terminal-actions
+  participant Prompt as SshDynamicPasswordDialog
   participant API as terminal:create
   participant TS as TerminalService
   participant S2 as ssh2 Client
   participant Remote as SSH 服务器
 
-  UI->>TA: openSshConnection(connection)
-  TA->>API: createSsh2(profile)
-  API->>TS: createSsh2
+  UI->>TA: createConnection(custom)
+  alt sshDynamicPassword 已启用
+    TA->>Prompt: promptSshDynamicPassword
+    Prompt-->>TA: 动态密码后缀（或取消）
+  end
+  TA->>API: terminal.create(sshConnectionId, sshDynamicPasswordSuffix?)
+  API->>API: resolveSshProfile / applySshConnectionToTerminalOptions
+  Note over API: 最终密码 = sshPassword + 后缀
+  API->>TS: createSsh2 / PTY ssh
   TS->>S2: connect + shell
   S2->>Remote: TCP 22
   Remote-->>S2: 交互式 shell stream
@@ -120,10 +130,10 @@ sequenceDiagram
 
 | 路径 | 内容 |
 |------|------|
-| `term.json` | SSH 连接配置（host、user、auth、`sshStartupScript` 等） |
+| `term.json` | SSH 连接配置（host、user、auth、`sshDynamicPassword`、`sshStartupScript` 等） |
 | `settings.json` | `ssh.*` 全局 SSH 行为 |
 
-私钥路径为本地文件路径；密钥内容可通过 Vault `${VAR}` 引用（见 [功能保险箱.md](./功能保险箱.md)）。
+私钥路径为本地文件路径；密钥内容与固定密码前缀可通过 Vault `${VAR}` 引用（见 [功能保险箱.md](./功能保险箱.md)）。动态密码每次连接时手动输入，**不写入** `term.json` 或 Tab 的 `terminalSpawn`。
 
 ## 核心代码
 
@@ -144,13 +154,17 @@ sequenceDiagram
 export function checkScpInPath(): ScpCheckResult
 ```
 
-连接配置解析：`electron/main/index.ts` 中 `resolveSshProfile(connectionId)`（`ipcMain.handle('ssh:getProfile', ...)`）。
+连接配置解析：`electron/main/index.ts` 中 `resolveSshProfile(connectionId, dynamicPasswordSuffix?)`（`ipcMain.handle('ssh:getProfile', ...)` 仍仅按 connectionId 解析，不含动态后缀，供 SCP 等场景使用）。
+
+密码拼接：`electron/ssh-auth.ts` — `resolveSshConnectionPassword` / `isSshDynamicPasswordEnabled`；内置 ssh2 与系统 `ssh.exe`（`ssh-terminal-spawn.ts` → `SSH_ASKPASS`）均使用该结果。
 
 连接后脚本：`electron/ssh-startup-script.ts`；`terminal:create` 中 `runSshConnectionStartupScript`（ssh2 与系统 ssh 两条路径均会调用）。
 
 ### 渲染层打开 SSH Tab
 
-`src/lib/terminal-actions.ts` — `openSshConnection(connection)` 等，设置 `sshConnectionId` 关联 Tab。
+`src/lib/terminal-actions.ts` — `createConnection`、`applySshDynamicPasswordToCreateOptions`，设置 `sshConnectionId` 关联 Tab；动态密码弹框由 `src/lib/ssh-dynamic-password-prompt.ts` + `SshDynamicPasswordDialog`（挂载于 `App.tsx`）提供。
+
+需再次输入动态密码的场景：新建连接、断线重连（`ssh-reconnect-actions.ts`）、拆分/克隆 Tab、超级省电恢复、会话恢复（`resume-term-session.ts`）。
 
 ### 断开状态
 

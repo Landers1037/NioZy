@@ -6,7 +6,7 @@ import {
   getActiveTerminalId,
   resolveTabTerminalSpawn,
 } from '@/lib/terminal-tab-utils'
-import { toastTerminalError } from '@/lib/terminal-actions'
+import { toastTerminalError, applySshDynamicPasswordToCreateOptions } from '@/lib/terminal-actions'
 import { requestTerminalFocus } from '@/lib/terminal-focus'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 
@@ -33,7 +33,12 @@ export async function cloneTerminalTab(tabId: string): Promise<void> {
       ...spawn.create,
       ...(cwd ? { cwd } : {}),
     }
-    const result = await getElectronAPI().terminal.create(createOptions)
+    const createWithDynamic = await applySshDynamicPasswordToCreateOptions(
+      createOptions,
+      spawn.sshConnectionId ?? tab.sshConnectionId,
+    )
+    if (!createWithDynamic) return
+    const result = await getElectronAPI().terminal.create(createWithDynamic)
     setTerminalCwd(result.id, cwd ?? result.cwd)
 
     const newTabId = `tab-${result.id}`
@@ -46,7 +51,10 @@ export async function cloneTerminalTab(tabId: string): Promise<void> {
       sshConnectionId: spawn.sshConnectionId ?? tab.sshConnectionId,
       terminalSpawn: {
         ...spawn,
-        create: createOptions,
+        create: {
+          ...createWithDynamic,
+          sshDynamicPasswordSuffix: undefined,
+        },
       },
     })
     useTabGroupStore.getState().addTabToActiveGroupIfAny(newTabId)

@@ -13,6 +13,9 @@ import type { TabTerminalSpawn } from '@/lib/terminal-tab-utils'
 import { connectionToTerminalSpawn } from '@/lib/terminal-tab-utils'
 import { requestTerminalFocus } from '@/lib/terminal-focus'
 import { useTabGroupStore } from '@/stores/tab-group-store'
+import { isSshDynamicPasswordEnabled } from '../../electron/ssh-auth'
+import { promptSshDynamicPassword } from '@/lib/ssh-dynamic-password-prompt'
+import { getSshConnection } from '@/lib/ssh-connection'
 
 type ShellType = BuiltinShellType | 'custom' | 'ssh'
 
@@ -35,14 +38,21 @@ async function openTerminalTab(
   options: TerminalCreateOptions & { sshConnectionId?: string },
 ): Promise<void> {
   const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
-  const { sshConnectionId, ...createOptions } = options
+  const { sshConnectionId, sshDynamicPasswordSuffix, ...createRest } = options
   const createPayload: TerminalCreateOptions = {
-    ...createOptions,
+    ...createRest,
     ...(sshConnectionId ? { sshConnectionId } : {}),
+    ...(sshDynamicPasswordSuffix !== undefined ? { sshDynamicPasswordSuffix } : {}),
   }
   const result = await getElectronAPI().terminal.create(createPayload)
   setTerminalCwd(result.id, result.cwd)
-  const terminalSpawn: TabTerminalSpawn = { create: createPayload, sshConnectionId }
+  const terminalSpawn: TabTerminalSpawn = {
+    create: {
+      ...createPayload,
+      sshDynamicPasswordSuffix: undefined,
+    },
+    sshConnectionId,
+  }
   const tabId = `tab-${result.id}`
   addTerminalTab({
     id: tabId,
@@ -147,6 +157,28 @@ export async function launchExternalConnection(connection: CustomConnection): Pr
   else if (connection.type === 'putty') await launchPuttyConnection(connection)
 }
 
+/** 若连接启用动态密码则弹框收集后缀；取消时返回 null */
+export async function resolveSshDynamicPasswordSuffix(
+  connection: CustomConnection,
+): Promise<string | null | undefined> {
+  if (!isSshDynamicPasswordEnabled(connection)) return undefined
+  return promptSshDynamicPassword(connection.name)
+}
+
+/** 为 terminal.create 补全动态密码后缀；取消时返回 null */
+export async function applySshDynamicPasswordToCreateOptions(
+  create: TerminalCreateOptions,
+  sshConnectionId?: string,
+): Promise<TerminalCreateOptions | null> {
+  const { settings } = useAppStore.getState()
+  const conn = getSshConnection(settings, sshConnectionId ?? create.sshConnectionId)
+  if (!conn) return create
+  const suffix = await resolveSshDynamicPasswordSuffix(conn)
+  if (suffix === null) return null
+  if (suffix === undefined) return create
+  return { ...create, sshDynamicPasswordSuffix: suffix }
+}
+
 export async function createConnection(
   shell: ShellType,
   custom?: CustomConnection,
@@ -162,7 +194,12 @@ export async function createConnection(
         return
       }
       const { create, sshConnectionId } = connectionToTerminalSpawn(custom)
-      await openTerminalTab({ ...create, sshConnectionId })
+      const createWithDynamic = await applySshDynamicPasswordToCreateOptions(
+        create,
+        sshConnectionId,
+      )
+      if (!createWithDynamic) return
+      await openTerminalTab({ ...createWithDynamic, sshConnectionId })
       return
     }
 

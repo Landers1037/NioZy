@@ -3,7 +3,7 @@ import { join } from 'path'
 import { fileURLToPath } from 'node:url'
 import { app } from 'electron'
 import type { CustomConnection, TerminalCreateOptions } from './shared/api-types'
-import { inferSshAuth } from './ssh-auth'
+import { inferSshAuth, resolveSshConnectionPassword } from './ssh-auth'
 
 const MAIN_DIR =
   typeof import.meta.dirname === 'string'
@@ -47,6 +47,7 @@ export function applySshConnectionToTerminalOptions(
   options: TerminalCreateOptions,
   conn: CustomConnection,
   resolveText: (text: string) => string,
+  dynamicPasswordSuffix?: string,
 ): TerminalCreateOptions {
   const auth = inferSshAuth(conn)
   const host = resolveText((conn.sshHost ?? conn.command).trim())
@@ -65,7 +66,8 @@ export function applySshConnectionToTerminalOptions(
     }
     args.push('-o', 'PreferredAuthentications=publickey', '-o', 'PasswordAuthentication=no')
   } else {
-    const password = conn.sshPassword?.trim() ? resolveText(conn.sshPassword.trim()) : ''
+    const password =
+      resolveSshConnectionPassword(conn, resolveText, dynamicPasswordSuffix) ?? ''
     const askpass = resolveSshAskpassScriptPath()
     if (password && askpass) {
       env.SSH_ASKPASS = askpass

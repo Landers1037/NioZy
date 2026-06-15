@@ -969,6 +969,8 @@
       "authMethod": "认证方式",
       "authPassword": "密码",
       "authPublicKey": "公钥",
+      "sshDynamicPassword": "动态密码",
+      "sshDynamicPasswordHint": "连接时需手动输入动态随机密码；实际登录密码为上方密码与其拼接。",
       "host": "主机",
       "port": "端口",
       "username": "用户名",
@@ -1323,5 +1325,12 @@
   },
   "electron": {
     "preloadMissing": "未检测到 Electron 预加载 API。请使用 npm run start 启动桌面应用，不要直接在浏览器中打开 Vite 地址。"
+  },
+  "ssh": {
+    "dynamicPasswordTitle": "输入动态密码",
+    "dynamicPasswordDescription": "连接「{{name}}」需要输入服务器当前的动态随机密码。",
+    "dynamicPasswordLabel": "动态密码",
+    "dynamicPasswordPlaceholder": "请输入动态密码",
+    "dynamicPasswordConnect": "连接"
   }
 }

@@ -72,7 +72,7 @@ import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
-import { inferSshAuth } from '../ssh-auth'
+import { inferSshAuth, resolveSshConnectionPassword } from '../ssh-auth'
 import { applySshConnectionToTerminalOptions } from '../ssh-terminal-spawn'
 import { scheduleSshStartupScript } from '../ssh-startup-script'
 import { launchRdpFromConnection } from '../rdp-launch'
@@ -1549,7 +1549,10 @@ ipcMain.on('screenshot:close', () => {
   })
 })
 
-function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
+function resolveSshProfile(
+  connectionId: string,
+  dynamicPasswordSuffix?: string,
+): SshConnectionProfile | null {
   const conn = settingsStore.get().connections.find((c) => c.id === connectionId)
   if (!conn || conn.type !== 'ssh' || !conn.sshHost?.trim() || !conn.sshUser?.trim()) {
     scpLog('getProfile: connection not found or invalid', { connectionId })
@@ -1557,10 +1560,7 @@ function resolveSshProfile(connectionId: string): SshConnectionProfile | null {
   }
   vaultStore.load()
   const auth = inferSshAuth(conn)
-  const password =
-    auth === 'password' && conn.sshPassword?.trim()
-      ? vaultStore.resolveText(conn.sshPassword.trim())
-      : undefined
+  const password = resolveSshConnectionPassword(conn, (text) => vaultStore.resolveText(text), dynamicPasswordSuffix)
   const profile: SshConnectionProfile = {
     host: vaultStore.resolveText(conn.sshHost.trim()),
     user: vaultStore.resolveText(conn.sshUser.trim()),
@@ -1752,7 +1752,7 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
       sshConn = conn
       const sshSettings = settingsStore.get().ssh
       if (sshSettings.useBuiltinSsh2) {
-        const profile = resolveSshProfile(options.sshConnectionId)
+        const profile = resolveSshProfile(options.sshConnectionId, options.sshDynamicPasswordSuffix)
         if (!profile) {
           throw new Error('无法解析 SSH 连接配置')
         }
@@ -1777,8 +1777,11 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
           throw err
         }
       }
-      resolved = applySshConnectionToTerminalOptions(resolved, conn, (text) =>
-        vaultStore.resolveText(text),
+      resolved = applySshConnectionToTerminalOptions(
+        resolved,
+        conn,
+        (text) => vaultStore.resolveText(text),
+        options.sshDynamicPasswordSuffix,
       )
     }
   }
