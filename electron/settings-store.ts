@@ -146,6 +146,8 @@ export interface AppSettings {
     disableSandbox: boolean
     transparency: number
     statusBarLiveStats: boolean
+    /** 为 true 时在状态栏内存右侧展示电池电量与充电状态 */
+    statusBarBattery: boolean
     /** Windows：在文件夹与目录背景右键注册「使用 NioZy 打开」 */
     shellContextMenu: boolean
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
@@ -247,6 +249,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
+    statusBarBattery: false,
     shellContextMenu: false,
     preserveWindowBounds: false,
     resourceAutoDegrade: false,
@@ -358,6 +361,10 @@ function buildAppSettingsFromStored(
         typeof stored.advanced?.resourceAutoDegrade === 'boolean'
           ? stored.advanced.resourceAutoDegrade
           : DEFAULT_SETTINGS.advanced.resourceAutoDegrade,
+      statusBarBattery:
+        typeof stored.advanced?.statusBarBattery === 'boolean'
+          ? stored.advanced.statusBarBattery
+          : DEFAULT_SETTINGS.advanced.statusBarBattery,
       lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
     },
     logging: normalizeLoggingSettings(

@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { Activity, AppWindow, Cpu, Droplets, FolderOpen, ShieldOff, TrendingDown } from 'lucide-react'
+import { Activity, AppWindow, Battery, Cpu, Droplets, FolderOpen, ShieldOff, TrendingDown } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { getElectronAPI } from '@/lib/electron-client'
 
@@ -181,6 +181,20 @@ export function AdvancedSettings() {
             checked={settings.advanced.statusBarLiveStats !== false}
             onCheckedChange={(v) =>
               patchSettings({ advanced: { ...settings.advanced, statusBarLiveStats: v } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Battery}
+          label={t('settings.advanced.statusBarBattery')}
+          description={t('settings.advanced.statusBarBatteryDesc')}
+          row
+        >
+          <Switch
+            checked={settings.advanced.statusBarBattery === true}
+            onCheckedChange={(v) =>
+              patchSettings({ advanced: { ...settings.advanced, statusBarBattery: v } })
             }
           />
         </SettingField>

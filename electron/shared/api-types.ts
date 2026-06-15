@@ -249,6 +249,8 @@ export interface AppSettings {
     transparency: number
     /** 为 false 时主进程停止轮询 CPU/内存并通过 IPC 推送 */
     statusBarLiveStats: boolean
+    /** 为 true 时在状态栏内存右侧展示电池电量与充电状态 */
+    statusBarBattery: boolean
     /** Windows：文件夹 / 目录背景右键「使用 NioZy 打开」 */
     shellContextMenu: boolean
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
@@ -320,6 +322,9 @@ export interface SystemStatsData {
   memoryPercent: number
   memoryUsedMb: number
   memoryTotalMb: number
+  batteryPercent: number
+  batteryCharging: boolean
+  batteryHasBattery: boolean
 }
 
 export interface AppMetricsProcess {

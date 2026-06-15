@@ -67,6 +67,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     disableSandbox: true,
     transparency: 100,
     statusBarLiveStats: true,
+    statusBarBattery: false,
     shellContextMenu: false,
     preserveWindowBounds: false,
     resourceAutoDegrade: false,
@@ -110,6 +111,9 @@ function mockSystemStats(): SystemStatsData {
     memoryPercent: 48,
     memoryUsedMb: 8192,
     memoryTotalMb: 16384,
+    batteryPercent: 76,
+    batteryCharging: false,
+    batteryHasBattery: true,
   }
 }
 
