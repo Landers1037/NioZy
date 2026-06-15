@@ -11,6 +11,8 @@ files:
   - '!node_modules/@copilotkit/**'
   - '!node_modules/sass/**'
   - '!node_modules/@excalidraw/excalidraw/dist/dev/**'
+  # 离线字体已由 vendor-excalidraw-fonts 复制到 out/renderer/excalidraw-fonts（见 index.html EXCALIDRAW_ASSET_PATH）
+  - '!node_modules/@excalidraw/excalidraw/dist/prod/fonts/**'
   - '!node_modules/@jitl/quickjs-wasmfile-debug-*/**'
   - '!node_modules/@jitl/quickjs-wasmfile-release-asyncify/**'
   - '!out/**/*.map'
