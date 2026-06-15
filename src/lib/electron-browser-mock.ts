@@ -470,6 +470,26 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         URL.revokeObjectURL(url)
         return true
       },
+      saveImage: async (input) => {
+        const mimeType =
+          input.mimeType ??
+          (input.defaultFileName.endsWith('.svg')
+            ? 'image/svg+xml'
+            : input.defaultFileName.endsWith('.jpg')
+              ? 'image/jpeg'
+              : 'image/png')
+        const blob =
+          input.encoding === 'base64'
+            ? await fetch(`data:${mimeType};base64,${input.content}`).then((r) => r.blob())
+            : new Blob([input.content], { type: mimeType })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = input.defaultFileName
+        a.click()
+        URL.revokeObjectURL(url)
+        return true
+      },
       listRoots: async () => ({
         ok: true,
         entries: [

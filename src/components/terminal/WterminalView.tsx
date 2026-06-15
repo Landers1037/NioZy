@@ -42,6 +42,7 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
+import { registerTerminalHost, unregisterTerminalHost } from '@/lib/terminal-host-registry'
 import type { TerminalViewProps } from './terminal-view-props'
 
 export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
@@ -253,6 +254,14 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     },
     [attachShellFeatures, isFocused, focus, tab.terminalId],
   )
+
+  useEffect(() => {
+    const terminalId = tab.terminalId
+    const host = hostRef.current
+    if (!terminalId || !host) return
+    registerTerminalHost(terminalId, host)
+    return () => unregisterTerminalHost(terminalId)
+  }, [tab.terminalId])
 
   useEffect(() => {
     if (!ghosttyCoreEnabled) {

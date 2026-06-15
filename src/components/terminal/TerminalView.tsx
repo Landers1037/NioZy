@@ -7,6 +7,7 @@ import { resolveTerminalThemeWithBackground, hasTerminalBackgroundImage, getTerm
 import type { TerminalViewProps } from './terminal-view-props'
 import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
+import { registerTerminalHost, unregisterTerminalHost } from '@/lib/terminal-host-registry'
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import {
   applyInteractiveCliTerminalOptions,
@@ -144,6 +145,15 @@ export function TerminalView({
   const effectiveTerminalId = isAttachHost
     ? (attachSession?.terminalId ?? null)
     : (tab.terminalId ?? null)
+
+  useEffect(() => {
+    const terminalId = effectiveTerminalId
+    const host = containerRef.current
+    if (!terminalId || !host) return
+    registerTerminalHost(terminalId, host)
+    return () => unregisterTerminalHost(terminalId)
+  }, [effectiveTerminalId])
+
   const rendererPreference = settings?.terminal.renderer ?? 'webgl'
   const superPowerSavingDom =
     settings?.performance.superPowerSaving === true &&

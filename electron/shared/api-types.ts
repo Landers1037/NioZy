@@ -356,6 +356,13 @@ export interface TerminalCreateOptions {
   sshConnectionId?: string
 }
 
+export interface SaveImageInput {
+  content: string
+  encoding: 'utf8' | 'base64'
+  defaultFileName: string
+  mimeType?: string
+}
+
 export interface ElectronAPI {
   window: {
     minimize: () => void
@@ -492,6 +499,8 @@ export interface ElectronAPI {
   files: {
     /** 弹出保存对话框并写入文本；用户取消时返回 false */
     saveText: (content: string, defaultFileName: string) => Promise<boolean>
+    /** 弹出保存对话框并写入图片；用户取消时返回 false */
+    saveImage: (input: SaveImageInput) => Promise<boolean>
     /** 本机文件系统树根（盘符或 /） */
     listRoots: () => Promise<import('./ssh-types').ScpListResult>
     getImagePreviewUrl: (filePath: string) => Promise<import('../fs-service').ImagePreviewResult>
