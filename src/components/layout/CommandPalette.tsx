@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
-import { Search } from 'lucide-react'
+import { Check, ChevronLeft, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getTabCornerRadius, useUiStyle } from '@/lib/ui-style'
 import {
@@ -41,6 +41,13 @@ import {
   listCommandPaletteItems,
   type CommandPaletteCommandId,
 } from '@/lib/command-palette-commands'
+import {
+  applyPickerSelection,
+  getActivePickerIndex,
+  getSubPanelTitle,
+  listPickerItems,
+  type CommandPaletteSubPanelKind,
+} from '@/lib/command-palette-pickers'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 import {
   recordCommandUsage,
@@ -56,6 +63,8 @@ export function CommandPalette() {
 
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [subPanel, setSubPanel] = useState<CommandPaletteSubPanelKind | null>(null)
+  const [subPanelParentId, setSubPanelParentId] = useState<CommandPaletteCommandId | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [closeOpen, setCloseOpen] = useState(false)
   const [addToGroupOpen, setAddToGroupOpen] = useState(false)
@@ -74,16 +83,26 @@ export function CommandPalette() {
   const groups = useTabGroupStore((s) => s.groups)
   const settings = useAppStore((s) => s.settings)
   const tabs = useAppStore((s) => s.tabs)
+  const terminalRenderer = settings?.terminal.renderer
+  const terminalColorScheme = settings?.terminal.colorScheme
 
-  const items = useMemo(
+  const commandItems = useMemo(
     () => listCommandPaletteItems(query),
-    [query, open, activeTab?.id, tabs, groups, settings?.terminal.renderer, settings?.experimental.terminalEmulator],
+    [query, open, activeTab?.id, tabs, groups, terminalRenderer, settings?.experimental.terminalEmulator],
   )
-  const showAllCommands = isShowAllCommandsQuery(query)
+  const pickerItems = useMemo(
+    () => (subPanel ? listPickerItems(subPanel, query) : []),
+    [subPanel, query, terminalRenderer, terminalColorScheme],
+  )
+  const showAllCommands = !subPanel && isShowAllCommandsQuery(query)
+  const inSubPanel = subPanel != null
+  const listCount = inSubPanel ? pickerItems.length : commandItems.length
 
   const resetState = useCallback(() => {
     setQuery('')
     setSelectedIndex(0)
+    setSubPanel(null)
+    setSubPanelParentId(null)
   }, [])
 
   useEffect(() => {
@@ -95,14 +114,37 @@ export function CommandPalette() {
   }, [open, resetState])
 
   useEffect(() => {
+    if (inSubPanel) {
+      const items = listPickerItems(subPanel!, query)
+      setSelectedIndex(query.trim() ? 0 : getActivePickerIndex(items))
+      return
+    }
     setSelectedIndex(0)
-  }, [query])
+  }, [query, subPanel, inSubPanel, terminalRenderer, terminalColorScheme])
 
   useEffect(() => {
     if (!open) return
     const el = listRef.current?.querySelector<HTMLElement>(`[data-cmd-index="${selectedIndex}"]`)
     el?.scrollIntoView({ block: 'nearest' })
-  }, [open, selectedIndex, items.length])
+  }, [open, selectedIndex, listCount])
+
+  const exitSubPanel = useCallback(() => {
+    setSubPanel(null)
+    setSubPanelParentId(null)
+    setQuery('')
+    setSelectedIndex(0)
+    window.setTimeout(() => inputRef.current?.focus(), 0)
+  }, [])
+
+  const runPickerSelection = useCallback(
+    (itemId: string) => {
+      if (!subPanel) return
+      applyPickerSelection(subPanel, itemId)
+      if (subPanelParentId) recordCommandUsage(subPanelParentId)
+      closePalette()
+    },
+    [subPanel, subPanelParentId, closePalette],
+  )
 
   const runCommand = useCallback(
     async (id: CommandPaletteCommandId, enabled: boolean) => {
@@ -114,6 +156,13 @@ export function CommandPalette() {
       const result = await executeCommandPaletteCommand(id)
       if (result.type === 'unavailable') {
         toast.message(t('commandPalette.unavailable'))
+        return
+      }
+
+      if (result.type === 'subPanel') {
+        setSubPanel(result.panel)
+        setSubPanelParentId(id)
+        setQuery('')
         return
       }
 
@@ -158,11 +207,46 @@ export function CommandPalette() {
     setEditOpen(false)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex((i) => Math.min(i + 1, Math.max(0, listCount - 1)))
+      return
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex((i) => Math.max(i - 1, 0))
+      return
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (inSubPanel) {
+        const item = pickerItems[selectedIndex]
+        if (item) runPickerSelection(item.id)
+        return
+      }
+      const item = commandItems[selectedIndex]
+      if (item) void runCommand(item.command.id, item.enabled)
+      return
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      if (inSubPanel) {
+        exitSubPanel()
+        return
+      }
+      closePalette()
+    }
+  }
+
   if (!open && !editOpen && !closeOpen && !addToGroupOpen && !screenshotOpen) {
     return null
   }
 
   const displayTitle = activeTab ? getTabDisplayTitle(activeTab) : ''
+  const inputPlaceholder = inSubPanel
+    ? t(`commandPalette.subPanel.${subPanel}Placeholder`)
+    : t('commandPalette.placeholder')
 
   return (
     <>
@@ -182,47 +266,69 @@ export function CommandPalette() {
             )}
             role="dialog"
             aria-modal="true"
-            aria-label={t('commandPalette.title')}
+            aria-label={inSubPanel ? getSubPanelTitle(subPanel!) : t('commandPalette.title')}
           >
+            {inSubPanel ? (
+              <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                <button
+                  type="button"
+                  className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-1 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                  onClick={exitSubPanel}
+                >
+                  <ChevronLeft className="size-3.5" />
+                  {t('commandPalette.subPanelBack')}
+                </button>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {getSubPanelTitle(subPanel!)}
+                </span>
+              </div>
+            ) : null}
             <div className="flex items-center gap-2 border-b border-border px-3 py-2">
               <Search className="size-4 shrink-0 text-muted-foreground" />
               <Input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={t('commandPalette.placeholder')}
+                placeholder={inputPlaceholder}
                 className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-                onKeyDown={(e) => {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault()
-                    setSelectedIndex((i) => Math.min(i + 1, Math.max(0, items.length - 1)))
-                    return
-                  }
-                  if (e.key === 'ArrowUp') {
-                    e.preventDefault()
-                    setSelectedIndex((i) => Math.max(i - 1, 0))
-                    return
-                  }
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    const item = items[selectedIndex]
-                    if (item) void runCommand(item.command.id, item.enabled)
-                    return
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault()
-                    closePalette()
-                  }
-                }}
+                onKeyDown={handleKeyDown}
               />
             </div>
-            <div ref={listRef} className={cn('overflow-y-auto p-1', showAllCommands ? 'max-h-80' : 'max-h-72')}>
-              {items.length === 0 ? (
+            <div
+              ref={listRef}
+              className={cn('overflow-y-auto p-1', inSubPanel || showAllCommands ? 'max-h-80' : 'max-h-72')}
+            >
+              {listCount === 0 ? (
                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                   {t('commandPalette.noResults')}
                 </div>
+              ) : inSubPanel ? (
+                pickerItems.map((item, index) => {
+                  const selected = index === selectedIndex
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      data-cmd-index={index}
+                      className={cn(
+                        'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
+                        getTabCornerRadius(uiStyle),
+                        selected
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-foreground hover:bg-muted/60',
+                      )}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                      onClick={() => runPickerSelection(item.id)}
+                    >
+                      <span className="flex size-4 shrink-0 items-center justify-center">
+                        {item.active ? <Check className="size-4 text-primary" /> : null}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    </button>
+                  )
+                })
               ) : (
-                items.map((item, index) => {
+                commandItems.map((item, index) => {
                   const Icon = item.command.icon
                   const selected = index === selectedIndex
                   return (
@@ -257,11 +363,15 @@ export function CommandPalette() {
                 })
               )}
             </div>
-            {!query.trim() && items.length > 0 ? (
+            {inSubPanel ? (
+              <div className="border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
+                {t('commandPalette.subPanelHint')}
+              </div>
+            ) : !query.trim() && commandItems.length > 0 ? (
               <div className="border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
                 {t('commandPalette.recentHint')} · {t('commandPalette.helpTip')}
               </div>
-            ) : showAllCommands && items.length > 0 ? (
+            ) : showAllCommands && commandItems.length > 0 ? (
               <div className="border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
                 {t('commandPalette.allCommandsHint')}
               </div>

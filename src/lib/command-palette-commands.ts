@@ -7,6 +7,7 @@ import {
   Monitor,
   PackageMinus,
   PackagePlus,
+  Palette,
   Pencil,
   Settings,
   Terminal,
@@ -21,7 +22,7 @@ import { splitTerminalTab } from '@/lib/terminal-split-actions'
 import { findGroupForTab } from '@/lib/tab-groups'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 import { getSplitPanes, MAX_TERMINAL_SPLITS } from '@/lib/terminal-tab-utils'
-import { canToggleTerminalRenderMode, toggleTerminalRenderMode } from '@/lib/terminal-render-actions'
+import { canToggleTerminalRenderMode } from '@/lib/terminal-render-actions'
 import { bestFuzzyScore, commandIdSearchTerms } from '@/lib/command-palette-fuzzy'
 import { getRecentCommandIds } from '@/stores/command-palette-store'
 
@@ -37,6 +38,7 @@ export type CommandPaletteCommandId =
   | 'terminalScreenshot'
   | 'openSettings'
   | 'toggleRenderMode'
+  | 'selectColorScheme'
 
 export interface CommandPaletteCommand {
   id: CommandPaletteCommandId
@@ -55,6 +57,7 @@ export interface CommandPaletteListItem {
 export type CommandPaletteExecuteResult =
   | { type: 'done' }
   | { type: 'dialog'; dialog: 'editTitle' | 'closeConfirm' | 'addToGroup' | 'screenshot' }
+  | { type: 'subPanel'; panel: 'renderMode' | 'colorScheme' }
 
 const COMMAND_ORDER: CommandPaletteCommandId[] = [
   'newTerminal',
@@ -68,6 +71,7 @@ const COMMAND_ORDER: CommandPaletteCommandId[] = [
   'terminalScreenshot',
   'openSettings',
   'toggleRenderMode',
+  'selectColorScheme',
 ]
 
 function getActiveTerminalTab(): AppTab | undefined {
@@ -208,6 +212,13 @@ function buildCommands(): CommandPaletteCommand[] {
       keywords: () => ['render', 'webgl', 'dom', '渲染', '模式'],
       isEnabled: () => canToggleTerminalRenderMode(),
     },
+    {
+      id: 'selectColorScheme',
+      icon: Palette,
+      label: () => i18n.t('commandPalette.commands.selectColorScheme'),
+      keywords: () => ['color', 'scheme', 'theme', 'palette', '配色', '主题'],
+      isEnabled: () => useAppStore.getState().settings != null,
+    },
   ]
 }
 
@@ -299,8 +310,9 @@ export async function executeCommandPaletteCommand(
       useAppStore.getState().addSettingsTab()
       return { type: 'done' }
     case 'toggleRenderMode':
-      toggleTerminalRenderMode()
-      return { type: 'done' }
+      return { type: 'subPanel', panel: 'renderMode' }
+    case 'selectColorScheme':
+      return { type: 'subPanel', panel: 'colorScheme' }
     default:
       return { type: 'done' }
   }
