@@ -86,6 +86,8 @@ export function CommandPalette() {
   const tabs = useAppStore((s) => s.tabs)
   const terminalRenderer = settings?.terminal.renderer
   const terminalColorScheme = settings?.terminal.colorScheme
+  const settingsUiStyle = settings?.uiStyle
+  const settingsTheme = settings?.theme
 
   const commandItems = useMemo(
     () => listCommandPaletteItems(query),
@@ -93,7 +95,7 @@ export function CommandPalette() {
   )
   const pickerItems = useMemo(
     () => (subPanel ? listPickerItems(subPanel, query) : []),
-    [subPanel, query, terminalRenderer, terminalColorScheme],
+    [subPanel, query, terminalRenderer, terminalColorScheme, settingsUiStyle, settingsTheme],
   )
   const showAllCommands = !subPanel && isShowAllCommandsQuery(query)
   const inSubPanel = subPanel != null
@@ -121,7 +123,7 @@ export function CommandPalette() {
       return
     }
     setSelectedIndex(0)
-  }, [query, subPanel, inSubPanel, terminalRenderer, terminalColorScheme])
+  }, [query, subPanel, inSubPanel, terminalRenderer, terminalColorScheme, settingsUiStyle, settingsTheme])
 
   useEffect(() => {
     if (!open) return
