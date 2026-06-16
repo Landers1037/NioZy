@@ -3,6 +3,7 @@ import type { Terminal } from '@xterm/xterm'
 import type { TerminalIdleAnimationMode } from '../../../electron/shared/terminal-idle-animation'
 import { BlackHoleRenderer } from '@/lib/terminal-idle-animation/black-hole-renderer'
 import { BlackHole2Renderer } from '@/lib/terminal-idle-animation/black-hole2-renderer'
+import { devError } from '../../../electron/shared/dev-log'
 import { LogoIdleAnimation } from '@/components/terminal/idle-animation/LogoIdleAnimation'
 import { PacmanIdleAnimation } from '@/components/terminal/idle-animation/PacmanIdleAnimation'
 
@@ -122,7 +123,7 @@ export function TerminalIdleAnimationOverlay({
         mode === 'blackHole2' ? new BlackHole2Renderer(canvas) : new BlackHoleRenderer(canvas)
       rendererRef.current = renderer
     } catch (error) {
-      console.error('[TerminalIdleAnimation] renderer init failed:', error)
+      devError('[TerminalIdleAnimation] renderer init failed:', error)
       return
     }
 

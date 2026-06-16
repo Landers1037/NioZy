@@ -11,6 +11,7 @@ import type {
   SettingsFileResult,
 } from '../shared/api-types'
 import { parseInitialSettingsFromArgv } from '../shared/initial-settings'
+import { devError, devLog } from '../shared/dev-log'
 import { createIpcMultiplex } from './ipc-multiplex'
 
 const require = createRequire(import.meta.url)
@@ -329,7 +330,7 @@ try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(globalThis as any).electronAPI = api
   }
-  console.log('[NioZy] preload: electronAPI exposed')
+  devLog('[NioZy] preload: electronAPI exposed')
 } catch (error) {
-  console.error('[NioZy] preload: failed to expose electronAPI', error)
+  devError('[NioZy] preload: failed to expose electronAPI', error)
 }

@@ -1,30 +1,30 @@
 /** DevTools 过滤关键字: NioZy GitGraph */
+import { devError, devLog, devWarn, isDevRuntime } from './dev-log'
+
 const LOG_PREFIX = '[NioZy GitGraph]'
 
-/** 生产环境可在控制台执行: localStorage.setItem('niozy:git-graph-debug','1') 后刷新 */
+/** 开发模式默认开启；生产环境可 localStorage.setItem('niozy:git-graph-debug','1') 后刷新 */
 export function isGitGraphDebugEnabled(): boolean {
+  if (isDevRuntime()) return true
   try {
     if (typeof localStorage !== 'undefined') {
       const flag = localStorage.getItem('niozy:git-graph-debug')
-      if (flag === '0') return false
       if (flag === '1') return true
+      if (flag === '0') return false
     }
   } catch {
     // ignore
   }
-  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) return true
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') return true
-  // widget IIFE 以 production 构建，默认仍输出日志便于排查；关闭: localStorage.setItem('niozy:git-graph-debug','0')
-  return true
+  return false
 }
 
 export function gitGraphDebug(scope: string, message: string, detail?: unknown): void {
   if (!isGitGraphDebugEnabled()) return
   const label = `${LOG_PREFIX}[${scope}] ${message}`
   if (detail !== undefined) {
-    console.log(label, detail)
+    devLog(label, detail)
   } else {
-    console.log(label)
+    devLog(label)
   }
 }
 
@@ -32,18 +32,19 @@ export function gitGraphWarn(scope: string, message: string, detail?: unknown): 
   if (!isGitGraphDebugEnabled()) return
   const label = `${LOG_PREFIX}[${scope}] ${message}`
   if (detail !== undefined) {
-    console.warn(label, detail)
+    devWarn(label, detail)
   } else {
-    console.warn(label)
+    devWarn(label)
   }
 }
 
 export function gitGraphError(scope: string, message: string, detail?: unknown): void {
+  if (!isGitGraphDebugEnabled()) return
   const label = `${LOG_PREFIX}[${scope}] ${message}`
   if (detail !== undefined) {
-    console.error(label, detail)
+    devError(label, detail)
   } else {
-    console.error(label)
+    devError(label)
   }
 }
 

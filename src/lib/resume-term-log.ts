@@ -1,8 +1,10 @@
+import { devDebug, devError, devInfo, devWarn } from '../../electron/shared/dev-log'
+
 const PREFIX = '[NioZy][ResumeTerm]'
 
 export const resumeTermLog = {
-  debug: (...args: unknown[]) => console.debug(PREFIX, ...args),
-  info: (...args: unknown[]) => console.info(PREFIX, ...args),
-  warn: (...args: unknown[]) => console.warn(PREFIX, ...args),
-  error: (...args: unknown[]) => console.error(PREFIX, ...args),
+  debug: (...args: unknown[]) => devDebug(PREFIX, ...args),
+  info: (...args: unknown[]) => devInfo(PREFIX, ...args),
+  warn: (...args: unknown[]) => devWarn(PREFIX, ...args),
+  error: (...args: unknown[]) => devError(PREFIX, ...args),
 }

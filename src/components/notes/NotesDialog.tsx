@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { getElectronAPI } from '@/lib/electron-client'
+import { devError } from '../../../electron/shared/dev-log'
 import type { NoteItem } from '../../../electron/shared/note-types'
 
 type Mode = 'list' | 'edit'
@@ -45,7 +46,7 @@ export function NotesDialog({
       setItems(list)
     } catch (err) {
       toast.error(t('notes.loadFailed'))
-      console.error(err)
+      devError(err)
     } finally {
       setLoading(false)
     }
@@ -96,7 +97,7 @@ export function NotesDialog({
       setEditingId(null)
     } catch (err) {
       toast.error(t('notes.saveFailed'))
-      console.error(err)
+      devError(err)
     } finally {
       setSaving(false)
     }
@@ -113,7 +114,7 @@ export function NotesDialog({
       toast.success(t('notes.copied'))
     } catch (err) {
       toast.error(t('notes.copyFailed'))
-      console.error(err)
+      devError(err)
     }
   }
 
@@ -129,7 +130,7 @@ export function NotesDialog({
       toast.success(t('notes.deleted'))
     } catch (err) {
       toast.error(t('notes.deleteFailed'))
-      console.error(err)
+      devError(err)
     } finally {
       setDeletingId(null)
     }
