@@ -7,10 +7,8 @@ import { getSplitPanes } from '@/lib/terminal-tab-utils'
 import { useInactiveTabOptimizationTick } from '@/hooks/useInactiveTabOptimizationTick'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
 import { useSuperPowerSavingStore } from '@/stores/super-power-saving-store'
-import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { InactiveTerminalPlaceholder } from '@/components/terminal/InactiveTerminalPlaceholder'
 import { SuperPowerSavingPlaceholder } from '@/components/terminal/SuperPowerSavingPlaceholder'
-import { AttachPtyPendingPlaceholder } from '@/components/terminal/AttachPtyPendingPlaceholder'
 import { TerminalBackgroundLayer } from '@/components/terminal/TerminalBackgroundLayer'
 import { cn } from '@/lib/utils'
 
@@ -40,8 +38,6 @@ export const TerminalTabLayer = memo(function TerminalTabLayer({
   const terminalSettings = useAppStore((s) => s.settings?.terminal)
   const attachPtyRenderMode = useAppStore((s) => isAttachPtyRenderMode(s.settings))
   const useAttachLayer = attachPtyRenderMode && getSplitPanes(tab).length <= 1
-  const pendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
-  const committed = useAttachPtySessionStore((s) => s.committed)
   const ptySuspended = useSuperPowerSavingStore((s) => !!s.suspendedTabIds[tab.id])
   const ptyResuming = useSuperPowerSavingStore((s) => !!s.resumingTabIds[tab.id])
   const lastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt[tab.id])
@@ -55,10 +51,6 @@ export const TerminalTabLayer = memo(function TerminalTabLayer({
   const superPowerSaving = performance?.superPowerSaving === true
   const waitForPtyResume = superPowerSaving && isTabActive && (ptySuspended || ptyResuming)
   const mountTerminal = policy.mountTerminal && !waitForPtyResume
-  const attachCommittedHere =
-    useAttachLayer && isTabActive && committed?.tabId === tab.id && pendingTabId !== tab.id
-  const attachPendingHere = useAttachLayer && isTabActive && pendingTabId === tab.id
-
   const terminalBody = (() => {
     if (!mountTerminal) {
       if (waitForPtyResume) {
@@ -71,14 +63,8 @@ export const TerminalTabLayer = memo(function TerminalTabLayer({
     }
 
     if (useAttachLayer) {
-      if (attachPendingHere) {
-        return <AttachPtyPendingPlaceholder tabId={tab.id} />
-      }
-      if (attachCommittedHere) {
-        return <div className="absolute inset-0" aria-hidden />
-      }
       if (isTabActive) {
-        return <AttachPtyPendingPlaceholder tabId={tab.id} />
+        return <div className="absolute inset-0" aria-hidden />
       }
       return null
     }

@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { Braces, Cpu, Link2, ScrollText, Terminal, Monitor, Zap, MousePointer2 } from 'lucide-react'
+import { Braces, Cpu, Link2, Layers, ScrollText, Terminal, Monitor, Zap, MousePointer2 } from 'lucide-react'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import {
@@ -258,73 +258,124 @@ export function ExperimentalSettings() {
           )}
         </div>
 
-        <SettingField
-          icon={Link2}
-          label={t('settings.experimental.attachPtyRenderMode')}
-          description={t('settings.experimental.attachPtyRenderModeDesc')}
-          row
-        >
-          <Switch
-            checked={attachPtyActive}
-            disabled={emulator === 'wterm'}
-            onCheckedChange={(enabled) => {
-              if (enabled === attachPtyEnabled) return
-              void patchSettings({
-                experimental: {
-                  ...settings.experimental,
-                  attachPtyRenderMode: enabled,
-                },
-              }).then(() => notifyRestartRequired(t, 'toast.attachPtyRenderRestart'))
-            }}
-          />
-        </SettingField>
+        <div className="flex flex-col gap-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+          <div>
+            <h3 className="text-sm font-medium">{t('settings.experimental.multiTerminal.title')}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('settings.experimental.multiTerminal.description')}
+            </p>
+          </div>
 
-        {attachPtyActive && (
           <SettingField
             icon={Link2}
-            label={t('settings.experimental.attachPtyTabSwitchDwellMs')}
-            description={t('settings.experimental.attachPtyTabSwitchDwellMsDesc')}
+            label={t('settings.experimental.attachPtyRenderMode')}
+            description={t('settings.experimental.attachPtyRenderModeDesc')}
+            row
           >
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min={MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS}
-                max={MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS}
-                step={50}
-                className="max-w-[120px]"
-                value={settings.experimental.attachPtyTabSwitchDwellMs}
-                onFocus={() => {
-                  attachDwellFocusRef.current =
-                    settings.experimental.attachPtyTabSwitchDwellMs
-                }}
-                onChange={(e) => {
-                  const n = Number.parseInt(e.target.value, 10)
-                  if (!Number.isNaN(n)) {
+            <Switch
+              checked={attachPtyActive}
+              disabled={emulator === 'wterm'}
+              onCheckedChange={(enabled) => {
+                if (enabled === attachPtyEnabled) return
+                void patchSettings({
+                  experimental: {
+                    ...settings.experimental,
+                    attachPtyRenderMode: enabled,
+                  },
+                }).then(() => notifyRestartRequired(t, 'toast.attachPtyRenderRestart'))
+              }}
+            />
+          </SettingField>
+
+          {attachPtyActive && (
+            <>
+              <SettingField
+                icon={Link2}
+                label={t('settings.experimental.attachPtyTabSwitchDwellMs')}
+                description={t('settings.experimental.attachPtyTabSwitchDwellMsDesc')}
+              >
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS}
+                    max={MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS}
+                    step={50}
+                    className="max-w-[120px]"
+                    value={settings.experimental.attachPtyTabSwitchDwellMs}
+                    onFocus={() => {
+                      attachDwellFocusRef.current =
+                        settings.experimental.attachPtyTabSwitchDwellMs
+                    }}
+                    onChange={(e) => {
+                      const n = Number.parseInt(e.target.value, 10)
+                      if (!Number.isNaN(n)) {
+                        void patchSettings({
+                          experimental: {
+                            ...settings.experimental,
+                            attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(n),
+                          },
+                        })
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const n = normalizeAttachPtyTabSwitchDwellMs(
+                        Number.parseInt(e.target.value, 10),
+                      )
+                      if (n === attachDwellFocusRef.current) return
+                      void patchSettings({
+                        experimental: {
+                          ...settings.experimental,
+                          attachPtyTabSwitchDwellMs: n,
+                        },
+                      })
+                    }}
+                  />
+                  <span className="text-sm text-muted-foreground">ms</span>
+                </div>
+              </SettingField>
+
+              <SettingField
+                icon={Layers}
+                label={t('settings.experimental.attachPtyWebglContextPool')}
+                description={t('settings.experimental.attachPtyWebglContextPoolDesc')}
+                row
+              >
+                <Switch
+                  checked={settings.experimental.attachPtyWebglContextPool}
+                  onCheckedChange={(enabled) => {
+                    if (enabled === settings.experimental.attachPtyWebglContextPool) return
                     void patchSettings({
                       experimental: {
                         ...settings.experimental,
-                        attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(n),
+                        attachPtyWebglContextPool: enabled,
+                      },
+                    }).then(() => notifyRestartRequired(t, 'toast.attachPtyRenderRestart'))
+                  }}
+                />
+              </SettingField>
+
+              <SettingField
+                icon={ScrollText}
+                label={t('settings.experimental.attachPtyScrollbackOffload')}
+                description={t('settings.experimental.attachPtyScrollbackOffloadDesc')}
+                row
+              >
+                <Switch
+                  checked={settings.experimental.attachPtyScrollbackOffload}
+                  onCheckedChange={(enabled) => {
+                    if (enabled === settings.experimental.attachPtyScrollbackOffload) return
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        attachPtyScrollbackOffload: enabled,
                       },
                     })
-                  }
-                }}
-                onBlur={(e) => {
-                  const n = normalizeAttachPtyTabSwitchDwellMs(
-                    Number.parseInt(e.target.value, 10),
-                  )
-                  if (n === attachDwellFocusRef.current) return
-                  void patchSettings({
-                    experimental: {
-                      ...settings.experimental,
-                      attachPtyTabSwitchDwellMs: n,
-                    },
-                  })
-                }}
-              />
-              <span className="text-sm text-muted-foreground">ms</span>
-            </div>
-          </SettingField>
-        )}
+                  }}
+                />
+              </SettingField>
+            </>
+          )}
+        </div>
 
         {emulator === 'wterm' && (
           <>
