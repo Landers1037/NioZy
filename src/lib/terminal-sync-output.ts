@@ -16,9 +16,13 @@ export function filterSynchronizedOutputSequences(data: string, enabled: boolean
 }
 
 export function writeXtermOutput(
-  term: { write: (data: string) => void },
+  term: { write: (data: string, callback?: () => void) => void },
   data: string,
   settings: AppSettings | null | undefined,
+  callback?: () => void,
 ): void {
-  term.write(filterSynchronizedOutputSequences(data, isSynchronizedOutputEnabled(settings)))
+  term.write(
+    filterSynchronizedOutputSequences(data, isSynchronizedOutputEnabled(settings)),
+    callback,
+  )
 }

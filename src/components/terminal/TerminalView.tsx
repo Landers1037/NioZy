@@ -84,6 +84,7 @@ import {
   type AttachPtyOffloadedBuffer,
 } from '@/lib/attach-pty-scrollback-offload'
 import { writeXtermOutput } from '@/lib/terminal-sync-output'
+import { createTerminalWriteBatcher, type TerminalWriteBatcher } from '@/lib/terminal-write-batcher'
 import {
   refreshWebglTextureAtlas,
   scheduleWebglTextureAtlasRefresh,
@@ -146,6 +147,7 @@ export function TerminalView({
   const previewMouseRef = useRef<IDisposable[]>([])
   /** WebGL 上下文丢失或加载失败后，本会话内不再尝试 WebGL */
   const webglBlockedRef = useRef(false)
+  const writeBatcherRef = useRef<TerminalWriteBatcher | null>(null)
   const lastFitRef = useRef({ cols: 0, rows: 0, width: 0, height: 0 })
   const [termReady, setTermReady] = useState(false)
   const [runtimeRenderer, setRuntimeRenderer] = useState<TerminalRuntimeRendererMode>('dom')
@@ -417,6 +419,8 @@ export function TerminalView({
       const term = termRef.current
       if (!term) return
 
+      writeBatcherRef.current?.dropPending()
+
       let offloadedRestore: AttachPtyOffloadedBuffer | undefined
       let snapshotText: string | undefined
       let snapshotFormat: AttachPtySnapshotFormat = 'plain'
@@ -469,6 +473,7 @@ export function TerminalView({
     let ro: ResizeObserver | null = null
     let unsubData: (() => void) | undefined
     let unsubExit: (() => void) | undefined
+    let writeBatcher: ReturnType<typeof createTerminalWriteBatcher> | undefined
     let unsubLayoutFit: (() => void) | undefined
     let termElement: HTMLElement | undefined
     let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
@@ -533,6 +538,12 @@ export function TerminalView({
 
       applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
 
+      writeBatcher = createTerminalWriteBatcher(
+        () => termRef.current,
+        () => useAppStore.getState().settings,
+      )
+      writeBatcherRef.current = writeBatcher
+
       const api = getElectronAPI()
       const onData = (data: string) => {
         const terminalId = boundTerminalIdRef.current
@@ -622,12 +633,13 @@ export function TerminalView({
 
       unsubData = api.terminal.onData((id, data) => {
         if (id === boundTerminalIdRef.current) {
-          writeXtermOutput(term, data, useAppStore.getState().settings)
+          writeBatcher?.queue(data)
         }
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
+          writeBatcher?.dropPending()
           writeXtermOutput(
             term,
             formatTerminalExitMessage(code),
@@ -658,6 +670,8 @@ export function TerminalView({
       unsubRenderFit?.dispose()
       unsubData?.()
       unsubExit?.()
+      writeBatcher?.dispose()
+      writeBatcherRef.current = null
       unsubLayoutFit?.()
       ro?.disconnect()
       if (tab.terminalId) {
@@ -677,6 +691,7 @@ export function TerminalView({
     let ro: ResizeObserver | null = null
     let unsubData: (() => void) | undefined
     let unsubExit: (() => void) | undefined
+    let writeBatcher: ReturnType<typeof createTerminalWriteBatcher> | undefined
     let unsubLayoutFit: (() => void) | undefined
     let termElement: HTMLElement | undefined
     let onLeftMouseDown: ((e: MouseEvent) => void) | undefined
@@ -738,6 +753,12 @@ export function TerminalView({
 
       applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
 
+      writeBatcher = createTerminalWriteBatcher(
+        () => termRef.current,
+        () => useAppStore.getState().settings,
+      )
+      writeBatcherRef.current = writeBatcher
+
       const api = getElectronAPI()
       const onData = (data: string) => {
         const terminalId = boundTerminalIdRef.current
@@ -827,12 +848,13 @@ export function TerminalView({
 
       unsubData = api.terminal.onData((id, data) => {
         if (id === boundTerminalIdRef.current) {
-          writeXtermOutput(term, data, useAppStore.getState().settings)
+          writeBatcher?.queue(data)
         }
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
+          writeBatcher?.dropPending()
           writeXtermOutput(
             term,
             formatTerminalExitMessage(code),
@@ -864,6 +886,8 @@ export function TerminalView({
       unsubRenderFit?.dispose()
       unsubData?.()
       unsubExit?.()
+      writeBatcher?.dispose()
+      writeBatcherRef.current = null
       unsubLayoutFit?.()
       ro?.disconnect()
       shellAddonsRef.current = createTerminalShellAddonState()
