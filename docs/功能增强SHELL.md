@@ -1,10 +1,16 @@
-# 功能：增强 SHELL（Oh My Posh）
+# 功能：增强 SHELL
+
+**设置 · SHELL** 下的增强能力：本地 **pwsh** 提示符美化（Oh My Posh）与终端输出**日志关键词着色**（类似 MobaXterm）。
+
+与 [功能Shell与命令回放.md](./功能Shell与命令回放.md) 同属该设置页；后者侧重链接/emoji/Tab 交互与命令回放，本文档专述 OMP 集成与日志着色。
+
+---
+
+## 一、Oh My Posh
 
 在 NioZy 内为 **pwsh** 终端离线内置 **Oh My Posh** 与 **posh-git**，通过会话级脚本注入美化提示符，无需用户全局安装或修改 `$PROFILE`。
 
-与 [功能Shell与命令回放.md](./功能Shell与命令回放.md) 同属 **设置 · SHELL**；后者侧重链接/emoji/Tab 交互与命令回放，本文档专述 OMP 集成。
-
-## 功能列表
+### 功能列表
 
 - **启用 Oh My Posh**：开关控制是否在 pwsh 会话中注入美化
 - **主题选择**：19 个内置热门主题下拉切换
@@ -13,7 +19,7 @@
 - **沙箱注入**：仅 NioZy 内终端生效，不修改用户主目录 Profile
 - **与 Shell 集成协同**：OMP 先初始化 Prompt，再由 `shell-integration.ps1` 包装 CWD OSC 同步
 
-## 生效范围
+### 生效范围
 
 | 条件 | 是否注入 OMP |
 |------|-------------|
@@ -26,7 +32,7 @@
 
 主题或开关变更后，需 **新建 pwsh 终端** 才生效；已打开 Tab 不会热更新。
 
-## 进程归属
+### 进程归属
 
 **主进程**负责资源路径解析、环境变量与启动参数注入；**渲染层**仅提供设置 UI。
 
@@ -45,7 +51,7 @@
 | `scripts/vendor-oh-my-posh.mjs` | 构建前下载 exe、主题、posh-git |
 | `electron-builder.yml` | `extraResources` 打入 `oh-my-posh` / `posh-git` |
 
-## 架构与数据流
+### 架构与数据流
 
 ```mermaid
 flowchart TB
@@ -103,16 +109,16 @@ sequenceDiagram
   Nio->>Nio: 包装 Prompt → 发 OSC 7 / 633
 ```
 
-### Prompt 链顺序
+#### Prompt 链顺序
 
 1. `omp-bootstrap.ps1`：`oh-my-posh init` 替换 `$function:Prompt`
 2. `shell-integration.ps1`：保存当前 Prompt 为 `NioZyOriginalPrompt`，外层发送工作目录 OSC
 
 必须先 OMP、后 NioZy，否则 CWD 同步会被覆盖。
 
-## 内置资源与构建
+### 内置资源与构建
 
-### 目录结构（开发态）
+#### 目录结构（开发态）
 
 ```
 vendor/
@@ -125,7 +131,7 @@ vendor/
     ...
 ```
 
-### 自动下载
+#### 自动下载
 
 | npm 生命周期 | 命令 |
 |-------------|------|
@@ -141,7 +147,7 @@ vendor/
 
 脚本读取 `electron/shared/oh-my-posh-themes.json` 下载全部主题；`.vendor-version` 与文件齐全时跳过重复下载。
 
-### 打包布局（`extraResources`）
+#### 打包布局（`extraResources`）
 
 安装后位于 `resources/`（asar 外，PowerShell 可直接访问）：
 
@@ -154,7 +160,7 @@ resources/
   posh-git/posh-git.psd1
 ```
 
-## 内置主题
+### 内置主题
 
 主题定义见 `electron/shared/oh-my-posh-themes.json`，默认 `jandedobbeleer`。
 
@@ -184,24 +190,7 @@ resources/
 
 扩展主题：在 `oh-my-posh-themes.json` 增加条目并同步 `oh-my-posh-themes.ts` 中的 `OhMyPoshThemeId` 联合类型，再执行 `vendor:oh-my-posh`。
 
-## 实验特性
-
-否。
-
-## 配置文件片段
-
-`settings.json` → `shell`（节选）：
-
-```json
-{
-  "shell": {
-    "ohMyPoshEnabled": false,
-    "ohMyPoshTheme": "jandedobbeleer"
-  }
-}
-```
-
-## 运行时环境变量
+### 运行时环境变量
 
 仅在 `ohMyPoshEnabled` 且资源齐全、Shell 为 `pwsh` 时由主进程注入：
 
@@ -214,7 +203,7 @@ resources/
 
 另保留 Shell 集成变量：`NIOZY_SHELL_INTEGRATION`、`TERM_PROGRAM=NioZy`。
 
-## 启动参数注入
+### 启动参数注入
 
 `mergeShellIntegrationArgs` 在保留用户原有 args 的前提下追加：
 
@@ -224,17 +213,13 @@ pwsh.exe ... -NoExit -ExecutionPolicy Bypass -Command "& { . 'omp-bootstrap.ps1'
 
 若调用方已含 `-Command` / `-File` 等，则不覆盖。
 
-## 核心代码
-
-### Shell 设置字段
+### OMP 核心代码
 
 ```typescript
 // electron/shared/shell-settings.ts
 ohMyPoshEnabled: boolean
 ohMyPoshTheme: OhMyPoshThemeId
 ```
-
-### 主进程传入终端创建
 
 ```typescript
 // electron/main/index.ts — terminal:create
@@ -245,21 +230,146 @@ terminalService.create({
 })
 ```
 
-### OMP Bootstrap（节选）
-
 ```powershell
 # electron/scripts/omp-bootstrap.ps1
 Import-Module -Name $env:NIOZY_POSH_GIT_MODULE -Force
 (& $env:NIOZY_OMP_EXE init pwsh --config $env:NIOZY_OMP_CONFIG) | Invoke-Expression
 ```
 
-## 使用建议
+### OMP 使用建议
 
 - 主题图标依赖 **Nerd Font**；建议在 **设置 · 终端** 开启内置 Nerd Font（`useBuiltinFont`）
 - posh-git 分支信息需要本机已安装 Git 且 `git` 在 PATH 中
 - 离线环境：首次构建需能访问 GitHub 以下载 vendor 资源；之后可完全离线使用
 
+---
+
+## 二、日志关键词着色（MobaXterm 风格）
+
+在**渲染层**对终端输出做语义着色：按 ERROR / WARNING / SUCCESS / INFO 等关键词**仅高亮匹配片段**（非整行），不修改 PTY 原始数据。远端 SSH 服务器不支持 ANSI 配色时同样生效。
+
+行为对齐 MobaXterm 内置方案 **「Default (OK/warning/error keywords)」**（`CustomSyntax.ini` 正则规则，见 [wezterm#4348](https://github.com/wezterm/wezterm/issues/4348)）。
+
+### 功能列表
+
+- **日志级别着色**：`shell.highlightLogLevels` 开关（默认 **开启**）
+- **区间高亮**：只给命中的关键词/短语上色，例如 `echo ERROR` 仅 `ERROR` 变红
+- **四级配色**：error（红）、warning（黄）、success（绿）、info（蓝）
+- **双引擎**：xterm（decoration）与 Wterm（DOM `<span>`）均支持
+- **全终端类型**：本地 PTY 与 SSH 会话均可使用
+- **热更新**：修改设置后已打开终端即时生效（无需重开 Tab）
+- **与链接高亮共存**：URL 链接着色优先，避免 span 重叠
+
+### 着色规则（摘要）
+
+| 级别 | 颜色 | 典型匹配 |
+|------|------|----------|
+| error | `#f14c4c` | `ERROR`、`ERROR 1045`、`FATAL`、`failed`、`denied`、`refused`、`invalid`、`segmentation fault`、`= false` |
+| warning | `#cca700` | `WARNING`、`cannot`、`could not`、`not found`、`deprecated`、`disconnected`、`(ww)` |
+| success | `#89d185` | `SUCCESS`、`OK`、`PASS`、`connected`、`successful`、`= true` |
+| info | `#3794ff` | `INFO`、`DEBUG`、`NOTE`、`loading`、`starting`、`last login`、`(ii)` |
+
+规则按 **error → warning → success → info** 优先级匹配；词边界近似 MobaXterm（前后非 `[A-Za-z0-9_&-]` / `[A-Za-z0-9_-]`）。完整规则见 `src/lib/terminal-log-highlight.ts`。
+
+### 进程归属
+
+| 层级 | 文件 |
+|------|------|
+| **设置** | `src/components/settings/ShellSettings.tsx` — 「日志级别着色」开关 |
+| **类型** | `electron/shared/shell-settings.ts` — `highlightLogLevels` |
+| **匹配** | `src/lib/terminal-log-highlight.ts` — `getLogHighlightSpans()` |
+| **xterm** | `src/lib/terminal-shell-addons.ts` — `registerDecoration` 按 span 着色 |
+| **Wterm** | `src/lib/wterm-dom-shell.ts` — `buildEnhancedRowHtml` 注入彩色 span |
+| **挂载** | `src/components/terminal/TerminalView.tsx`、`WterminalView.tsx` |
+
+### 架构与数据流
+
+```mermaid
+flowchart TB
+  subgraph Settings["设置 · SHELL"]
+    HL["highlightLogLevels"]
+  end
+
+  subgraph Renderer["渲染层"]
+    Match["terminal-log-highlight.ts\ngetLogHighlightSpans"]
+    Xterm["terminal-shell-addons.ts\ndecoration per span"]
+    Wterm["wterm-dom-shell.ts\nDOM span per span"]
+  end
+
+  subgraph PTY["PTY / SSH stream"]
+    Out["terminal:data 原始输出"]
+  end
+
+  Disk[("settings.json shell.*")]
+
+  HL --> Disk
+  Out --> Xterm
+  Out --> Wterm
+  Disk --> Match
+  Match --> Xterm
+  Match --> Wterm
+```
+
+```mermaid
+sequenceDiagram
+  participant PTY as PTY / SSH
+  participant Term as xterm / Wterm
+  participant Match as getLogHighlightSpans
+  participant Paint as decoration / DOM span
+
+  PTY->>Term: terminal:data（原样写入）
+  Term->>Match: 扫描可见行文本
+  Match-->>Term: [{start,end,color}, ...]
+  Term->>Paint: 仅对匹配区间着色
+```
+
+**与 MobaXterm 一致**：不往 PTY 注入 ANSI 转义，纯展示层增强。
+
+### 实验特性
+
+否（稳定功能）。
+
+### 配置文件片段
+
+`settings.json` → `shell`（节选）：
+
+```json
+{
+  "shell": {
+    "ohMyPoshEnabled": false,
+    "ohMyPoshTheme": "jandedobbeleer",
+    "highlightLogLevels": true
+  }
+}
+```
+
+### 日志着色核心代码
+
+```typescript
+// electron/shared/shell-settings.ts
+highlightLogLevels: boolean  // 默认 true
+```
+
+```typescript
+// src/lib/terminal-log-highlight.ts
+export function getLogHighlightSpans(lineText: string): LogHighlightSpan[]
+```
+
+```typescript
+// src/lib/terminal-shell-addons.ts — xterm 按 span 注册 decoration
+term.registerDecoration({
+  marker,
+  x: span.start,
+  width: span.end - span.start,
+  foregroundColor: span.color,
+  layer: 'bottom',
+})
+```
+
+---
+
 ## 相关文档
 
-- [功能Shell与命令回放.md](./功能Shell与命令回放.md) — 同设置页其他 Shell 选项
-- [功能终端与会话.md](./功能终端与会话.md) — PTY、`shell-integration.ps1` 与内置字体
+- [功能Shell与命令回放.md](./功能Shell与命令回放.md) — 同设置页其他 Shell 选项（链接高亮、emoji、命令回放等）
+- [功能终端与会话.md](./功能终端与会话.md) — PTY、双渲染引擎、`shell-integration.ps1` 与内置字体
+- [功能SSH连接.md](./功能SSH连接.md) — SSH 会话建立与断开检测
