@@ -8,6 +8,8 @@ export interface ShellSettings {
   emojiNativeRendering: boolean
   /** 高亮终端中的 http / https 链接 */
   highlightLinks: boolean
+  /** 按日志级别为终端输出行着色（ERROR / WARNING 等，类似 MobaXterm） */
+  highlightLogLevels: boolean
   /** 单击链接时用系统默认浏览器打开 */
   clickToOpenLinks: boolean
   /** 将 Shift/Ctrl+Enter 等修饰键组合映射为换行（交互式 CLI） */
@@ -29,6 +31,7 @@ export interface ShellSettings {
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   emojiNativeRendering: false,
   highlightLinks: false,
+  highlightLogLevels: true,
   clickToOpenLinks: false,
   shiftEnterNewline: false,
   showTerminalIndex: false,
@@ -50,6 +53,10 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.highlightLinks === 'boolean'
         ? v.highlightLinks
         : DEFAULT_SHELL_SETTINGS.highlightLinks,
+    highlightLogLevels:
+      typeof v.highlightLogLevels === 'boolean'
+        ? v.highlightLogLevels
+        : DEFAULT_SHELL_SETTINGS.highlightLogLevels,
     clickToOpenLinks:
       typeof v.clickToOpenLinks === 'boolean'
         ? v.clickToOpenLinks
