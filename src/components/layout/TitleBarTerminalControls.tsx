@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Check,
@@ -45,6 +46,9 @@ const titleBarMenuIconClass = 'size-3.5 shrink-0 text-muted-foreground'
 const titleBarMenuBtnClass =
   'h-7 gap-1.5 rounded-full border-border/60 bg-muted/40 px-2.5 text-xs font-normal text-foreground shadow-none hover:bg-muted focus:bg-muted/40 focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=open]:bg-muted/40 data-[state=open]:ring-0 active:bg-muted/40'
 
+const SNAP_PANEL_WIDTH = 320
+const SNAP_PANEL_GAP = 8
+
 function notifyEmulatorRestart(t: (key: string) => string) {
   toast.info(t('toast.terminalEmulatorRestart'), {
     duration: 10_000,
@@ -66,9 +70,33 @@ export function TitleBarTerminalControls() {
   const [connectivityOpen, setConnectivityOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
   const [snapOpen, setSnapOpen] = useState(false)
+  const [snapPanelPos, setSnapPanelPos] = useState<{ top: number; left: number } | null>(null)
   const snapRootRef = useRef<HTMLDivElement | null>(null)
+  const snapTriggerRef = useRef<HTMLButtonElement | null>(null)
   const snapCloseTimerRef = useRef<number | null>(null)
   const searchOpenNonce = useTerminalUiStore((s) => s.searchOpenNonce)
+
+  const updateSnapPanelPos = useCallback(() => {
+    const trigger = snapTriggerRef.current
+    if (!trigger) return
+    const rect = trigger.getBoundingClientRect()
+    const rawLeft = rect.left + rect.width / 2 - SNAP_PANEL_WIDTH / 2
+    const maxLeft = Math.max(8, window.innerWidth - SNAP_PANEL_WIDTH - 8)
+    setSnapPanelPos({
+      top: rect.bottom + SNAP_PANEL_GAP,
+      left: Math.min(Math.max(8, rawLeft), maxLeft),
+    })
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!snapOpen) {
+      setSnapPanelPos(null)
+      return
+    }
+    updateSnapPanelPos()
+    window.addEventListener('resize', updateSnapPanelPos)
+    return () => window.removeEventListener('resize', updateSnapPanelPos)
+  }, [snapOpen, updateSnapPanelPos])
 
   useEffect(() => {
     if (searchOpenNonce > 0) setSearchOpen(true)
@@ -90,6 +118,23 @@ export function TitleBarTerminalControls() {
   const showConnectivityCheck = assistive.connectivityCheckEnabled !== false
   const showScreenshot = assistive.screenshotEnabled !== false
   const showNotes = assistive.notesEnabled !== false
+  const glassSnapVibrancy =
+    settings.uiStyle === 'glass' && settings.enableGlassTransparency === true
+
+  const snapPanelClass = cn(
+    'fixed z-[100] w-[320px] overflow-hidden rounded-xl border border-border p-2 no-drag',
+    glassSnapVibrancy
+      ? 'ui-overlay-panel ui-snap-layout-panel bg-card'
+      : 'bg-card/95 shadow-2xl backdrop-blur',
+  )
+  const snapZoneClass = cn(
+    'rounded-lg border border-border/70 bg-muted/15 p-2',
+    glassSnapVibrancy && 'ui-snap-layout-zone',
+  )
+  const snapSlotClass = cn(
+    'rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40',
+    glassSnapVibrancy && 'ui-snap-layout-slot',
+  )
 
   const handleAiSidebarToggle = () => {
     useAiSidebarStore.getState().toggle()
@@ -251,6 +296,7 @@ export function TitleBarTerminalControls() {
         className="relative"
         onMouseEnter={() => {
           cancelSnapClose()
+          updateSnapPanelPos()
           setSnapOpen(true)
         }}
         onMouseLeave={() => {
@@ -259,6 +305,7 @@ export function TitleBarTerminalControls() {
         }}
       >
         <Button
+          ref={snapTriggerRef}
           variant="outline"
           size="icon"
           className={cn(titleBarMenuBtnClass, 'w-7 px-0')}
@@ -275,6 +322,7 @@ export function TitleBarTerminalControls() {
               } catch {
                 // ignore
               }
+              updateSnapPanelPos()
               setSnapOpen(true)
             })()
           }}
@@ -282,94 +330,98 @@ export function TitleBarTerminalControls() {
           <SquareSplitHorizontal className={titleBarMenuIconClass} aria-hidden />
         </Button>
 
-        {snapOpen ? (
-          <div
-            className="absolute left-1/2 top-full z-50 w-[320px] -translate-x-1/2 translate-y-2 rounded-xl border border-border bg-card/95 p-2 shadow-2xl backdrop-blur"
-            onMouseEnter={() => cancelSnapClose()}
-            onMouseLeave={() => scheduleSnapClose()}
-          >
-            <div className="px-2 pb-2 text-[11px] text-muted-foreground">
-              {t('titleBar.snapHint')}
-            </div>
-
-            {/* Windows/VS Code 风格：每个布局是一组矩形组合，hover 高亮、点击触发 */}
-            <div className="grid grid-cols-3 gap-2 px-1 pb-1">
-              {/* 左右 50/50 */}
-              <div className="rounded-lg border border-border/70 bg-muted/15 p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    className="h-18 rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('left')}
-                    aria-label={t('titleBar.snapLayout.left')}
-                    title={t('titleBar.snapLayout.left')}
-                  />
-                  <button
-                    type="button"
-                    className="h-18 rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('right')}
-                    aria-label={t('titleBar.snapLayout.right')}
-                    title={t('titleBar.snapLayout.right')}
-                  />
+        {snapOpen && snapPanelPos
+          ? createPortal(
+              <div
+                className={snapPanelClass}
+                style={{ top: snapPanelPos.top, left: snapPanelPos.left }}
+                onMouseEnter={() => cancelSnapClose()}
+                onMouseLeave={() => scheduleSnapClose()}
+              >
+                <div className="px-2 pb-2 text-[11px] text-muted-foreground">
+                  {t('titleBar.snapHint')}
                 </div>
-              </div>
 
-              {/* 上下 50/50 */}
-              <div className="rounded-lg border border-border/70 bg-muted/15 p-2">
-                <div className="grid grid-rows-2 gap-2">
-                  <button
-                    type="button"
-                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('top')}
-                    aria-label={t('titleBar.snapLayout.top')}
-                    title={t('titleBar.snapLayout.top')}
-                  />
-                  <button
-                    type="button"
-                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('bottom')}
-                    aria-label={t('titleBar.snapLayout.bottom')}
-                    title={t('titleBar.snapLayout.bottom')}
-                  />
-                </div>
-              </div>
+                {/* Windows/VS Code 风格：每个布局是一组矩形组合，hover 高亮、点击触发 */}
+                <div className="grid grid-cols-3 gap-2 px-1 pb-1">
+                  {/* 左右 50/50 */}
+                  <div className={snapZoneClass}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-18')}
+                        onClick={() => snap('left')}
+                        aria-label={t('titleBar.snapLayout.left')}
+                        title={t('titleBar.snapLayout.left')}
+                      />
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-18')}
+                        onClick={() => snap('right')}
+                        aria-label={t('titleBar.snapLayout.right')}
+                        title={t('titleBar.snapLayout.right')}
+                      />
+                    </div>
+                  </div>
 
-              {/* 四象限 */}
-              <div className="rounded-lg border border-border/70 bg-muted/15 p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('topLeft')}
-                    aria-label={t('titleBar.snapLayout.topLeft')}
-                    title={t('titleBar.snapLayout.topLeft')}
-                  />
-                  <button
-                    type="button"
-                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('topRight')}
-                    aria-label={t('titleBar.snapLayout.topRight')}
-                    title={t('titleBar.snapLayout.topRight')}
-                  />
-                  <button
-                    type="button"
-                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('bottomLeft')}
-                    aria-label={t('titleBar.snapLayout.bottomLeft')}
-                    title={t('titleBar.snapLayout.bottomLeft')}
-                  />
-                  <button
-                    type="button"
-                    className="h-[26px] rounded-md border border-border/70 bg-background/50 hover:bg-sky-500/20 focus:outline-none focus:ring-1 focus:ring-ring/40"
-                    onClick={() => snap('bottomRight')}
-                    aria-label={t('titleBar.snapLayout.bottomRight')}
-                    title={t('titleBar.snapLayout.bottomRight')}
-                  />
+                  {/* 上下 50/50 */}
+                  <div className={snapZoneClass}>
+                    <div className="grid grid-rows-2 gap-2">
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-[26px]')}
+                        onClick={() => snap('top')}
+                        aria-label={t('titleBar.snapLayout.top')}
+                        title={t('titleBar.snapLayout.top')}
+                      />
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-[26px]')}
+                        onClick={() => snap('bottom')}
+                        aria-label={t('titleBar.snapLayout.bottom')}
+                        title={t('titleBar.snapLayout.bottom')}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 四象限 */}
+                  <div className={snapZoneClass}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-[26px]')}
+                        onClick={() => snap('topLeft')}
+                        aria-label={t('titleBar.snapLayout.topLeft')}
+                        title={t('titleBar.snapLayout.topLeft')}
+                      />
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-[26px]')}
+                        onClick={() => snap('topRight')}
+                        aria-label={t('titleBar.snapLayout.topRight')}
+                        title={t('titleBar.snapLayout.topRight')}
+                      />
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-[26px]')}
+                        onClick={() => snap('bottomLeft')}
+                        aria-label={t('titleBar.snapLayout.bottomLeft')}
+                        title={t('titleBar.snapLayout.bottomLeft')}
+                      />
+                      <button
+                        type="button"
+                        className={cn(snapSlotClass, 'h-[26px]')}
+                        onClick={() => snap('bottomRight')}
+                        aria-label={t('titleBar.snapLayout.bottomRight')}
+                        title={t('titleBar.snapLayout.bottomRight')}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
+              </div>,
+              document.body,
+            )
+          : null}
       </div>
 
       {showScreenshot ? (
