@@ -18,7 +18,7 @@ import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
 import { useAttachPtyTabSwitch } from '@/hooks/useAttachPtyTabSwitch'
 import { useResumeTermSessionSync } from '@/hooks/useResumeTermSessionSync'
-import { isAttachPtyRenderMode, resolveAttachPtyTargetTab } from '@/lib/attach-pty-render'
+import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { AttachPtyTerminalHost } from '@/components/terminal/AttachPtyTerminalHost'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
@@ -263,7 +263,6 @@ export default function App() {
   const scpTransferTabId = useAppStore((s) => s.scpTransferTabId)
   const setScpTransferTabId = useAppStore((s) => s.setScpTransferTabId)
   const attachCommitted = useAttachPtySessionStore((s) => s.committed)
-  const attachPendingTabId = useAttachPtySessionStore((s) => s.pendingTabId)
   const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
   const [AiCopilotRoot, setAiCopilotRoot] = useState<ComponentType | null>(null)
   const [aiMountKey, setAiMountKey] = useState(0)
@@ -279,7 +278,6 @@ export default function App() {
     const scpTransferTab = scpTransferTabId
       ? tabs.find((t) => t.id === scpTransferTabId)
       : undefined
-    const attachTargetTab = resolveAttachPtyTargetTab(activeTabId, tabs)
     const attachPtyMode = isAttachPtyRenderMode(settings)
 
     return {
@@ -307,10 +305,8 @@ export default function App() {
       vncTabActive: activeType === 'vnc',
       showAttachPtyHost:
         attachPtyMode &&
-        !!attachCommitted &&
-        !attachPendingTabId &&
-        !!attachTargetTab &&
-        attachCommitted.tabId === attachTargetTab.id,
+        activeType === 'terminal' &&
+        !!attachCommitted,
       aiSidebarEnabled: settings?.experimental.aiSidebarEnabled === true,
       aiSidebarWidthPx: resolveAiSidebarWidthPx(
         settings?.experimental.aiSidebarWidth ?? 'default',
@@ -322,7 +318,6 @@ export default function App() {
     scpTransferTabId,
     settings,
     attachCommitted,
-    attachPendingTabId,
   ])
 
   const {

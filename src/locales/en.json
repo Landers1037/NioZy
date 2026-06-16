@@ -818,6 +818,10 @@
         "title": "VNC features",
         "description": "VNC viewer and display-related settings."
       },
+      "multiTerminal": {
+        "title": "Multi-terminal optimization",
+        "description": "Attach-PTY and multi-tab terminal performance settings. Xterm.js only."
+      },
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "Use the libghostty WASM build as Wterm's VT parser for fuller terminal emulation (grapheme clusters, full SGR, etc.). Restart open terminal tabs after switching.",
       "ghosttyScrollbackLimit": "Ghostty scrollback lines",
@@ -825,7 +829,11 @@
       "attachPtyRenderMode": "Attach-PTY render mode",
       "attachPtyRenderModeDesc": "Use one shared Xterm instance per tab; switch tabs to attach different PTYs. Split panes still use multiple instances. Xterm.js only.",
       "attachPtyTabSwitchDwellMs": "Attach-PTY tab switch delay",
-      "attachPtyTabSwitchDwellMsDesc": "Milliseconds to stay on a tab before restoring its terminal; quick passes do not attach. Range 0–5000, default 300."
+      "attachPtyTabSwitchDwellMsDesc": "Skip snapshot save when leaving a tab before this dwell (ms); switching is immediate with no loading spinner. Range 0–5000, default 300.",
+      "attachPtyWebglContextPool": "WebGL context pool",
+      "attachPtyWebglContextPoolDesc": "Share one WebGL slot for the Attach-PTY host; tab switches do not release or recreate the context per terminalId.",
+      "attachPtyScrollbackOffload": "Scrollback offload",
+      "attachPtyScrollbackOffloadDesc": "On detach, move scrollback to side storage and clear the xterm buffer; restore on re-attach to reduce memory with many tabs."
     },
     "advanced": {
       "title": "Advanced",

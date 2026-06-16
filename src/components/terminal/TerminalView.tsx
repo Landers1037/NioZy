@@ -61,7 +61,19 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
-import { getTerminalBufferText, restoreTerminalBufferText } from '@/lib/terminal-buffer'
+import { getTerminalBufferText, getTerminalScrollbackText, getTerminalScreenText, restoreTerminalBufferText, restoreTerminalFromOffload } from '@/lib/terminal-buffer'
+import {
+  getAttachPtyTabSwitchDwellMs,
+  isAttachPtyScrollbackOffloadEnabled,
+  isAttachPtyWebglContextPoolEnabled,
+  shouldSaveAttachSnapshotOnDetach,
+} from '@/lib/attach-pty-render'
+import { resolveAttachPtyWebglSlotId } from '@/lib/attach-pty-webgl-pool'
+import {
+  offloadAttachPtyBuffer,
+  takeOffloadedAttachPtyBuffer,
+  type AttachPtyOffloadedBuffer,
+} from '@/lib/attach-pty-scrollback-offload'
 import { writeXtermOutput } from '@/lib/terminal-sync-output'
 import {
   refreshWebglTextureAtlas,
@@ -129,6 +141,17 @@ export function TerminalView({
   const [runtimeRenderer, setRuntimeRenderer] = useState<TerminalRuntimeRendererMode>('dom')
   const [runtimeFallback, setRuntimeFallback] = useState<string | undefined>()
   const settings = useAppStore((s) => s.settings)
+  const attachPtyWebglPool = isAttachHost && isAttachPtyWebglContextPoolEnabled(settings)
+  const attachPtyScrollbackOffload =
+    isAttachHost && isAttachPtyScrollbackOffloadEnabled(settings)
+
+  const resolveWebglSlotId = useCallback(
+    (terminalId: string | null): string | null => {
+      if (!terminalId) return null
+      return resolveAttachPtyWebglSlotId(terminalId, attachPtyWebglPool)
+    },
+    [attachPtyWebglPool],
+  )
 
   useEffect(() => {
     tabRef.current = tab
@@ -145,6 +168,11 @@ export function TerminalView({
   const effectiveTerminalId = isAttachHost
     ? (attachSession?.terminalId ?? null)
     : (tab.terminalId ?? null)
+
+  const webglSlotId =
+    effectiveTerminalId != null
+      ? resolveAttachPtyWebglSlotId(effectiveTerminalId, attachPtyWebglPool)
+      : null
 
   useEffect(() => {
     const terminalId = effectiveTerminalId
@@ -242,18 +270,19 @@ export function TerminalView({
     } catch {
       /* WebGL 上下文已丢失时 dispose 可能报错 */
     }
-    const terminalId = boundTerminalIdRef.current
-    if (terminalId && hasWebglSlot(terminalId)) {
-      releaseWebglSlot(terminalId)
+    const slotId = resolveWebglSlotId(boundTerminalIdRef.current)
+    if (slotId && hasWebglSlot(slotId)) {
+      releaseWebglSlot(slotId)
     }
-  }, [])
+  }, [resolveWebglSlotId])
 
   const loadWebgl = useCallback(async () => {
     const terminalId = boundTerminalIdRef.current
-    if (!termRef.current || !terminalId || webglRef.current) return
+    const slotId = resolveWebglSlotId(terminalId)
+    if (!termRef.current || !slotId || webglRef.current) return
     if (webglBlockedRef.current || activeRenderer !== 'webgl') return
 
-    if (!tryAcquireWebglSlot(terminalId)) {
+    if (!tryAcquireWebglSlot(slotId)) {
       setRuntimeRenderer('dom')
       setRuntimeFallback('webgl-slot-full')
       return
@@ -265,8 +294,8 @@ export function TerminalView({
       const { WebglAddon } = await import('@xterm/addon-webgl')
       const term = termRef.current
       if (!term || webglRef.current) {
-        if (terminalId && hasWebglSlot(terminalId)) {
-          releaseWebglSlot(terminalId)
+        if (slotId && hasWebglSlot(slotId)) {
+          releaseWebglSlot(slotId)
         }
         setRuntimeRenderer('dom')
         setRuntimeFallback('webgl-cancelled')
@@ -281,7 +310,7 @@ export function TerminalView({
       const webgl = new WebglAddon()
       webglRef.current = webgl
       term.loadAddon(webgl)
-      touchWebglSlot(terminalId)
+      touchWebglSlot(slotId)
       setRuntimeRenderer('webgl')
       setRuntimeFallback(undefined)
       webgl.onContextLoss(() => {
@@ -305,7 +334,7 @@ export function TerminalView({
       setRuntimeFallback('webgl-load-failed')
       disposeWebgl()
     }
-  }, [activeRenderer, disposeWebgl, safeFit, scheduleFit])
+  }, [activeRenderer, disposeWebgl, resolveWebglSlotId, safeFit, scheduleFit])
 
   const applyRenderer = useCallback(() => {
     if (!termRef.current || !termReady) return
@@ -339,37 +368,72 @@ export function TerminalView({
     const term = termRef.current
     const prev = prevAttachSessionRef.current
     if (!term || !prev) return
-    useAttachPtySessionStore.getState().saveSnapshot(prev.tabId, getTerminalBufferText(term))
+
+    const dwellMs = getAttachPtyTabSwitchDwellMs(useAppStore.getState().settings)
+    const saveSnapshot = shouldSaveAttachSnapshotOnDetach(prev, dwellMs)
+
+    if (saveSnapshot) {
+      if (attachPtyScrollbackOffload) {
+        offloadAttachPtyBuffer(prev.tabId, {
+          scrollbackText: getTerminalScrollbackText(term),
+          screenText: getTerminalScreenText(term),
+        })
+      } else {
+        useAttachPtySessionStore.getState().saveSnapshot(prev.tabId, getTerminalBufferText(term))
+      }
+    }
+
     unregisterTerminal(prev.terminalId)
     prevAttachSessionRef.current = null
     boundTerminalIdRef.current = null
-  }, [])
+  }, [attachPtyScrollbackOffload])
 
   const applyAttachSession = useCallback(
     (session: AttachPtyCommittedSession | null) => {
       const term = termRef.current
       if (!term) return
 
+      let offloadedRestore: AttachPtyOffloadedBuffer | undefined
+      let snapshotText: string | undefined
+
+      if (session) {
+        if (attachPtyScrollbackOffload) {
+          offloadedRestore = takeOffloadedAttachPtyBuffer(session.tabId)
+        } else {
+          snapshotText = useAttachPtySessionStore.getState().takeSnapshot(session.tabId)?.bufferText
+        }
+      }
+
       detachAttachSession()
 
       if (!session) {
-        term.clear()
+        requestAnimationFrame(() => {
+          term.clear()
+        })
         return
       }
 
       prevAttachSessionRef.current = session
       boundTerminalIdRef.current = session.terminalId
       registerTerminal(session.terminalId, term)
-      term.clear()
-      safeFit(true)
-      const snap = useAttachPtySessionStore.getState().takeSnapshot(session.tabId)
-      if (snap?.bufferText) {
-        restoreTerminalBufferText(term, snap.bufferText)
-      }
-      scheduleFit(true)
-      term.focus()
+
+      requestAnimationFrame(() => {
+        term.clear()
+        safeFit(true)
+        if (offloadedRestore) {
+          restoreTerminalFromOffload(
+            term,
+            offloadedRestore.scrollbackText,
+            offloadedRestore.screenText,
+          )
+        } else if (snapshotText) {
+          restoreTerminalBufferText(term, snapshotText)
+        }
+        scheduleFit(true)
+        term.focus()
+      })
     },
-    [detachAttachSession, safeFit, scheduleFit],
+    [detachAttachSession, safeFit, scheduleFit, attachPtyScrollbackOffload],
   )
 
   useEffect(() => {
@@ -800,9 +864,9 @@ export function TerminalView({
   ])
 
   useEffect(() => {
-    if (!termReady || !effectiveTerminalId || activeRenderer !== 'webgl') return
+    if (!termReady || !webglSlotId || activeRenderer !== 'webgl') return
 
-    const unregisterEvict = registerWebglEvictHandler(effectiveTerminalId, () => {
+    const unregisterEvict = registerWebglEvictHandler(webglSlotId, () => {
       disposeWebgl()
     })
 
@@ -811,7 +875,7 @@ export function TerminalView({
     return () => {
       unregisterEvict()
     }
-  }, [termReady, effectiveTerminalId, activeRenderer, loadWebgl, disposeWebgl])
+  }, [termReady, webglSlotId, activeRenderer, loadWebgl, disposeWebgl])
 
   const syncPreviewMouse = useCallback(() => {
     for (const d of previewMouseRef.current) d.dispose()
@@ -877,8 +941,8 @@ export function TerminalView({
     if (!termReady || !termRef.current || !effectiveTerminalId) return
     if (isFocused) {
       touchTabActivity(tab.id)
-      if (activeRenderer === 'webgl') {
-        touchWebglSlot(effectiveTerminalId)
+      if (activeRenderer === 'webgl' && webglSlotId) {
+        touchWebglSlot(webglSlotId)
       }
       safeFit()
       termRef.current.focus()
@@ -898,6 +962,7 @@ export function TerminalView({
     termReady,
     safeFit,
     effectiveTerminalId,
+    webglSlotId,
     loadWebgl,
     activeRenderer,
     tab.id,

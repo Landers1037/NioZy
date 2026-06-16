@@ -818,6 +818,10 @@
         "title": "VNC 特性",
         "description": "VNC Viewer 与显示相关设置。"
       },
+      "multiTerminal": {
+        "title": "多终端优化",
+        "description": "Attach-PTY 与多 Tab 终端性能相关设置，仅支持 Xterm.js。"
+      },
       "ghosttyCoreEnabled": "Ghostty Core",
       "ghosttyCoreEnabledDesc": "使用 libghostty WASM 作为 Wterm 的 VT 解析核心，提供更完整的终端仿真（Unicode 字素簇、完整 SGR 等）。切换后请重新打开终端 Tab 生效。",
       "ghosttyScrollbackLimit": "Ghostty 回滚行数",
@@ -825,7 +829,11 @@
       "attachPtyRenderMode": "Attach-PTY 渲染模式",
       "attachPtyRenderModeDesc": "单 Tab 共用一个 Xterm 实例，切换 Tab 时 attach 不同 PTY。分屏仍使用多个终端实例。仅支持 Xterm.js。",
       "attachPtyTabSwitchDwellMs": "Attach-PTY Tab 切换延迟",
-      "attachPtyTabSwitchDwellMsDesc": "切换到某 Tab 后需停留该时长（毫秒）才恢复终端内容；快速划过不会 attach。范围 0–5000，默认 300。"
+      "attachPtyTabSwitchDwellMsDesc": "在 Tab 上停留不足该时长（毫秒）就切走时，跳过快照保存以减轻开销；切换本身立即完成，不再显示等待。范围 0–5000，默认 300。",
+      "attachPtyWebglContextPool": "WebGL Context Pool",
+      "attachPtyWebglContextPoolDesc": "Attach-PTY 单例宿主共用 WebGL 槽位，切换 Tab 时不随 terminalId 释放与重建上下文。",
+      "attachPtyScrollbackOffload": "Scrollback Offload",
+      "attachPtyScrollbackOffloadDesc": "detach 时将 scrollback 卸载到侧存储并清空 xterm 缓冲，切回时再恢复，降低多 Tab 内存占用。"
     },
     "advanced": {
       "title": "高级设置",

@@ -705,10 +705,18 @@
       "ghosttyCoreEnabledDesc": "libghostty WASM ビルドを Wterm の VT パーサーとして使用（書記素クラスタ、完全 SGR 等）。切り替え後は開いているターミナルタブを再起動してください。",
       "ghosttyScrollbackLimit": "Ghostty スクロールバック行数",
       "ghosttyScrollbackLimitDesc": "Ghostty Core の最大スクロールバック行数（デフォルト 10000）。変更後は開いているターミナルタブを再起動してください。",
+      "multiTerminal": {
+        "title": "マルチターミナル最適化",
+        "description": "Attach-PTY と複数 Tab のパフォーマンス設定。Xterm.js のみ対応。"
+      },
       "attachPtyRenderMode": "Attach-PTY レンダーモード",
       "attachPtyRenderModeDesc": "単一 Tab で Xterm を 1 つ共有し、Tab 切替で PTY を attach。分割ペインは複数インスタンスのまま。Xterm.js のみ。",
       "attachPtyTabSwitchDwellMs": "Attach-PTY Tab 切替遅延",
-      "attachPtyTabSwitchDwellMsDesc": "Tab に切り替えてからこの時間（ミリ秒）留まった後にターミナルを復元。素早く通過しただけでは attach しません。0–5000、既定 300。"
+      "attachPtyTabSwitchDwellMsDesc": "この時間（ミリ秒）未満で Tab を離れた場合はスナップショット保存を省略。切替自体は即時でローディング表示なし。0–5000、既定 300。",
+      "attachPtyWebglContextPool": "WebGL Context Pool",
+      "attachPtyWebglContextPoolDesc": "Attach-PTY ホストで WebGL スロットを共有。Tab 切替時に terminalId ごとにコンテキストを解放・再作成しません。",
+      "attachPtyScrollbackOffload": "Scrollback Offload",
+      "attachPtyScrollbackOffloadDesc": "detach 時に scrollback をサイドストレージへ退避し xterm バッファを解放。再 attach 時に復元し、複数 Tab のメモリを抑えます。"
     },
     "advanced": {
       "title": "詳細",

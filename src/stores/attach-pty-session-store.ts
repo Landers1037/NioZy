@@ -1,4 +1,8 @@
 import { create } from 'zustand'
+import {
+  clearOffloadedAttachPtyBuffers,
+  resetOffloadedAttachPtyBuffers,
+} from '@/lib/attach-pty-scrollback-offload'
 
 export interface AttachPtyTabSnapshot {
   bufferText: string
@@ -7,6 +11,8 @@ export interface AttachPtyTabSnapshot {
 export interface AttachPtyCommittedSession {
   tabId: string
   terminalId: string
+  /** 本次 commit 时间戳；用于 dwell 内快速切走时跳过快照 */
+  committedAt: number
 }
 
 interface AttachPtySessionState {
@@ -27,7 +33,13 @@ export const useAttachPtySessionStore = create<AttachPtySessionState>((set, get)
   committed: null,
   pendingTabId: null,
   snapshots: {},
-  setCommitted: (committed) => set({ committed }),
+  setCommitted: (committed) =>
+    set({
+      committed: committed
+        ? { ...committed, committedAt: committed.committedAt ?? Date.now() }
+        : null,
+      pendingTabId: null,
+    }),
   setPendingTabId: (pendingTabId) => set({ pendingTabId }),
   saveSnapshot: (tabId, bufferText) =>
     set((s) => ({
@@ -53,6 +65,7 @@ export const useAttachPtySessionStore = create<AttachPtySessionState>((set, get)
     }),
   clearSnapshots: (tabIds) =>
     set((s) => {
+      clearOffloadedAttachPtyBuffers(tabIds)
       const next = { ...s.snapshots }
       let changed = false
       for (const id of tabIds) {
@@ -63,5 +76,8 @@ export const useAttachPtySessionStore = create<AttachPtySessionState>((set, get)
       }
       return changed ? { snapshots: next } : s
     }),
-  reset: () => set({ committed: null, pendingTabId: null, snapshots: {} }),
+  reset: () => {
+    resetOffloadedAttachPtyBuffers()
+    set({ committed: null, pendingTabId: null, snapshots: {} })
+  },
 }))

@@ -59,6 +59,10 @@ export interface ExperimentalSettings {
   attachPtyRenderMode: boolean
   /** Attach-PTY：Tab 停留多久（ms）后才 attach / 恢复终端内容 */
   attachPtyTabSwitchDwellMs: number
+  /** Attach-PTY：单例宿主复用 WebGL 上下文槽位，Tab 切换时不随 terminalId 释放 */
+  attachPtyWebglContextPool: boolean
+  /** Attach-PTY：detach 时将 scrollback 卸载到侧存储，减轻 xterm 内存占用 */
+  attachPtyScrollbackOffload: boolean
   /** 开启 AI 对话边栏 */
   aiSidebarEnabled: boolean
   /** AI 边栏支持附加本地图片/文件 */
@@ -94,6 +98,8 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   vncEncoding: DEFAULT_VNC_ENCODING,
   attachPtyRenderMode: false,
   attachPtyTabSwitchDwellMs: DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
+  attachPtyWebglContextPool: false,
+  attachPtyScrollbackOffload: false,
   aiSidebarEnabled: false,
   aiAttachmentsEnabled: false,
   aiSidebarWidth: DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
@@ -144,6 +150,8 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     vncEncoding: normalizeVncEncoding(o.vncEncoding),
     attachPtyRenderMode: o.attachPtyRenderMode === true,
     attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(o.attachPtyTabSwitchDwellMs),
+    attachPtyWebglContextPool: o.attachPtyWebglContextPool === true,
+    attachPtyScrollbackOffload: o.attachPtyScrollbackOffload === true,
     aiSidebarEnabled: o.aiSidebarEnabled === true,
     aiAttachmentsEnabled: o.aiAttachmentsEnabled === true,
     aiSidebarWidth: normalizeAiSidebarWidthPreset(o.aiSidebarWidth),

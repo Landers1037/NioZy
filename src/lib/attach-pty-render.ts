@@ -21,12 +21,37 @@ export function isAttachPtyRenderMode(settings: AppSettings | null | undefined):
   return !isWtermEmulator(settings)
 }
 
+export function isAttachPtyWebglContextPoolEnabled(
+  settings: AppSettings | null | undefined,
+): boolean {
+  return (
+    isAttachPtyRenderMode(settings) && settings?.experimental.attachPtyWebglContextPool === true
+  )
+}
+
+export function isAttachPtyScrollbackOffloadEnabled(
+  settings: AppSettings | null | undefined,
+): boolean {
+  return (
+    isAttachPtyRenderMode(settings) && settings?.experimental.attachPtyScrollbackOffload === true
+  )
+}
+
 export function tabUsesAttachPtyRender(
   tab: AppTab,
   settings: AppSettings | null | undefined,
 ): boolean {
   if (!isAttachPtyRenderMode(settings)) return false
   return getSplitPanes(tab).length <= 1
+}
+
+/** 停留不足 dwell 时跳过 detach 快照，依赖主进程 pausedOutput 续流 */
+export function shouldSaveAttachSnapshotOnDetach(
+  session: { committedAt: number },
+  dwellMs: number,
+  now = Date.now(),
+): boolean {
+  return now - session.committedAt >= dwellMs
 }
 
 export function resolveAttachPtyTargetTab(
