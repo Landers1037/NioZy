@@ -294,7 +294,8 @@
     "inputPlaceholder": "Type a message…",
     "addAttachment": "Add attachment",
     "addAttachmentDialogTitle": "Select attachments",
-    "attachmentInputNotReady": "Attachment input is not ready. Reopen the AI sidebar and try again."
+    "attachmentInputNotReady": "Attachment input is not ready. Reopen the AI sidebar and try again.",
+    "newChat": "New chat"
   },
   "layout": {
     "default": { "label": "Default", "description": "Sidebar expanded by default" },
@@ -1318,7 +1319,9 @@
     "resourceAutoDegradeAction": "Downgrade",
     "resourceAutoDegradeApplied": "Switched to DOM rendering with Attach-PTY and inactive tab optimization enabled.",
     "resourceAutoDegradeFailed": "Failed to save performance downgrade settings.",
-    "restartApp": "Restart"
+    "restartApp": "Restart",
+    "aiSidebarRequestTimeout": "AI chat request timed out",
+    "aiSidebarRequestFailed": "AI chat request failed"
   },
   "terminal": {
     "processExited": "[Process exited]",

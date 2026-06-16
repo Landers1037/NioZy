@@ -294,7 +294,8 @@
     "inputPlaceholder": "输入消息…",
     "addAttachment": "添加附件",
     "addAttachmentDialogTitle": "选择附件",
-    "attachmentInputNotReady": "附件输入未就绪，请重新打开 AI 边栏后再试。"
+    "attachmentInputNotReady": "附件输入未就绪，请重新打开 AI 边栏后再试。",
+    "newChat": "新对话"
   },
   "layout": {
     "default": { "label": "默认", "description": "左侧边栏默认展开" },
@@ -1318,7 +1319,9 @@
     "resourceAutoDegradeAction": "一键降级",
     "resourceAutoDegradeApplied": "已切换为 DOM 渲染，并开启 Attach-PTY 与非活动 Tab 优化",
     "resourceAutoDegradeFailed": "性能降级设置保存失败",
-    "restartApp": "重启"
+    "restartApp": "重启",
+    "aiSidebarRequestTimeout": "AI 对话请求超时",
+    "aiSidebarRequestFailed": "AI 对话请求失败"
   },
   "terminal": {
     "processExited": "[进程已退出]",

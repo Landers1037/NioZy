@@ -1,8 +1,15 @@
-import { forwardRef, useCallback, useEffect, useState, type ButtonHTMLAttributes } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ButtonHTMLAttributes,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { CopilotKit } from '@copilotkit/react-core'
-import { CopilotSidebar, useCopilotChatConfiguration } from '@copilotkit/react-core/v2'
+import { CopilotSidebar, useCopilotChatConfiguration, type CopilotSidebarProps } from '@copilotkit/react-core/v2'
 import '@copilotkit/react-core/v2/styles.css'
 import './ai-copilot-theme.css'
 import { useAppStore } from '@/stores/app-store'
@@ -14,6 +21,9 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { clickCopilotFileInput } from '@/lib/click-copilot-file-input'
 import { appendCopilotChatInput } from '@/lib/append-copilot-chat-input'
 import { AiCopilotContextBridge } from './AiCopilotContextBridge'
+import { AiCopilotErrorBridge } from './AiCopilotErrorBridge'
+import { AiCopilotNewChatBridge } from './AiCopilotNewChatBridge'
+import { AiSidebarNewChatButton } from './AiCopilotSidebarHeader'
 
 type AiAddAttachmentButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   onAddFile?: () => void
@@ -126,6 +136,29 @@ export function AiCopilotRoot() {
   const [configured, setConfigured] = useState(false)
   const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen)
 
+  const sidebarHeader = useMemo(
+    (): NonNullable<CopilotSidebarProps['header']> => ({
+      title: t('aiSidebar.title'),
+      children: ({ titleContent, closeButton }) => (
+        <header
+          data-testid="copilot-modal-header"
+          data-slot="copilot-modal-header"
+          className="copilotKitHeader cpk:flex cpk:items-center cpk:justify-between cpk:border-b cpk:border-border cpk:px-4 cpk:py-4 cpk:bg-background/95 cpk:backdrop-blur cpk:supports-[backdrop-filter]:bg-background/80"
+        >
+          <div className="cpk:flex cpk:w-full cpk:items-center cpk:gap-2">
+            <div className="cpk:flex-1" aria-hidden />
+            <div className="cpk:flex cpk:flex-1 cpk:justify-center cpk:text-center">{titleContent}</div>
+            <div className="cpk:flex cpk:flex-1 cpk:items-center cpk:justify-end cpk:gap-1">
+              <AiSidebarNewChatButton />
+              {closeButton}
+            </div>
+          </div>
+        </header>
+      ),
+    }),
+    [t],
+  )
+
   const handleAddFile = useCallback(() => {
     clickCopilotFileInput()
   }, [])
@@ -219,12 +252,15 @@ export function AiCopilotRoot() {
       {/* 主题作用域 wrapper，与 CopilotKit 官方 CSS 自定义示例一致 */}
       <div className="niozy-ai-copilot-scope">
         <AiCopilotContextBridge />
+        <AiCopilotErrorBridge />
+        <AiCopilotNewChatBridge />
         <AiSidebarInputBridge />
         <CopilotSidebar
           defaultOpen={false}
           position="right"
           width={aiSidebarWidthPx}
           toggleButton={HiddenAiSidebarToggle}
+          header={sidebarHeader}
           labels={{
             modalHeaderTitle: t('aiSidebar.title'),
             welcomeMessageText: configured

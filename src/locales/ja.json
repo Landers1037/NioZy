@@ -220,7 +220,8 @@
     "inputPlaceholder": "メッセージを入力…",
     "addAttachment": "添付を追加",
     "addAttachmentDialogTitle": "添付ファイルを選択",
-    "attachmentInputNotReady": "添付入力の準備ができていません。AI サイドバーを開き直してから再試行してください。"
+    "attachmentInputNotReady": "添付入力の準備ができていません。AI サイドバーを開き直してから再試行してください。",
+    "newChat": "新しい会話"
   },
   "layout": {
     "default": { "label": "デフォルト", "description": "サイドバーをデフォルトで展開" },
@@ -1154,7 +1155,9 @@
     "resourceAutoDegradeAction": "ダウングレード",
     "resourceAutoDegradeApplied": "DOM レンダリングに切り替え、Attach-PTY と非アクティブ Tab 最適化を有効にしました。",
     "resourceAutoDegradeFailed": "パフォーマンスダウングレード設定の保存に失敗しました。",
-    "restartApp": "再起動"
+    "restartApp": "再起動",
+    "aiSidebarRequestTimeout": "AI チャットのリクエストがタイムアウトしました",
+    "aiSidebarRequestFailed": "AI チャットのリクエストに失敗しました"
   },
   "connection": {
     "invalidPort": "ポートが無効です（1–65535）。設定値: {{port}}"
