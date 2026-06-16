@@ -32,6 +32,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 13,
   showAppTitle: true,
   enableDialogAnimations: true,
+  enableGlassTransparency: false,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',

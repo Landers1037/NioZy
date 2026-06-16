@@ -110,6 +110,7 @@ export interface AppSettings {
   fontWeightBold?: number
   showAppTitle: boolean
   enableDialogAnimations: boolean
+  enableGlassTransparency: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
@@ -218,6 +219,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 13,
   showAppTitle: true,
   enableDialogAnimations: true,
+  enableGlassTransparency: false,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
@@ -290,6 +292,10 @@ function buildAppSettingsFromStored(
       typeof stored.enableDialogAnimations === 'boolean'
         ? stored.enableDialogAnimations
         : DEFAULT_SETTINGS.enableDialogAnimations,
+    enableGlassTransparency:
+      typeof stored.enableGlassTransparency === 'boolean'
+        ? stored.enableGlassTransparency
+        : DEFAULT_SETTINGS.enableGlassTransparency,
     connections,
     terminal: {
       ...DEFAULT_SETTINGS.terminal,

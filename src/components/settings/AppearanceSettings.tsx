@@ -22,6 +22,7 @@ import {
   AppWindow,
   Wand2,
   Bold,
+  Layers2,
 } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
@@ -164,6 +165,21 @@ export function AppearanceSettings() {
             checked={settings.enableDialogAnimations}
             onCheckedChange={(enableDialogAnimations) =>
               patchSettings({ enableDialogAnimations })
+            }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Layers2}
+          label={t('settings.appearance.enableGlassTransparency')}
+          description={t('settings.appearance.enableGlassTransparencyDesc')}
+          row
+        >
+          <Switch
+            checked={settings.enableGlassTransparency}
+            disabled={settings.uiStyle !== 'glass'}
+            onCheckedChange={(enableGlassTransparency) =>
+              patchSettings({ enableGlassTransparency })
             }
           />
         </SettingField>

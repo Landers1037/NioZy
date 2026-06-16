@@ -316,7 +316,9 @@
       "showAppTitle": "アプリ名を表示",
       "showAppTitleDesc": "オフの場合、タイトルバーにはアイコンのみ表示（NioZy 名は非表示）",
       "enableDialogAnimations": "アニメーション",
-      "enableDialogAnimationsDesc": "オン時、ダイアログ（画像プレビュー含む）は下からフェードインし、下へフェードアウト"
+      "enableDialogAnimationsDesc": "オン時、ダイアログ（画像プレビュー含む）は下からフェードインし、下へフェードアウト",
+      "enableGlassTransparency": "透明効果",
+      "enableGlassTransparencyDesc": "「ガラス」インターフェーススタイル時のみ：ダイアログ・ボタン・全体 UI に macOS 風の半透明すりガラス質感を強化"
     },
     "terminal": {
       "title": "ターミナル",
