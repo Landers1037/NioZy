@@ -110,7 +110,7 @@ export function CommitDetailPanel({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
       <div className="shrink-0 space-y-3 border-b border-border p-4">
         <div>
           <p className="font-mono text-xs text-muted-foreground">{detail.shortSha}</p>
@@ -148,12 +148,12 @@ export function CommitDetailPanel({
         {detail.files.length === 0 ? (
           <p className="px-4 text-xs text-muted-foreground">{t('repo.noChangedFiles')}</p>
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-            <ul className="space-y-1">
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 pb-4">
+            <ul className="min-w-0 space-y-1">
               {detail.files.map((file) => {
                 const selected = selectedPath === file.path
                 return (
-                  <li key={file.path} className="rounded-md border border-border/60">
+                  <li key={file.path} className="min-w-0 rounded-md border border-border/60">
                     <button
                       type="button"
                       onClick={() => void loadFileDiff(file.path)}
@@ -190,7 +190,7 @@ export function CommitDetailPanel({
                       </span>
                     </button>
                     {selected ? (
-                      <div className="border-t border-border/60 p-2">
+                      <div className="min-w-0 border-t border-border/60 p-2">
                         {diffLoading ? (
                           <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground">
                             <Loader2 className="size-3.5 animate-spin" />

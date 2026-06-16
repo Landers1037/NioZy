@@ -23,17 +23,19 @@ export function CommitFileDiffView({ diff, className }: CommitFileDiffViewProps)
   const lines = diff.split('\n')
 
   return (
-    <pre
+    <div
       className={cn(
-        'overflow-x-auto rounded-md border border-border bg-muted/30 p-2 font-mono text-[11px] leading-relaxed',
+        'show-scrollbar min-w-0 w-full max-w-full overflow-x-auto rounded-md border border-border bg-muted/30',
         className,
       )}
     >
-      {lines.map((line, index) => (
-        <div key={`${index}-${line.slice(0, 8)}`} className={cn('whitespace-pre', diffLineClass(line))}>
-          {line || ' '}
-        </div>
-      ))}
-    </pre>
+      <div className="w-max min-w-full p-2 font-mono text-[11px] leading-relaxed">
+        {lines.map((line, index) => (
+          <div key={`${index}-${line.slice(0, 8)}`} className={cn('whitespace-pre', diffLineClass(line))}>
+            {line || ' '}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
