@@ -1,6 +1,9 @@
+import type { AttachPtySnapshotFormat } from '@/lib/terminal-buffer-serialize'
+
 export interface AttachPtyOffloadedBuffer {
   scrollbackText: string
   screenText: string
+  format?: AttachPtySnapshotFormat
 }
 
 /** 侧存储：避免大段 scrollback 驻留在 xterm / zustand 响应式树中 */

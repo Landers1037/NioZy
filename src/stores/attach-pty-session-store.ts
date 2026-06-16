@@ -4,8 +4,11 @@ import {
   resetOffloadedAttachPtyBuffers,
 } from '@/lib/attach-pty-scrollback-offload'
 
+import type { AttachPtySnapshotFormat } from '@/lib/terminal-buffer-serialize'
+
 export interface AttachPtyTabSnapshot {
   bufferText: string
+  format?: AttachPtySnapshotFormat
 }
 
 export interface AttachPtyCommittedSession {
@@ -21,7 +24,7 @@ interface AttachPtySessionState {
   snapshots: Record<string, AttachPtyTabSnapshot>
   setCommitted: (session: AttachPtyCommittedSession | null) => void
   setPendingTabId: (tabId: string | null) => void
-  saveSnapshot: (tabId: string, bufferText: string) => void
+  saveSnapshot: (tabId: string, bufferText: string, format?: AttachPtySnapshotFormat) => void
   peekSnapshot: (tabId: string) => AttachPtyTabSnapshot | undefined
   takeSnapshot: (tabId: string) => AttachPtyTabSnapshot | undefined
   clearSnapshot: (tabId: string) => void
@@ -41,9 +44,9 @@ export const useAttachPtySessionStore = create<AttachPtySessionState>((set, get)
       pendingTabId: null,
     }),
   setPendingTabId: (pendingTabId) => set({ pendingTabId }),
-  saveSnapshot: (tabId, bufferText) =>
+  saveSnapshot: (tabId, bufferText, format) =>
     set((s) => ({
-      snapshots: { ...s.snapshots, [tabId]: { bufferText } },
+      snapshots: { ...s.snapshots, [tabId]: { bufferText, format } },
     })),
   peekSnapshot: (tabId) => get().snapshots[tabId],
   takeSnapshot: (tabId) => {
