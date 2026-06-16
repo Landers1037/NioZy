@@ -31,7 +31,7 @@ function copyMainAssets(): Plugin {
     },
   }
 }
-import react from '@vitejs/plugin-react'
+import preact from '@preact/preset-vite'
 import tailwindcss from '@tailwindcss/vite'
 
 /** 打进 out/main/copilot-runtime.mjs，避免 asar 内整包 node_modules/@copilotkit/runtime */
@@ -151,9 +151,10 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': resolve('src'),
+        'react-dom/client': 'preact/compat/client',
       },
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [preact(), tailwindcss()],
   },
 }
 })
