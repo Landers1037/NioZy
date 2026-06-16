@@ -11,7 +11,7 @@
 | 外观设置 | [功能外观与布局.md](./功能外观与布局.md) |
 | 终端设置 | [功能终端与会话.md](./功能终端与会话.md) |
 | SSH | [功能SSH连接.md](./功能SSH连接.md) |
-| SHELL | [功能Shell与命令回放.md](./功能Shell与命令回放.md)、[SHELL.md](./SHELL.md)、[功能增强SHELL.md](./功能增强SHELL.md) |
+| SHELL | [功能增强SHELL.md](./功能增强SHELL.md)、[SHELL.md](./SHELL.md) |
 | 预览 | [功能预览与WebView.md](./功能预览与WebView.md) |
 | 性能 | [功能性能.md](./功能性能.md) |
 | 文件系统 | [功能文件系统.md](./功能文件系统.md)、[功能仓库管理.md](./功能仓库管理.md) |
@@ -44,9 +44,8 @@
 | [功能绘图.md](./功能绘图.md) | Excalidraw / Draw.io Tab |
 | [功能预览与WebView.md](./功能预览与WebView.md) | 链接预览、WebView、Office/PDF 预览 |
 | [功能外观与布局.md](./功能外观与布局.md) | 主题、UI 风格（含 Claude 等）、布局、Tab 分组 |
-| [功能Shell与命令回放.md](./功能Shell与命令回放.md) | 链接检测、emoji、命令回放 |
+| [功能增强SHELL.md](./功能增强SHELL.md) | 链接检测、emoji、快捷换行、Oh My Posh、日志着色、命令回放 |
 | [SHELL.md](./SHELL.md) | 重启恢复终端会话 |
-| [功能增强SHELL.md](./功能增强SHELL.md) | Oh My Posh / posh-git |
 | [功能快捷键.md](./功能快捷键.md) | 全局快捷键 |
 | [功能使用统计.md](./功能使用统计.md) | 本地使用时长与 Tab 统计 |
 | [功能番茄钟.md](./功能番茄钟.md) | 顶部栏番茄钟 |

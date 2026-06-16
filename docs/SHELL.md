@@ -2,7 +2,7 @@
 
 在 **设置 · SHELL** 中开启「重启后恢复上次终端会话」后，关闭程序时会保存终端 Tab 结构与连接配置；下次启动时按保存内容重建 PTY 并恢复 Tab 顺序与活动 Tab。
 
-> 与 [功能Shell与命令回放.md](./功能Shell与命令回放.md)（链接/emoji/命令回放）、[功能增强SHELL.md](./功能增强SHELL.md)（Oh My Posh）同属 **设置 · SHELL** 分区。
+> 与 [功能增强SHELL.md](./功能增强SHELL.md)（链接/emoji/命令回放/Oh My Posh 等）同属 **设置 · SHELL** 分区。
 
 ## 功能列表
 
@@ -217,5 +217,5 @@ let resumeTermBootComplete = false
 ## 相关文档
 
 - [功能终端与会话.md](./功能终端与会话.md) — Tab / PTY / 拆分
-- [功能Shell与命令回放.md](./功能Shell与命令回放.md) — 同设置页其它 Shell 选项
+- [功能增强SHELL.md](./功能增强SHELL.md) — 同设置页其它 Shell 选项
 - [功能系统与托盘.md](./功能系统与托盘.md) — 文件夹右键「使用 NioZy 打开」
