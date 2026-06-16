@@ -201,6 +201,8 @@ export interface AppSettings {
   showAppTitle: boolean
   /** 弹框打开/关闭过渡动画 */
   enableDialogAnimations: boolean
+  /** 玻璃界面风格下启用 macOS 风格增强毛玻璃透明效果 */
+  enableGlassTransparency: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string

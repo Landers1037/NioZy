@@ -397,7 +397,9 @@
       "showAppTitle": "显示程序标题",
       "showAppTitleDesc": "关闭后顶栏仅显示图标，不显示 NioZy 名称",
       "enableDialogAnimations": "动画效果",
-      "enableDialogAnimationsDesc": "开启后弹框（含图片预览）打开与关闭时自底部向上淡入、向下淡出"
+      "enableDialogAnimationsDesc": "开启后弹框（含图片预览）打开与关闭时自底部向上淡入、向下淡出",
+      "enableGlassTransparency": "透明效果",
+      "enableGlassTransparencyDesc": "仅在「玻璃」界面风格下生效：增强弹框、按钮与整体界面的 macOS 风格半透明毛玻璃质感"
     },
     "terminal": {
       "title": "终端设置",

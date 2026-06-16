@@ -445,6 +445,11 @@ export function applyThemeToDocument(settings: AppSettings): void {
   const root = document.documentElement
   root.classList.toggle('dark', settings.theme === 'dark')
   root.dataset.uiStyle = uiStyleToDataAttribute(settings.uiStyle)
+  if (settings.uiStyle === 'glass' && settings.enableGlassTransparency) {
+    root.dataset.glassVibrancy = 'true'
+  } else {
+    delete root.dataset.glassVibrancy
+  }
   root.style.setProperty('--primary', settings.accentColor)
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)

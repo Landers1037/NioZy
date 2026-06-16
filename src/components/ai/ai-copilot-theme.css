@@ -290,6 +290,52 @@ html[data-ui-style='glass']
   background: transparent;
 }
 
+/* 玻璃 + 透明效果：AI 侧栏与输入区同步 macOS 毛玻璃 */
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  [data-copilot-sidebar],
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  .copilotKitHeader,
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  .copilotKitMessage.copilotKitUserMessage
+  > div
+  > div:first-of-type,
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-chat-input'].copilotKitInput,
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  [data-testid='copilot-chat-input'].copilotKitInput {
+  backdrop-filter: var(--glass-backdrop, blur(44px) saturate(195%) brightness(1.05));
+  -webkit-backdrop-filter: var(--glass-backdrop, blur(44px) saturate(195%) brightness(1.05));
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  [data-copilot-sidebar] {
+  background: color-mix(in srgb, var(--card) 58%, transparent);
+  box-shadow:
+    inset 1px 0 0 var(--glass-highlight),
+    -12px 0 40px var(--glass-shadow);
+}
+
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  .copilotKitHeader {
+  background: color-mix(in srgb, var(--card) 52%, transparent);
+}
+
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  .niozy-ai-copilot-scope
+  [data-testid='copilot-chat-input'].copilotKitInput,
+html[data-ui-style='glass'][data-glass-vibrancy='true']
+  [data-testid='copilot-chat-input'].copilotKitInput {
+  background: color-mix(in srgb, var(--card) 48%, transparent) !important;
+}
+
 /* —— Claude：暖奶油底、白卡片输入、衬线标题、珊瑚强调 —— */
 html[data-ui-style='claude'] .niozy-ai-copilot-scope [data-copilotkit] {
   --cpk-theme-background: var(--background);
