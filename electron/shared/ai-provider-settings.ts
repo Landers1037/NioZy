@@ -1,4 +1,5 @@
 import { containsVaultReference, listVaultReferenceNames } from './vault-reference'
+import { devError } from './dev-log'
 
 /** 本文件会被渲染进程打包，勿导入 `electron/app-log` 等 Node 专用模块 */
 
@@ -124,14 +125,14 @@ export function warnIfAiApiKeyUnresolved(
   if (key && !containsVaultReference(key)) return
   const refs = listVaultReferenceNames(storedApiKey)
   if (refs.length > 0) {
-    console.error(
+    devError(
       '[NioZy][Copilot] AI API Key vault reference could not be resolved:',
       refs,
     )
     return
   }
   if (!key) {
-    console.error('[NioZy][Copilot] AI API Key is empty after resolving vault references')
+    devError('[NioZy][Copilot] AI API Key is empty after resolving vault references')
   }
 }
 

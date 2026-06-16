@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2'
+import { devError } from '../../../electron/shared/dev-log'
 import { createAiCopilotThreadId } from '@/lib/ai-copilot-thread'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 
@@ -17,7 +18,7 @@ export function AiCopilotNewChatBridge() {
     try {
       await copilotkit.connectAgent({ agent })
     } catch (error) {
-      console.error('AiCopilotNewChatBridge: connectAgent failed', error)
+      devError('AiCopilotNewChatBridge: connectAgent failed', error)
     }
   }, [agent, copilotkit])
 

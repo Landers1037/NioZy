@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useAppStore, type AppTab } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
+import { devError, devLog } from '../../../electron/shared/dev-log'
 import { getSshConnection } from '@/lib/ssh-connection'
 import { getTabDisplayTitle } from '@/lib/tab-display'
 import type { ScpFileEntry, ScpTransferProgress } from '../../../electron/shared/api-types'
@@ -254,14 +255,14 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
 
       const run = async () => {
         setRemoteLoading(true)
-        console.log('[NioZy][SCP] renderer listRemote start', {
+        devLog('[NioZy][SCP] renderer listRemote start', {
           connectionId,
           dir,
           afterTransfer: Boolean(options?.afterTransfer),
         })
         try {
           const result = await getElectronAPI().ssh.listRemote(connectionId, dir, options)
-          console.log('[NioZy][SCP] renderer listRemote done', {
+          devLog('[NioZy][SCP] renderer listRemote done', {
             ok: result.ok,
             entryCount: result.entries?.length,
             resolvedPath: result.resolvedPath,
@@ -277,7 +278,7 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
           }
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
-          console.error('[NioZy][SCP] renderer listRemote error', message)
+          devError('[NioZy][SCP] renderer listRemote error', message)
           if (!options?.afterTransfer) {
             toast.error(message || t('scp.listFailed'))
           }
@@ -298,19 +299,19 @@ export function ScpTransferDialog({ tab, open, onOpenChange }: ScpTransferDialog
     let cancelled = false
 
     void (async () => {
-      console.log('[NioZy][SCP] renderer open panel', {
+      devLog('[NioZy][SCP] renderer open panel', {
         connectionId: tab.sshConnectionId,
         tabId: tab.id,
       })
       const prof = await getElectronAPI().ssh.getProfile(tab.sshConnectionId!)
       if (cancelled) return
       if (!prof) {
-        console.error('[NioZy][SCP] renderer getProfile failed')
+        devError('[NioZy][SCP] renderer getProfile failed')
         toast.error(t('scp.profileFailed'))
         onOpenChange(false)
         return
       }
-      console.log('[NioZy][SCP] renderer getProfile ok', {
+      devLog('[NioZy][SCP] renderer getProfile ok', {
         host: prof.host,
         user: prof.user,
         hasPassword: Boolean(prof.password),
