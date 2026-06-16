@@ -105,12 +105,33 @@ function disposeAll(items: IDisposable[]): void {
   items.length = 0
 }
 
+let _linkHighlightLastViewportY = -1
+let _linkHighlightLastBufferLen = -1
+let _linkHighlightLastRows = -1
+
 function refreshLinkHighlightDecorations(term: Terminal, state: TerminalShellAddonState): void {
+  const buffer = term.buffer.active
+  const viewportY = buffer.viewportY
+  const bufferLen = buffer.length
+  const rows = term.rows
+
+  // Skip if viewport position and buffer length haven't changed
+  if (
+    viewportY === _linkHighlightLastViewportY &&
+    bufferLen === _linkHighlightLastBufferLen &&
+    rows === _linkHighlightLastRows &&
+    state.linkHighlightDisposables.length > 0
+  ) {
+    return
+  }
+  _linkHighlightLastViewportY = viewportY
+  _linkHighlightLastBufferLen = bufferLen
+  _linkHighlightLastRows = rows
+
   disposeAll(state.linkHighlightDisposables)
 
-  const buffer = term.buffer.active
-  const scanStart = Math.max(0, buffer.viewportY - 20)
-  const scanEnd = Math.min(buffer.length, buffer.viewportY + term.rows + 20)
+  const scanStart = Math.max(0, viewportY - 20)
+  const scanEnd = Math.min(bufferLen, viewportY + rows + 20)
 
   for (let y = scanStart; y < scanEnd; y++) {
     const line = buffer.getLine(y)
@@ -150,6 +171,9 @@ function refreshLinkHighlightDecorations(term: Terminal, state: TerminalShellAdd
   }
 }
 
+/** 链接高亮刷新上限（约 10fps），减轻高频输出时的正则扫描开销 */
+const LINK_HIGHLIGHT_MIN_INTERVAL_MS = 100
+
 function bindLinkHighlightListeners(
   term: Terminal,
   state: TerminalShellAddonState,
@@ -163,21 +187,19 @@ function bindLinkHighlightListeners(
     bindHighlightLinkClickHandler(term, state.linkHighlightListeners)
   }
 
-  const scheduleRefresh = () => {
-    cancelAnimationFrame(state.linkHighlightFrame)
-    state.linkHighlightFrame = requestAnimationFrame(() => {
-      refreshLinkHighlightDecorations(term, state)
-    })
-  }
+  const throttled = createThrottledHighlightScheduler(LINK_HIGHLIGHT_MIN_INTERVAL_MS, () => {
+    state.linkHighlightFrame = 0
+    refreshLinkHighlightDecorations(term, state)
+  })
 
   state.linkHighlightListeners.push(
-    term.onWriteParsed(scheduleRefresh),
-    term.onScroll(scheduleRefresh),
-    term.onRender(scheduleRefresh),
-    term.onResize(scheduleRefresh),
+    term.onWriteParsed(() => throttled.schedule()),
+    term.onScroll(() => throttled.schedule(true)),
+    term.onResize(() => throttled.schedule(true)),
+    { dispose: () => throttled.dispose() },
   )
 
-  scheduleRefresh()
+  throttled.schedule(true)
 }
 
 function clearLinkHighlight(_term: Terminal, state: TerminalShellAddonState): void {
@@ -187,12 +209,33 @@ function clearLinkHighlight(_term: Terminal, state: TerminalShellAddonState): vo
   disposeAll(state.linkHighlightListeners)
 }
 
+let _logHighlightLastViewportY = -1
+let _logHighlightLastBufferLen = -1
+let _logHighlightLastRows = -1
+
 function refreshLogHighlightDecorations(term: Terminal, state: TerminalShellAddonState): void {
+  const buffer = term.buffer.active
+  const viewportY = buffer.viewportY
+  const bufferLen = buffer.length
+  const rows = term.rows
+
+  // Skip if viewport position and buffer length haven't changed
+  if (
+    viewportY === _logHighlightLastViewportY &&
+    bufferLen === _logHighlightLastBufferLen &&
+    rows === _logHighlightLastRows &&
+    state.logHighlightDisposables.length > 0
+  ) {
+    return
+  }
+  _logHighlightLastViewportY = viewportY
+  _logHighlightLastBufferLen = bufferLen
+  _logHighlightLastRows = rows
+
   disposeAll(state.logHighlightDisposables)
 
-  const buffer = term.buffer.active
-  const scanStart = Math.max(0, buffer.viewportY - 20)
-  const scanEnd = Math.min(buffer.length, buffer.viewportY + term.rows + 20)
+  const scanStart = Math.max(0, viewportY - 20)
+  const scanEnd = Math.min(bufferLen, viewportY + rows + 20)
 
   for (let y = scanStart; y < scanEnd; y++) {
     const line = buffer.getLine(y)
@@ -232,26 +275,79 @@ function refreshLogHighlightDecorations(term: Terminal, state: TerminalShellAddo
   }
 }
 
+/** 日志高亮刷新上限（约 10fps），减轻高频输出时的正则扫描开销 */
+const LOG_HIGHLIGHT_MIN_INTERVAL_MS = 100
+
+function createThrottledHighlightScheduler(
+  minIntervalMs: number,
+  refresh: () => void,
+): { schedule: (immediate?: boolean) => void; dispose: () => void } {
+  let lastRun = 0
+  let raf = 0
+  let trailingTimer: ReturnType<typeof setTimeout> | null = null
+
+  const run = (): void => {
+    lastRun = Date.now()
+    cancelAnimationFrame(raf)
+    raf = requestAnimationFrame(() => {
+      raf = 0
+      refresh()
+    })
+  }
+
+  const schedule = (immediate = false): void => {
+    if (immediate) {
+      if (trailingTimer) {
+        clearTimeout(trailingTimer)
+        trailingTimer = null
+      }
+      run()
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastRun >= minIntervalMs) {
+      run()
+      return
+    }
+
+    if (!trailingTimer) {
+      trailingTimer = setTimeout(() => {
+        trailingTimer = null
+        run()
+      }, minIntervalMs - (now - lastRun))
+    }
+  }
+
+  return {
+    schedule,
+    dispose: () => {
+      cancelAnimationFrame(raf)
+      if (trailingTimer) clearTimeout(trailingTimer)
+      raf = 0
+      trailingTimer = null
+    },
+  }
+}
+
 function bindLogHighlightListeners(term: Terminal, state: TerminalShellAddonState): void {
   disposeAll(state.logHighlightListeners)
   cancelAnimationFrame(state.logHighlightFrame)
   state.logHighlightFrame = 0
 
-  const scheduleRefresh = () => {
-    cancelAnimationFrame(state.logHighlightFrame)
-    state.logHighlightFrame = requestAnimationFrame(() => {
-      refreshLogHighlightDecorations(term, state)
-    })
-  }
+  const throttled = createThrottledHighlightScheduler(LOG_HIGHLIGHT_MIN_INTERVAL_MS, () => {
+    state.logHighlightFrame = 0
+    refreshLogHighlightDecorations(term, state)
+  })
 
   state.logHighlightListeners.push(
-    term.onWriteParsed(scheduleRefresh),
-    term.onScroll(scheduleRefresh),
-    term.onRender(scheduleRefresh),
-    term.onResize(scheduleRefresh),
+    term.onWriteParsed(() => throttled.schedule()),
+    term.onScroll(() => throttled.schedule(true)),
+    term.onResize(() => throttled.schedule(true)),
+    { dispose: () => throttled.dispose() },
   )
 
-  scheduleRefresh()
+  throttled.schedule(true)
 }
 
 function clearLogHighlight(_term: Terminal, state: TerminalShellAddonState): void {

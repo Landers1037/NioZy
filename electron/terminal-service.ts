@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import * as pty from 'node-pty'
 import { Client, type ClientChannel } from 'ssh2'
 import { randomUUID } from 'crypto'
+import { appendTerminalOutputCapped } from './shared/terminal-output-limits'
 import { resolveExecutable } from './resolve-executable'
 import { extractCwdFromTerminalData } from './terminal-cwd-parser'
 import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integration'
@@ -334,11 +335,10 @@ export class TerminalService extends EventEmitter {
       return
     }
     const prev = this.pausedOutput.get(id) ?? ''
-    let next = prev + data
-    if (next.length > MAX_PAUSED_OUTPUT_CHARS) {
-      next = next.slice(-MAX_PAUSED_OUTPUT_CHARS)
-    }
-    this.pausedOutput.set(id, next)
+    this.pausedOutput.set(
+      id,
+      appendTerminalOutputCapped(prev, data, MAX_PAUSED_OUTPUT_CHARS),
+    )
   }
 
   write(id: string, data: string): void {

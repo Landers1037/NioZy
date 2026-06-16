@@ -41,9 +41,18 @@ export function useTerminalIdleAnimation({
     const disposables: IDisposable[] = [
       term.onData(bumpActivity),
     ]
+
+    // onWriteParsed fires very frequently during log floods;
+    // throttle to at most once per 500ms to avoid React state churn
+    let writeParsedThrottled = false
     const onWriteParsed = (term as TerminalWithWriteParsed).onWriteParsed
     if (onWriteParsed) {
-      disposables.push(onWriteParsed.call(term, bumpActivity))
+      disposables.push(onWriteParsed.call(term, () => {
+        if (writeParsedThrottled) return
+        writeParsedThrottled = true
+        setTimeout(() => { writeParsedThrottled = false }, 500)
+        bumpActivity()
+      }))
     }
 
     const el = term.element
@@ -56,7 +65,7 @@ export function useTerminalIdleAnimation({
       if (Date.now() - lastActivityRef.current >= idleDelayMs) {
         setActive(true)
       }
-    }, 250)
+    }, 1000)
 
     return () => {
       for (const disposable of disposables) disposable.dispose()
