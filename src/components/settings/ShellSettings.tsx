@@ -21,6 +21,7 @@ import {
   Sparkles,
   Palette,
   History,
+  AlertTriangle,
 } from 'lucide-react'
 import { OH_MY_POSH_THEMES, type OhMyPoshThemeId } from '../../../electron/shared/oh-my-posh-themes'
 import { CommandReplaySettingsSection } from '@/components/command-replay/CommandReplaySettingsSection'
@@ -114,6 +115,18 @@ export function ShellSettings() {
           <Switch
             checked={shell.clickToOpenLinks}
             onCheckedChange={(v) => patchShell({ clickToOpenLinks: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={AlertTriangle}
+          label={t('settings.shell.highlightLogLevels')}
+          description={t('settings.shell.highlightLogLevelsDesc')}
+          row
+        >
+          <Switch
+            checked={shell.highlightLogLevels}
+            onCheckedChange={(v) => patchShell({ highlightLogLevels: v })}
           />
         </SettingField>
 

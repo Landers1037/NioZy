@@ -8,6 +8,7 @@ import {
   TERMINAL_LINK_FOREGROUND,
   TERMINAL_URL_REGEX,
 } from '@/lib/terminal-url'
+import { getLogHighlightSpans, type LogHighlightSpan } from '@/lib/terminal-log-highlight'
 import {
   attachAlternateScreenShiftDomSelect,
 } from '@/lib/terminal-interactive-cli'
@@ -65,58 +66,130 @@ function getColFromMouseEvent(rowEl: HTMLElement, event: MouseEvent): number | n
   return Math.min(text.length, Math.max(0, offset))
 }
 
-function buildHighlightedRowHtml(lineText: string): string | null {
-  TERMINAL_URL_REGEX.lastIndex = 0
-  const parts: string[] = []
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-  let found = false
+type TextRange = { start: number; end: number }
 
+function overlaps(a: TextRange, b: TextRange): boolean {
+  return a.start < b.end && b.start < a.end
+}
+
+function getUrlRanges(lineText: string): TextRange[] {
+  TERMINAL_URL_REGEX.lastIndex = 0
+  const ranges: TextRange[] = []
+  let match: RegExpExecArray | null
   while ((match = TERMINAL_URL_REGEX.exec(lineText)) !== null) {
     const url = match[0]
     const start = match.index
-    if (!url || start < lastIndex) continue
-    parts.push(escapeHtml(lineText.slice(lastIndex, start)))
-    parts.push(
-      `<span class="${WTERM_LINK_CLASS}" style="color:${TERMINAL_LINK_FOREGROUND};text-decoration:underline;text-underline-offset:2px;cursor:pointer">${escapeHtml(url)}</span>`,
-    )
-    lastIndex = start + url.length
-    found = true
+    if (!url || start < 0) continue
+    ranges.push({ start, end: start + url.length })
+  }
+  return ranges
+}
+
+function buildEnhancedRowHtml(
+  lineText: string,
+  highlightLinks: boolean,
+  logSpans: LogHighlightSpan[],
+): string | null {
+  const urlRanges = highlightLinks ? getUrlRanges(lineText) : []
+
+  // 丢弃与 URL 重叠的日志高亮（避免把链接 span 打碎）
+  const spans = logSpans.filter((s) => !urlRanges.some((u) => overlaps(u, s)))
+
+  if (urlRanges.length === 0 && spans.length === 0) return null
+
+  type Segment =
+    | { kind: 'url'; start: number; end: number; text: string }
+    | { kind: 'log'; start: number; end: number; text: string; color: string }
+
+  const segments: Segment[] = []
+
+  for (const u of urlRanges) {
+    segments.push({
+      kind: 'url',
+      start: u.start,
+      end: u.end,
+      text: lineText.slice(u.start, u.end),
+    })
   }
 
-  if (!found) return null
+  for (const s of spans) {
+    segments.push({
+      kind: 'log',
+      start: s.start,
+      end: s.end,
+      text: lineText.slice(s.start, s.end),
+      color: s.color,
+    })
+  }
+
+  segments.sort((a, b) => a.start - b.start || b.end - a.end)
+
+  const picked: Segment[] = []
+  let cursor = 0
+  for (const seg of segments) {
+    if (seg.start < cursor) continue
+    picked.push(seg)
+    cursor = seg.end
+  }
+
+  const parts: string[] = []
+  let lastIndex = 0
+  for (const seg of picked) {
+    if (seg.start > lastIndex) parts.push(escapeHtml(lineText.slice(lastIndex, seg.start)))
+    if (seg.kind === 'url') {
+      parts.push(
+        `<span class="${WTERM_LINK_CLASS}" style="color:${TERMINAL_LINK_FOREGROUND};text-decoration:underline;text-underline-offset:2px;cursor:pointer">${escapeHtml(seg.text)}</span>`,
+      )
+    } else {
+      parts.push(
+        `<span style="color:${escapeHtml(seg.color)}">${escapeHtml(seg.text)}</span>`,
+      )
+    }
+    lastIndex = seg.end
+  }
   parts.push(escapeHtml(lineText.slice(lastIndex)))
   return parts.join('')
+}
+
+function refreshRowEnhancements(
+  rowEl: HTMLElement,
+  highlightLinks: boolean,
+  highlightLogLevels: boolean,
+): void {
+  if (rowEl.querySelector('.term-cursor')) return
+
+  const text = rowEl.textContent ?? ''
+  const shouldHighlightLinks = highlightLinks && lineTextHasUrl(text)
+  const logSpans = highlightLogLevels ? getLogHighlightSpans(text) : []
+  const html = buildEnhancedRowHtml(text, shouldHighlightLinks, logSpans)
+
+  if (html) {
+    rowEl.innerHTML = html
+    rowEl.setAttribute(PROCESSED_ATTR, '1')
+  } else if (rowEl.hasAttribute(PROCESSED_ATTR)) {
+    // 恢复为纯文本
+    rowEl.textContent = text
+    rowEl.removeAttribute(PROCESSED_ATTR)
+  }
 }
 
 function refreshLinkHighlights(
   root: HTMLElement,
   highlightLinks: boolean,
+  highlightLogLevels: boolean,
   followScroll: boolean,
 ): void {
-  if (!highlightLinks) {
+  if (!highlightLinks && !highlightLogLevels) {
     for (const row of root.querySelectorAll('.term-row')) {
-      row.removeAttribute(PROCESSED_ATTR)
+      const rowEl = row as HTMLElement
+      rowEl.removeAttribute(PROCESSED_ATTR)
     }
     return
   }
 
   const rows = root.querySelectorAll('.term-grid .term-row, .term-row')
   for (const row of rows) {
-    const rowEl = row as HTMLElement
-    if (rowEl.querySelector('.term-cursor')) continue
-    const text = rowEl.textContent ?? ''
-    if (!lineTextHasUrl(text)) {
-      rowEl.removeAttribute(PROCESSED_ATTR)
-      continue
-    }
-    const html = buildHighlightedRowHtml(text)
-    if (!html) {
-      rowEl.removeAttribute(PROCESSED_ATTR)
-      continue
-    }
-    rowEl.innerHTML = html
-    rowEl.setAttribute(PROCESSED_ATTR, '1')
+    refreshRowEnhancements(row as HTMLElement, highlightLinks, highlightLogLevels)
   }
 
   if (followScroll && isWtermNearBottom(root)) {
@@ -208,7 +281,7 @@ export function attachWtermDomShellFeatures(
   let observer: MutationObserver | null = null
 
   bindRightClickBehavior(root, options, listeners)
-  const { highlightLinks, clickToOpenLinks, shiftEnterNewline } = options.shell
+  const { highlightLinks, highlightLogLevels, clickToOpenLinks, shiftEnterNewline } = options.shell
   const preview = options.preview ?? DEFAULT_PREVIEW_SETTINGS
   if (clickToOpenLinks || isAnyPreviewEnabled(preview)) {
     bindDomTerminalPreview(
@@ -226,15 +299,15 @@ export function attachWtermDomShellFeatures(
   bindInteractiveCliMouse(instance, shiftEnterNewline, listeners)
 
   const scheduleHighlight = () => {
-    if (!highlightLinks) return
+    if (!highlightLinks && !highlightLogLevels) return
     cancelAnimationFrame(highlightFrame)
     highlightFrame = requestAnimationFrame(() => {
       const followScroll = isWtermNearBottom(root)
-      refreshLinkHighlights(root, true, followScroll)
+      refreshLinkHighlights(root, highlightLinks, highlightLogLevels, followScroll)
     })
   }
 
-  if (highlightLinks) {
+  if (highlightLinks || highlightLogLevels) {
     const grid = root.querySelector('.term-grid') ?? root
     observer = new MutationObserver(scheduleHighlight)
     observer.observe(grid, { childList: true, subtree: true })
@@ -248,6 +321,6 @@ export function attachWtermDomShellFeatures(
 
   return () => {
     for (const off of listeners) off()
-    refreshLinkHighlights(root, false, false)
+    refreshLinkHighlights(root, false, false, false)
   }
 }

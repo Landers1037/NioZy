@@ -190,6 +190,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     settings?.terminal.advancedRightClickMenu,
     settings?.shell?.clickToOpenLinks,
     settings?.shell?.highlightLinks,
+    settings?.shell?.highlightLogLevels,
     settings?.shell?.shiftEnterNewline,
     settings?.preview,
     settings?.shortcuts,

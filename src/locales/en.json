@@ -488,6 +488,8 @@
       "highlightLinksDesc": "Highlight http and https URLs in terminal output",
       "clickToOpenLinks": "Click to open links",
       "clickToOpenLinksDesc": "Open a link in the default browser when you click it with the mouse",
+      "highlightLogLevels": "Log level coloring",
+      "highlightLogLevelsDesc": "Color terminal lines by log level (e.g. ERROR, WARNING), similar to MobaXterm; works for SSH and local terminals",
       "shiftEnterNewline": "Use Shift+Enter for newline",
       "shiftEnterNewlineDesc": "When enabled, Shift+Enter or Ctrl+Enter inserts a newline in interactive CLIs (e.g. Claude, Cursor agent); Enter sends the message. Clicks on output no longer move the cursor to the end of the screen. In TUIs, hold Shift and drag with the left button to select; release to copy",
       "showTerminalIndex": "Show terminal index",

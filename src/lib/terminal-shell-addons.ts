@@ -11,6 +11,7 @@ import {
   TERMINAL_LINK_FOREGROUND,
   TERMINAL_URL_REGEX,
 } from '@/lib/terminal-url'
+import { getLogHighlightSpans } from '@/lib/terminal-log-highlight'
 import { handleTerminalLinkClick } from '@/lib/terminal-preview-open'
 import { openTerminalExternalLink } from '@/lib/terminal-url'
 import { isXtermForceSelectionMouseEvent } from '@/lib/xterm-mouse-selection'
@@ -69,6 +70,9 @@ export interface TerminalShellAddonState {
   linkHighlightDisposables: IDisposable[]
   linkHighlightListeners: IDisposable[]
   linkHighlightFrame: number
+  logHighlightDisposables: IDisposable[]
+  logHighlightListeners: IDisposable[]
+  logHighlightFrame: number
 }
 
 export function createTerminalShellAddonState(): TerminalShellAddonState {
@@ -79,6 +83,9 @@ export function createTerminalShellAddonState(): TerminalShellAddonState {
     linkHighlightDisposables: [],
     linkHighlightListeners: [],
     linkHighlightFrame: 0,
+    logHighlightDisposables: [],
+    logHighlightListeners: [],
+    logHighlightFrame: 0,
   }
 }
 
@@ -180,6 +187,80 @@ function clearLinkHighlight(_term: Terminal, state: TerminalShellAddonState): vo
   disposeAll(state.linkHighlightListeners)
 }
 
+function refreshLogHighlightDecorations(term: Terminal, state: TerminalShellAddonState): void {
+  disposeAll(state.logHighlightDisposables)
+
+  const buffer = term.buffer.active
+  const scanStart = Math.max(0, buffer.viewportY - 20)
+  const scanEnd = Math.min(buffer.length, buffer.viewportY + term.rows + 20)
+
+  for (let y = scanStart; y < scanEnd; y++) {
+    const line = buffer.getLine(y)
+    if (!line) continue
+
+    const text = line.translateToString(false)
+    const spans = getLogHighlightSpans(text)
+    if (spans.length === 0) continue
+
+    const marker = markerForBufferLine(term, y)
+    if (!marker || marker.isDisposed) continue
+
+    const decorations: IDisposable[] = []
+    for (const span of spans) {
+      const width = Math.max(1, span.end - span.start)
+      const decoration = term.registerDecoration({
+        marker,
+        x: span.start,
+        width,
+        foregroundColor: span.color,
+        layer: 'bottom',
+      })
+      if (decoration) decorations.push(decoration)
+    }
+
+    if (decorations.length === 0) {
+      marker.dispose()
+      continue
+    }
+
+    state.logHighlightDisposables.push({
+      dispose: () => {
+        for (const d of decorations) d.dispose()
+        marker.dispose()
+      },
+    })
+  }
+}
+
+function bindLogHighlightListeners(term: Terminal, state: TerminalShellAddonState): void {
+  disposeAll(state.logHighlightListeners)
+  cancelAnimationFrame(state.logHighlightFrame)
+  state.logHighlightFrame = 0
+
+  const scheduleRefresh = () => {
+    cancelAnimationFrame(state.logHighlightFrame)
+    state.logHighlightFrame = requestAnimationFrame(() => {
+      refreshLogHighlightDecorations(term, state)
+    })
+  }
+
+  state.logHighlightListeners.push(
+    term.onWriteParsed(scheduleRefresh),
+    term.onScroll(scheduleRefresh),
+    term.onRender(scheduleRefresh),
+    term.onResize(scheduleRefresh),
+  )
+
+  scheduleRefresh()
+}
+
+function clearLogHighlight(_term: Terminal, state: TerminalShellAddonState): void {
+  cancelAnimationFrame(state.logHighlightFrame)
+  state.logHighlightFrame = 0
+  disposeAll(state.logHighlightDisposables)
+  disposeAll(state.logHighlightListeners)
+}
+
 function syncWebLinksAddon(
   term: Terminal,
   state: TerminalShellAddonState,
@@ -254,5 +335,11 @@ export function applyTerminalShellAddons(
     )
   } else {
     clearLinkHighlight(term, state)
+  }
+
+  if (shell.highlightLogLevels) {
+    bindLogHighlightListeners(term, state)
+  } else {
+    clearLogHighlight(term, state)
   }
 }
