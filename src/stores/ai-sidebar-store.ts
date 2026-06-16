@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+type NewChatHandler = () => void | Promise<void>
+
 interface AiSidebarState {
   isOpen: boolean
   setOpen: (open: boolean) => void
@@ -7,6 +9,10 @@ interface AiSidebarState {
   setModalOpen: ((open: boolean) => void) | null
   registerSetModalOpen: (fn: (open: boolean) => void) => void
   unregisterSetModalOpen: () => void
+  newChatHandler: NewChatHandler | null
+  registerNewChatHandler: (fn: NewChatHandler) => void
+  unregisterNewChatHandler: () => void
+  requestNewChat: () => void
   /** 终端右键菜单等待写入 AI 输入框的文本 */
   pendingInputAppend: string | null
   queueInputAppend: (text: string) => void
@@ -26,6 +32,12 @@ export const useAiSidebarStore = create<AiSidebarState>((set, get) => ({
   setModalOpen: null,
   registerSetModalOpen: (fn) => set({ setModalOpen: fn }),
   unregisterSetModalOpen: () => set({ setModalOpen: null }),
+  newChatHandler: null,
+  registerNewChatHandler: (fn) => set({ newChatHandler: fn }),
+  unregisterNewChatHandler: () => set({ newChatHandler: null }),
+  requestNewChat: () => {
+    void get().newChatHandler?.()
+  },
   pendingInputAppend: null,
   queueInputAppend: (text) => {
     const trimmed = text.trim()
@@ -34,5 +46,6 @@ export const useAiSidebarStore = create<AiSidebarState>((set, get) => ({
     get().setModalOpen?.(true)
   },
   clearPendingInputAppend: () => set({ pendingInputAppend: null }),
-  reset: () => set({ isOpen: false, setModalOpen: null, pendingInputAppend: null }),
+  reset: () =>
+    set({ isOpen: false, setModalOpen: null, newChatHandler: null, pendingInputAppend: null }),
 }))

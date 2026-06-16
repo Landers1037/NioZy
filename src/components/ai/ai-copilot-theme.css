@@ -93,6 +93,32 @@
   font-weight: var(--app-font-weight-bold, 700);
 }
 
+.niozy-ai-copilot-scope .niozy-ai-new-chat-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.niozy-ai-copilot-scope .niozy-ai-new-chat-button:hover {
+  background: color-mix(in srgb, var(--muted) 72%, transparent);
+  color: var(--foreground);
+}
+
+.niozy-ai-copilot-scope .niozy-ai-new-chat-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 /* 输入区 */
 .niozy-ai-copilot-scope .copilotKitInput {
   font-family: var(--font-sans);
