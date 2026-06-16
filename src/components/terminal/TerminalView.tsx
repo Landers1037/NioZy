@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import type { Terminal, IDisposable } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
+import type { SerializeAddon } from '@xterm/addon-serialize'
 import type { WebglAddon } from '@xterm/addon-webgl'
 import { useAppStore } from '@/stores/app-store'
 import { resolveTerminalThemeWithBackground, hasTerminalBackgroundImage, getTerminalChromeBackgroundColor, getTerminalCellBackgroundColor } from '@/lib/terminal-background'
@@ -61,7 +62,15 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
-import { getTerminalBufferText, getTerminalScrollbackText, getTerminalScreenText, restoreTerminalBufferText, restoreTerminalFromOffload } from '@/lib/terminal-buffer'
+import { getAttachPtySnapshotText, restoreTerminalBufferText } from '@/lib/terminal-buffer'
+import {
+  restoreAttachPtyBuffer,
+  restoreAttachPtyOffload,
+  serializeAttachPtyBuffer,
+  serializeAttachPtyOffload,
+  serializeAttachPtyOffloadPlain,
+  type AttachPtySnapshotFormat,
+} from '@/lib/terminal-buffer-serialize'
 import {
   getAttachPtyTabSwitchDwellMs,
   isAttachPtyScrollbackOffloadEnabled,
@@ -131,6 +140,7 @@ export function TerminalView({
   /** Attach 宿主 remount 后须为 null，否则会误判「已 attach」而跳过快照恢复 */
   const prevAttachSessionRef = useRef<AttachPtyCommittedSession | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
+  const serializeAddonRef = useRef<SerializeAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
   const shellAddonsRef = useRef(createTerminalShellAddonState())
   const previewMouseRef = useRef<IDisposable[]>([])
@@ -373,13 +383,27 @@ export function TerminalView({
     const saveSnapshot = shouldSaveAttachSnapshotOnDetach(prev, dwellMs)
 
     if (saveSnapshot) {
+      const serializeAddon = serializeAddonRef.current
       if (attachPtyScrollbackOffload) {
-        offloadAttachPtyBuffer(prev.tabId, {
-          scrollbackText: getTerminalScrollbackText(term),
-          screenText: getTerminalScreenText(term),
-        })
+        if (serializeAddon) {
+          offloadAttachPtyBuffer(prev.tabId, {
+            ...serializeAttachPtyOffload(term, serializeAddon),
+            format: 'vt',
+          })
+        } else {
+          offloadAttachPtyBuffer(prev.tabId, {
+            ...serializeAttachPtyOffloadPlain(term),
+            format: 'plain',
+          })
+        }
+      } else if (serializeAddon) {
+        useAttachPtySessionStore
+          .getState()
+          .saveSnapshot(prev.tabId, serializeAttachPtyBuffer(term, serializeAddon), 'vt')
       } else {
-        useAttachPtySessionStore.getState().saveSnapshot(prev.tabId, getTerminalBufferText(term))
+        useAttachPtySessionStore
+          .getState()
+          .saveSnapshot(prev.tabId, getAttachPtySnapshotText(term), 'plain')
       }
     }
 
@@ -395,43 +419,44 @@ export function TerminalView({
 
       let offloadedRestore: AttachPtyOffloadedBuffer | undefined
       let snapshotText: string | undefined
+      let snapshotFormat: AttachPtySnapshotFormat = 'plain'
 
       if (session) {
         if (attachPtyScrollbackOffload) {
           offloadedRestore = takeOffloadedAttachPtyBuffer(session.tabId)
         } else {
-          snapshotText = useAttachPtySessionStore.getState().takeSnapshot(session.tabId)?.bufferText
+          const snap = useAttachPtySessionStore.getState().takeSnapshot(session.tabId)
+          if (snap) {
+            snapshotText = snap.bufferText
+            snapshotFormat = snap.format ?? 'plain'
+          }
         }
       }
 
       detachAttachSession()
 
       if (!session) {
-        requestAnimationFrame(() => {
-          term.clear()
-        })
+        term.clear()
         return
       }
 
       prevAttachSessionRef.current = session
+      term.clear()
+      safeFit(true)
+      if (offloadedRestore) {
+        restoreAttachPtyOffload(
+          term,
+          offloadedRestore.scrollbackText,
+          offloadedRestore.screenText,
+          offloadedRestore.format ?? 'plain',
+        )
+      } else if (snapshotText) {
+        restoreAttachPtyBuffer(term, snapshotText, snapshotFormat)
+      }
       boundTerminalIdRef.current = session.terminalId
       registerTerminal(session.terminalId, term)
-
-      requestAnimationFrame(() => {
-        term.clear()
-        safeFit(true)
-        if (offloadedRestore) {
-          restoreTerminalFromOffload(
-            term,
-            offloadedRestore.scrollbackText,
-            offloadedRestore.screenText,
-          )
-        } else if (snapshotText) {
-          restoreTerminalBufferText(term, snapshotText)
-        }
-        scheduleFit(true)
-        term.focus()
-      })
+      scheduleFit(true)
+      term.focus()
     },
     [detachAttachSession, safeFit, scheduleFit, attachPtyScrollbackOffload],
   )
@@ -663,9 +688,10 @@ export function TerminalView({
 
     void (async () => {
       await import('@xterm/xterm/css/xterm.css')
-      const [{ Terminal }, { FitAddon }] = await Promise.all([
+      const [{ Terminal }, { FitAddon }, { SerializeAddon }] = await Promise.all([
         import('@xterm/xterm'),
         import('@xterm/addon-fit'),
+        import('@xterm/addon-serialize'),
       ])
 
       if (disposed || !containerRef.current) return
@@ -691,6 +717,9 @@ export function TerminalView({
 
       const fit = new FitAddon()
       term.loadAddon(fit)
+      const serializeAddon = new SerializeAddon()
+      term.loadAddon(serializeAddon)
+      serializeAddonRef.current = serializeAddon
       term.open(containerRef.current)
       unsubRenderFit = term.onRender(() => {
         if (safeFit(true)) {
@@ -838,6 +867,8 @@ export function TerminalView({
       unsubLayoutFit?.()
       ro?.disconnect()
       shellAddonsRef.current = createTerminalShellAddonState()
+      serializeAddonRef.current?.dispose()
+      serializeAddonRef.current = null
       termRef.current?.dispose()
       termRef.current = null
       fitRef.current = null
