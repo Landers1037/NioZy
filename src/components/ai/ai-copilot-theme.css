@@ -112,6 +112,14 @@
   color: var(--muted-foreground);
 }
 
+/* 覆写 CopilotKit 侧栏 inputContainer 默认 px-8 / max-w-3xl（见 v2/styles.css） */
+.niozy-ai-copilot-scope div[data-sidebar-chat] .cpk\:\[div\[data-sidebar-chat\]_\&\]\:px-8 {
+  max-width: none !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+}
+
 /* —— NioZy 原版 —— */
 html[data-ui-style='niozy'] .niozy-ai-copilot-scope .copilotKitHeader {
   background: var(--card);
