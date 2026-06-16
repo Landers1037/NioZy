@@ -5,11 +5,13 @@ import {
   Download,
   Image,
   Monitor,
+  Moon,
   PackageMinus,
   PackagePlus,
   Palette,
   Pencil,
   Settings,
+  Sparkles,
   Terminal,
   X,
 } from 'lucide-react'
@@ -39,6 +41,8 @@ export type CommandPaletteCommandId =
   | 'openSettings'
   | 'toggleRenderMode'
   | 'selectColorScheme'
+  | 'selectUiStyle'
+  | 'selectThemeMode'
 
 export interface CommandPaletteCommand {
   id: CommandPaletteCommandId
@@ -57,7 +61,7 @@ export interface CommandPaletteListItem {
 export type CommandPaletteExecuteResult =
   | { type: 'done' }
   | { type: 'dialog'; dialog: 'editTitle' | 'closeConfirm' | 'addToGroup' | 'screenshot' }
-  | { type: 'subPanel'; panel: 'renderMode' | 'colorScheme' }
+  | { type: 'subPanel'; panel: 'renderMode' | 'colorScheme' | 'uiStyle' | 'themeMode' }
 
 const COMMAND_ORDER: CommandPaletteCommandId[] = [
   'newTerminal',
@@ -72,6 +76,8 @@ const COMMAND_ORDER: CommandPaletteCommandId[] = [
   'openSettings',
   'toggleRenderMode',
   'selectColorScheme',
+  'selectUiStyle',
+  'selectThemeMode',
 ]
 
 function getActiveTerminalTab(): AppTab | undefined {
@@ -219,6 +225,20 @@ function buildCommands(): CommandPaletteCommand[] {
       keywords: () => ['color', 'scheme', 'theme', 'palette', '配色', '主题'],
       isEnabled: () => useAppStore.getState().settings != null,
     },
+    {
+      id: 'selectUiStyle',
+      icon: Sparkles,
+      label: () => i18n.t('commandPalette.commands.selectUiStyle'),
+      keywords: () => ['ui', 'style', 'appearance', 'interface', '界面', '风格', '外观'],
+      isEnabled: () => useAppStore.getState().settings != null,
+    },
+    {
+      id: 'selectThemeMode',
+      icon: Moon,
+      label: () => i18n.t('commandPalette.commands.selectThemeMode'),
+      keywords: () => ['theme', 'light', 'dark', 'mode', '明亮', '暗黑', '主题'],
+      isEnabled: () => useAppStore.getState().settings != null,
+    },
   ]
 }
 
@@ -313,6 +333,10 @@ export async function executeCommandPaletteCommand(
       return { type: 'subPanel', panel: 'renderMode' }
     case 'selectColorScheme':
       return { type: 'subPanel', panel: 'colorScheme' }
+    case 'selectUiStyle':
+      return { type: 'subPanel', panel: 'uiStyle' }
+    case 'selectThemeMode':
+      return { type: 'subPanel', panel: 'themeMode' }
     default:
       return { type: 'done' }
   }

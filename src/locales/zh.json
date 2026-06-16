@@ -1108,13 +1108,19 @@
       "terminalScreenshot": "终端截图",
       "openSettings": "打开设置",
       "toggleRenderMode": "切换渲染模式",
-      "selectColorScheme": "切换终端配色方案"
+      "selectColorScheme": "切换终端配色方案",
+      "selectUiStyle": "切换界面风格",
+      "selectThemeMode": "切换明亮/暗黑主题"
     },
     "subPanel": {
       "renderMode": "选择渲染模式",
       "colorScheme": "选择配色方案",
+      "uiStyle": "选择界面风格",
+      "themeMode": "选择主题",
       "renderModePlaceholder": "筛选渲染模式…",
-      "colorSchemePlaceholder": "筛选配色方案…"
+      "colorSchemePlaceholder": "筛选配色方案…",
+      "uiStylePlaceholder": "筛选界面风格…",
+      "themeModePlaceholder": "筛选主题…"
     },
     "subPanelBack": "返回",
     "subPanelHint": "↑↓ 选择 · Enter 确认 · Esc 返回上级"
