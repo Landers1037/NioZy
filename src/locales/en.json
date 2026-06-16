@@ -51,7 +51,18 @@
     "openVsCodeFailed": "VS Code not found. Configure or detect the path in Settings.",
     "openCursorFailed": "Cursor not found. Configure or detect the path in Settings.",
     "openCustomFailed": "Program not found: {{path}}",
-    "openProgramFailed": "Failed to launch external program"
+    "openProgramFailed": "Failed to launch external program",
+    "modern": {
+      "treeTitle": "Folders",
+      "thisPc": "This PC",
+      "goUp": "Go up",
+      "refresh": "Refresh",
+      "listView": "List view",
+      "gridView": "Grid view",
+      "viewModeAria": "File browser view mode",
+      "columnName": "Name",
+      "columnSize": "Size"
+    }
   },
   "repo": {
     "listTitle": "Repository management",
@@ -550,6 +561,8 @@
       "description": "Local file tree preview, context menu open actions, and external programs",
       "localFilesystemEnabled": "Enable local file system",
       "localFilesystemEnabledDesc": "Show the File system tab in the sidebar when enabled",
+      "modernFilesystemUiEnabled": "Use modern file system UI",
+      "modernFilesystemUiEnabledDesc": "Split layout with a folder tree on the left and file browser on the right; supports list and grid views",
       "imagePreview": "Image preview",
       "imagePreviewDesc": "When enabled, click or double-click an image file to preview it in a dialog",
       "contextMenuTitle": "Context menu",

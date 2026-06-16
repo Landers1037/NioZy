@@ -145,6 +145,20 @@ export function FilesystemSettings() {
           />
         </SettingField>
 
+        {fs.localFilesystemEnabled && (
+          <SettingField
+            icon={FolderCode}
+            label={t('settings.filesystem.modernFilesystemUiEnabled')}
+            description={t('settings.filesystem.modernFilesystemUiEnabledDesc')}
+            row
+          >
+            <Switch
+              checked={fs.modernFilesystemUiEnabled}
+              onCheckedChange={(v) => patchFilesystem({ modernFilesystemUiEnabled: v })}
+            />
+          </SettingField>
+        )}
+
         <SettingField
           icon={Image}
           label={t('settings.filesystem.imagePreview')}

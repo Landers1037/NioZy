@@ -51,7 +51,18 @@
     "openVsCodeFailed": "未找到 VS Code，请在设置中配置或检测程序路径",
     "openCursorFailed": "未找到 Cursor，请在设置中配置或检测程序路径",
     "openCustomFailed": "未找到程序：{{path}}",
-    "openProgramFailed": "无法启动外部程序"
+    "openProgramFailed": "无法启动外部程序",
+    "modern": {
+      "treeTitle": "文件夹",
+      "thisPc": "此电脑",
+      "goUp": "上一级",
+      "refresh": "刷新",
+      "listView": "列表视图",
+      "gridView": "网格视图",
+      "viewModeAria": "文件浏览视图模式",
+      "columnName": "名称",
+      "columnSize": "大小"
+    }
   },
   "repo": {
     "listTitle": "仓库管理",
@@ -550,6 +561,8 @@
       "description": "本机文件树预览、右键打开方式与外部程序",
       "localFilesystemEnabled": "开启本地文件系统",
       "localFilesystemEnabledDesc": "开启后在左侧边栏显示「文件系统」Tab",
+      "modernFilesystemUiEnabled": "使用现代风格文件系统 UI",
+      "modernFilesystemUiEnabledDesc": "开启后文件系统采用左右分栏布局：左侧文件树、右侧文件浏览器，支持列表与网格视图",
       "imagePreview": "图片预览",
       "imagePreviewDesc": "开启后单击或双击图片文件可在弹框中预览",
       "contextMenuTitle": "右键上下文菜单",

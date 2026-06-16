@@ -9,6 +9,8 @@ export interface FilesystemCustomOpener {
 export interface FilesystemSettings {
   /** 开启后在侧栏显示「文件系统」Tab */
   localFilesystemEnabled: boolean
+  /** 开启后使用左右分栏的现代文件系统 UI（文件树 + 浏览器） */
+  modernFilesystemUiEnabled: boolean
   /** 开启后双击图片可在弹框中预览 */
   imagePreviewEnabled: boolean
   /** 右键显示「通过 VS Code 打开」 */
@@ -27,6 +29,7 @@ export interface FilesystemSettings {
 
 export const DEFAULT_FILESYSTEM_SETTINGS: FilesystemSettings = {
   localFilesystemEnabled: true,
+  modernFilesystemUiEnabled: false,
   imagePreviewEnabled: true,
   openWithVsCode: true,
   openWithCursor: true,
@@ -56,6 +59,7 @@ export function normalizeFilesystemSettings(value: unknown): FilesystemSettings 
 
   return {
     localFilesystemEnabled: v.localFilesystemEnabled !== false,
+    modernFilesystemUiEnabled: v.modernFilesystemUiEnabled === true,
     imagePreviewEnabled:
       typeof v.imagePreviewEnabled === 'boolean'
         ? v.imagePreviewEnabled
