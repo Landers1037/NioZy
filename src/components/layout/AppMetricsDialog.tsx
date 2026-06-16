@@ -62,7 +62,7 @@ export function AppMetricsDialog({ open, onOpenChange }: AppMetricsDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-4">
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-4 select-none">
         <DialogHeader>
           <DialogTitle>{t('appMetrics.title')}</DialogTitle>
           <DialogDescription>{t('appMetrics.description')}</DialogDescription>
