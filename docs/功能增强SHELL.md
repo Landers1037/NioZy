@@ -1,12 +1,116 @@
 # 功能：增强 SHELL
 
-**设置 · SHELL** 下的增强能力：本地 **pwsh** 提示符美化（Oh My Posh）与终端输出**日志关键词着色**（类似 MobaXterm）。
+**设置 · SHELL** 分区下的终端增强能力：链接与 Emoji 渲染、交互式 CLI 快捷换行、侧栏 Tab 交互、Oh My Posh 提示符美化、日志关键词着色，以及命令序列录制与一键重放。
 
-与 [功能Shell与命令回放.md](./功能Shell与命令回放.md) 同属该设置页；后者侧重链接/emoji/Tab 交互与命令回放，本文档专述 OMP 集成与日志着色。
+> **重启恢复终端会话**（`restoreTerminalSessionOnRestart`）见 [SHELL.md](./SHELL.md)。
+
+## 功能总览
+
+| 类别 | 能力 |
+|------|------|
+| 终端交互 | Emoji Unicode 11 宽度表；高亮 / 单击打开 http(s) 链接；Shift+Enter / Ctrl+Enter 快捷换行（交互式 CLI）；侧栏 Tab 编号；长按 2s 拖拽排序 |
+| 提示符美化 | 离线内置 Oh My Posh + posh-git（仅 pwsh） |
+| 输出增强 | 日志级别关键词着色（MobaXterm 风格） |
+| 命令回放 | 录制终端输入序列、命名保存、标题栏一键播放 |
+
+统一类型与默认值：`electron/shared/shell-settings.ts`；设置 UI：`src/components/settings/ShellSettings.tsx`。
 
 ---
 
-## 一、Oh My Posh
+## 一、终端交互（链接 / Emoji / 快捷换行 / Tab）
+
+在**渲染层**增强终端展示与输入行为，不修改 PTY 原始输出（链接高亮、日志着色除外，均为展示层）。
+
+### 功能列表
+
+- **Emoji 原生宽度**：`emojiNativeRendering` — Unicode 11 宽度表，正确渲染 emoji 等宽字符
+- **链接高亮**：`highlightLinks` — 高亮终端输出中的 http / https 链接
+- **单击打开链接**：`clickToOpenLinks` — 用系统默认浏览器打开链接
+- **快捷换行**：`shiftEnterNewline` — 在交互式 CLI（Claude Code、Cursor agent 等）中，Shift+Enter / Ctrl+Enter 插入换行，Enter 提交；点击输出区不将光标移到屏幕末尾；TUI 中 Shift+左键拖选后自动复制
+- **终端 Tab 编号**：`showTerminalIndex` — 侧栏 Tab 名称左侧显示序号
+- **Tab 拖拽排序**：`enableTabDrag` — 长按侧栏 Tab 2s 进入拖拽模式
+
+### 进程归属
+
+| 文件 | 作用 |
+|------|------|
+| `src/components/settings/ShellSettings.tsx` | 上述开关 UI |
+| `src/lib/terminal-shell-addons.ts` | xterm 链接高亮、日志着色 decoration |
+| `src/lib/wterm-dom-shell.ts` | Wterm 链接高亮、日志着色 DOM span、交互式 CLI 鼠标 |
+| `src/lib/terminal-shortcut-actions.ts` | 修饰键 + Enter → Kitty `CSI 13;2u` |
+| `src/lib/terminal-interactive-cli.ts` | xterm 备用屏单击 / Shift 拖选 |
+| `src/lib/terminal-right-click.ts` | 右键复制 / 粘贴 |
+| `src/components/terminal/TerminalView.tsx` | xterm 挂载快捷键与交互逻辑 |
+| `src/components/terminal/WterminalView.tsx` | Wterm 挂载快捷键（含内部 textarea capture） |
+
+### 快捷换行原理
+
+xterm.js / Wterm 默认将修饰键 + Enter 与裸 Enter 均发送 `\r`，交互式 CLI 无法区分「换行」与「提交」。开启 `shiftEnterNewline` 后，在键盘 `keydown` 阶段拦截**任意修饰键 + Enter**（Shift、Ctrl、Ctrl+Shift 等），统一写入 Kitty 序列 `\x1b[13;2u`。
+
+| 按键 | 未开启时终端发送 | 开启后 NioZy 发送 |
+|------|-----------------|------------------|
+| Enter | `\r` | `\r`（不拦截，仍为提交） |
+| Shift+Enter | `\r` | `\x1b[13;2u`（换行） |
+| Ctrl+Enter | `\r` | `\x1b[13;2u`（换行，映射为与 Shift 相同序列） |
+
+Claude Code 等将 `CSI 13;2u` 绑定为 `chat:newline`；`CSI 13;5u`（原生 Ctrl+Enter）未被识别，故 Ctrl+Enter 也映射为 `13;2u`。
+
+Wterm 内置 `@wterm/dom` 的 `input.js` 仅原生处理 Shift+Enter；Ctrl+Enter 会落入 `FIXED_KEYS.Enter` → `\r`。因此在 `textarea` 上以 **capture** 阶段抢先拦截，并 `stopImmediatePropagation()`，避免与 Wterm 内部处理器冲突。
+
+### 快捷换行核心代码
+
+**拦截并写入 PTY** — `src/lib/terminal-shortcut-actions.ts`：
+
+```typescript
+const INTERACTIVE_CLI_NEWLINE_SEQUENCE = '\x1b[13;2u'
+
+export function handleTerminalModifiedEnterKey(
+  terminalId: string,
+  event: KeyboardEvent,
+  enabled: boolean,
+): boolean {
+  if (!enabled || event.type !== 'keydown' || !isEnterKey(event)) return false
+  if (kittyEnterModifier(event) === null) return false
+
+  event.preventDefault()
+  writeTerminalInput(terminalId, INTERACTIVE_CLI_NEWLINE_SEQUENCE)
+  return true
+}
+```
+
+`isEnterKey` 同时识别 `Enter` 与 `NumpadEnter`；`kittyEnterModifier` 检测是否存在 Shift / Ctrl / Alt / Meta 修饰。
+
+**xterm 挂载** — `src/components/terminal/TerminalView.tsx`，`attachCustomKeyEventHandler` 内调用；返回 `false` 阻止 xterm 默认发送 `\r`：
+
+```typescript
+if (handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)) {
+  return false
+}
+```
+
+**Wterm 挂载** — `src/components/terminal/WterminalView.tsx`，在 `instance.element` 与内部 `textarea` 上均注册 capture `keydown`；处理成功后 `stopImmediatePropagation()`：
+
+```typescript
+const keyTargets: EventTarget[] = [instance.element]
+const textarea = instance.element.querySelector('textarea')
+if (textarea) keyTargets.push(textarea)
+
+for (const target of keyTargets) {
+  target.addEventListener('keydown', onKeyDown, { capture: true })
+}
+```
+
+**交互式 CLI 鼠标行为**（非换行本身，但与同开关联动）— `src/lib/terminal-interactive-cli.ts`：`applyInteractiveCliTerminalOptions` 关闭 `altClickMovesCursor`；备用屏单击不抢焦点，Shift+拖选后复制。
+
+设置键：`electron/shared/shell-settings.ts` → `shiftEnterNewline: boolean`（默认 `false`）。
+
+### 实验特性
+
+否（稳定功能）。
+
+---
+
+## 二、Oh My Posh
 
 在 NioZy 内为 **pwsh** 终端离线内置 **Oh My Posh** 与 **posh-git**，通过会话级脚本注入美化提示符，无需用户全局安装或修改 `$PROFILE`。
 
@@ -244,7 +348,7 @@ Import-Module -Name $env:NIOZY_POSH_GIT_MODULE -Force
 
 ---
 
-## 二、日志关键词着色（MobaXterm 风格）
+## 三、日志关键词着色（MobaXterm 风格）
 
 在**渲染层**对终端输出做语义着色：按 ERROR / WARNING / SUCCESS / INFO 等关键词**仅高亮匹配片段**（非整行），不修改 PTY 原始数据。远端 SSH 服务器不支持 ANSI 配色时同样生效。
 
@@ -325,24 +429,6 @@ sequenceDiagram
 
 **与 MobaXterm 一致**：不往 PTY 注入 ANSI 转义，纯展示层增强。
 
-### 实验特性
-
-否（稳定功能）。
-
-### 配置文件片段
-
-`settings.json` → `shell`（节选）：
-
-```json
-{
-  "shell": {
-    "ohMyPoshEnabled": false,
-    "ohMyPoshTheme": "jandedobbeleer",
-    "highlightLogLevels": true
-  }
-}
-```
-
 ### 日志着色核心代码
 
 ```typescript
@@ -368,8 +454,138 @@ term.registerDecoration({
 
 ---
 
+## 四、命令回放
+
+录制终端输入字节序列，命名保存后在标题栏一键重放写入 PTY。**渲染层**实现捕获与播放；列表持久化在 `settings.shell.commandReplays`。
+
+标题栏入口受 **辅助功能 → 开启命令重放**（`commandReplayEnabled`）控制，见 [辅助功能.md](./辅助功能.md)。
+
+### 功能列表
+
+- 标题栏开始 / 停止录制，保存为命名条目
+- 设置页管理回放列表（增删改）
+- 播放时将原始字节序列（含 `\r`、`\n`、退格等）写入 PTY
+
+### 进程归属
+
+| 文件 | 作用 |
+|------|------|
+| `src/components/settings/ShellSettings.tsx` | Shell 设置 + 嵌入命令回放区 |
+| `src/components/command-replay/CommandReplaySettingsSection.tsx` | 回放说明 |
+| `src/components/layout/TitleBarCommandReplay.tsx` | 标题栏录制/播放 UI |
+| `src/stores/command-replay-store.ts` | 回放列表状态 |
+| `src/lib/command-replay.ts` | 写入 PTY |
+| `electron/shared/command-replay.ts` | `CommandReplayItem` 类型 |
+| `electron/shared/shell-settings.ts` | `commandReplays` 字段 |
+
+### 架构与数据流
+
+```mermaid
+flowchart TB
+  subgraph Record["录制"]
+    TB["TitleBarCommandReplay"]
+    Cap["command-replay-capture"]
+    TB --> Cap
+  end
+
+  subgraph Play["播放"]
+    List["CommandReplayList"]
+    CR["command-replay.ts write PTY"]
+    List --> CR
+  end
+
+  Store["command-replay-store"]
+  Disk[("settings.shell.commandReplays")]
+
+  Cap --> Store --> Disk
+  Disk --> List
+  CR --> API["terminal:write"]
+```
+
+```mermaid
+sequenceDiagram
+  participant User as 用户
+  participant TB as 标题栏
+  participant Cap as capture hook
+  participant Store as settings.shell
+  participant PTY as terminal:write
+
+  User->>TB: 开始录制
+  Cap->>Cap: 拦截 xterm 输入
+  User->>TB: 停止并保存
+  TB->>Store: commandReplays.push
+
+  User->>TB: 播放条目
+  TB->>PTY: write(原始字节序列)
+```
+
+### 数据存储
+
+命令回放列表存在 **`settings.json` 的 `shell.commandReplays`**，无单独文件。
+
+### 命令回放核心代码
+
+```typescript
+// electron/shared/command-replay.ts
+export interface CommandReplayItem {
+  id: string
+  name: string
+  command: string  // 含 \r \n 等原始序列
+}
+```
+
+`src/components/layout/TitleBarCommandReplay.tsx` — 录制开始/停止、播放、编辑；挂载于 `TitleBarTerminalControls`。
+
+---
+
+## 配置文件
+
+`settings.json` → `shell`：
+
+```json
+{
+  "shell": {
+    "emojiNativeRendering": false,
+    "highlightLinks": false,
+    "highlightLogLevels": true,
+    "clickToOpenLinks": false,
+    "shiftEnterNewline": false,
+    "showTerminalIndex": false,
+    "enableTabDrag": false,
+    "ohMyPoshEnabled": false,
+    "ohMyPoshTheme": "jandedobbeleer",
+    "commandReplays": [
+      { "id": "uuid", "name": "deploy", "command": "npm run build\r" }
+    ],
+    "restoreTerminalSessionOnRestart": false
+  }
+}
+```
+
+### Shell 设置结构
+
+```typescript
+// electron/shared/shell-settings.ts
+export interface ShellSettings {
+  emojiNativeRendering: boolean
+  highlightLinks: boolean
+  highlightLogLevels: boolean
+  clickToOpenLinks: boolean
+  shiftEnterNewline: boolean
+  showTerminalIndex: boolean
+  enableTabDrag: boolean
+  ohMyPoshEnabled: boolean
+  ohMyPoshTheme: OhMyPoshThemeId
+  commandReplays: CommandReplayItem[]
+  restoreTerminalSessionOnRestart: boolean
+}
+```
+
+---
+
 ## 相关文档
 
-- [功能Shell与命令回放.md](./功能Shell与命令回放.md) — 同设置页其他 Shell 选项（链接高亮、emoji、命令回放等）
+- [SHELL.md](./SHELL.md) — 重启恢复终端会话
 - [功能终端与会话.md](./功能终端与会话.md) — PTY、双渲染引擎、`shell-integration.ps1` 与内置字体
 - [功能SSH连接.md](./功能SSH连接.md) — SSH 会话建立与断开检测
+- [辅助功能.md](./辅助功能.md) — 标题栏命令重放入口开关

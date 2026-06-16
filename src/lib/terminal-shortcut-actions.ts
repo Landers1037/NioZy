@@ -17,22 +17,28 @@ function kittyEnterModifier(event: KeyboardEvent): number | null {
   return mask === 0 ? null : mask + 1
 }
 
+function isEnterKey(event: KeyboardEvent): boolean {
+  return event.key === 'Enter' || event.code === 'NumpadEnter'
+}
+
+/** 交互式 CLI（Claude Code 等）将 Shift+Enter（CSI 13;2u）绑定为换行。 */
+const INTERACTIVE_CLI_NEWLINE_SEQUENCE = '\x1b[13;2u'
+
 /**
- * xterm.js 未实现 Kitty 键盘协议时，修饰键+Enter 与裸 Enter 均发送 \\r。
- * 交互式 CLI（Claude/Cursor agent 等）依赖 \\x1b[13;Nu 区分换行与提交。
+ * xterm.js / Wterm 未完整实现 Kitty 键盘协议时，修饰键+Enter 与裸 Enter 均发送 \\r。
+ * 交互式 CLI 依赖 CSI 13;2u 区分换行与提交；Ctrl+Enter 也映射为同序列。
  */
 export function handleTerminalModifiedEnterKey(
   terminalId: string,
   event: KeyboardEvent,
   enabled: boolean,
 ): boolean {
-  if (!enabled || event.type !== 'keydown' || event.key !== 'Enter') return false
+  if (!enabled || event.type !== 'keydown' || !isEnterKey(event)) return false
 
-  const modifier = kittyEnterModifier(event)
-  if (modifier === null) return false
+  if (kittyEnterModifier(event) === null) return false
 
   event.preventDefault()
-  writeTerminalInput(terminalId, `\x1b[13;${modifier}u`)
+  writeTerminalInput(terminalId, INTERACTIVE_CLI_NEWLINE_SEQUENCE)
   return true
 }
 

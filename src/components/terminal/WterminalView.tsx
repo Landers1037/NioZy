@@ -123,6 +123,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
           handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)
         ) {
           event.stopPropagation()
+          event.stopImmediatePropagation()
           return
         }
 
@@ -141,10 +142,14 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
         }
       }
 
-      instance.element.addEventListener('keydown', onKeyDown, captureOpts)
-      listeners.push(() =>
-        instance.element.removeEventListener('keydown', onKeyDown, captureOpts),
-      )
+      const keyTargets: EventTarget[] = [instance.element]
+      const textarea = instance.element.querySelector('textarea')
+      if (textarea) keyTargets.push(textarea)
+
+      for (const target of keyTargets) {
+        target.addEventListener('keydown', onKeyDown, captureOpts)
+        listeners.push(() => target.removeEventListener('keydown', onKeyDown, captureOpts))
+      }
 
       shellCleanupRef.current = () => {
         for (const off of listeners) off()
