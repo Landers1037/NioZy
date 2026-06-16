@@ -78,7 +78,7 @@ export function RepoDetailView({ repoId, onBack }: RepoDetailViewProps) {
             onSelectCommit={(sha) => void loadCommitDetail(sha)}
           />
         </div>
-        <div className="min-h-0 border-t border-border md:border-t-0 md:border-l">
+        <div className="min-h-0 min-w-0 overflow-hidden border-t border-border md:border-t-0 md:border-l">
           <CommitDetailPanel
             repoId={repoId}
             detail={commitDetail}
