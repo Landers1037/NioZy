@@ -1,3 +1,4 @@
+import { LRUCache } from 'lru-cache'
 import type { AttachPtySnapshotFormat } from '@/lib/terminal-buffer-serialize'
 
 export interface AttachPtyOffloadedBuffer {
@@ -6,8 +7,27 @@ export interface AttachPtyOffloadedBuffer {
   format?: AttachPtySnapshotFormat
 }
 
-/** 侧存储：避免大段 scrollback 驻留在 xterm / zustand 响应式树中 */
-const offloadedBuffers = new Map<string, AttachPtyOffloadedBuffer>()
+/** 最多缓存的 Tab 快照条目数 */
+const OFFLOAD_CACHE_MAX_ENTRIES = 50
+/** 快照总字节上限（UTF-16 估算） */
+const OFFLOAD_CACHE_MAX_BYTES = 64 * 1024 * 1024
+/** 未再 attach 的快照保留时长 */
+const OFFLOAD_CACHE_TTL_MS = 30 * 60 * 1000
+
+function estimateBufferSize(buf: AttachPtyOffloadedBuffer): number {
+  return (buf.scrollbackText.length + buf.screenText.length) * 2
+}
+
+/**
+ * LRU 侧存储：避免大段 scrollback 驻留在 xterm / zustand 响应式树中。
+ * 按条目数 + 总字节双限，超出时 LRU 驱逐最久未访问的快照。
+ */
+const offloadedBuffers = new LRUCache<string, AttachPtyOffloadedBuffer>({
+  max: OFFLOAD_CACHE_MAX_ENTRIES,
+  maxSize: OFFLOAD_CACHE_MAX_BYTES,
+  sizeCalculation: estimateBufferSize,
+  ttl: OFFLOAD_CACHE_TTL_MS,
+})
 
 export function offloadAttachPtyBuffer(tabId: string, buffer: AttachPtyOffloadedBuffer): void {
   offloadedBuffers.set(tabId, buffer)
@@ -32,4 +52,18 @@ export function clearOffloadedAttachPtyBuffers(tabIds: string[]): void {
 
 export function resetOffloadedAttachPtyBuffers(): void {
   offloadedBuffers.clear()
+}
+
+export function getOffloadCacheStats(): {
+  count: number
+  totalBytes: number
+  maxBytes: number
+  maxEntries: number
+} {
+  return {
+    count: offloadedBuffers.size,
+    totalBytes: offloadedBuffers.calculatedSize,
+    maxBytes: OFFLOAD_CACHE_MAX_BYTES,
+    maxEntries: OFFLOAD_CACHE_MAX_ENTRIES,
+  }
 }

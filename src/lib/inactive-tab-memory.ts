@@ -1,5 +1,5 @@
 import type { AppTab } from '@/stores/app-store'
-import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
+import { getAllTerminalIds, getSplitPanes } from '@/lib/terminal-tab-utils'
 import type { PerformanceSettings } from '../../electron/shared/performance-settings'
 import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-settings'
 
@@ -48,13 +48,40 @@ export function resolveInactiveTabPolicy(
   return { mountTerminal: true, streamActive: true, sleepStyle: false }
 }
 
+export interface CollectActiveTerminalStreamOptions {
+  /** Attach-PTY：仅 committed 终端实时推流，后台 yes 洪水进主进程 pausedOutput */
+  attachPtyMode?: boolean
+  committedTerminalId?: string | null
+}
+
 export function collectActiveTerminalStreamIds(
   tabs: AppTab[],
   activeTabId: string | null,
   performance: PerformanceSettings | undefined,
   tabLastActivityAt: Record<string, number>,
   now = Date.now(),
+  options?: CollectActiveTerminalStreamOptions,
 ): string[] {
+  if (options?.attachPtyMode) {
+    const activeTab = activeTabId ? tabs.find((t) => t.id === activeTabId) : undefined
+    if (
+      activeTab?.type === 'terminal' &&
+      getSplitPanes(activeTab).length > 1
+    ) {
+      const policy = resolveInactiveTabPolicy(
+        performance,
+        true,
+        tabLastActivityAt[activeTab.id],
+        now,
+      )
+      if (!policy.streamActive) return []
+      return getAllTerminalIds(activeTab)
+    }
+
+    const committedTerminalId = options.committedTerminalId
+    return committedTerminalId ? [committedTerminalId] : []
+  }
+
   const ids: string[] = []
   for (const tab of tabs) {
     if (tab.type !== 'terminal') continue

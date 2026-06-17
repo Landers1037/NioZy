@@ -190,7 +190,7 @@ function bindLinkHighlightListeners(
   const throttled = createThrottledHighlightScheduler(LINK_HIGHLIGHT_MIN_INTERVAL_MS, () => {
     state.linkHighlightFrame = 0
     refreshLinkHighlightDecorations(term, state)
-  })
+  }, term)
 
   state.linkHighlightListeners.push(
     term.onWriteParsed(() => throttled.schedule()),
@@ -278,43 +278,59 @@ function refreshLogHighlightDecorations(term: Terminal, state: TerminalShellAddo
 /** 日志高亮刷新上限（约 10fps），减轻高频输出时的正则扫描开销 */
 const LOG_HIGHLIGHT_MIN_INTERVAL_MS = 100
 
+function isTerminalVisible(term: Terminal): boolean {
+  const el = term.element
+  if (!el) return false
+  const host = el.closest('.niozy-terminal-host')
+  if (!host) return true
+  if (host.closest('[inert]')) return false
+  return (host as HTMLElement).offsetParent !== null
+}
+
 function createThrottledHighlightScheduler(
   minIntervalMs: number,
   refresh: () => void,
+  term: Terminal,
 ): { schedule: (immediate?: boolean) => void; dispose: () => void } {
   let lastRun = 0
   let raf = 0
   let trailingTimer: ReturnType<typeof setTimeout> | null = null
+  let dirty = false
 
-  const run = (): void => {
+  const doRefresh = (): void => {
+    raf = 0
+    if (!isTerminalVisible(term)) return
     lastRun = Date.now()
-    cancelAnimationFrame(raf)
-    raf = requestAnimationFrame(() => {
-      raf = 0
-      refresh()
-    })
+    refresh()
+  }
+
+  const ensureRaf = (): void => {
+    if (raf) return
+    raf = requestAnimationFrame(doRefresh)
   }
 
   const schedule = (immediate = false): void => {
+    dirty = true
+
     if (immediate) {
       if (trailingTimer) {
         clearTimeout(trailingTimer)
         trailingTimer = null
       }
-      run()
+      ensureRaf()
       return
     }
 
     const now = Date.now()
     if (now - lastRun >= minIntervalMs) {
-      run()
+      ensureRaf()
       return
     }
 
     if (!trailingTimer) {
       trailingTimer = setTimeout(() => {
         trailingTimer = null
-        run()
+        if (dirty) ensureRaf()
       }, minIntervalMs - (now - lastRun))
     }
   }
@@ -322,10 +338,9 @@ function createThrottledHighlightScheduler(
   return {
     schedule,
     dispose: () => {
-      cancelAnimationFrame(raf)
-      if (trailingTimer) clearTimeout(trailingTimer)
-      raf = 0
-      trailingTimer = null
+      if (raf) { cancelAnimationFrame(raf); raf = 0 }
+      if (trailingTimer) { clearTimeout(trailingTimer); trailingTimer = null }
+      dirty = false
     },
   }
 }
@@ -338,7 +353,7 @@ function bindLogHighlightListeners(term: Terminal, state: TerminalShellAddonStat
   const throttled = createThrottledHighlightScheduler(LOG_HIGHLIGHT_MIN_INTERVAL_MS, () => {
     state.logHighlightFrame = 0
     refreshLogHighlightDecorations(term, state)
-  })
+  }, term)
 
   state.logHighlightListeners.push(
     term.onWriteParsed(() => throttled.schedule()),
