@@ -80,6 +80,7 @@ import { launchRdpFromConnection } from '../rdp-launch'
 import { launchPuttyFromConnection } from '../putty-launch'
 import { runConnectivityCheck } from '../connectivity-check-service'
 import { GitService } from '../git-service'
+import { listClaudeCodeSessions } from '../session-service'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
@@ -1541,6 +1542,15 @@ ipcMain.handle('repo:getCommitFileDiff', (_, id: string, sha: string, filePath: 
   return gitService.getCommitFileDiff(id, sha, filePath)
 })
 ipcMain.handle('repo:getById', (_, id: string) => gitService.getRepo(id) ?? null)
+
+ipcMain.handle('session:listClaudeCodeSessions', (_, historyPath?: string) => {
+  const settings = settingsStore.get()
+  const path =
+    typeof historyPath === 'string' && historyPath.trim()
+      ? historyPath.trim()
+      : settings.session.claudeCodeHistoryPath
+  return listClaudeCodeSessions(path)
+})
 
 ipcMain.on('screenshot:open', () => {
   void openScreenshotCapture().catch((err) => {

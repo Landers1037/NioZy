@@ -24,6 +24,7 @@
     "chatTabTitle": "暗号化チャット",
     "sandboxTabTitle": "JS サンドボックス",
     "repoTabTitle": "リポジトリ管理",
+    "sessionTabTitle": "セッション管理",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -287,6 +288,7 @@
       "system": "システム",
       "p2p": "暗号化通信",
       "ai": "AI 機能",
+      "session": "セッション管理",
       "logging": "ログ",
       "advanced": "詳細",
       "experimental": "実験的"
@@ -702,6 +704,20 @@
         "openSkillsDirFailed": "スキルフォルダを開けませんでした"
       }
     },
+    "session": {
+      "title": "セッション管理",
+      "description": "AI コーディングツールのセッションを管理します。サイドバーからセッション管理パネルを開き、過去のセッションを再開できます。",
+      "agentSessionEnabled": "Agent セッション管理を有効化",
+      "agentSessionEnabledDesc": "有効にするとサイドバーに「セッション管理」入口を表示します",
+      "claudeCodeSessionEnabled": "Claude Code セッション管理を有効化",
+      "claudeCodeSessionEnabledDesc": "Claude Code の history.jsonl を解析してセッション管理パネルに表示します",
+      "claudeCodeHistoryPath": "Claude Code セッション一覧パス",
+      "claudeCodeHistoryPathDesc": "JSONL ファイルパス。デフォルトは %USERPROFILE%/.claude/history.jsonl",
+      "openCodeSessionEnabled": "Open Code セッション管理を有効化",
+      "openCodeSessionEnabledDesc": "未実装",
+      "piAgentSessionEnabled": "Pi Agent セッション管理を有効化",
+      "piAgentSessionEnabledDesc": "未実装"
+    },
     "experimental": {
       "title": "実験的",
       "description": "不安定で変更または削除される可能性がある機能",
@@ -914,6 +930,27 @@
       "noMatch": "一致するフォントがありません"
     }
   },
+  "session": {
+    "title": "セッション管理",
+    "refresh": "更新",
+    "resume": "再開",
+    "searchPlaceholder": "プロジェクト・タイトル・時間で検索…",
+    "empty": "セッションがありません",
+    "noSearchResults": "一致するセッションがありません",
+    "toolNotEnabled": "この AI ツールのセッション管理が有効になっていません。設定 → セッション管理で有効にしてください。",
+    "unknownProject": "不明なプロジェクト",
+    "untitledSession": "（無題）",
+    "sessionCount": "{{count}} 件のセッション",
+    "tools": {
+      "claudeCode": "Claude Code",
+      "openCode": "Open Code",
+      "piAgent": "Pi Agent"
+    },
+    "errors": {
+      "fileNotFound": "セッション一覧ファイルが見つかりません。Claude Code のパス設定を確認してください。",
+      "readFailed": "セッション一覧の読み込みに失敗しました"
+    }
+  },
   "sidebar": {
     "resize": "ドラッグしてサイドバーの幅を変更",
     "terminals": "ターミナル",
@@ -922,6 +959,8 @@
     "connection": "接続",
     "settings": "設定",
     "filesystem": "ファイルシステム",
+    "repoManagement": "リポジトリ管理",
+    "sessionManagement": "セッション管理",
     "openChat": "暗号化通信",
     "openJsSandbox": "サンドボックスを開く",
     "excalidraw": "Excalidraw",

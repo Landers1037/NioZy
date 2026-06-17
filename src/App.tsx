@@ -88,6 +88,11 @@ const RepoManagementPanel = lazy(() =>
     default: m.RepoManagementPanel,
   })),
 )
+const SessionManagementPanel = lazy(() =>
+  import('@/components/session/SessionManagementPanel').then((m) => ({
+    default: m.SessionManagementPanel,
+  })),
+)
 const ExcalidrawPanel = lazy(() =>
   import('@/components/drawing/ExcalidrawPanel').then((m) => ({
     default: m.ExcalidrawPanel,
@@ -302,6 +307,9 @@ export default function App() {
       chatTabActive: activeType === 'chat',
       hasRepoTab: tabs.some((t) => t.type === 'repo'),
       repoTabActive: activeType === 'repo',
+      hasSessionTab: tabs.some((t) => t.type === 'session'),
+      sessionTabActive: activeType === 'session',
+      agentSessionEnabled: settings?.session.agentSessionEnabled === true,
       hasExcalidrawTab: tabs.some((t) => t.type === 'excalidraw'),
       excalidrawTabActive: activeType === 'excalidraw',
       hasDrawioTab: tabs.some((t) => t.type === 'drawio'),
@@ -342,6 +350,9 @@ export default function App() {
     chatTabActive,
     hasRepoTab,
     repoTabActive,
+    hasSessionTab,
+    sessionTabActive,
+    agentSessionEnabled,
     hasExcalidrawTab,
     excalidrawTabActive,
     hasDrawioTab,
@@ -464,6 +475,11 @@ export default function App() {
             {hasRepoTab && (
               <AnimatedTabPanel active={repoTabActive}>
                 <RepoManagementPanel />
+              </AnimatedTabPanel>
+            )}
+            {hasSessionTab && agentSessionEnabled && (
+              <AnimatedTabPanel active={sessionTabActive}>
+                <SessionManagementPanel />
               </AnimatedTabPanel>
             )}
             {hasExcalidrawTab && excalidrawEnabled && (

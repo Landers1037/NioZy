@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ export function Sidebar() {
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const addRepoTab = useAppStore((s) => s.addRepoTab)
+  const addSessionTab = useAppStore((s) => s.addSessionTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const addExcalidrawTab = useAppStore((s) => s.addExcalidrawTab)
@@ -35,6 +36,7 @@ export function Sidebar() {
   const drawioEnabled = settings?.drawing?.drawioEnabled === true
   const localFilesystemEnabled = settings?.filesystem.localFilesystemEnabled !== false
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
+  const agentSessionEnabled = settings?.session.agentSessionEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
   const patchSettings = useAppStore((s) => s.patchSettings)
 
@@ -162,6 +164,19 @@ export function Sidebar() {
                 <GitBranch className="size-4 shrink-0" />
                 {!collapsed && (
                   <span className="min-w-0 truncate">{t('sidebar.repoManagement')}</span>
+                )}
+              </Button>
+            )}
+            {agentSessionEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addSessionTab()}
+              >
+                <History className="size-4 shrink-0" />
+                {!collapsed && (
+                  <span className="min-w-0 truncate">{t('sidebar.sessionManagement')}</span>
                 )}
               </Button>
             )}

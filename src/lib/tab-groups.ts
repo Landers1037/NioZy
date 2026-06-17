@@ -12,6 +12,7 @@ const SINGLETON_TAB_TYPES: TabType[] = [
   'chat',
   'sandbox',
   'repo',
+  'session',
   'excalidraw',
   'drawio',
 ]

@@ -24,6 +24,7 @@
     "chatTabTitle": "Encrypted chat",
     "sandboxTabTitle": "JS Sandbox",
     "repoTabTitle": "Repositories",
+    "sessionTabTitle": "Sessions",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -133,6 +134,27 @@
       "GIT_NOT_FOUND": "Git command not found",
       "NOT_GIT_REPO": "Not a Git repository",
       "PATH_INVALID": "Invalid path"
+    }
+  },
+  "session": {
+    "title": "Session management",
+    "refresh": "Refresh",
+    "resume": "Resume",
+    "searchPlaceholder": "Search by project, title, or time…",
+    "empty": "No sessions yet",
+    "noSearchResults": "No matching sessions",
+    "toolNotEnabled": "Session management for this AI tool is not enabled. Enable it in Settings → Manage sessions.",
+    "unknownProject": "Unknown project",
+    "untitledSession": "(Untitled)",
+    "sessionCount": "{{count}} sessions",
+    "tools": {
+      "claudeCode": "Claude Code",
+      "openCode": "Open Code",
+      "piAgent": "Pi Agent"
+    },
+    "errors": {
+      "fileNotFound": "Session list file not found. Check the Claude Code history path in settings.",
+      "readFailed": "Failed to read session list"
     }
   },
   "locale": {
@@ -368,6 +390,7 @@
       "system": "System",
       "p2p": "Encrypted communication",
       "ai": "AI features",
+      "session": "Manage sessions",
       "logging": "Logging",
       "advanced": "Advanced",
       "experimental": "Experimental"
@@ -797,6 +820,20 @@
         "openSkillsDirFailed": "Could not open skills folder"
       }
     },
+    "session": {
+      "title": "Manage sessions",
+      "description": "Manage AI coding tool sessions. Open the session panel from the sidebar and resume past sessions.",
+      "agentSessionEnabled": "Enable Agent session management",
+      "agentSessionEnabledDesc": "Show the Sessions entry in the sidebar when enabled",
+      "claudeCodeSessionEnabled": "Enable Claude Code session management",
+      "claudeCodeSessionEnabledDesc": "Parse Claude Code history.jsonl and show sessions in the panel",
+      "claudeCodeHistoryPath": "Claude Code session list path",
+      "claudeCodeHistoryPathDesc": "JSONL file path; default is %USERPROFILE%/.claude/history.jsonl",
+      "openCodeSessionEnabled": "Enable Open Code session management",
+      "openCodeSessionEnabledDesc": "Not implemented yet",
+      "piAgentSessionEnabled": "Enable Pi Agent session management",
+      "piAgentSessionEnabledDesc": "Not implemented yet"
+    },
     "experimental": {
       "title": "Experimental",
       "description": "Unstable features that may change or be removed",
@@ -1046,6 +1083,7 @@
     "settings": "Settings",
     "filesystem": "File system",
     "repoManagement": "Repositories",
+    "sessionManagement": "Sessions",
     "openChat": "Encrypted communication",
     "openJsSandbox": "Open sandbox",
     "excalidraw": "Excalidraw",

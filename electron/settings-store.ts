@@ -91,6 +91,10 @@ import {
   DEFAULT_ASSISTIVE_SETTINGS,
   normalizeAssistiveSettings,
 } from './shared/assistive-settings'
+import {
+  DEFAULT_SESSION_SETTINGS,
+  normalizeSessionSettings,
+} from './shared/session-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -269,6 +273,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   p2p: { ...DEFAULT_P2P_SETTINGS },
   reminder: { ...DEFAULT_REMINDER_SETTINGS },
   assistive: { ...DEFAULT_ASSISTIVE_SETTINGS },
+  session: { ...DEFAULT_SESSION_SETTINGS },
 }
 
 function buildAppSettingsFromStored(
@@ -408,6 +413,7 @@ function buildAppSettingsFromStored(
     p2p: normalizeP2pSettings(stored.p2p),
     reminder: normalizeReminderSettings(stored.reminder),
     assistive: normalizeAssistiveSettings((stored as Partial<AppSettings>).assistive),
+    session: normalizeSessionSettings((stored as Partial<AppSettings>).session),
   }
 }
 

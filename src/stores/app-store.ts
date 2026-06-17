@@ -12,6 +12,7 @@ import {
   getChatTabTitle,
   getSandboxTabTitle,
   getRepoTabTitle,
+  getSessionTabTitle,
   getSettingsTabTitle,
   getExcalidrawTabTitle,
   getDrawioTabTitle,
@@ -28,6 +29,7 @@ export type TabType =
   | 'chat'
   | 'vnc'
   | 'repo'
+  | 'session'
   | 'excalidraw'
   | 'drawio'
 
@@ -91,6 +93,8 @@ interface AppState {
   closeDrawioTabIfPresent: () => void
   addRepoTab: () => void
   closeRepoTabIfPresent: () => void
+  addSessionTab: () => void
+  closeSessionTabIfPresent: () => void
   addChatTab: () => void
   addSandboxTab: () => void
   closeSandboxTabIfPresent: () => void
@@ -247,6 +251,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   closeRepoTabIfPresent: () => {
     const existing = get().tabs.find((t) => t.type === 'repo')
+    if (!existing) return
+    get().removeTab(existing.id)
+  },
+  addSessionTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'session')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'session',
+      type: 'session',
+      title: getSessionTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  closeSessionTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'session')
     if (!existing) return
     get().removeTab(existing.id)
   },
