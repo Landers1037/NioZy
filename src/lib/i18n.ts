@@ -47,6 +47,10 @@ export function getRepoTabTitle(): string {
   return i18n.t('app.repoTabTitle')
 }
 
+export function getSessionTabTitle(): string {
+  return i18n.t('app.sessionTabTitle')
+}
+
 export function getExcalidrawTabTitle(): string {
   return i18n.t('app.excalidrawTabTitle')
 }

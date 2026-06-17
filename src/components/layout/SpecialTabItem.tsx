@@ -3,6 +3,7 @@ import type { AppTab } from '@/stores/app-store'
 import { ChatTabItem } from '@/components/layout/ChatTabItem'
 import { FilesystemTabItem } from '@/components/layout/FilesystemTabItem'
 import { RepoTabItem } from '@/components/layout/RepoTabItem'
+import { SessionTabItem } from '@/components/layout/SessionTabItem'
 import { SandboxTabItem } from '@/components/layout/SandboxTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { WebviewTabItem } from '@/components/layout/WebviewTabItem'
@@ -34,6 +35,9 @@ export const SpecialTabItem = memo(function SpecialTabItem(props: SpecialTabItem
   }
   if (props.tab.type === 'repo') {
     return <RepoTabItem {...props} />
+  }
+  if (props.tab.type === 'session') {
+    return <SessionTabItem {...props} />
   }
   if (props.tab.type === 'chat') {
     return <ChatTabItem {...props} />

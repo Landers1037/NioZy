@@ -19,6 +19,7 @@ import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-s
 import { DEFAULT_P2P_SETTINGS } from '../../electron/shared/p2p-settings'
 import { DEFAULT_REMINDER_SETTINGS } from '../../electron/shared/reminder-settings'
 import { DEFAULT_ASSISTIVE_SETTINGS } from '../../electron/shared/assistive-settings'
+import { DEFAULT_SESSION_SETTINGS } from '../../electron/shared/session-settings'
 import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
@@ -90,6 +91,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   p2p: { ...DEFAULT_P2P_SETTINGS },
   reminder: { ...DEFAULT_REMINDER_SETTINGS },
   assistive: { ...DEFAULT_ASSISTIVE_SETTINGS },
+  session: { ...DEFAULT_SESSION_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -654,6 +656,9 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       getCommitDetail: async () => ({ error: 'Browser preview' }),
       getCommitFileDiff: async () => ({ error: 'Browser preview' }),
       getById: async () => null,
+    },
+    session: {
+      listClaudeCodeSessions: async () => ({ ok: true as const, groups: [] }),
     },
     notes: {
       list: async () => [],

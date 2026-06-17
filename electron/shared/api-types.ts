@@ -68,6 +68,18 @@ export type { P2pSettings } from './p2p-settings'
 export { DEFAULT_P2P_SETTINGS, normalizeP2pSettings } from './p2p-settings'
 export type { AssistiveSettings } from './assistive-settings'
 export { DEFAULT_ASSISTIVE_SETTINGS, normalizeAssistiveSettings } from './assistive-settings'
+export type { SessionSettings } from './session-settings'
+export {
+  DEFAULT_SESSION_SETTINGS,
+  DEFAULT_CLAUDE_CODE_HISTORY_PATH,
+  normalizeSessionSettings,
+} from './session-settings'
+export type {
+  SessionTool,
+  ClaudeCodeSessionEntry,
+  ProjectSessionGroup,
+  ListClaudeCodeSessionsResult,
+} from './session-types'
 export type { NoteItem } from './note-types'
 export type {
   P2pPeerInfo,
@@ -276,6 +288,7 @@ export interface AppSettings {
   p2p: import('./p2p-settings').P2pSettings
   reminder: import('./reminder-settings').ReminderSettings
   assistive: import('./assistive-settings').AssistiveSettings
+  session: import('./session-settings').SessionSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -706,5 +719,10 @@ export interface ElectronAPI {
       filePath: string,
     ) => Promise<import('./repo-types').GitCommitFileDiff | { error: string }>
     getById: (id: string) => Promise<import('./repo-types').ManagedRepo | null>
+  }
+  session: {
+    listClaudeCodeSessions: (
+      historyPath?: string,
+    ) => Promise<import('./session-types').ListClaudeCodeSessionsResult>
   }
 }

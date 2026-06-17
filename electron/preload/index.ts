@@ -324,6 +324,10 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('repo:getCommitFileDiff', id, sha, filePath),
     getById: (id) => ipcRenderer.invoke('repo:getById', id),
   },
+  session: {
+    listClaudeCodeSessions: (historyPath) =>
+      ipcRenderer.invoke('session:listClaudeCodeSessions', historyPath),
+  },
 }
 
 try {

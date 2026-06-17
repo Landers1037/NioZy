@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle } from 'lucide-react'
+import { ArrowLeft, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ export function MinimalTabBar() {
   const addSettingsTab = useAppStore((s) => s.addSettingsTab)
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const addRepoTab = useAppStore((s) => s.addRepoTab)
+  const addSessionTab = useAppStore((s) => s.addSessionTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const addExcalidrawTab = useAppStore((s) => s.addExcalidrawTab)
@@ -33,6 +34,7 @@ export function MinimalTabBar() {
   const drawioEnabled = settings?.drawing?.drawioEnabled === true
   const localFilesystemEnabled = settings?.filesystem.localFilesystemEnabled !== false
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
+  const agentSessionEnabled = settings?.session.agentSessionEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
   const ui = useUiClasses()
 
@@ -129,6 +131,17 @@ export function MinimalTabBar() {
             onClick={() => addRepoTab()}
           >
             <GitBranch className="size-3" />
+          </Button>
+        )}
+        {agentSessionEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.sessionManagement')}
+            onClick={() => addSessionTab()}
+          >
+            <History className="size-3" />
           </Button>
         )}
         {p2pChatEnabled && (

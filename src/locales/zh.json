@@ -24,6 +24,7 @@
     "chatTabTitle": "加密聊天",
     "sandboxTabTitle": "JS 沙箱",
     "repoTabTitle": "仓库管理",
+    "sessionTabTitle": "会话管理",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -133,6 +134,27 @@
       "GIT_NOT_FOUND": "未找到 Git 命令",
       "NOT_GIT_REPO": "不是 Git 仓库",
       "PATH_INVALID": "路径无效"
+    }
+  },
+  "session": {
+    "title": "会话管理",
+    "refresh": "刷新",
+    "resume": "恢复",
+    "searchPlaceholder": "按项目、标题或时间搜索…",
+    "empty": "暂无会话记录",
+    "noSearchResults": "没有匹配的会话",
+    "toolNotEnabled": "该 AI 工具的会话管理尚未开启，请在设置 → 管理会话中启用",
+    "unknownProject": "未知项目",
+    "untitledSession": "（无标题）",
+    "sessionCount": "{{count}} 个会话",
+    "tools": {
+      "claudeCode": "Claude Code",
+      "openCode": "Open Code",
+      "piAgent": "Pi Agent"
+    },
+    "errors": {
+      "fileNotFound": "未找到会话列表文件，请检查 Claude Code 会话列表路径设置",
+      "readFailed": "读取会话列表失败"
     }
   },
   "locale": {
@@ -368,6 +390,7 @@
       "system": "系统设置",
       "p2p": "加密通信",
       "ai": "AI 特性",
+      "session": "管理会话",
       "logging": "日志设置",
       "advanced": "高级设置",
       "experimental": "实验特性"
@@ -797,6 +820,20 @@
         "openSkillsDirFailed": "无法打开技能目录"
       }
     },
+    "session": {
+      "title": "管理会话",
+      "description": "管理 AI 编程工具的会话记录，支持从侧栏打开会话管理面板并恢复历史会话。",
+      "agentSessionEnabled": "开启 Agent 会话管理",
+      "agentSessionEnabledDesc": "开启后在左侧边栏显示「会话管理」入口",
+      "claudeCodeSessionEnabled": "开启 Claude Code 会话管理",
+      "claudeCodeSessionEnabledDesc": "解析 Claude Code 的 history.jsonl 并在会话管理面板中展示",
+      "claudeCodeHistoryPath": "Claude Code 会话列表路径",
+      "claudeCodeHistoryPathDesc": "JSONL 文件路径，默认为 %USERPROFILE%/.claude/history.jsonl",
+      "openCodeSessionEnabled": "开启 Open Code 会话管理",
+      "openCodeSessionEnabledDesc": "暂未实现",
+      "piAgentSessionEnabled": "开启 Pi Agent 会话管理",
+      "piAgentSessionEnabledDesc": "暂未实现"
+    },
     "experimental": {
       "title": "实验特性",
       "description": "不稳定功能，可能变更或移除",
@@ -1046,6 +1083,7 @@
     "settings": "设置",
     "filesystem": "文件系统",
     "repoManagement": "仓库管理",
+    "sessionManagement": "会话管理",
     "openChat": "加密通信",
     "openJsSandbox": "打开沙箱",
     "excalidraw": "Excalidraw",
