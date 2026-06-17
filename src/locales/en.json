@@ -1123,7 +1123,9 @@
       "toggleRenderMode": "Switch render mode",
       "selectColorScheme": "Switch terminal color scheme",
       "selectUiStyle": "Switch interface style",
-      "selectThemeMode": "Switch light/dark theme"
+      "selectThemeMode": "Switch light/dark theme",
+      "toggleAiSidebar": "Toggle AI chat",
+      "newAiChat": "New AI chat"
     },
     "subPanel": {
       "renderMode": "Select render mode",

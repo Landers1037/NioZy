@@ -1123,7 +1123,9 @@
       "toggleRenderMode": "切换渲染模式",
       "selectColorScheme": "切换终端配色方案",
       "selectUiStyle": "切换界面风格",
-      "selectThemeMode": "切换明亮/暗黑主题"
+      "selectThemeMode": "切换明亮/暗黑主题",
+      "toggleAiSidebar": "打开/关闭 AI 对话",
+      "newAiChat": "新建 AI 对话"
     },
     "subPanel": {
       "renderMode": "选择渲染模式",
