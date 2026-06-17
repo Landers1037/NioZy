@@ -19,6 +19,7 @@ interface TabGroupState {
   addTabToActiveGroupIfAny: (tabId: string) => void
   addTabToNewGroup: (tabId: string, name: string) => void
   removeTabFromAllGroups: (tabId: string) => void
+  removeTabsFromAllGroups: (tabIds: string[]) => void
   renameGroup: (groupId: string, name: string) => void
   deleteGroup: (groupId: string) => void
 }
@@ -28,10 +29,15 @@ function pruneEmptyGroups(groups: TabGroup[]): TabGroup[] {
 }
 
 function removeTabFromGroups(groups: TabGroup[], tabId: string): TabGroup[] {
+  return removeTabsFromGroups(groups, new Set([tabId]))
+}
+
+function removeTabsFromGroups(groups: TabGroup[], tabIdSet: Set<string>): TabGroup[] {
+  if (tabIdSet.size === 0) return groups
   return pruneEmptyGroups(
     groups.map((g) => ({
       ...g,
-      tabIds: g.tabIds.filter((id) => id !== tabId),
+      tabIds: g.tabIds.filter((id) => !tabIdSet.has(id)),
     })),
   )
 }
@@ -92,7 +98,13 @@ export const useTabGroupStore = create<TabGroupState>((set, get) => ({
   },
 
   removeTabFromAllGroups: (tabId) => {
-    set((s) => ({ groups: removeTabFromGroups(s.groups, tabId) }))
+    get().removeTabsFromAllGroups([tabId])
+  },
+
+  removeTabsFromAllGroups: (tabIds) => {
+    if (tabIds.length === 0) return
+    const tabIdSet = new Set(tabIds)
+    set((s) => ({ groups: removeTabsFromGroups(s.groups, tabIdSet) }))
   },
 
   renameGroup: (groupId, name) => {

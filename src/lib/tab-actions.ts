@@ -4,23 +4,29 @@ import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { getTerminal } from '@/lib/terminal-registry'
 import { getTerminalBufferText } from '@/lib/terminal-buffer'
+import { scheduleTerminalKills } from '@/lib/schedule-terminal-kills'
 import { getActiveTerminalId, getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import type { AppTab } from '@/stores/app-store'
 
-function killTerminalTab(tab: AppTab): void {
-  if (tab.type !== 'terminal') return
-  for (const terminalId of getAllTerminalIds(tab)) {
-    getElectronAPI().terminal.kill(terminalId)
+function collectTerminalIds(tabs: AppTab[]): string[] {
+  const ids: string[] = []
+  for (const tab of tabs) {
+    if (tab.type !== 'terminal') continue
+    for (const terminalId of getAllTerminalIds(tab)) {
+      ids.push(terminalId)
+    }
   }
+  return ids
 }
 
 export function closeTerminalTabs(tabIds: string[]): void {
   const { tabs, removeTabs } = useAppStore.getState()
-  const toClose = tabs.filter((t) => tabIds.includes(t.id) && t.type === 'terminal')
-  for (const tab of toClose) {
-    killTerminalTab(tab)
-  }
+  const idSet = new Set(tabIds)
+  const toClose = tabs.filter((t) => idSet.has(t.id) && t.type === 'terminal')
+  const terminalIds = collectTerminalIds(toClose)
+
   removeTabs(tabIds)
+  scheduleTerminalKills(terminalIds)
 }
 
 export function closeOtherTerminalTabs(keepTabId: string): void {

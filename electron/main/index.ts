@@ -25,6 +25,7 @@ import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 import { sendToRenderer } from './window-ipc'
 import { createTerminalOutputFlusher } from './terminal-output-flush'
+import { createTerminalKillQueue } from '../terminal-kill-queue'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
 import {
@@ -262,6 +263,7 @@ async function syncAllSettingsSideEffects(): Promise<void> {
 const isDev = isElectronDev()
 
 const terminalService = new TerminalService()
+const terminalKillQueue = createTerminalKillQueue((id) => terminalService.kill(id))
 const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
 const settingsStore = new SettingsStore()
 const statisticsStore = new StatisticsStore(
@@ -1852,7 +1854,7 @@ ipcMain.on('terminal:write', (_, id: string, data: string) => {
 ipcMain.on('terminal:resize', (_, id: string, cols: number, rows: number) =>
   terminalService.resize(id, cols, rows),
 )
-ipcMain.on('terminal:kill', (_, id: string) => terminalService.kill(id))
+ipcMain.on('terminal:kill', (_, id: string) => terminalKillQueue.enqueue(id))
 ipcMain.on('terminal:setActiveStream', (_, id: string | null) => {
   terminalService.setActiveStream(id)
 })
