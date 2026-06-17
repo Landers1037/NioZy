@@ -498,6 +498,8 @@
       "enableTabDragDesc": "开启后长按左侧边栏终端 Tab 2 秒进入拖拽模式，可上下拖动调整顺序",
       "restoreTerminalSessionOnRestart": "重启后恢复上次终端会话",
       "restoreTerminalSessionOnRestartDesc": "关闭程序时保存终端 Tab 结构与连接配置，下次启动时恢复。关闭此选项将删除已保存的数据",
+      "showRestoreTerminalSessionLoadingAnimation": "显示恢复终端会话加载动画",
+      "showRestoreTerminalSessionLoadingAnimationDesc": "启动时恢复终端会话为阻塞过程，开启后在恢复完成前显示全局加载动画",
       "commandReplayList": "命令重放列表",
       "commandReplayListDesc": "保存常用终端输入序列，可在顶部栏命令面板中录制或一键重放"
     },
@@ -1342,6 +1344,7 @@
     "attachPtyPending": "正在连接终端…",
     "superPowerSavingIdle": "超级省电：此 Tab 的终端与 PTY 已挂起。切换回来将自动恢复。",
     "superPowerSavingResuming": "正在恢复终端会话…",
+    "restoreSessionLoading": "正在恢复终端会话…",
     "inputAriaLabel": "终端输入",
     "sshReconnectHint": "使用 Enter 键重新尝试连接",
     "sshReconnectFailed": "SSH 重连",

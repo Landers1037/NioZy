@@ -32,6 +32,7 @@
 | `src/lib/resume-term-session.ts` | 快照构建、恢复、`markResumeTermBootComplete` |
 | `src/hooks/useResumeTermSessionSync.ts` | Tab/cwd 变化防抖保存、`beforeunload` flush |
 | `src/components/settings/ShellSettings.tsx` | 设置 UI 开关 |
+| `src/components/terminal/RestoreTerminalSessionOverlay.tsx` | 启动恢复时的全局加载动画 |
 | `src/App.tsx` | 启动时恢复或回退 `createTerminal()` |
 | `src/lib/resume-term-log.ts` | 渲染层调试日志 `[NioZy][ResumeTerm]` |
 
@@ -112,12 +113,13 @@ sequenceDiagram
 
 ### settings.json
 
-`shell.restoreTerminalSessionOnRestart`（默认 `false`）：
+`shell.restoreTerminalSessionOnRestart`（默认 `false`）；子开关 `showRestoreTerminalSessionLoadingAnimation`（默认 `true`，仅父开关开启时可见）：
 
 ```json
 {
   "shell": {
-    "restoreTerminalSessionOnRestart": true
+    "restoreTerminalSessionOnRestart": true,
+    "showRestoreTerminalSessionLoadingAnimation": true
   }
 }
 ```

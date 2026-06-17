@@ -1541,3 +1541,30 @@ body {
     opacity: 0.55;
   }
 }
+
+/* 启动恢复终端会话：SquareTerminal 顺时针旋转 */
+@keyframes restore-session-wheel-roll {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.restore-session-wheel-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.restore-session-wheel-roll {
+  animation: restore-session-wheel-roll 1.1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .restore-session-wheel-roll {
+    animation: none;
+    opacity: 0.7;
+  }
+}

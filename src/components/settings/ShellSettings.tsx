@@ -22,6 +22,7 @@ import {
   Palette,
   History,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react'
 import { OH_MY_POSH_THEMES, type OhMyPoshThemeId } from '../../../electron/shared/oh-my-posh-themes'
 import { CommandReplaySettingsSection } from '@/components/command-replay/CommandReplaySettingsSection'
@@ -177,6 +178,23 @@ export function ShellSettings() {
             onCheckedChange={(v) => patchShell({ restoreTerminalSessionOnRestart: v })}
           />
         </SettingField>
+
+        {shell.restoreTerminalSessionOnRestart && (
+          <SettingField
+            className="pl-0 sm:pl-8"
+            icon={Loader2}
+            label={t('settings.shell.showRestoreTerminalSessionLoadingAnimation')}
+            description={t('settings.shell.showRestoreTerminalSessionLoadingAnimationDesc')}
+            row
+          >
+            <Switch
+              checked={shell.showRestoreTerminalSessionLoadingAnimation}
+              onCheckedChange={(v) =>
+                patchShell({ showRestoreTerminalSessionLoadingAnimation: v })
+              }
+            />
+          </SettingField>
+        )}
 
         <CommandReplaySettingsSection />
       </CardContent>

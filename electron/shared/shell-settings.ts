@@ -26,6 +26,8 @@ export interface ShellSettings {
   commandReplays: CommandReplayItem[]
   /** 重启后恢复上次终端 Tab 结构与连接配置 */
   restoreTerminalSessionOnRestart: boolean
+  /** 启动恢复终端会话时显示全局加载动画（需开启 restoreTerminalSessionOnRestart） */
+  showRestoreTerminalSessionLoadingAnimation: boolean
 }
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
@@ -40,6 +42,7 @@ export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   ohMyPoshTheme: DEFAULT_OH_MY_POSH_THEME,
   commandReplays: [],
   restoreTerminalSessionOnRestart: false,
+  showRestoreTerminalSessionLoadingAnimation: true,
 }
 
 export function normalizeShellSettings(value: unknown): ShellSettings {
@@ -83,5 +86,9 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.restoreTerminalSessionOnRestart === 'boolean'
         ? v.restoreTerminalSessionOnRestart
         : DEFAULT_SHELL_SETTINGS.restoreTerminalSessionOnRestart,
+    showRestoreTerminalSessionLoadingAnimation:
+      typeof v.showRestoreTerminalSessionLoadingAnimation === 'boolean'
+        ? v.showRestoreTerminalSessionLoadingAnimation
+        : DEFAULT_SHELL_SETTINGS.showRestoreTerminalSessionLoadingAnimation,
   }
 }

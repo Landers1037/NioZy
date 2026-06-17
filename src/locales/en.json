@@ -498,6 +498,8 @@
       "enableTabDragDesc": "When enabled, long-press a sidebar terminal tab for 2 seconds to enter drag mode and reorder tabs vertically",
       "restoreTerminalSessionOnRestart": "Restore last terminal session on restart",
       "restoreTerminalSessionOnRestartDesc": "Saves terminal tab layout and connection settings when the app closes and restores them on the next launch. Turning this off deletes the saved data",
+      "showRestoreTerminalSessionLoadingAnimation": "Show loading animation while restoring session",
+      "showRestoreTerminalSessionLoadingAnimationDesc": "Session restore blocks startup; when enabled, a global loading animation is shown until restore completes",
       "commandReplayList": "Command replay list",
       "commandReplayListDesc": "Save terminal input sequences for one-click replay from the title bar command panel"
     },
@@ -1342,6 +1344,7 @@
     "attachPtyPending": "Connecting terminal…",
     "superPowerSavingIdle": "Super power saving: this tab's terminal and PTY are suspended. Switch back to restore.",
     "superPowerSavingResuming": "Restoring terminal session…",
+    "restoreSessionLoading": "Restoring terminal session…",
     "inputAriaLabel": "Terminal input",
     "sshReconnectHint": "Press Enter to reconnect",
     "sshReconnectFailed": "SSH reconnect",
