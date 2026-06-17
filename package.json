@@ -1,6 +1,6 @@
 {
   "name": "niozy",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "NioZy — Terminal workbench with built-in AI copilot",
   "main": "out/main/index.mjs",
   "type": "module",
@@ -55,6 +55,7 @@
     "electron-screenshots": "^0.6.1",
     "font-list": "^2.1.0",
     "i18next": "^26.2.0",
+    "lru-cache": "^11.5.1",
     "lucide-react": "^1.17.0",
     "mammoth": "^1.12.0",
     "motion": "^12.40.0",

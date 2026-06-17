@@ -64,6 +64,8 @@ export class TerminalService extends EventEmitter {
   /** 向渲染进程实时推流的终端 id（拆分视图可同时包含多个） */
   private activeStreamIds = new Set<string>()
   private pausedOutput = new Map<string, string>()
+  /** 已暂停数据源的终端 id（backpressure：远端 yes 会自然阻塞） */
+  private pausedStreamIds = new Set<string>()
 
   create(options: TerminalCreateOptions): {
     id: string
@@ -185,6 +187,9 @@ export class TerminalService extends EventEmitter {
       if (!this.sessions.has(id)) return
       terminalLog.debug('PTY process exit', { id, exitCode, name })
       this.sessions.delete(id)
+      this.pausedOutput.delete(id)
+      this.activeStreamIds.delete(id)
+      this.pausedStreamIds.delete(id)
       this.emit('exit', id, exitCode)
     })
 
@@ -307,19 +312,44 @@ export class TerminalService extends EventEmitter {
 
   /** 单终端 Tab：仅一个 id 实时推流，其余缓冲 */
   setActiveStream(id: string | null): void {
-    this.activeStreamIds.clear()
-    if (id) {
-      this.activeStreamIds.add(id)
-      this.flushBufferedOutput(id)
-    }
+    this.setActiveStreams(id ? [id] : [])
   }
 
   /** 拆分终端：所有可见 pane 同时实时推流 */
   setActiveStreams(ids: string[]): void {
-    this.activeStreamIds = new Set(ids)
+    const newActive = new Set(ids)
+    for (const id of this.activeStreamIds) {
+      if (!newActive.has(id)) this.pauseSessionStream(id)
+    }
+    for (const id of newActive) {
+      if (!this.activeStreamIds.has(id)) this.resumeSessionStream(id)
+    }
+    this.activeStreamIds = newActive
     for (const id of ids) {
       this.flushBufferedOutput(id)
     }
+  }
+
+  private pauseSessionStream(id: string): void {
+    if (this.pausedStreamIds.has(id)) return
+    const session = this.sessions.get(id)
+    if (!session) return
+    this.pausedStreamIds.add(id)
+    try {
+      if (session.pty) session.pty.pause()
+      else if (session.ssh2) session.ssh2.stream.pause()
+    } catch { /* ignore */ }
+  }
+
+  private resumeSessionStream(id: string): void {
+    if (!this.pausedStreamIds.has(id)) return
+    this.pausedStreamIds.delete(id)
+    const session = this.sessions.get(id)
+    if (!session) return
+    try {
+      if (session.pty) session.pty.resume()
+      else if (session.ssh2) session.ssh2.stream.resume()
+    } catch { /* ignore */ }
   }
 
   private flushBufferedOutput(id: string): void {
@@ -375,6 +405,7 @@ export class TerminalService extends EventEmitter {
     this.sessions.delete(id)
     this.pausedOutput.delete(id)
     this.activeStreamIds.delete(id)
+    this.pausedStreamIds.delete(id)
     if (session.pty) {
       try {
         session.pty.kill()
@@ -402,6 +433,7 @@ export class TerminalService extends EventEmitter {
     this.sessions.clear()
     this.pausedOutput.clear()
     this.activeStreamIds.clear()
+    this.pausedStreamIds.clear()
     for (const session of sessions) {
       if (session.pty) {
         try {
