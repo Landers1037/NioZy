@@ -54,7 +54,6 @@ import { openScpTransferForTab } from '@/lib/scp-transfer-actions'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getElectronAPI } from '@/lib/electron-client'
 import {
-  getAllTerminalIds,
   getSplitPanes,
   MAX_TERMINAL_SPLITS,
 } from '@/lib/terminal-tab-utils'
@@ -136,7 +135,6 @@ export const TerminalTabItem = memo(function TerminalTabItem({
 }: TerminalTabItemProps) {
   const { t } = useTranslation()
   const setActiveTab = useAppStore((s) => s.setActiveTab)
-  const removeTab = useAppStore((s) => s.removeTab)
   const setTabCustomTitle = useAppStore((s) => s.setTabCustomTitle)
 
   const groups = useTabGroupStore((s) => s.groups)
@@ -162,10 +160,7 @@ export const TerminalTabItem = memo(function TerminalTabItem({
 
   const handleQuickClose = (e: React.MouseEvent) => {
     e.stopPropagation()
-    for (const terminalId of getAllTerminalIds(tab)) {
-      getElectronAPI().terminal.kill(terminalId)
-    }
-    removeTab(tab.id)
+    closeTerminalTabs([tab.id])
   }
 
   const splitCount = getSplitPanes(tab).length

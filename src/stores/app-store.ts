@@ -2,10 +2,9 @@ import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
 import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
-import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
-import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
+import { scheduleTabRemovalSideEffects } from '@/lib/schedule-tab-removal-side-effects'
 import { getElectronAPI } from '@/lib/electron-client'
-import { recordTerminalTabClosed, recordTerminalTabOpened } from '@/lib/usage-statistics'
+import { recordTerminalTabOpened } from '@/lib/usage-statistics'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import {
   applyAppLocale,
@@ -18,7 +17,7 @@ import {
   getDrawioTabTitle,
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
-import { useTabGroupStore } from '@/stores/tab-group-store'
+import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
 
 export type TabType =
   | 'terminal'
@@ -328,16 +327,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   removeTabs: (ids) => {
     if (ids.length === 0) return
     const idSet = new Set(ids)
+    const snapshot = get()
+    const removed = snapshot.tabs.filter((t) => idSet.has(t.id))
+    const removedTerminalCount = removed.filter((t) => t.type === 'terminal').length
+    const removedTabIds = removed.map((t) => t.id)
+
     set((s) => {
-      const removed = s.tabs.filter((t) => idSet.has(t.id))
-      const removedTerminalCount = removed.filter((t) => t.type === 'terminal').length
-      if (removedTerminalCount > 0) {
-        const settings = get().settings
-        for (let i = 0; i < removedTerminalCount; i++) {
-          recordTerminalTabClosed(settings)
-        }
-      }
-      // webview tabs clean up automatically when the <webview> element unmounts
       const tabs = s.tabs.filter((t) => !idSet.has(t.id))
       let activeTabId = s.activeTabId
       if (s.activeTabId && idSet.has(s.activeTabId)) {
@@ -347,26 +342,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       const terminalCwds = { ...s.terminalCwds }
       const sshDisconnectedTerminalIds = { ...s.sshDisconnectedTerminalIds }
       for (const tab of removed) {
-        useInactiveTabActivityStore.getState().clearTabActivity(tab.id)
         for (const terminalId of getAllTerminalIds(tab)) {
           delete terminalCwds[terminalId]
           delete sshDisconnectedTerminalIds[terminalId]
         }
       }
-      const removedTabIds = removed.map((t) => t.id)
-      if (removedTabIds.length > 0) {
-        const attachStore = useAttachPtySessionStore.getState()
-        attachStore.clearSnapshots(removedTabIds)
-        if (attachStore.committed && removedTabIds.includes(attachStore.committed.tabId)) {
-          attachStore.setCommitted(null)
-          attachStore.setPendingTabId(null)
-        }
-        for (const tabId of removedTabIds) {
-          useTabGroupStore.getState().removeTabFromAllGroups(tabId)
-        }
-      }
       return { tabs, activeTabId, terminalCwds, sshDisconnectedTerminalIds }
     })
+
+    scheduleTabRemovalSideEffects(removedTabIds, removedTerminalCount, snapshot.settings)
   },
   setTerminalCwd: (terminalId, cwd) =>
     set((s) => ({
