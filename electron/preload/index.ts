@@ -183,6 +183,9 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('files:saveText', content, defaultFileName),
     saveImage: (input) => ipcRenderer.invoke('files:saveImage', input),
     listRoots: () => ipcRenderer.invoke('fs:listRoots'),
+    listFavorites: () => ipcRenderer.invoke('fs:listFavorites'),
+    addFavorite: (path: string) => ipcRenderer.invoke('fs:addFavorite', path),
+    removeFavorite: (id: string) => ipcRenderer.invoke('fs:removeFavorite', id),
     getImagePreviewUrl: (filePath) => ipcRenderer.invoke('fs:getImagePreviewUrl', filePath),
     getTerminalFilePreviewUrl: (filePath, kind) =>
       ipcRenderer.invoke('fs:getTerminalFilePreviewUrl', filePath, kind),

@@ -32,6 +32,10 @@ export function getRepoFilePath(): string {
   return join(getConfigDir(), 'repo.json')
 }
 
+export function getFilesystemFavoritesFilePath(): string {
+  return join(getConfigDir(), 'filesystem-favorites.json')
+}
+
 export function getFontsCacheFilePath(): string {
   return join(getConfigDir(), 'fonts-cache.json')
 }

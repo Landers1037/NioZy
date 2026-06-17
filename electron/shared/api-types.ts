@@ -514,6 +514,11 @@ export interface ElectronAPI {
     saveImage: (input: SaveImageInput) => Promise<boolean>
     /** 本机文件系统树根（盘符或 /） */
     listRoots: () => Promise<import('./ssh-types').ScpListResult>
+    listFavorites: () => Promise<import('./filesystem-favorites-types').FilesystemFavorite[]>
+    addFavorite: (
+      path: string,
+    ) => Promise<import('./filesystem-favorites-types').FilesystemFavoriteAddResult>
+    removeFavorite: (id: string) => Promise<{ ok: boolean }>
     getImagePreviewUrl: (filePath: string) => Promise<import('../fs-service').ImagePreviewResult>
     getTerminalFilePreviewUrl: (
       filePath: string,

@@ -39,6 +39,9 @@ interface FilesystemBrowserPaneProps {
   viewMode: FilesystemViewMode
   filesystem: FilesystemSettings
   customOpeners: FilesystemCustomOpener[]
+  isFavoritePath: (path: string) => boolean
+  onAddFavorite: (path: string) => void
+  onRemoveFavorite: (path: string) => void
   onViewModeChange: (mode: FilesystemViewMode) => void
   onNavigate: (path: string) => void
   onSelect: (entry: ScpFileEntry) => void
@@ -139,12 +142,30 @@ function Breadcrumb({
   )
 }
 
+function buildFavoriteActions(
+  entry: ScpFileEntry,
+  isFavoritePath: (path: string) => boolean,
+  onAddFavorite: (path: string) => void,
+  onRemoveFavorite: (path: string) => void,
+) {
+  if (!entry.isDirectory) return undefined
+  const isFavorite = isFavoritePath(entry.path)
+  return {
+    isFavorite,
+    onAdd: () => onAddFavorite(entry.path),
+    onRemove: () => onRemoveFavorite(entry.path),
+  }
+}
+
 function ListView({
   entries,
   selectedPath,
   isRootsView,
   filesystem,
   customOpeners,
+  isFavoritePath,
+  onAddFavorite,
+  onRemoveFavorite,
   onSelect,
   onEnter,
   onPreviewImage,
@@ -154,6 +175,9 @@ function ListView({
   isRootsView: boolean
   filesystem: FilesystemSettings
   customOpeners: FilesystemCustomOpener[]
+  isFavoritePath: (path: string) => boolean
+  onAddFavorite: (path: string) => void
+  onRemoveFavorite: (path: string) => void
   onSelect: (entry: ScpFileEntry) => void
   onEnter: (entry: ScpFileEntry) => void
   onPreviewImage: (entry: ScpFileEntry) => void
@@ -193,6 +217,12 @@ function ListView({
               entry={entry}
               filesystem={filesystem}
               customOpeners={customOpeners}
+              favoriteActions={buildFavoriteActions(
+                entry,
+                isFavoritePath,
+                onAddFavorite,
+                onRemoveFavorite,
+              )}
             >
               <tr
                 role="button"
@@ -233,6 +263,9 @@ function GridView({
   isRootsView,
   filesystem,
   customOpeners,
+  isFavoritePath,
+  onAddFavorite,
+  onRemoveFavorite,
   onSelect,
   onEnter,
   onPreviewImage,
@@ -242,6 +275,9 @@ function GridView({
   isRootsView: boolean
   filesystem: FilesystemSettings
   customOpeners: FilesystemCustomOpener[]
+  isFavoritePath: (path: string) => boolean
+  onAddFavorite: (path: string) => void
+  onRemoveFavorite: (path: string) => void
   onSelect: (entry: ScpFileEntry) => void
   onEnter: (entry: ScpFileEntry) => void
   onPreviewImage: (entry: ScpFileEntry) => void
@@ -270,6 +306,12 @@ function GridView({
             entry={entry}
             filesystem={filesystem}
             customOpeners={customOpeners}
+            favoriteActions={buildFavoriteActions(
+              entry,
+              isFavoritePath,
+              onAddFavorite,
+              onRemoveFavorite,
+            )}
           >
             <button
               type="button"
@@ -300,6 +342,9 @@ export function FilesystemBrowserPane({
   viewMode,
   filesystem,
   customOpeners,
+  isFavoritePath,
+  onAddFavorite,
+  onRemoveFavorite,
   onViewModeChange,
   onNavigate,
   onSelect,
@@ -398,6 +443,9 @@ export function FilesystemBrowserPane({
             isRootsView={isRootsView}
             filesystem={filesystem}
             customOpeners={customOpeners}
+            isFavoritePath={isFavoritePath}
+            onAddFavorite={onAddFavorite}
+            onRemoveFavorite={onRemoveFavorite}
             onSelect={onSelect}
             onEnter={onEnter}
             onPreviewImage={onPreviewImage}
@@ -409,6 +457,9 @@ export function FilesystemBrowserPane({
             isRootsView={isRootsView}
             filesystem={filesystem}
             customOpeners={customOpeners}
+            isFavoritePath={isFavoritePath}
+            onAddFavorite={onAddFavorite}
+            onRemoveFavorite={onRemoveFavorite}
             onSelect={onSelect}
             onEnter={onEnter}
             onPreviewImage={onPreviewImage}

@@ -83,6 +83,7 @@ import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
 import { NoteStore } from '../note-store'
+import { FilesystemFavoritesStore } from '../filesystem-favorites-store'
 import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
@@ -280,6 +281,8 @@ const vaultStore = new VaultStore()
 const gitService = new GitService()
 const systemStats = new SystemStats()
 const noteStore = new NoteStore()
+const filesystemFavoritesStore = new FilesystemFavoritesStore()
+filesystemFavoritesStore.load()
 
 function syncStatisticsPolling(): void {
   statisticsStore.syncPolling()
@@ -1639,6 +1642,13 @@ ipcMain.handle('ssh:checkScp', () => sshService.checkScpInPath())
 ipcMain.handle('ssh:getProfile', (_, connectionId: string) => resolveSshProfile(connectionId))
 ipcMain.handle('ssh:listLocal', (_, dirPath: string) => sshService.listLocalDirectory(dirPath))
 ipcMain.handle('fs:listRoots', () => sshService.listFilesystemRoots())
+ipcMain.handle('fs:listFavorites', () => filesystemFavoritesStore.get())
+ipcMain.handle('fs:addFavorite', async (_, path: string) =>
+  filesystemFavoritesStore.add(path),
+)
+ipcMain.handle('fs:removeFavorite', (_, id: string) => ({
+  ok: filesystemFavoritesStore.remove(id),
+}))
 ipcMain.handle('fs:getImagePreviewUrl', (_, filePath: string) =>
   fsService.getImagePreviewUrl(filePath),
 )

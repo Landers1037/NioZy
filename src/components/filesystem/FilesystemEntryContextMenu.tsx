@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, FileCode, Terminal } from 'lucide-react'
+import { ExternalLink, FileCode, Star, Terminal } from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -21,6 +21,12 @@ interface FilesystemEntryContextMenuProps {
   filesystem: FilesystemSettings
   customOpeners: FilesystemCustomOpener[]
   children: React.ReactNode
+  /** 目录收藏相关操作（仅目录且传入时显示） */
+  favoriteActions?: {
+    isFavorite: boolean
+    onAdd: () => void
+    onRemove: () => void
+  }
 }
 
 export function FilesystemEntryContextMenu({
@@ -28,6 +34,7 @@ export function FilesystemEntryContextMenu({
   filesystem,
   customOpeners,
   children,
+  favoriteActions,
 }: FilesystemEntryContextMenuProps) {
   const { t } = useTranslation()
   const terminalCwd = entry.isDirectory ? entry.path : parentDirectory(entry.path)
@@ -45,6 +52,22 @@ export function FilesystemEntryContextMenu({
           <Terminal className="size-4 text-muted-foreground" />
           {t('filesystem.newTerminalHere')}
         </ContextMenuItem>
+        {entry.isDirectory && favoriteActions && (
+          <>
+            <ContextMenuSeparator />
+            {favoriteActions.isFavorite ? (
+              <ContextMenuItem onSelect={favoriteActions.onRemove}>
+                <Star className="size-4 fill-amber-500 text-amber-500" />
+                {t('filesystem.removeFromFavorites')}
+              </ContextMenuItem>
+            ) : (
+              <ContextMenuItem onSelect={favoriteActions.onAdd}>
+                <Star className="size-4 text-muted-foreground" />
+                {t('filesystem.addToFavorites')}
+              </ContextMenuItem>
+            )}
+          </>
+        )}
         {(filesystem.openWithVsCode ||
           filesystem.openWithCursor ||
           customOpeners.length > 0) && <ContextMenuSeparator />}
