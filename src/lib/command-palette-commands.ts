@@ -4,6 +4,7 @@ import {
   Copy,
   Download,
   Image,
+  MessageSquare,
   Monitor,
   Moon,
   PackageMinus,
@@ -12,11 +13,13 @@ import {
   Pencil,
   Settings,
   Sparkles,
+  SquarePen,
   Terminal,
   X,
 } from 'lucide-react'
 import i18n from '@/lib/i18n'
 import { useAppStore, type AppTab } from '@/stores/app-store'
+import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import { createTerminal } from '@/lib/terminal-actions'
 import { closeTerminalTabs, exportTerminalTab } from '@/lib/tab-actions'
 import { cloneTerminalTab } from '@/lib/terminal-clone-actions'
@@ -43,6 +46,8 @@ export type CommandPaletteCommandId =
   | 'selectColorScheme'
   | 'selectUiStyle'
   | 'selectThemeMode'
+  | 'toggleAiSidebar'
+  | 'newAiChat'
 
 export interface CommandPaletteCommand {
   id: CommandPaletteCommandId
@@ -78,7 +83,13 @@ const COMMAND_ORDER: CommandPaletteCommandId[] = [
   'selectColorScheme',
   'selectUiStyle',
   'selectThemeMode',
+  'toggleAiSidebar',
+  'newAiChat',
 ]
+
+function isAiSidebarEnabled(): boolean {
+  return useAppStore.getState().settings?.experimental.aiSidebarEnabled === true
+}
 
 function getActiveTerminalTab(): AppTab | undefined {
   const { tabs, activeTabId } = useAppStore.getState()
@@ -239,6 +250,20 @@ function buildCommands(): CommandPaletteCommand[] {
       keywords: () => ['theme', 'light', 'dark', 'mode', '明亮', '暗黑', '主题'],
       isEnabled: () => useAppStore.getState().settings != null,
     },
+    {
+      id: 'toggleAiSidebar',
+      icon: MessageSquare,
+      label: () => i18n.t('commandPalette.commands.toggleAiSidebar'),
+      keywords: () => ['ai', 'chat', 'sidebar', 'copilot', '对话', '边栏', 'AI'],
+      isEnabled: () => isAiSidebarEnabled(),
+    },
+    {
+      id: 'newAiChat',
+      icon: SquarePen,
+      label: () => i18n.t('commandPalette.commands.newAiChat'),
+      keywords: () => ['ai', 'chat', 'new', 'conversation', '对话', '新建', 'AI'],
+      isEnabled: () => isAiSidebarEnabled(),
+    },
   ]
 }
 
@@ -337,6 +362,18 @@ export async function executeCommandPaletteCommand(
       return { type: 'subPanel', panel: 'uiStyle' }
     case 'selectThemeMode':
       return { type: 'subPanel', panel: 'themeMode' }
+    case 'toggleAiSidebar':
+      useAiSidebarStore.getState().toggle()
+      return { type: 'done' }
+    case 'newAiChat': {
+      const aiStore = useAiSidebarStore.getState()
+      if (!aiStore.isOpen) {
+        aiStore.setOpen(true)
+        aiStore.setModalOpen?.(true)
+      }
+      aiStore.requestNewChat()
+      return { type: 'done' }
+    }
     default:
       return { type: 'done' }
   }
