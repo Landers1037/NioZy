@@ -8,6 +8,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { FilesystemEntryContextMenu } from '@/components/filesystem/FilesystemEntryContextMenu'
+import { FilesystemFavoritesSection } from '@/components/filesystem/FilesystemFavoritesSection'
 import {
   entryKey,
   type TreeNode,
@@ -16,6 +17,7 @@ import type {
   FilesystemCustomOpener,
   FilesystemSettings,
 } from '../../../electron/shared/filesystem-settings'
+import type { FilesystemFavorite } from '../../../electron/shared/filesystem-favorites-types'
 import { isImageFilePath } from '../../../electron/shared/filesystem-image'
 import type { ScpFileEntry } from '../../../electron/shared/ssh-types'
 import { cn } from '@/lib/utils'
@@ -132,11 +134,14 @@ function TreeRow({
 interface FilesystemTreeSidebarProps {
   roots: TreeNode[]
   loadingRoots: boolean
+  favorites: FilesystemFavorite[]
   selectedPath: string | null
   filesystem: FilesystemSettings
   customOpeners: FilesystemCustomOpener[]
   onToggle: (path: string) => void
   onSelect: (entry: ScpFileEntry) => void
+  onFavoriteSelect: (path: string) => void
+  onRemoveFavorite: (id: string) => void
   onPreviewImage: (entry: ScpFileEntry) => void
   panelClassName?: string
 }
@@ -144,11 +149,14 @@ interface FilesystemTreeSidebarProps {
 export function FilesystemTreeSidebar({
   roots,
   loadingRoots,
+  favorites,
   selectedPath,
   filesystem,
   customOpeners,
   onToggle,
   onSelect,
+  onFavoriteSelect,
+  onRemoveFavorite,
   onPreviewImage,
   panelClassName,
 }: FilesystemTreeSidebarProps) {
@@ -161,6 +169,14 @@ export function FilesystemTreeSidebar({
         panelClassName,
       )}
     >
+      <FilesystemFavoritesSection
+        favorites={favorites}
+        selectedPath={selectedPath}
+        filesystem={filesystem}
+        customOpeners={customOpeners}
+        onSelect={onFavoriteSelect}
+        onRemoveFavorite={onRemoveFavorite}
+      />
       <div className="shrink-0 border-b border-border px-3 py-2">
         <span className="text-xs font-semibold text-muted-foreground">
           {t('filesystem.modern.treeTitle')}

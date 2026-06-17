@@ -21,7 +21,12 @@ import { usePaneResize } from '@/hooks/usePaneResize'
 import { useAppStore } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import type { ScpFileEntry } from '../../../electron/shared/ssh-types'
+import type { FilesystemFavorite } from '../../../electron/shared/filesystem-favorites-types'
 import { cn } from '@/lib/utils'
+
+function normalizeComparePath(path: string): string {
+  return path.replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase()
+}
 
 const DEFAULT_TREE_WIDTH = 240
 const MIN_TREE_WIDTH = 160
@@ -53,6 +58,67 @@ export function ModernFilesystemPanel() {
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<FilesystemViewMode>('grid')
   const [previewFile, setPreviewFile] = useState<{ path: string; name: string } | null>(null)
+  const [favorites, setFavorites] = useState<FilesystemFavorite[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const list = await getElectronAPI().files.listFavorites()
+      if (!cancelled) setFavorites(list)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const isFavoritePath = useCallback(
+    (path: string) =>
+      favorites.some((f) => normalizeComparePath(f.path) === normalizeComparePath(path)),
+    [favorites],
+  )
+
+  const handleAddFavorite = useCallback(
+    async (path: string) => {
+      const result = await getElectronAPI().files.addFavorite(path)
+      if (result.ok) {
+        setFavorites((prev) => [...prev, result.favorite])
+        toast.success(t('filesystem.addedToFavorites'))
+        return
+      }
+      if (result.error === 'DUPLICATE') {
+        toast.info(t('filesystem.alreadyInFavorites'))
+        return
+      }
+      toast.error(t('filesystem.addFavoriteFailed'))
+    },
+    [t],
+  )
+
+  const handleRemoveFavoriteByPath = useCallback(
+    async (path: string) => {
+      const favorite = favorites.find(
+        (f) => normalizeComparePath(f.path) === normalizeComparePath(path),
+      )
+      if (!favorite) return
+      const result = await getElectronAPI().files.removeFavorite(favorite.id)
+      if (result.ok) {
+        setFavorites((prev) => prev.filter((f) => f.id !== favorite.id))
+        toast.success(t('filesystem.removedFromFavorites'))
+      }
+    },
+    [favorites, t],
+  )
+
+  const handleRemoveFavoriteById = useCallback(
+    async (id: string) => {
+      const result = await getElectronAPI().files.removeFavorite(id)
+      if (result.ok) {
+        setFavorites((prev) => prev.filter((f) => f.id !== id))
+        toast.success(t('filesystem.removedFromFavorites'))
+      }
+    },
+    [t],
+  )
 
   const customOpeners = useMemo(
     () =>
@@ -252,11 +318,14 @@ export function ModernFilesystemPanel() {
           <FilesystemTreeSidebar
             roots={roots}
             loadingRoots={loadingRoots}
+            favorites={favorites}
             selectedPath={selectedPath}
             filesystem={filesystem}
             customOpeners={customOpeners}
             onToggle={handleTreeToggle}
             onSelect={handleTreeSelect}
+            onFavoriteSelect={navigateTo}
+            onRemoveFavorite={(id) => void handleRemoveFavoriteById(id)}
             onPreviewImage={(entry) =>
               setPreviewFile({ path: entry.path, name: entry.name })
             }
@@ -282,6 +351,9 @@ export function ModernFilesystemPanel() {
           viewMode={viewMode}
           filesystem={filesystem}
           customOpeners={customOpeners}
+          isFavoritePath={isFavoritePath}
+          onAddFavorite={(path) => void handleAddFavorite(path)}
+          onRemoveFavorite={(path) => void handleRemoveFavoriteByPath(path)}
           onViewModeChange={setViewMode}
           onNavigate={navigateTo}
           onSelect={(entry) => setSelectedPath(entry.path)}

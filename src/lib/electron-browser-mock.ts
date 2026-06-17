@@ -502,6 +502,17 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           { name: 'D:', path: 'D:\\', isDirectory: true },
         ],
       }),
+      listFavorites: async () => [],
+      addFavorite: async (path) => ({
+        ok: true as const,
+        favorite: {
+          id: `fav_${Date.now()}`,
+          path,
+          displayName: path.split(/[/\\]/).filter(Boolean).pop() ?? path,
+          addedAt: Date.now(),
+        },
+      }),
+      removeFavorite: async () => ({ ok: true }),
       getImagePreviewUrl: async (filePath) => {
         if (!/\.(png|jpe?g|gif|webp|svg)$/i.test(filePath)) {
           return { ok: false, error: 'Browser preview: not an image' }

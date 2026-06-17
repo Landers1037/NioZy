@@ -51,7 +51,13 @@
     "openVsCodeFailed": "VS Code が見つかりません。設定でパスを指定または検出してください。",
     "openCursorFailed": "Cursor が見つかりません。設定でパスを指定または検出してください。",
     "openCustomFailed": "プログラムが見つかりません: {{path}}",
-    "openProgramFailed": "外部プログラムの起動に失敗しました"
+    "openProgramFailed": "外部プログラムの起動に失敗しました",
+    "addToFavorites": "お気に入りに追加",
+    "removeFromFavorites": "お気に入りから削除",
+    "addedToFavorites": "お気に入りに追加しました",
+    "removedFromFavorites": "お気に入りから削除しました",
+    "alreadyInFavorites": "このフォルダは既にお気に入りにあります",
+    "addFavoriteFailed": "お気に入りに追加できませんでした"
   },
   "locale": {
     "zh": "中文",
