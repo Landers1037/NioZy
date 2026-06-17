@@ -415,6 +415,8 @@
       "enableTabDragDesc": "有効時、サイドバーのターミナルタブを 2 秒長押しでドラッグモードに入り、縦方向に並べ替え可能",
       "restoreTerminalSessionOnRestart": "再起動後に前回のターミナルセッションを復元",
       "restoreTerminalSessionOnRestartDesc": "アプリ終了時にターミナルタブの構成と接続設定を保存し、次回起動時に復元します。このオプションをオフにすると保存データを削除します",
+      "showRestoreTerminalSessionLoadingAnimation": "セッション復元時の読み込みアニメーションを表示",
+      "showRestoreTerminalSessionLoadingAnimationDesc": "起動時のセッション復元はブロッキング処理です。オンにすると復元完了までグローバルな読み込みアニメーションを表示します",
       "commandReplayList": "コマンドリプレイ一覧",
       "commandReplayListDesc": "よく使うターミナル入力を保存し、タイトルバーのコマンドパネルから録画またはワンクリック再生"
     },
@@ -1179,6 +1181,7 @@
     "attachPtyPending": "ターミナルに接続しています…",
     "superPowerSavingIdle": "スーパー省電力：このタブのターミナルと PTY は停止中です。戻ると自動的に復元します。",
     "superPowerSavingResuming": "ターミナルセッションを復元しています…",
+    "restoreSessionLoading": "ターミナルセッションを復元しています…",
     "inputAriaLabel": "ターミナル入力",
     "sshReconnectHint": "Enter キーで再接続",
     "sshReconnectFailed": "SSH 再接続",

@@ -557,7 +557,8 @@ export interface CommandReplayItem {
     "commandReplays": [
       { "id": "uuid", "name": "deploy", "command": "npm run build\r" }
     ],
-    "restoreTerminalSessionOnRestart": false
+    "restoreTerminalSessionOnRestart": false,
+    "showRestoreTerminalSessionLoadingAnimation": true
   }
 }
 ```
@@ -578,6 +579,7 @@ export interface ShellSettings {
   ohMyPoshTheme: OhMyPoshThemeId
   commandReplays: CommandReplayItem[]
   restoreTerminalSessionOnRestart: boolean
+  showRestoreTerminalSessionLoadingAnimation: boolean
 }
 ```
 

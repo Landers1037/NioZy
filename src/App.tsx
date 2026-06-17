@@ -30,6 +30,7 @@ import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, handleOpenDirectoryPayload } from '@/lib/terminal-actions'
 import { restoreTerminalSessionFromDisk, markResumeTermBootComplete } from '@/lib/resume-term-session'
+import { RestoreTerminalSessionOverlay } from '@/components/terminal/RestoreTerminalSessionOverlay'
 import { resumeTermLog } from '@/lib/resume-term-log'
 import { waitForTerminalFonts } from '@/lib/terminal-webgl-refresh'
 import { isSshTerminalTab } from '@/lib/ssh-connection'
@@ -114,6 +115,7 @@ export default function App() {
 
   const booted = useRef(false)
   const bootInFlight = useRef(false)
+  const [restoringTerminalSession, setRestoringTerminalSession] = useState(false)
 
   useAppShortcuts()
   useSshDisconnectAlert()
@@ -167,11 +169,17 @@ export default function App() {
               resumeTermLog.info('boot: pending open directory, skip session restore', pending)
               await handleOpenDirectoryPayload(pending)
             } else if (s.shell.restoreTerminalSessionOnRestart) {
-              resumeTermLog.info('boot: attempting session restore')
-              const restored = await restoreTerminalSessionFromDisk()
-              if (!restored) {
-                resumeTermLog.warn('boot: restore failed, creating default terminal')
-                await createTerminal()
+              const showRestoreLoading = s.shell.showRestoreTerminalSessionLoadingAnimation
+              if (showRestoreLoading) setRestoringTerminalSession(true)
+              try {
+                resumeTermLog.info('boot: attempting session restore')
+                const restored = await restoreTerminalSessionFromDisk()
+                if (!restored) {
+                  resumeTermLog.warn('boot: restore failed, creating default terminal')
+                  await createTerminal()
+                }
+              } finally {
+                if (showRestoreLoading) setRestoringTerminalSession(false)
               }
             } else {
               resumeTermLog.info('boot: restore disabled, creating default terminal')
@@ -513,6 +521,7 @@ export default function App() {
         </main>
       </div>
       <StatusBar />
+      <RestoreTerminalSessionOverlay visible={restoringTerminalSession} />
       <FilePreviewDialog />
       <ReminderDueDialog />
       <SshDynamicPasswordDialog />
