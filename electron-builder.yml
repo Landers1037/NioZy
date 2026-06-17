@@ -19,9 +19,15 @@ files:
   - '!**/{.DS_Store,thumbs.db}'
   - '!**/{test,tests,__tests__,docs,doc,example,examples,demo}/**'
   - '!**/*.{md,markdown,map,d.ts,d.mts}'
+  # node-pty 源码与构建脚本无需进入产物；原生二进制由 asarUnpack + afterPack 按架构保留
+  - '!node_modules/node-pty/{src,deps,scripts,typings}/**'
+  - '!node_modules/node-pty/binding.gyp'
 asar: true
 asarUnpack:
-  - '**/node_modules/node-pty/**'
+  # 仅解包 node-pty 原生产物目录（JS 留在 asar 内，Electron 会映射到 unpacked 路径）
+  - '**/node_modules/node-pty/prebuilds/**'
+  - '**/node_modules/node-pty/third_party/**'
+  - '**/node_modules/node-pty/build/**'
   - '**/node_modules/font-list/**'
   - '**/node_modules/node-screenshots/**'
   - '**/node_modules/node-screenshots-*/**'
