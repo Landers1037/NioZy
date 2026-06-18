@@ -30,14 +30,14 @@ import {
 import {
   computeResumeProof,
   computeSharedSecret,
-  decryptPayload,
   deriveSessionKey,
-  encryptPayload,
   generateEphemeralKeyPair,
   importPublicKey,
   loadOrCreateDeviceIdentity,
   type DeviceIdentity,
 } from './p2p-crypto'
+import { runMainWorkerTask } from '../workers/main-worker-pool'
+import type { P2pCryptoResult } from '../workers/main-worker-types'
 import { describeProbeFailure, scanLan, probePeer } from './p2p-discovery'
 import {
   appendMessage,
@@ -1052,19 +1052,23 @@ export class P2PService {
     try {
       session.reader.feed(chunk, (frame) => {
         if (frame.type !== 'ENCRYPTED' || typeof frame.payload !== 'string') return
-        let inner: Record<string, unknown>
-        try {
-          inner = JSON.parse(decryptPayload(session.sessionKey, frame.payload)) as Record<
-            string,
-            unknown
-          >
-        } catch {
-          return
-        }
-        this.handleEncryptedPayload(session, inner)
+        void this.handleEncryptedFrame(session, frame.payload)
       })
     } catch {
       this.markSessionDisconnected(session.sessionId)
+    }
+  }
+
+  private async handleEncryptedFrame(session: ActiveSession, encrypted: string): Promise<void> {
+    try {
+      const { result } = await runMainWorkerTask<P2pCryptoResult>('p2p:decryptPayload', {
+        sessionKeyBase64: session.sessionKey.toString('base64'),
+        encrypted,
+      })
+      const inner = JSON.parse(result) as Record<string, unknown>
+      this.handleEncryptedPayload(session, inner)
+    } catch {
+      // ignore malformed frames
     }
   }
 
@@ -1150,8 +1154,18 @@ export class P2PService {
   }
 
   private sendEncrypted(session: ActiveSession, payload: Record<string, unknown>): void {
-    const encrypted = encryptPayload(session.sessionKey, JSON.stringify(payload))
-    session.socket.write(encodeWireFrame({ type: 'ENCRYPTED', payload: encrypted }))
+    void this.sendEncryptedAsync(session, payload)
+  }
+
+  private async sendEncryptedAsync(
+    session: ActiveSession,
+    payload: Record<string, unknown>,
+  ): Promise<void> {
+    const { result } = await runMainWorkerTask<P2pCryptoResult>('p2p:encryptPayload', {
+      sessionKeyBase64: session.sessionKey.toString('base64'),
+      plaintext: JSON.stringify(payload),
+    })
+    session.socket.write(encodeWireFrame({ type: 'ENCRYPTED', payload: result }))
   }
 
   private async streamFileToPeer(
@@ -1161,26 +1175,53 @@ export class P2PService {
     total: number,
   ): Promise<void> {
     let transferred = 0
+    const stream = createReadStream(localPath, { highWaterMark: FILE_CHUNK_SIZE })
+
     await new Promise<void>((resolve, reject) => {
-      const stream = createReadStream(localPath, { highWaterMark: FILE_CHUNK_SIZE })
-      stream.on('data', (chunk) => {
-        const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
-        this.sendEncrypted(session, {
-          type: 'FILE_CHUNK',
-          fileId,
-          data: buf.toString('base64'),
-        })
-        transferred += buf.length
-        this.push('p2p:fileProgress', {
-          sessionId: session.sessionId,
-          fileId,
-          transferred,
-          total,
-        })
-      })
+      let processing = false
+      let ended = false
+
+      const pump = (): void => {
+        if (processing) return
+        processing = true
+        void (async () => {
+          try {
+            while (true) {
+              const chunk = stream.read() as Buffer | null
+              if (!chunk) break
+              const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+              stream.pause()
+              await this.sendEncryptedAsync(session, {
+                type: 'FILE_CHUNK',
+                fileId,
+                data: buf.toString('base64'),
+              })
+              transferred += buf.length
+              this.push('p2p:fileProgress', {
+                sessionId: session.sessionId,
+                fileId,
+                transferred,
+                total,
+              })
+              stream.resume()
+            }
+            if (ended) {
+              await this.sendEncryptedAsync(session, { type: 'FILE_COMPLETE', fileId })
+              resolve()
+            }
+          } catch (err) {
+            reject(err)
+          } finally {
+            processing = false
+            if (!ended) pump()
+          }
+        })()
+      }
+
+      stream.on('readable', pump)
       stream.on('end', () => {
-        this.sendEncrypted(session, { type: 'FILE_COMPLETE', fileId })
-        resolve()
+        ended = true
+        pump()
       })
       stream.on('error', reject)
     })

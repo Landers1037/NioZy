@@ -1,4 +1,4 @@
-import type { IBufferCell, Terminal } from '@xterm/xterm'
+import type { Terminal } from '@xterm/xterm'
 import type { TerminalColorScheme } from '../../electron/shared/terminal-color-schemes'
 import { TERMINAL_COLOR_SCHEME_IDS } from '../../electron/shared/terminal-color-schemes'
 import { getTerminal } from '@/lib/terminal-registry'
@@ -6,9 +6,17 @@ import { getTerminalHost } from '@/lib/terminal-host-registry'
 import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 import { useAppStore } from '@/stores/app-store'
 import { isWtermEmulator } from '@/lib/terminal-emulator'
-import { resolveTerminalTheme, getThemePalette } from '@/lib/terminal-themes'
+import { resolveTerminalTheme } from '@/lib/terminal-themes'
 import { findXtermRenderCanvas } from '@/lib/terminal-idle-animation/black-hole-renderer'
 import { ensureWtermTerminalThemes } from '@/lib/wterm-theme'
+import {
+  renderScreenshotPayloadToCanvas,
+  serializeXtermViewport,
+} from '@/lib/terminal-screenshot-cells'
+import {
+  renderScreenshotInWorker,
+  screenshotBitmapToCanvas,
+} from '@/lib/terminal-screenshot-worker-client'
 import { getElectronAPI } from '@/lib/electron-client'
 import { toast } from 'sonner'
 import i18n from '@/lib/i18n'
@@ -25,93 +33,6 @@ export interface TerminalScreenshotOptions {
 
 const DEFAULT_WATERMARK = 'by NioZy'
 const SCREENSHOT_EDGE_PADDING_PX = 10
-
-function parseHexColor(hex: string): [number, number, number] {
-  const normalized = hex.replace('#', '')
-  if (normalized.length === 3) {
-    const r = Number.parseInt(normalized[0]! + normalized[0]!, 16)
-    const g = Number.parseInt(normalized[1]! + normalized[1]!, 16)
-    const b = Number.parseInt(normalized[2]! + normalized[2]!, 16)
-    return [r / 255, g / 255, b / 255]
-  }
-  if (normalized.length >= 6) {
-    const r = Number.parseInt(normalized.slice(0, 2), 16)
-    const g = Number.parseInt(normalized.slice(2, 4), 16)
-    const b = Number.parseInt(normalized.slice(4, 6), 16)
-    return [r / 255, g / 255, b / 255]
-  }
-  return [0, 0, 0]
-}
-
-function hexToRgbTuple(hex: string): [number, number, number] {
-  return parseHexColor(hex.startsWith('#') ? hex : `#${hex}`)
-}
-
-function rgbToCss(rgb: [number, number, number]): string {
-  return `rgb(${Math.round(rgb[0]! * 255)}, ${Math.round(rgb[1]! * 255)}, ${Math.round(rgb[2]! * 255)})`
-}
-
-function xterm256Component(level: number): number {
-  if (level <= 0) return 0
-  return 55 + (level - 1) * 40
-}
-
-/** xterm 256 色调色板（索引 16–255） */
-function xterm256Color(index: number): [number, number, number] {
-  if (index >= 232) {
-    const gray = 8 + (index - 232) * 10
-    return [gray / 255, gray / 255, gray / 255]
-  }
-  const cube = index - 16
-  const r = Math.floor(cube / 36)
-  const g = Math.floor((cube % 36) / 6)
-  const b = cube % 6
-  return [
-    xterm256Component(r) / 255,
-    xterm256Component(g) / 255,
-    xterm256Component(b) / 255,
-  ]
-}
-
-function paletteColor(theme: ReturnType<typeof resolveTerminalTheme>, index: number): [number, number, number] {
-  const palette = getThemePalette(theme)
-  if (index >= 0 && index < 16) {
-    return hexToRgbTuple(palette[index]!)
-  }
-  if (index >= 16 && index < 256) {
-    return xterm256Color(index)
-  }
-  return hexToRgbTuple(theme.foreground ?? '#d4d4d4')
-}
-
-function resolveCellFgRgb(cell: IBufferCell, scheme: TerminalColorScheme): [number, number, number] {
-  const theme = resolveTerminalTheme(scheme)
-  const fgDefault = hexToRgbTuple(theme.foreground ?? '#d4d4d4')
-
-  if (cell.isFgRGB()) {
-    const c = cell.getFgColor()
-    return [((c >> 16) & 0xff) / 255, ((c >> 8) & 0xff) / 255, (c & 0xff) / 255]
-  }
-  if (cell.isFgPalette()) {
-    return paletteColor(theme, cell.getFgColor())
-  }
-  return fgDefault
-}
-
-function resolveCellBgRgb(cell: IBufferCell, scheme: TerminalColorScheme): [number, number, number] | null {
-  const theme = resolveTerminalTheme(scheme)
-  const bgDefault = hexToRgbTuple(theme.background ?? '#101419')
-
-  if (cell.isBgRGB()) {
-    const c = cell.getBgColor()
-    return [((c >> 16) & 0xff) / 255, ((c >> 8) & 0xff) / 255, (c & 0xff) / 255]
-  }
-  if (cell.isBgPalette()) {
-    return paletteColor(theme, cell.getBgColor())
-  }
-  if (cell.isBgDefault()) return null
-  return bgDefault
-}
 
 function isCanvasMostlyBlank(ctx: CanvasRenderingContext2D, width: number, height: number): boolean {
   const sample = ctx.getImageData(
@@ -153,72 +74,6 @@ function captureXtermRenderCanvas(term: Terminal): HTMLCanvasElement | null {
     return null
   }
   return target
-}
-
-/** 按 buffer viewport 重绘可见区域（含 ANSI / 256 / 真彩色） */
-function renderXtermViewportToCanvas(term: Terminal, target: HTMLCanvasElement, scheme: TerminalColorScheme): boolean {
-  const screen = getXtermVisibleScreen(term)
-  if (!screen) return false
-
-  const cssW = Math.max(1, Math.round(screen.clientWidth))
-  const cssH = Math.max(1, Math.round(screen.clientHeight))
-  const dpr = window.devicePixelRatio || 1
-  target.width = Math.round(cssW * dpr)
-  target.height = Math.round(cssH * dpr)
-
-  const ctx = target.getContext('2d')
-  if (!ctx) return false
-  ctx.scale(dpr, dpr)
-
-  const theme = resolveTerminalTheme(scheme)
-  const bgDefault = hexToRgbTuple(theme.background ?? '#101419')
-  ctx.fillStyle = rgbToCss(bgDefault)
-  ctx.fillRect(0, 0, cssW, cssH)
-
-  const fontSize = term.options.fontSize ?? 13
-  const fontFamily = term.options.fontFamily ?? 'monospace'
-  const lineHeight = fontSize * (term.options.lineHeight ?? 1)
-  ctx.font = `${fontSize}px ${fontFamily}`
-  ctx.textBaseline = 'top'
-
-  const buf = term.buffer.active
-  const visibleRows = term.rows
-  const startRow = buf.viewportY
-  const { cols } = term
-  const cellW = cssW / Math.max(cols, 1)
-  const cellH = cssH / Math.max(visibleRows, 1)
-
-  for (let viewRow = 0; viewRow < visibleRows; viewRow++) {
-    const bufferRow = startRow + viewRow
-    const line = buf.getLine(bufferRow)
-    if (!line) continue
-    for (let col = 0; col < cols; col++) {
-      const cell = line.getCell(col)
-      if (!cell) continue
-
-      const themeBg = hexToRgbTuple(theme.background ?? '#101419')
-      let fgRgb = resolveCellFgRgb(cell, scheme)
-      let bgRgb = resolveCellBgRgb(cell, scheme)
-      if (cell.isInverse()) {
-        const nextFg = bgRgb ?? themeBg
-        const nextBg = fgRgb
-        fgRgb = nextFg
-        bgRgb = nextBg
-      }
-
-      if (bgRgb) {
-        ctx.fillStyle = rgbToCss(bgRgb)
-        ctx.fillRect(col * cellW, viewRow * cellH, cellW, cellH)
-      }
-
-      const chars = cell.getChars()
-      if (!chars || chars === ' ') continue
-      ctx.fillStyle = rgbToCss(fgRgb)
-      ctx.fillText(chars, col * cellW, viewRow * cellH + (cellH - lineHeight) / 2)
-    }
-  }
-
-  return true
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -350,11 +205,19 @@ async function captureXtermToCanvas(
     if (pixels) return pixels
   }
 
-  const target = document.createElement('canvas')
-  if (renderXtermViewportToCanvas(term, target, scheme)) {
-    return target
+  const payload = serializeXtermViewport(term, scheme)
+  if (!payload) return null
+
+  if (scheme !== currentScheme) {
+    try {
+      const bitmap = await renderScreenshotInWorker(payload)
+      return screenshotBitmapToCanvas(bitmap)
+    } catch {
+      return renderScreenshotPayloadToCanvas(payload)
+    }
   }
-  return null
+
+  return renderScreenshotPayloadToCanvas(payload)
 }
 
 function applyScreenshotEdgePadding(

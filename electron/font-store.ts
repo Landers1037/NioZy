@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { getFonts } from 'font-list'
 import { ensureConfigDir, getFontsCacheFilePath } from './config-paths'
+import { runMainWorkerTask } from './workers/main-worker-pool'
 
 interface FontsCacheFile {
   fonts: string[]
@@ -28,9 +29,17 @@ function writeDiskCache(fonts: string[]): void {
   writeFileSync(getFontsCacheFilePath(), JSON.stringify(payload, null, 2), 'utf-8')
 }
 
-async function fetchFromSystem(): Promise<string[]> {
+async function fetchFromSystemFallback(): Promise<string[]> {
   const raw = await getFonts({ disableQuoting: true })
   return [...new Set(raw)].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+}
+
+async function fetchFromWorkerOrFallback(): Promise<string[]> {
+  try {
+    return await runMainWorkerTask<string[]>('fonts:fetchAndNormalize', {})
+  } catch {
+    return fetchFromSystemFallback()
+  }
 }
 
 /** 获取系统字体列表；内存与磁盘缓存，避免重复调用 font-list */
@@ -45,7 +54,7 @@ export function listSystemFonts(): Promise<string[]> {
       return disk
     }
 
-    const fonts = await fetchFromSystem()
+    const fonts = await fetchFromWorkerOrFallback()
     memoryCache = fonts
     writeDiskCache(fonts)
     return fonts

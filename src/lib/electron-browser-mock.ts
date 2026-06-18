@@ -350,6 +350,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         mockVault = mockVault.filter((v) => v.id !== id)
       },
       resolve: async (text) => resolveVaultText(text),
+      resolveBatch: async (texts) => texts.map((text) => resolveVaultText(text)),
     },
     app: {
       getVersion: async () => '0.1.0',

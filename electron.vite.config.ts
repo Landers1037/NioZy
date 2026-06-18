@@ -60,7 +60,10 @@ export default defineConfig(({ command }) => {
     build: {
       minify: 'esbuild',
       lib: {
-        entry: resolve('electron/main/index.ts'),
+        entry: {
+          index: resolve('electron/main/index.ts'),
+          'workers/main-worker': resolve('electron/workers/main-worker.ts'),
+        },
         formats: ['es'],
       },
       rollupOptions: {
