@@ -8,11 +8,31 @@ import { useUiClasses } from '@/lib/ui-style'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI, isElectron } from '@/lib/electron-client'
 import { resumeClaudeCodeSession } from '@/lib/session-actions'
+import { SESSION_TOOL_ICONS } from '@/components/icons/session-tool-icons'
 import type {
   ClaudeCodeSessionEntry,
   ProjectSessionGroup,
   SessionTool,
 } from '../../../electron/shared/session-types'
+import type { SessionSettings } from '../../../electron/shared/session-settings'
+
+const SESSION_TOOLS: SessionTool[] = ['claudeCode', 'openCode', 'piAgent', 'cline', 'codex']
+
+function isToolEnabled(tool: SessionTool, session: SessionSettings | undefined): boolean {
+  if (!session) return false
+  if (tool === 'claudeCode') return session.claudeCodeSessionEnabled === true
+  if (tool === 'openCode') return session.openCodeSessionEnabled === true
+  if (tool === 'piAgent') return session.piAgentSessionEnabled === true
+  if (tool === 'cline') return session.clineSessionEnabled === true
+  return session.codexSessionEnabled === true
+}
+
+function firstEnabledTool(session: SessionSettings | undefined): SessionTool {
+  for (const tool of SESSION_TOOLS) {
+    if (isToolEnabled(tool, session)) return tool
+  }
+  return 'claudeCode'
+}
 
 function formatSessionTime(timestamp: number, locale: string): string {
   if (!timestamp) return '—'
@@ -146,18 +166,10 @@ export function SessionManagementPanel() {
   const sessionSettings = settings?.session
 
   const claudeEnabled = sessionSettings?.claudeCodeSessionEnabled === true
-  const openCodeEnabled = sessionSettings?.openCodeSessionEnabled === true
-  const piAgentEnabled = sessionSettings?.piAgentSessionEnabled === true
 
-  const defaultTool: SessionTool = claudeEnabled
-    ? 'claudeCode'
-    : openCodeEnabled
-      ? 'openCode'
-      : piAgentEnabled
-        ? 'piAgent'
-        : 'claudeCode'
-
-  const [activeTool, setActiveTool] = useState<SessionTool>(defaultTool)
+  const [activeTool, setActiveTool] = useState<SessionTool>(() =>
+    firstEnabledTool(sessionSettings),
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [groups, setGroups] = useState<ProjectSessionGroup[]>([])
   const [loading, setLoading] = useState(false)
@@ -201,17 +213,10 @@ export function SessionManagementPanel() {
   }, [loadSessions])
 
   useEffect(() => {
-    if (activeTool === 'claudeCode' && !claudeEnabled) {
-      if (openCodeEnabled) setActiveTool('openCode')
-      else if (piAgentEnabled) setActiveTool('piAgent')
-    } else if (activeTool === 'openCode' && !openCodeEnabled) {
-      if (claudeEnabled) setActiveTool('claudeCode')
-      else if (piAgentEnabled) setActiveTool('piAgent')
-    } else if (activeTool === 'piAgent' && !piAgentEnabled) {
-      if (claudeEnabled) setActiveTool('claudeCode')
-      else if (openCodeEnabled) setActiveTool('openCode')
+    if (!isToolEnabled(activeTool, sessionSettings)) {
+      setActiveTool(firstEnabledTool(sessionSettings))
     }
-  }, [activeTool, claudeEnabled, openCodeEnabled, piAgentEnabled])
+  }, [activeTool, sessionSettings])
 
   const filteredGroups = useMemo(
     () => filterGroups(groups, searchQuery, i18n.language),
@@ -236,17 +241,10 @@ export function SessionManagementPanel() {
     })
   }
 
-  const toolDisabled = (tool: SessionTool) => {
-    if (tool === 'claudeCode') return !claudeEnabled
-    if (tool === 'openCode') return !openCodeEnabled
-    return !piAgentEnabled
-  }
-
-  const toolTabs: { id: SessionTool; label: string }[] = [
-    { id: 'claudeCode', label: t('session.tools.claudeCode') },
-    { id: 'openCode', label: t('session.tools.openCode') },
-    { id: 'piAgent', label: t('session.tools.piAgent') },
-  ]
+  const toolTabs: { id: SessionTool; label: string }[] = SESSION_TOOLS.map((id) => ({
+    id,
+    label: t(`session.tools.${id}`),
+  }))
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background select-none">
@@ -270,7 +268,8 @@ export function SessionManagementPanel() {
           aria-label={t('session.title')}
         >
           {toolTabs.map((tab) => {
-            const disabled = toolDisabled(tab.id)
+            const disabled = !isToolEnabled(tab.id, sessionSettings)
+            const Icon = SESSION_TOOL_ICONS[tab.id]
             return (
               <button
                 key={tab.id}
@@ -279,7 +278,7 @@ export function SessionManagementPanel() {
                 aria-selected={activeTool === tab.id}
                 disabled={disabled}
                 className={cn(
-                  'rounded-md px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40',
                   activeTool === tab.id
                     ? cn(ui.segmentActive, 'font-app-bold')
                     : cn(ui.segmentInactive, 'font-app-regular'),
@@ -288,6 +287,7 @@ export function SessionManagementPanel() {
                   if (!disabled) setActiveTool(tab.id)
                 }}
               >
+                <Icon className="size-3.5 shrink-0" />
                 {tab.label}
               </button>
             )

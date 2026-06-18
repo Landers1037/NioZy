@@ -11,6 +11,10 @@ export interface SessionSettings {
   openCodeSessionEnabled: boolean
   /** 开启 Pi Agent 会话管理（暂未实现） */
   piAgentSessionEnabled: boolean
+  /** 开启 Cline 会话管理（暂未实现） */
+  clineSessionEnabled: boolean
+  /** 开启 Codex 会话管理（暂未实现） */
+  codexSessionEnabled: boolean
 }
 
 export const DEFAULT_SESSION_SETTINGS: SessionSettings = {
@@ -19,6 +23,8 @@ export const DEFAULT_SESSION_SETTINGS: SessionSettings = {
   claudeCodeHistoryPath: DEFAULT_CLAUDE_CODE_HISTORY_PATH,
   openCodeSessionEnabled: false,
   piAgentSessionEnabled: false,
+  clineSessionEnabled: false,
+  codexSessionEnabled: false,
 }
 
 export function normalizeSessionSettings(value: unknown): SessionSettings {
@@ -32,5 +38,7 @@ export function normalizeSessionSettings(value: unknown): SessionSettings {
         : DEFAULT_SESSION_SETTINGS.claudeCodeHistoryPath,
     openCodeSessionEnabled: v.openCodeSessionEnabled === true,
     piAgentSessionEnabled: v.piAgentSessionEnabled === true,
+    clineSessionEnabled: v.clineSessionEnabled === true,
+    codexSessionEnabled: v.codexSessionEnabled === true,
   }
 }
