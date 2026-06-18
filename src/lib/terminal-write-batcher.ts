@@ -4,7 +4,12 @@ import {
   TERMINAL_WRITE_FLUSH_CHUNK_CHARS,
   appendTerminalOutputCapped,
 } from '../../electron/shared/terminal-output-limits'
-import { writeXtermOutput } from '@/lib/terminal-sync-output'
+import { TerminalFlowControl } from '@/lib/terminal-flow-control'
+import {
+  isTerminalRenderPaused,
+  onTerminalRenderPaused,
+  onTerminalRenderResumed,
+} from '@/lib/terminal-render-pause'
 
 export interface TerminalWriteBatcher {
   queue: (data: string) => void
@@ -16,12 +21,33 @@ export interface TerminalWriteBatcher {
 export function createTerminalWriteBatcher(
   getTerm: () => { write: (data: string, callback?: () => void) => void } | null,
   getSettings: () => AppSettings | null | undefined,
+  getTerminalId: () => string | null,
+  ackOutput: (terminalId: string, length: number) => void,
 ): TerminalWriteBatcher {
   let pending = ''
-  let raf = 0
   let pumping = false
+  const flowControl = new TerminalFlowControl()
+  const unsubFlowUnblock = flowControl.onUnblock(() => {
+    startPumpIfNeeded()
+  })
 
-  const pumpNext = (): void => {
+  const stopPump = (): void => {
+    pumping = false
+  }
+
+  const unsubPause = onTerminalRenderPaused(stopPump)
+  const unsubResume = onTerminalRenderResumed(() => {
+    startPumpIfNeeded()
+  })
+
+  const pumpLoop = async (): Promise<void> => {
+    await flowControl.waitIfBlocked()
+
+    if (isTerminalRenderPaused()) {
+      pumping = false
+      return
+    }
+
     const term = getTerm()
     if (!term || !pending) {
       pumping = false
@@ -34,24 +60,38 @@ export function createTerminalWriteBatcher(
         : pending.slice(0, TERMINAL_WRITE_FLUSH_CHUNK_CHARS)
     pending = pending.slice(chunk.length)
 
-    writeXtermOutput(term, chunk, getSettings(), () => {
-      if (pending) pumpNext()
-      else pumping = false
-    })
+    const terminalId = getTerminalId()
+    flowControl.write(
+      term,
+      chunk,
+      getSettings(),
+      (length) => {
+        if (terminalId) ackOutput(terminalId, length)
+      },
+      () => {
+        if (isTerminalRenderPaused()) {
+          pumping = false
+          return
+        }
+        if (pending) void pumpLoop()
+        else pumping = false
+      },
+    )
   }
 
   const startPumpIfNeeded = (): void => {
-    if (pumping || !pending) return
+    if (pumping || !pending || isTerminalRenderPaused()) return
+    if (flowControl.isBlocked) return
     pumping = true
-    pumpNext()
+    void pumpLoop()
   }
 
-  const schedule = (): void => {
-    if (raf) return
-    raf = requestAnimationFrame(() => {
-      raf = 0
-      startPumpIfNeeded()
-    })
+  const ackDroppedPending = (): void => {
+    const terminalId = getTerminalId()
+    const dropped = pending.length
+    if (terminalId && dropped > 0) {
+      ackOutput(terminalId, dropped)
+    }
   }
 
   return {
@@ -62,20 +102,21 @@ export function createTerminalWriteBatcher(
         data,
         TERMINAL_OUTPUT_PENDING_MAX_CHARS,
       )
-      schedule()
+      if (!isTerminalRenderPaused()) startPumpIfNeeded()
     },
     dropPending() {
-      cancelAnimationFrame(raf)
-      raf = 0
+      ackDroppedPending()
+      stopPump()
       pending = ''
-      pumping = false
     },
-    /** 卸载时丢弃 pending，不再写入即将销毁的 xterm */
     dispose() {
-      cancelAnimationFrame(raf)
-      raf = 0
+      unsubPause()
+      unsubResume()
+      unsubFlowUnblock()
+      ackDroppedPending()
+      stopPump()
       pending = ''
-      pumping = false
+      flowControl.reset()
     },
   }
 }

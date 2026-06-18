@@ -12,6 +12,7 @@ import {
   TERMINAL_URL_REGEX,
 } from '@/lib/terminal-url'
 import { getLogHighlightSpans } from '@/lib/terminal-log-highlight'
+import { isTerminalRenderPaused, onTerminalRenderPaused } from '@/lib/terminal-render-pause'
 import { handleTerminalLinkClick } from '@/lib/terminal-preview-open'
 import { openTerminalExternalLink } from '@/lib/terminal-url'
 import { isXtermForceSelectionMouseEvent } from '@/lib/xterm-mouse-selection'
@@ -279,12 +280,14 @@ function refreshLogHighlightDecorations(term: Terminal, state: TerminalShellAddo
 const LOG_HIGHLIGHT_MIN_INTERVAL_MS = 100
 
 function isTerminalVisible(term: Terminal): boolean {
+  if (isTerminalRenderPaused()) return false
   const el = term.element
   if (!el) return false
   const host = el.closest('.niozy-terminal-host')
   if (!host) return true
   if (host.closest('[inert]')) return false
-  return (host as HTMLElement).offsetParent !== null
+  if (host.closest('.niozy-terminal-tab-sleep')) return false
+  return true
 }
 
 function createThrottledHighlightScheduler(
@@ -297,19 +300,35 @@ function createThrottledHighlightScheduler(
   let trailingTimer: ReturnType<typeof setTimeout> | null = null
   let dirty = false
 
+  const cancelPending = (): void => {
+    if (raf) {
+      cancelAnimationFrame(raf)
+      raf = 0
+    }
+    if (trailingTimer) {
+      clearTimeout(trailingTimer)
+      trailingTimer = null
+    }
+    dirty = false
+  }
+
+  const unsubPause = onTerminalRenderPaused(cancelPending)
+
   const doRefresh = (): void => {
     raf = 0
-    if (!isTerminalVisible(term)) return
+    dirty = false
+    if (isTerminalRenderPaused() || !isTerminalVisible(term)) return
     lastRun = Date.now()
     refresh()
   }
 
   const ensureRaf = (): void => {
-    if (raf) return
+    if (raf || isTerminalRenderPaused()) return
     raf = requestAnimationFrame(doRefresh)
   }
 
   const schedule = (immediate = false): void => {
+    if (isTerminalRenderPaused()) return
     dirty = true
 
     if (immediate) {
@@ -321,26 +340,26 @@ function createThrottledHighlightScheduler(
       return
     }
 
+    // 已有待执行的刷新，无需重复排队（yes 洪水时 onWriteParsed 极高频）
+    if (raf || trailingTimer) return
+
     const now = Date.now()
     if (now - lastRun >= minIntervalMs) {
       ensureRaf()
       return
     }
 
-    if (!trailingTimer) {
-      trailingTimer = setTimeout(() => {
-        trailingTimer = null
-        if (dirty) ensureRaf()
-      }, minIntervalMs - (now - lastRun))
-    }
+    trailingTimer = setTimeout(() => {
+      trailingTimer = null
+      if (dirty) ensureRaf()
+    }, minIntervalMs - (now - lastRun))
   }
 
   return {
     schedule,
     dispose: () => {
-      if (raf) { cancelAnimationFrame(raf); raf = 0 }
-      if (trailingTimer) { clearTimeout(trailingTimer); trailingTimer = null }
-      dirty = false
+      unsubPause()
+      cancelPending()
     },
   }
 }

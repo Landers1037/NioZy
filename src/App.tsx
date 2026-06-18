@@ -16,6 +16,7 @@ import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
+import { setTerminalRenderPaused } from '@/lib/terminal-render-pause'
 import { useAttachPtyTabSwitch } from '@/hooks/useAttachPtyTabSwitch'
 import { useResumeTermSessionSync } from '@/hooks/useResumeTermSessionSync'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
@@ -140,6 +141,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false
     let unsubMax: (() => void) | undefined
+    let unsubMoving: (() => void) | undefined
     let unsubSettings: (() => void) | undefined
 
     const setup = (): boolean => {
@@ -149,6 +151,7 @@ export default function App() {
         if (!cancelled) setWindowMaximized(v)
       })
       unsubMax = api.window.onMaximized(setWindowMaximized)
+      unsubMoving = api.window.onMoving(setTerminalRenderPaused)
       unsubSettings = api.settings.onChanged((s) => {
         if (!cancelled) {
           setSettings(s)
@@ -214,6 +217,7 @@ export default function App() {
       cancelled = true
       if (!booted.current) bootInFlight.current = false
       unsubMax?.()
+      unsubMoving?.()
       unsubSettings?.()
     }
 

@@ -3,6 +3,7 @@ import * as pty from 'node-pty'
 import { Client, type ClientChannel } from 'ssh2'
 import { randomUUID } from 'crypto'
 import { appendTerminalOutputCapped } from './shared/terminal-output-limits'
+import { TerminalActiveOutputGate } from './terminal-active-output-gate'
 import { resolveExecutable } from './resolve-executable'
 import { extractCwdFromTerminalData } from './terminal-cwd-parser'
 import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integration'
@@ -54,6 +55,8 @@ export interface Ssh2TerminalCreateOptions {
 /** 非活跃标签在主进程侧暂存的输出上限（字符数），切换回来时一次性回放 */
 const MAX_PAUSED_OUTPUT_CHARS = 512 * 1024
 
+type StreamPauseReason = 'inactive' | 'flow'
+
 const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
   powershell: 'powershell.exe',
   cmd: 'cmd.exe',
@@ -67,6 +70,10 @@ export class TerminalService extends EventEmitter {
   private pausedOutput = new Map<string, string>()
   /** 已暂停数据源的终端 id（backpressure：远端 yes 会自然阻塞） */
   private pausedStreamIds = new Set<string>()
+  /** 活跃推流闸门（闭环反压：未 ack 超限时 pause PTY） */
+  private activeGates = new Map<string, TerminalActiveOutputGate>()
+  /** PTY/SSH 暂停原因：inactive Tab 与 flow 反压可叠加 */
+  private streamPauseReasons = new Map<string, Set<StreamPauseReason>>()
 
   create(options: TerminalCreateOptions): {
     id: string
@@ -191,6 +198,8 @@ export class TerminalService extends EventEmitter {
       this.pausedOutput.delete(id)
       this.activeStreamIds.delete(id)
       this.pausedStreamIds.delete(id)
+      this.disposeActiveGate(id)
+      this.streamPauseReasons.delete(id)
       this.emit('exit', id, exitCode)
     })
 
@@ -288,6 +297,11 @@ export class TerminalService extends EventEmitter {
               exited = true
               terminalLog.debug('ssh2 terminal session end', { id, name, reason })
               this.sessions.delete(id)
+              this.pausedOutput.delete(id)
+              this.activeStreamIds.delete(id)
+              this.pausedStreamIds.delete(id)
+              this.disposeActiveGate(id)
+              this.streamPauseReasons.delete(id)
               this.emit('exit', id, 0)
             }
 
@@ -315,6 +329,12 @@ export class TerminalService extends EventEmitter {
     })
   }
 
+  /** 渲染层 xterm 处理完一批输出后 ack，驱动主进程恢复 PTY 推流 */
+  ackActiveOutput(id: string, length: number): void {
+    if (!Number.isFinite(length) || length <= 0) return
+    this.activeGates.get(id)?.ack(Math.floor(length))
+  }
+
   /** 单终端 Tab：仅一个 id 实时推流，其余缓冲 */
   setActiveStream(id: string | null): void {
     this.setActiveStreams(id ? [id] : [])
@@ -336,37 +356,89 @@ export class TerminalService extends EventEmitter {
   }
 
   private pauseSessionStream(id: string): void {
-    if (this.pausedStreamIds.has(id)) return
-    const session = this.sessions.get(id)
-    if (!session) return
-    this.pausedStreamIds.add(id)
-    try {
-      if (session.pty) session.pty.pause()
-      else if (session.ssh2) session.ssh2.stream.pause()
-    } catch { /* ignore */ }
+    const reasons = this.streamPauseReasons.get(id)
+    if (reasons?.has('inactive')) return
+    this.drainActiveGateToPaused(id)
+    this.addStreamPause(id, 'inactive')
   }
 
   private resumeSessionStream(id: string): void {
-    if (!this.pausedStreamIds.has(id)) return
-    this.pausedStreamIds.delete(id)
+    this.removeStreamPause(id, 'inactive')
+  }
+
+  private drainActiveGateToPaused(id: string): void {
+    const gate = this.activeGates.get(id)
+    if (!gate) return
+    const rest = gate.drain()
+    gate.dispose()
+    this.activeGates.delete(id)
+    if (!rest) return
+    const prev = this.pausedOutput.get(id) ?? ''
+    this.pausedOutput.set(
+      id,
+      appendTerminalOutputCapped(prev, rest, MAX_PAUSED_OUTPUT_CHARS),
+    )
+  }
+
+  private disposeActiveGate(id: string): void {
+    const gate = this.activeGates.get(id)
+    if (!gate) return
+    gate.dispose()
+    this.activeGates.delete(id)
+  }
+
+  private addStreamPause(id: string, reason: StreamPauseReason): void {
+    let reasons = this.streamPauseReasons.get(id)
+    if (!reasons) {
+      reasons = new Set()
+      this.streamPauseReasons.set(id, reasons)
+    }
+    if (reasons.has(reason)) return
+    reasons.add(reason)
+    this.pausedStreamIds.add(id)
+    this.applyStreamPauseState(id)
+  }
+
+  private removeStreamPause(id: string, reason: StreamPauseReason): void {
+    const reasons = this.streamPauseReasons.get(id)
+    if (!reasons?.has(reason)) return
+    reasons.delete(reason)
+    if (reasons.size === 0) {
+      this.streamPauseReasons.delete(id)
+      this.pausedStreamIds.delete(id)
+    }
+    this.applyStreamPauseState(id)
+  }
+
+  private applyStreamPauseState(id: string): void {
     const session = this.sessions.get(id)
     if (!session) return
+    const paused = (this.streamPauseReasons.get(id)?.size ?? 0) > 0
     try {
-      if (session.pty) session.pty.resume()
-      else if (session.ssh2) session.ssh2.stream.resume()
-    } catch { /* ignore */ }
+      if (session.pty) {
+        if (paused) session.pty.pause()
+        else session.pty.resume()
+        return
+      }
+      if (session.ssh2) {
+        if (paused) session.ssh2.stream.pause()
+        else session.ssh2.stream.resume()
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   private flushBufferedOutput(id: string): void {
     const buffered = this.pausedOutput.get(id)
     if (!buffered) return
     this.pausedOutput.delete(id)
-    this.emit('data', id, buffered)
+    this.pushActiveOutput(id, buffered)
   }
 
   private pushOutput(id: string, data: string): void {
     if (this.activeStreamIds.has(id)) {
-      this.emit('data', id, data)
+      this.pushActiveOutput(id, data)
       return
     }
     const prev = this.pausedOutput.get(id) ?? ''
@@ -374,6 +446,19 @@ export class TerminalService extends EventEmitter {
       id,
       appendTerminalOutputCapped(prev, data, MAX_PAUSED_OUTPUT_CHARS),
     )
+  }
+
+  private pushActiveOutput(id: string, data: string): void {
+    let gate = this.activeGates.get(id)
+    if (!gate) {
+      gate = new TerminalActiveOutputGate({
+        onEmit: (chunk) => this.emit('data', id, chunk),
+        onFlowPause: () => this.addStreamPause(id, 'flow'),
+        onFlowResume: () => this.removeStreamPause(id, 'flow'),
+      })
+      this.activeGates.set(id, gate)
+    }
+    gate.push(data)
   }
 
   write(id: string, data: string): void {
@@ -415,6 +500,8 @@ export class TerminalService extends EventEmitter {
     this.pausedOutput.delete(id)
     this.activeStreamIds.delete(id)
     this.pausedStreamIds.delete(id)
+    this.disposeActiveGate(id)
+    this.streamPauseReasons.delete(id)
     if (session.pty) {
       try {
         session.pty.kill()
@@ -443,6 +530,10 @@ export class TerminalService extends EventEmitter {
     this.pausedOutput.clear()
     this.activeStreamIds.clear()
     this.pausedStreamIds.clear()
+    for (const id of [...this.activeGates.keys()]) {
+      this.disposeActiveGate(id)
+    }
+    this.streamPauseReasons.clear()
     for (const session of sessions) {
       if (session.pty) {
         try {

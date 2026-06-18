@@ -225,6 +225,8 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       close: () => undefined,
       isMaximized: async () => false,
       onMaximized: () => () => undefined,
+      onMoving: () => () => undefined,
+      setDragging: () => undefined,
       snap: () => undefined,
       toggleSnapRestore: async () => false,
       setTransparencyPreview: () => undefined,
@@ -698,6 +700,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       isAlive: async () => true,
       setActiveStream: () => undefined,
       setActiveStreams: () => undefined,
+      ackData: () => undefined,
       onData: (cb) => {
         dataListeners.add(cb)
         return () => dataListeners.delete(cb)

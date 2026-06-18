@@ -394,6 +394,10 @@ export interface ElectronAPI {
     close: () => void
     isMaximized: () => Promise<boolean>
     onMaximized: (cb: (maximized: boolean) => void) => () => void
+    /** 窗口正在被拖拽移动时为 true，用于暂停终端渲染以保持 UI 流畅 */
+    onMoving: (cb: (moving: boolean) => void) => () => void
+    /** 标题栏 drag-region 按下/抬起时通知主进程暂停/恢复终端 IPC */
+    setDragging: (moving: boolean) => void
     /** Windows Snap：将窗口贴到当前屏幕指定分屏布局（类似 Win+←/→） */
     snap: (
       layout:
@@ -470,6 +474,8 @@ export interface ElectronAPI {
     setActiveStream: (id: string | null) => void
     /** 拆分终端：多个 pane 同时推流 */
     setActiveStreams: (ids: string[]) => void
+    /** xterm 处理完一批输出后 ack，驱动主进程闭环反压 */
+    ackData: (id: string, length: number) => void
     onData: (cb: (id: string, data: string) => void) => () => void
     onCwd: (cb: (id: string, cwd: string) => void) => () => void
     onExit: (cb: (id: string, code: number) => void) => () => void

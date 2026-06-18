@@ -1330,6 +1330,17 @@ body {
   -webkit-app-region: no-drag;
 }
 
+/* 窗口拖拽期间隐藏终端层并隔离布局，减轻 DWM 合成与 reflow 开销 */
+html.window-dragging .niozy-terminal-host {
+  content-visibility: hidden;
+  contain: strict;
+}
+
+html.window-dragging .niozy-terminal-host .xterm,
+html.window-dragging .niozy-terminal-host .wterm {
+  visibility: hidden;
+}
+
 
 .niozy-terminal-host .xterm {
   height: 100%;

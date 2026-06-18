@@ -20,6 +20,17 @@ const { contextBridge, ipcRenderer, webUtils } = require('electron') as typeof i
 const initialSettings = parseInitialSettingsFromArgv(process.argv)
 
 const onWindowMaximized = createIpcMultiplex<[boolean]>(ipcRenderer, 'window:maximized')
+const onWindowMoving = createIpcMultiplex<[boolean]>(ipcRenderer, 'window:moving')
+/** 窗口拖拽期间丢弃 terminal:data，避免 xterm / Shell 高亮占用主线程 */
+let terminalIpcPaused = false
+
+function syncTerminalIpcPaused(moving: boolean): void {
+  terminalIpcPaused = moving
+}
+
+onWindowMoving((moving) => {
+  syncTerminalIpcPaused(moving)
+})
 const onSystemStats = createIpcMultiplex<[SystemStatsData]>(ipcRenderer, 'system:stats')
 const onAppOpenDirectory = createIpcMultiplex<[string]>(ipcRenderer, 'app:openDirectory')
 const onAppNewTerminal = createIpcMultiplex<[]>(ipcRenderer, 'app:newTerminal')
@@ -73,6 +84,11 @@ const api: ElectronAPI = {
     close: () => ipcRenderer.send('window:close'),
     isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
     onMaximized: (cb) => onWindowMaximized(cb),
+    onMoving: (cb) => onWindowMoving(cb),
+    setDragging: (moving: boolean) => {
+      syncTerminalIpcPaused(moving)
+      ipcRenderer.send('window:setDragging', moving)
+    },
     snap: (layout) => ipcRenderer.send('window:snap', layout),
     toggleSnapRestore: () => ipcRenderer.invoke('window:toggleSnapRestore') as Promise<boolean>,
     setTransparencyPreview: (transparency) =>
@@ -140,7 +156,12 @@ const api: ElectronAPI = {
     isAlive: (id) => ipcRenderer.invoke('terminal:isAlive', id) as Promise<boolean>,
     setActiveStream: (id) => ipcRenderer.send('terminal:setActiveStream', id),
     setActiveStreams: (ids) => ipcRenderer.send('terminal:setActiveStreams', ids),
-    onData: (cb) => onTerminalData(cb),
+    ackData: (id, length) => ipcRenderer.send('terminal:ackData', id, length),
+    onData: (cb) =>
+      onTerminalData((id, data) => {
+        if (terminalIpcPaused) return
+        cb(id, data)
+      }),
     onCwd: (cb) => onTerminalCwd(cb),
     onExit: (cb) => onTerminalExit(cb),
     pickBackground: () => ipcRenderer.invoke('terminal:pickBackground'),
