@@ -3,6 +3,7 @@ import type { AppSettings, CustomConnection } from '../../electron/shared/api-ty
 import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { scheduleTabRemovalSideEffects } from '@/lib/schedule-tab-removal-side-effects'
+import { scheduleTerminalKills } from '@/lib/schedule-terminal-kills'
 import { getElectronAPI } from '@/lib/electron-client'
 import { recordTerminalTabOpened } from '@/lib/usage-statistics'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
@@ -13,12 +14,16 @@ import {
   getSandboxTabTitle,
   getRepoTabTitle,
   getSessionTabTitle,
+  getWorkspaceTabTitle,
   getSettingsTabTitle,
   getExcalidrawTabTitle,
   getDrawioTabTitle,
 } from '@/lib/i18n'
 import { uiStyleToDataAttribute } from '../../electron/shared/ui-style'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
+import { randomUUID } from '@/lib/id'
+import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useTabGroupStore } from '@/stores/tab-group-store'
 
 export type TabType =
   | 'terminal'
@@ -30,6 +35,7 @@ export type TabType =
   | 'vnc'
   | 'repo'
   | 'session'
+  | 'workspace'
   | 'excalidraw'
   | 'drawio'
 
@@ -53,6 +59,8 @@ export interface AppTab {
   activeSplitIndex?: number
   /** VNC Tab 关联的连接 id */
   vncConnectionId?: string
+  /** 工作区目录（Start 后） */
+  workspaceDir?: string
 }
 
 interface AppState {
@@ -95,6 +103,16 @@ interface AppState {
   closeRepoTabIfPresent: () => void
   addSessionTab: () => void
   closeSessionTabIfPresent: () => void
+  addWorkspaceTab: () => void
+  closeWorkspaceTabIfPresent: () => void
+  patchWorkspaceTab: (
+    tabId: string,
+    patch: {
+      workspaceDir?: string
+      terminalId?: string
+      title?: string
+    },
+  ) => void
   addChatTab: () => void
   addSandboxTab: () => void
   closeSandboxTabIfPresent: () => void
@@ -275,6 +293,45 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!existing) return
     get().removeTab(existing.id)
   },
+  addWorkspaceTab: () => {
+    const tabId = `workspace-${randomUUID()}`
+    useWorkspaceStore.getState().ensureSession(tabId)
+    const tab: AppTab = {
+      id: tabId,
+      type: 'workspace',
+      title: getWorkspaceTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+    useTabGroupStore.getState().addTabToActiveGroupIfAny(tabId)
+  },
+  closeWorkspaceTabIfPresent: () => {
+    const workspaceTabs = get().tabs.filter((t) => t.type === 'workspace')
+    if (workspaceTabs.length === 0) return
+    get().removeTabs(workspaceTabs.map((t) => t.id))
+  },
+  patchWorkspaceTab: (tabId, patch) => {
+    set((s) => ({
+      tabs: s.tabs.map((t) => {
+        if (t.id !== tabId || t.type !== 'workspace') return t
+        const next: AppTab = { ...t }
+        if (patch.workspaceDir !== undefined) {
+          if (patch.workspaceDir) next.workspaceDir = patch.workspaceDir
+          else delete next.workspaceDir
+        }
+        if (patch.terminalId !== undefined) {
+          if (patch.terminalId) next.terminalId = patch.terminalId
+          else delete next.terminalId
+        }
+        if (patch.title !== undefined) {
+          next.title = patch.title || getWorkspaceTabTitle()
+        }
+        return next
+      }),
+    }))
+  },
   addChatTab: () => {
     const existing = get().tabs.find((t) => t.type === 'chat')
     if (existing) {
@@ -356,6 +413,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     const removed = snapshot.tabs.filter((t) => idSet.has(t.id))
     const removedTerminalCount = removed.filter((t) => t.type === 'terminal').length
     const removedTabIds = removed.map((t) => t.id)
+    const workspaceTerminalIds = removed
+      .filter((t) => t.type === 'workspace' && t.terminalId)
+      .map((t) => t.terminalId!)
+    if (workspaceTerminalIds.length > 0) {
+      scheduleTerminalKills(workspaceTerminalIds)
+    }
 
     set((s) => {
       const tabs = s.tabs.filter((t) => !idSet.has(t.id))
@@ -367,6 +430,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       const terminalCwds = { ...s.terminalCwds }
       const sshDisconnectedTerminalIds = { ...s.sshDisconnectedTerminalIds }
       for (const tab of removed) {
+        if (tab.type === 'workspace' && tab.terminalId) {
+          delete terminalCwds[tab.terminalId]
+        }
         for (const terminalId of getAllTerminalIds(tab)) {
           delete terminalCwds[terminalId]
           delete sshDisconnectedTerminalIds[terminalId]
@@ -417,6 +483,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
         if (t.type === 'repo') return { ...t, title: getRepoTabTitle() }
+        if (t.type === 'session') return { ...t, title: getSessionTabTitle() }
+        if (t.type === 'workspace' && !t.workspaceDir) {
+          return { ...t, title: getWorkspaceTabTitle() }
+        }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         if (t.type === 'excalidraw') return { ...t, title: getExcalidrawTabTitle() }
@@ -436,6 +506,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (t.type === 'settings') return { ...t, title: getSettingsTabTitle() }
         if (t.type === 'filesystem') return { ...t, title: getFilesystemTabTitle() }
         if (t.type === 'repo') return { ...t, title: getRepoTabTitle() }
+        if (t.type === 'session') return { ...t, title: getSessionTabTitle() }
+        if (t.type === 'workspace' && !t.workspaceDir) {
+          return { ...t, title: getWorkspaceTabTitle() }
+        }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         if (t.type === 'excalidraw') return { ...t, title: getExcalidrawTabTitle() }

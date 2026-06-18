@@ -96,6 +96,10 @@ import {
   DEFAULT_SESSION_SETTINGS,
   normalizeSessionSettings,
 } from './shared/session-settings'
+import {
+  DEFAULT_WORKSPACE_SETTINGS,
+  normalizeWorkspaceSettings,
+} from './shared/workspace-settings'
 
 export type { SavedWindowState } from './shared/window-state'
 
@@ -175,6 +179,8 @@ export interface AppSettings {
   p2p: import('./shared/p2p-settings').P2pSettings
   reminder: import('./shared/reminder-settings').ReminderSettings
   assistive: import('./shared/assistive-settings').AssistiveSettings
+  session: import('./shared/session-settings').SessionSettings
+  workspace: import('./shared/workspace-settings').WorkspaceSettings
 }
 
 /** 写入 settings.json 的字段（不含连接列表） */
@@ -275,6 +281,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   reminder: { ...DEFAULT_REMINDER_SETTINGS },
   assistive: { ...DEFAULT_ASSISTIVE_SETTINGS },
   session: { ...DEFAULT_SESSION_SETTINGS },
+  workspace: { ...DEFAULT_WORKSPACE_SETTINGS },
 }
 
 function buildAppSettingsFromStored(
@@ -415,6 +422,7 @@ function buildAppSettingsFromStored(
     reminder: normalizeReminderSettings(stored.reminder),
     assistive: normalizeAssistiveSettings((stored as Partial<AppSettings>).assistive),
     session: normalizeSessionSettings((stored as Partial<AppSettings>).session),
+    workspace: normalizeWorkspaceSettings((stored as Partial<AppSettings>).workspace),
   }
 }
 

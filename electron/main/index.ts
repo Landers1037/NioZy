@@ -80,6 +80,7 @@ import { launchRdpFromConnection } from '../rdp-launch'
 import { launchPuttyFromConnection } from '../putty-launch'
 import { runConnectivityCheck } from '../connectivity-check-service'
 import { GitService } from '../git-service'
+import { WorkspaceService } from '../workspace-service'
 import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
@@ -297,6 +298,7 @@ const reminderScheduler = new ReminderScheduler(
 )
 const vaultStore = new VaultStore()
 const gitService = new GitService()
+const workspaceService = new WorkspaceService(gitService)
 const systemStats = new SystemStats()
 const noteStore = new NoteStore()
 const filesystemFavoritesStore = new FilesystemFavoritesStore()
@@ -1603,6 +1605,22 @@ ipcMain.handle('repo:getCommitFileDiff', (_, id: string, sha: string, filePath: 
 })
 ipcMain.handle('repo:getById', (_, id: string) => gitService.getRepo(id) ?? null)
 
+ipcMain.handle('workspace:getHomeDir', () => workspaceService.getHomeDir())
+ipcMain.handle('workspace:listDir', (_, dirPath: string) => workspaceService.listDir(dirPath))
+ipcMain.handle('workspace:pickDirectory', () => workspaceService.pickDirectory(mainWindow))
+ipcMain.handle('workspace:detectGit', (_, workDir: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return workspaceService.detectGit(workDir)
+})
+ipcMain.handle('workspace:gitStatus', (_, workDir: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return workspaceService.gitStatus(workDir)
+})
+ipcMain.handle('workspace:gitDiff', (_, workDir: string, filePath: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return workspaceService.gitDiff(workDir, filePath)
+})
+
 ipcMain.handle('session:listClaudeCodeSessions', async (_, historyPath?: string) => {
   const settings = settingsStore.get()
   const path =
@@ -1969,6 +1987,7 @@ ipcMain.on('terminal:setActiveStream', (_, id: string | null) => {
 ipcMain.on('terminal:setActiveStreams', (_, ids: string[]) => {
   terminalService.setActiveStreams(ids)
 })
+ipcMain.handle('terminal:claimStream', (_, id: string) => terminalService.claimStream(id))
 ipcMain.on('terminal:ackData', (_, id: string, length: number) => {
   terminalService.ackActiveOutput(id, length)
 })

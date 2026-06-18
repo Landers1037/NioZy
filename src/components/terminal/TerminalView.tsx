@@ -644,6 +644,15 @@ export function TerminalView({
         writeBatcher?.queue(data)
       })
 
+      const claimId = boundTerminalIdRef.current
+      if (claimId) {
+        const replay = await api.terminal.claimStream(claimId)
+        if (replay) {
+          trackTerminalOutputBracketedPaste(claimId, replay)
+          writeBatcher?.queue(replay)
+        }
+      }
+
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
           clearTerminalBracketedPasteState(id)
@@ -862,6 +871,15 @@ export function TerminalView({
         trackTerminalOutputBracketedPaste(id, data)
         writeBatcher?.queue(data)
       })
+
+      const claimId = boundTerminalIdRef.current
+      if (claimId) {
+        const replay = await api.terminal.claimStream(claimId)
+        if (replay) {
+          trackTerminalOutputBracketedPaste(claimId, replay)
+          writeBatcher?.queue(replay)
+        }
+      }
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {

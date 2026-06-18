@@ -24,6 +24,7 @@ import {
   Bell,
   Brain,
   MessageSquareCode,
+  SquareTerminal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { AppearanceSettings } from './AppearanceSettings'
@@ -44,6 +45,7 @@ import { ShortcutSettings } from './ShortcutSettings'
 import { ExperimentalSettings } from './ExperimentalSettings'
 import { AiSettings } from './AiSettings'
 import { SessionSettings } from './SessionSettings'
+import { WorkspaceSettings } from './WorkspaceSettings'
 import { PreviewSettings } from './PreviewSettings'
 import { P2pSettings } from './P2pSettings'
 import { DrawingSettings } from './DrawingSettings'
@@ -68,6 +70,7 @@ const SECTION_DEFS = [
   { id: 'p2p', icon: MessageSquare },
   { id: 'ai', icon: Brain },
   { id: 'session', icon: MessageSquareCode },
+  { id: 'workspace', icon: SquareTerminal },
   { id: 'logging', icon: ScrollText },
   { id: 'advanced', icon: SlidersHorizontal },
   { id: 'experimental', icon: FlaskConical },
@@ -113,6 +116,8 @@ function SettingsSectionContent({ section }: { section: SectionId }) {
       return <AiSettings />
     case 'session':
       return <SessionSettings />
+    case 'workspace':
+      return <WorkspaceSettings />
     case 'logging':
       return <LogSettings />
     case 'advanced':

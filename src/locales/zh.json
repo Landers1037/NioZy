@@ -25,6 +25,7 @@
     "sandboxTabTitle": "JS 沙箱",
     "repoTabTitle": "仓库管理",
     "sessionTabTitle": "会话管理",
+    "workspaceTabTitle": "工作区",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -179,6 +180,35 @@
     "errors": {
       "fileNotFound": "未找到会话列表文件，请检查 Claude Code 会话列表路径设置",
       "readFailed": "读取会话列表失败"
+    }
+  },
+  "workspace": {
+    "start": "Start",
+    "homeDir": "用户目录",
+    "browseDirectory": "浏览选择目录…",
+    "fileTree": "文件树",
+    "gitWorkspace": "Git 工作区",
+    "collapsePanel": "收起侧栏",
+    "expandPanel": "展开侧栏",
+    "emptyDir": "目录为空",
+    "gitNotSupported": "未找到 Git 命令或当前目录不是 Git 仓库",
+    "notGitRepo": "当前工作目录不是 Git 仓库",
+    "gitClean": "没有未提交的变更",
+    "closeConfirmTitle": "关闭工作区？",
+    "closeConfirmDesc": "关闭后将终止当前工作区终端会话，未保存的终端状态不会保留。",
+    "tools": {
+      "claudeCode": "Claude Code",
+      "openCode": "Open Code",
+      "piAgent": "Pi Agent",
+      "cursorAgent": "Cursor Agent"
+    },
+    "fileStatus": {
+      "added": "新增",
+      "modified": "修改",
+      "deleted": "删除"
+    },
+    "errors": {
+      "noWorkingDir": "请选择工作目录"
     }
   },
   "locale": {
@@ -415,6 +445,7 @@
       "p2p": "加密通信",
       "ai": "AI 特性",
       "session": "管理会话",
+      "workspace": "工作区",
       "logging": "日志设置",
       "advanced": "高级设置",
       "experimental": "实验特性"
@@ -866,6 +897,14 @@
       "codexSessionEnabled": "开启 Codex 会话管理",
       "codexSessionEnabledDesc": "暂未实现"
     },
+    "workspace": {
+      "title": "工作区",
+      "description": "面向终端 AI Coding 的工作区：在指定目录下启动开发工具，并浏览文件树与 Git 变更。",
+      "workspaceEnabled": "启用工作区",
+      "workspaceEnabledDesc": "开启后在「新建连接」菜单的默认终端下方显示「工作区」入口，可创建多个工作区",
+      "gitWorkspaceEnabled": "支持 Git 工作区",
+      "gitWorkspaceEnabledDesc": "开启后工作区右侧可切换查看未提交的 Git 变更"
+    },
     "experimental": {
       "title": "实验特性",
       "description": "不稳定功能，可能变更或移除",
@@ -1116,6 +1155,7 @@
     "filesystem": "文件系统",
     "repoManagement": "仓库管理",
     "sessionManagement": "会话管理",
+    "workspace": "工作区",
     "openChat": "加密通信",
     "openJsSandbox": "打开沙箱",
     "excalidraw": "Excalidraw",

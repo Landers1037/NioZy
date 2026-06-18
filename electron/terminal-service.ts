@@ -355,6 +355,31 @@ export class TerminalService extends EventEmitter {
     }
   }
 
+  /**
+   * 渲染进程 xterm 已订阅 terminal:data 后调用：合并进活跃推流集、
+   * 清除过早激活导致的 flow 反压，并返回主进程侧尚未推送的缓冲。
+   */
+  claimStream(id: string): string {
+    if (!this.sessions.has(id)) return ''
+
+    this.removeStreamPause(id, 'flow')
+    this.disposeActiveGate(id)
+
+    const replay = this.pausedOutput.get(id) ?? ''
+    this.pausedOutput.delete(id)
+
+    if (!this.activeStreamIds.has(id)) {
+      const newActive = new Set(this.activeStreamIds)
+      newActive.add(id)
+      for (const activeId of newActive) {
+        if (!this.activeStreamIds.has(activeId)) this.resumeSessionStream(activeId)
+      }
+      this.activeStreamIds = newActive
+    }
+
+    return replay
+  }
+
   private pauseSessionStream(id: string): void {
     const reasons = this.streamPauseReasons.get(id)
     if (reasons?.has('inactive')) return

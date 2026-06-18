@@ -4,6 +4,7 @@ import { ChatTabItem } from '@/components/layout/ChatTabItem'
 import { FilesystemTabItem } from '@/components/layout/FilesystemTabItem'
 import { RepoTabItem } from '@/components/layout/RepoTabItem'
 import { SessionTabItem } from '@/components/layout/SessionTabItem'
+import { WorkspaceTabItem } from '@/components/layout/WorkspaceTabItem'
 import { SandboxTabItem } from '@/components/layout/SandboxTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { WebviewTabItem } from '@/components/layout/WebviewTabItem'
@@ -38,6 +39,9 @@ export const SpecialTabItem = memo(function SpecialTabItem(props: SpecialTabItem
   }
   if (props.tab.type === 'session') {
     return <SessionTabItem {...props} />
+  }
+  if (props.tab.type === 'workspace') {
+    return <WorkspaceTabItem {...props} />
   }
   if (props.tab.type === 'chat') {
     return <ChatTabItem {...props} />

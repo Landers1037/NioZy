@@ -95,6 +95,11 @@ const SessionManagementPanel = lazy(() =>
     default: m.SessionManagementPanel,
   })),
 )
+const WorkspacePanel = lazy(() =>
+  import('@/components/workspace/WorkspacePanel').then((m) => ({
+    default: m.WorkspacePanel,
+  })),
+)
 const ExcalidrawPanel = lazy(() =>
   import('@/components/drawing/ExcalidrawPanel').then((m) => ({
     default: m.ExcalidrawPanel,
@@ -291,6 +296,11 @@ export default function App() {
     [tabs],
   )
 
+  const workspaceTabs = useMemo(
+    () => tabs.filter((t) => t.type === 'workspace'),
+    [tabs],
+  )
+
   const tabLayout = useMemo(() => {
     const activeTab = tabs.find((t) => t.id === activeTabId)
     const activeType = activeTab?.type
@@ -315,6 +325,8 @@ export default function App() {
       repoTabActive: activeType === 'repo',
       hasSessionTab: tabs.some((t) => t.type === 'session'),
       sessionTabActive: activeType === 'session',
+      hasWorkspaceTab: workspaceTabs.length > 0,
+      workspaceEnabled: settings?.workspace.workspaceEnabled === true,
       agentSessionEnabled: settings?.session.agentSessionEnabled === true,
       hasExcalidrawTab: tabs.some((t) => t.type === 'excalidraw'),
       excalidrawTabActive: activeType === 'excalidraw',
@@ -340,6 +352,7 @@ export default function App() {
     scpTransferTabId,
     settings,
     attachCommitted,
+    workspaceTabs,
   ])
 
   const {
@@ -358,6 +371,8 @@ export default function App() {
     repoTabActive,
     hasSessionTab,
     sessionTabActive,
+    hasWorkspaceTab,
+    workspaceEnabled,
     agentSessionEnabled,
     hasExcalidrawTab,
     excalidrawTabActive,
@@ -487,6 +502,15 @@ export default function App() {
               <AnimatedTabPanel active={sessionTabActive}>
                 <SessionManagementPanel />
               </AnimatedTabPanel>
+            )}
+            {hasWorkspaceTab && workspaceEnabled && (
+              <>
+                {workspaceTabs.map((tab) => (
+                  <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
+                    <WorkspacePanel tab={tab} />
+                  </AnimatedTabPanel>
+                ))}
+              </>
             )}
             {hasExcalidrawTab && excalidrawEnabled && (
               <div
