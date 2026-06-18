@@ -1,4 +1,5 @@
 export const DEFAULT_CLAUDE_CODE_HISTORY_PATH = '%USERPROFILE%/.claude/history.jsonl'
+export const DEFAULT_OPEN_CODE_DB_PATH = '%USERPROFILE%/.local/share/opencode/opencode.db'
 
 export interface SessionSettings {
   /** 开启后在侧栏显示「会话管理」入口 */
@@ -7,8 +8,10 @@ export interface SessionSettings {
   claudeCodeSessionEnabled: boolean
   /** Claude Code 会话列表 JSONL 路径 */
   claudeCodeHistoryPath: string
-  /** 开启 Open Code 会话管理（暂未实现） */
+  /** 开启 Open Code 会话管理 */
   openCodeSessionEnabled: boolean
+  /** Open Code 会话 SQLite 数据库路径 */
+  openCodeDbPath: string
   /** 开启 Pi Agent 会话管理（暂未实现） */
   piAgentSessionEnabled: boolean
   /** 开启 Cline 会话管理（暂未实现） */
@@ -22,6 +25,7 @@ export const DEFAULT_SESSION_SETTINGS: SessionSettings = {
   claudeCodeSessionEnabled: false,
   claudeCodeHistoryPath: DEFAULT_CLAUDE_CODE_HISTORY_PATH,
   openCodeSessionEnabled: false,
+  openCodeDbPath: DEFAULT_OPEN_CODE_DB_PATH,
   piAgentSessionEnabled: false,
   clineSessionEnabled: false,
   codexSessionEnabled: false,
@@ -37,6 +41,10 @@ export function normalizeSessionSettings(value: unknown): SessionSettings {
         ? v.claudeCodeHistoryPath.trim()
         : DEFAULT_SESSION_SETTINGS.claudeCodeHistoryPath,
     openCodeSessionEnabled: v.openCodeSessionEnabled === true,
+    openCodeDbPath:
+      typeof v.openCodeDbPath === 'string' && v.openCodeDbPath.trim()
+        ? v.openCodeDbPath.trim()
+        : DEFAULT_SESSION_SETTINGS.openCodeDbPath,
     piAgentSessionEnabled: v.piAgentSessionEnabled === true,
     clineSessionEnabled: v.clineSessionEnabled === true,
     codexSessionEnabled: v.codexSessionEnabled === true,

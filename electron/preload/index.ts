@@ -332,6 +332,8 @@ const api: ElectronAPI = {
   session: {
     listClaudeCodeSessions: (historyPath) =>
       ipcRenderer.invoke('session:listClaudeCodeSessions', historyPath),
+    listOpenCodeSessions: (dbPath) =>
+      ipcRenderer.invoke('session:listOpenCodeSessions', dbPath),
   },
 }
 

@@ -80,7 +80,7 @@ import { launchRdpFromConnection } from '../rdp-launch'
 import { launchPuttyFromConnection } from '../putty-launch'
 import { runConnectivityCheck } from '../connectivity-check-service'
 import { GitService } from '../git-service'
-import { listClaudeCodeSessions } from '../session-service'
+import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
@@ -1563,6 +1563,15 @@ ipcMain.handle('session:listClaudeCodeSessions', (_, historyPath?: string) => {
       ? historyPath.trim()
       : settings.session.claudeCodeHistoryPath
   return listClaudeCodeSessions(path)
+})
+
+ipcMain.handle('session:listOpenCodeSessions', async (_, dbPath?: string) => {
+  const settings = settingsStore.get()
+  const path =
+    typeof dbPath === 'string' && dbPath.trim()
+      ? dbPath.trim()
+      : settings.session.openCodeDbPath
+  return listOpenCodeSessions(path)
 })
 
 ipcMain.on('screenshot:open', () => {

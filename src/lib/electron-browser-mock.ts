@@ -659,6 +659,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     session: {
       listClaudeCodeSessions: async () => ({ ok: true as const, groups: [] }),
+      listOpenCodeSessions: async () => ({ ok: true as const, groups: [] }),
     },
     notes: {
       list: async () => [],

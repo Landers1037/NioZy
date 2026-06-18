@@ -11,12 +11,36 @@ export async function resumeClaudeCodeSession(
   sessionId: string,
   project?: string,
 ): Promise<void> {
+  await resumeAgentSession({
+    command: 'claude',
+    args: ['-r', sessionId],
+    project,
+  })
+}
+
+/** 在指定项目目录下恢复 Open Code 会话 */
+export async function resumeOpenCodeSession(
+  sessionId: string,
+  project?: string,
+): Promise<void> {
+  await resumeAgentSession({
+    command: 'opencode',
+    args: ['-s', sessionId],
+    project,
+  })
+}
+
+async function resumeAgentSession(input: {
+  command: string
+  args: string[]
+  project?: string
+}): Promise<void> {
   const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
   const createPayload: TerminalCreateOptions = {
     shell: 'custom',
-    command: 'claude',
-    args: ['-r', sessionId],
-    ...(project ? { cwd: project } : {}),
+    command: input.command,
+    args: input.args,
+    ...(input.project ? { cwd: input.project } : {}),
   }
 
   try {

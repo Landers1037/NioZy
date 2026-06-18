@@ -12,8 +12,10 @@ export interface ProjectSessionGroup {
   sessions: ClaudeCodeSessionEntry[]
 }
 
-export type ListClaudeCodeSessionsError = 'FILE_NOT_FOUND' | 'READ_FAILED'
+export type ListSessionsError = 'FILE_NOT_FOUND' | 'READ_FAILED'
 
 export type ListClaudeCodeSessionsResult =
   | { ok: true; groups: ProjectSessionGroup[] }
-  | { ok: false; error: ListClaudeCodeSessionsError }
+  | { ok: false; error: ListSessionsError }
+
+export type ListOpenCodeSessionsResult = ListClaudeCodeSessionsResult
