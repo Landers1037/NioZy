@@ -20,6 +20,11 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
   const tabLastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt)
   const optimizationTick = useInactiveTabOptimizationTick()
 
+  const streamTabsKey = tabs
+    .filter((t) => t.type === 'terminal' || (t.type === 'workspace' && t.terminalId))
+    .map((t) => `${t.id}:${t.terminalId ?? ''}`)
+    .join(',')
+
   const terminalTabsKey = tabs
     .filter((t) => t.type === 'terminal')
     .map((t) => t.id)
@@ -48,6 +53,7 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
     performance,
     tabLastActivityAt,
     terminalTabsKey,
+    streamTabsKey,
     optimizationTick,
     attachPtyMode,
     attachStreamTerminalId,

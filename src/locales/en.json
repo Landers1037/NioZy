@@ -25,6 +25,7 @@
     "sandboxTabTitle": "JS Sandbox",
     "repoTabTitle": "Repositories",
     "sessionTabTitle": "Sessions",
+    "workspaceTabTitle": "Workspace",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -179,6 +180,35 @@
     "errors": {
       "fileNotFound": "Session list file not found. Check the Claude Code history path in settings.",
       "readFailed": "Failed to read session list"
+    }
+  },
+  "workspace": {
+    "start": "Start",
+    "homeDir": "Home",
+    "browseDirectory": "Browse directory…",
+    "fileTree": "File tree",
+    "gitWorkspace": "Git workspace",
+    "collapsePanel": "Collapse sidebar",
+    "expandPanel": "Expand sidebar",
+    "emptyDir": "Directory is empty",
+    "gitNotSupported": "Git was not found or this directory is not a repository",
+    "notGitRepo": "Working directory is not a Git repository",
+    "gitClean": "No uncommitted changes",
+    "closeConfirmTitle": "Close workspace?",
+    "closeConfirmDesc": "This will terminate the workspace terminal session. Terminal state will not be preserved.",
+    "tools": {
+      "claudeCode": "Claude Code",
+      "openCode": "Open Code",
+      "piAgent": "Pi Agent",
+      "cursorAgent": "Cursor Agent"
+    },
+    "fileStatus": {
+      "added": "Added",
+      "modified": "Modified",
+      "deleted": "Deleted"
+    },
+    "errors": {
+      "noWorkingDir": "Select a working directory"
     }
   },
   "locale": {
@@ -415,6 +445,7 @@
       "p2p": "Encrypted communication",
       "ai": "AI features",
       "session": "Manage sessions",
+      "workspace": "Workspace",
       "logging": "Logging",
       "advanced": "Advanced",
       "experimental": "Experimental"
@@ -866,6 +897,14 @@
       "codexSessionEnabled": "Enable Codex session management",
       "codexSessionEnabledDesc": "Not implemented yet"
     },
+    "workspace": {
+      "title": "Workspace",
+      "description": "AI coding workspace: launch a dev tool in a directory and browse files plus Git changes.",
+      "workspaceEnabled": "Enable workspace",
+      "workspaceEnabledDesc": "Show the Workspace entry below default shells in the new-connection menu; you can open multiple workspaces",
+      "gitWorkspaceEnabled": "Git workspace",
+      "gitWorkspaceEnabledDesc": "Allow switching the right panel to uncommitted Git changes"
+    },
     "experimental": {
       "title": "Experimental",
       "description": "Unstable features that may change or be removed",
@@ -1116,6 +1155,7 @@
     "filesystem": "File system",
     "repoManagement": "Repositories",
     "sessionManagement": "Sessions",
+    "workspace": "Workspace",
     "openChat": "Encrypted communication",
     "openJsSandbox": "Open sandbox",
     "excalidraw": "Excalidraw",

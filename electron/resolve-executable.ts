@@ -3,22 +3,32 @@ import { join } from 'path'
 
 const WIN_PATH_KEY = () => (process.env.Path !== undefined ? 'Path' : 'PATH')
 
-/** Windows 上 GUI 启动的 Electron 常缺少 OpenSSH / Git 等目录，补全主进程 PATH */
-export function augmentWindowsPath(): void {
-  if (process.platform !== 'win32') return
-
+function windowsExtraPathDirs(): string[] {
   const systemRoot = process.env.SystemRoot ?? 'C:\\Windows'
   const programFiles = process.env.ProgramFiles ?? 'C:\\Program Files'
   const programFilesX86 = process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)'
+  const appData = process.env.APPDATA
+  const localAppData = process.env.LOCALAPPDATA
 
-  const extraDirs = [
+  const candidates = [
     join(systemRoot, 'System32', 'OpenSSH'),
     join(systemRoot, 'System32'),
     join(systemRoot, 'Sysnative', 'OpenSSH'),
     join(programFiles, 'Git', 'usr', 'bin'),
     join(programFiles, 'Git', 'bin'),
     join(programFilesX86, 'Git', 'usr', 'bin'),
-  ].filter((dir) => existsSync(dir))
+    ...(appData ? [join(appData, 'npm')] : []),
+    ...(localAppData ? [join(localAppData, 'npm')] : []),
+  ]
+
+  return candidates.filter((dir) => existsSync(dir))
+}
+
+/** Windows 上 GUI 启动的 Electron 常缺少 OpenSSH / Git / npm 全局等目录，补全主进程 PATH */
+export function augmentWindowsPath(): void {
+  if (process.platform !== 'win32') return
+
+  const extraDirs = windowsExtraPathDirs()
 
   const key = WIN_PATH_KEY()
   const current = process.env[key] ?? ''
@@ -81,17 +91,7 @@ export function resolveExecutable(
   }
 
   if (process.platform === 'win32') {
-    const systemRoot = env.SystemRoot ?? process.env.SystemRoot ?? 'C:\\Windows'
-    const programFiles = env.ProgramFiles ?? process.env.ProgramFiles ?? 'C:\\Program Files'
-    const programFilesX86 =
-      env['ProgramFiles(x86)'] ?? process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)'
-
-    const fallbackDirs = [
-      join(systemRoot, 'System32', 'OpenSSH'),
-      join(systemRoot, 'System32'),
-      join(programFiles, 'Git', 'usr', 'bin'),
-      join(programFilesX86, 'Git', 'usr', 'bin'),
-    ]
+    const fallbackDirs = windowsExtraPathDirs()
 
     for (const dir of fallbackDirs) {
       for (const ext of extensions) {

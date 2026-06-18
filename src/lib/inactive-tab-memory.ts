@@ -64,6 +64,18 @@ export function collectActiveTerminalStreamIds(
 ): string[] {
   if (options?.attachPtyMode) {
     const activeTab = activeTabId ? tabs.find((t) => t.id === activeTabId) : undefined
+    if (activeTab?.type === 'workspace' && activeTab.terminalId) {
+      const policy = resolveInactiveTabPolicy(
+        performance,
+        true,
+        tabLastActivityAt[activeTab.id],
+        now,
+      )
+      if (policy.streamActive) {
+        return [activeTab.terminalId]
+      }
+      return []
+    }
     if (
       activeTab?.type === 'terminal' &&
       getSplitPanes(activeTab).length > 1
@@ -84,6 +96,19 @@ export function collectActiveTerminalStreamIds(
 
   const ids: string[] = []
   for (const tab of tabs) {
+    if (tab.type === 'workspace' && tab.terminalId) {
+      const isActive = tab.id === activeTabId
+      const policy = resolveInactiveTabPolicy(
+        performance,
+        isActive,
+        tabLastActivityAt[tab.id],
+        now,
+      )
+      if (policy.streamActive) {
+        ids.push(tab.terminalId)
+      }
+      continue
+    }
     if (tab.type !== 'terminal') continue
     const termIds = getAllTerminalIds(tab)
     if (termIds.length === 0) continue

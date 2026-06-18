@@ -289,6 +289,7 @@ export interface AppSettings {
   reminder: import('./reminder-settings').ReminderSettings
   assistive: import('./assistive-settings').AssistiveSettings
   session: import('./session-settings').SessionSettings
+  workspace: import('./workspace-settings').WorkspaceSettings
 }
 
 export interface ReloadEnvironmentResult {
@@ -474,6 +475,8 @@ export interface ElectronAPI {
     setActiveStream: (id: string | null) => void
     /** 拆分终端：多个 pane 同时推流 */
     setActiveStreams: (ids: string[]) => void
+    /** xterm 订阅 data 后领取推流并取回主进程缓冲 */
+    claimStream: (id: string) => Promise<string>
     /** xterm 处理完一批输出后 ack，驱动主进程闭环反压 */
     ackData: (id: string, length: number) => void
     onData: (cb: (id: string, data: string) => void) => () => void
@@ -740,5 +743,16 @@ export interface ElectronAPI {
     listOpenCodeSessions: (
       dbPath?: string,
     ) => Promise<import('./session-types').ListOpenCodeSessionsResult>
+  }
+  workspace: {
+    getHomeDir: () => Promise<string>
+    listDir: (dirPath: string) => Promise<import('./workspace-types').WorkspaceListDirResponse>
+    pickDirectory: () => Promise<string | null>
+    detectGit: (workDir: string) => Promise<import('./workspace-types').WorkspaceDetectGitResponse>
+    gitStatus: (workDir: string) => Promise<import('./workspace-types').WorkspaceGitStatusResponse>
+    gitDiff: (
+      workDir: string,
+      filePath: string,
+    ) => Promise<import('./workspace-types').WorkspaceGitDiffResponse>
   }
 }

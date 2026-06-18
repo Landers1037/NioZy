@@ -156,6 +156,7 @@ const api: ElectronAPI = {
     isAlive: (id) => ipcRenderer.invoke('terminal:isAlive', id) as Promise<boolean>,
     setActiveStream: (id) => ipcRenderer.send('terminal:setActiveStream', id),
     setActiveStreams: (ids) => ipcRenderer.send('terminal:setActiveStreams', ids),
+    claimStream: (id) => ipcRenderer.invoke('terminal:claimStream', id) as Promise<string>,
     ackData: (id, length) => ipcRenderer.send('terminal:ackData', id, length),
     onData: (cb) =>
       onTerminalData((id, data) => {
@@ -357,6 +358,14 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('session:listClaudeCodeSessions', historyPath),
     listOpenCodeSessions: (dbPath) =>
       ipcRenderer.invoke('session:listOpenCodeSessions', dbPath),
+  },
+  workspace: {
+    getHomeDir: () => ipcRenderer.invoke('workspace:getHomeDir'),
+    listDir: (dirPath) => ipcRenderer.invoke('workspace:listDir', dirPath),
+    pickDirectory: () => ipcRenderer.invoke('workspace:pickDirectory'),
+    detectGit: (workDir) => ipcRenderer.invoke('workspace:detectGit', workDir),
+    gitStatus: (workDir) => ipcRenderer.invoke('workspace:gitStatus', workDir),
+    gitDiff: (workDir, filePath) => ipcRenderer.invoke('workspace:gitDiff', workDir, filePath),
   },
 }
 

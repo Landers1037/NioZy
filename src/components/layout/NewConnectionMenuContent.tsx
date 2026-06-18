@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppWindow, Boxes, Link2, Monitor, Network, Server } from 'lucide-react'
+import { AppWindow, Boxes, Computer, Link2, Monitor, Network, Server } from 'lucide-react'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -7,6 +7,7 @@ import {
 import { ShellMenuIcon } from '@/components/shell/ShellMenuIcon'
 import { useAppStore } from '@/stores/app-store'
 import { createConnection } from '@/lib/terminal-actions'
+import { openWorkspaceTab } from '@/lib/workspace-actions'
 import { BUILTIN_SHELL_TYPES } from '../../../electron/shared/builtin-shells'
 import type { CustomConnection } from '../../../electron/shared/api-types'
 
@@ -23,6 +24,15 @@ export function NewConnectionMenuContent() {
           {t(`settings.connections.shell.${shell}`)}
         </DropdownMenuItem>
       ))}
+      {settings?.workspace.workspaceEnabled === true && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => openWorkspaceTab()}>
+            <Computer className="size-4 shrink-0 text-muted-foreground" />
+            {t('sidebar.workspace')}
+          </DropdownMenuItem>
+        </>
+      )}
       <DropdownMenuSeparator />
       {settings?.connections
         .filter((c) => c.type !== 'vnc' || vncEnabled)

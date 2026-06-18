@@ -17,6 +17,16 @@ export function scheduleTabRemovalSideEffects(
       useInactiveTabActivityStore.getState().clearTabsActivity(removedTabIds)
       useTabGroupStore.getState().removeTabsFromAllGroups(removedTabIds)
 
+      if (removedTabIds.some((id) => id.startsWith('workspace-'))) {
+        void import('@/stores/workspace-store').then((m) => {
+          for (const tabId of removedTabIds) {
+            if (tabId.startsWith('workspace-')) {
+              m.useWorkspaceStore.getState().removeSession(tabId)
+            }
+          }
+        })
+      }
+
       const attachStore = useAttachPtySessionStore.getState()
       attachStore.clearSnapshots(removedTabIds)
       const removedSet = new Set(removedTabIds)

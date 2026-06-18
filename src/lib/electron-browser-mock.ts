@@ -20,6 +20,7 @@ import { DEFAULT_P2P_SETTINGS } from '../../electron/shared/p2p-settings'
 import { DEFAULT_REMINDER_SETTINGS } from '../../electron/shared/reminder-settings'
 import { DEFAULT_ASSISTIVE_SETTINGS } from '../../electron/shared/assistive-settings'
 import { DEFAULT_SESSION_SETTINGS } from '../../electron/shared/session-settings'
+import { DEFAULT_WORKSPACE_SETTINGS } from '../../electron/shared/workspace-settings'
 import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
 
@@ -92,6 +93,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   reminder: { ...DEFAULT_REMINDER_SETTINGS },
   assistive: { ...DEFAULT_ASSISTIVE_SETTINGS },
   session: { ...DEFAULT_SESSION_SETTINGS },
+  workspace: { ...DEFAULT_WORKSPACE_SETTINGS },
 }
 
 let mockVault: VaultVariablePublic[] = []
@@ -664,6 +666,14 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       listClaudeCodeSessions: async () => ({ ok: true as const, groups: [] }),
       listOpenCodeSessions: async () => ({ ok: true as const, groups: [] }),
     },
+    workspace: {
+      getHomeDir: async () => 'C:\\Users\\Developer',
+      listDir: async () => ({ ok: true as const, entries: [] }),
+      pickDirectory: async () => null,
+      detectGit: async () => ({ ok: true as const, isRepo: false }),
+      gitStatus: async () => ({ ok: false as const, error: 'GIT_NOT_FOUND' }),
+      gitDiff: async () => ({ ok: false as const, error: 'Browser preview' }),
+    },
     notes: {
       list: async () => [],
       save: async (input) => ({
@@ -700,6 +710,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       isAlive: async () => true,
       setActiveStream: () => undefined,
       setActiveStreams: () => undefined,
+      claimStream: async () => '',
       ackData: () => undefined,
       onData: (cb) => {
         dataListeners.add(cb)
