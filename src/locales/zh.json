@@ -79,6 +79,23 @@
     "empty": "尚未添加任何 Git 仓库",
     "addFirst": "添加第一个仓库",
     "add": "添加仓库",
+    "clone": "克隆仓库",
+    "cloneTitle": "克隆 Git 仓库",
+    "cloneDesc": "从远程地址克隆仓库到本地目录",
+    "cloneUrlLabel": "Git 仓库地址",
+    "cloneUrlPlaceholder": "https://github.com/user/repo.git 或 git@github.com:user/repo.git",
+    "cloneBranchLabel": "分支",
+    "clonePathLabel": "本地存储路径",
+    "clonePathPlaceholder": "选择目录后将自动拼接仓库名称",
+    "cloneBrowse": "浏览选择目录",
+    "cloneOutputLabel": "克隆输出",
+    "cloneStarting": "正在启动 git clone…",
+    "cloneAction": "开始克隆",
+    "cloning": "克隆中…",
+    "cloneSuccess": "仓库克隆成功",
+    "cloneFailed": "克隆失败",
+    "cloneInvalidUrl": "请输入有效的 Git 仓库地址（https 或 git 协议）",
+    "clonePathRequired": "请指定本地存储路径",
     "refresh": "刷新",
     "view": "查看",
     "pull": "更新",
@@ -133,7 +150,9 @@
     "errors": {
       "GIT_NOT_FOUND": "未找到 Git 命令",
       "NOT_GIT_REPO": "不是 Git 仓库",
-      "PATH_INVALID": "路径无效"
+      "PATH_INVALID": "路径无效",
+      "INVALID_URL": "仓库地址无效",
+      "PATH_EXISTS": "目标路径已存在"
     }
   },
   "session": {
