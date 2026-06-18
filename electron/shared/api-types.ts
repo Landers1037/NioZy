@@ -465,6 +465,7 @@ export interface ElectronAPI {
     write: (id: string, data: string) => void
     resize: (id: string, cols: number, rows: number) => void
     kill: (id: string) => void
+    isAlive: (id: string) => Promise<boolean>
     /** 声明当前向渲染进程推流的终端；非活跃会话输出在主进程有限缓冲 */
     setActiveStream: (id: string | null) => void
     /** 拆分终端：多个 pane 同时推流 */

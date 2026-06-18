@@ -137,6 +137,7 @@ const api: ElectronAPI = {
     write: (id, data) => ipcRenderer.send('terminal:write', id, data),
     resize: (id, cols, rows) => ipcRenderer.send('terminal:resize', id, cols, rows),
     kill: (id) => ipcRenderer.send('terminal:kill', id),
+    isAlive: (id) => ipcRenderer.invoke('terminal:isAlive', id) as Promise<boolean>,
     setActiveStream: (id) => ipcRenderer.send('terminal:setActiveStream', id),
     setActiveStreams: (ids) => ipcRenderer.send('terminal:setActiveStreams', ids),
     onData: (cb) => onTerminalData(cb),

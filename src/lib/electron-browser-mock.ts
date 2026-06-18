@@ -694,6 +694,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
       resize: () => undefined,
       kill: () => undefined,
+      isAlive: async () => true,
       setActiveStream: () => undefined,
       setActiveStreams: () => undefined,
       onData: (cb) => {

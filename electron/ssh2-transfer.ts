@@ -16,6 +16,7 @@ export type ScpProgressCallback = (progress: ScpTransferProgress) => void
 function withSftp<T>(
   profile: SshConnectionProfile,
   enabledKex: string[] | undefined,
+  connectTimeoutSeconds: number | undefined,
   fn: (sftp: SFTPWrapper) => Promise<T>,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -48,7 +49,7 @@ function withSftp<T>(
       reject(err)
     })
 
-    void buildSsh2ConnectConfig(profile, enabledKex)
+    void buildSsh2ConnectConfig(profile, enabledKex, connectTimeoutSeconds)
       .then((config) => {
         scpLog('ssh2 connect', {
           host: config.host,
@@ -159,12 +160,13 @@ export async function listRemoteViaSsh2(
   profile: SshConnectionProfile,
   remotePath: string,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpListResult> {
   logScpProfile('listRemote (ssh2/sftp)', profile)
   const path = remotePath?.trim() || '~'
 
   try {
-    return await withSftp(profile, enabledKex, async (sftp) => {
+    return await withSftp(profile, enabledKex, connectTimeoutSeconds, async (sftp) => {
       const dir = normalizeRemoteDir(path)
       let resolvedPath: string
       try {
@@ -192,6 +194,7 @@ export async function uploadViaSsh2(
   remotePath: string,
   onProgress?: ScpProgressCallback,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpTransferResult> {
   logScpProfile('upload (ssh2/sftp)', profile)
   const fileName = basename(localPath)
@@ -211,7 +214,7 @@ export async function uploadViaSsh2(
   }
   emit(0, total)
   try {
-    await withSftp(profile, enabledKex, async (sftp) => {
+    await withSftp(profile, enabledKex, connectTimeoutSeconds, async (sftp) => {
       await fastPutAsync(sftp, localPath, remotePath, (transferred, stepTotal) => {
         emit(transferred, stepTotal)
       })
@@ -230,6 +233,7 @@ export async function downloadViaSsh2(
   localPath: string,
   onProgress?: ScpProgressCallback,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpTransferResult> {
   logScpProfile('download (ssh2/sftp)', profile)
   const fileName = basename(remotePath)
@@ -238,7 +242,7 @@ export async function downloadViaSsh2(
   }
   emit(0, 0)
   try {
-    await withSftp(profile, enabledKex, async (sftp) => {
+    await withSftp(profile, enabledKex, connectTimeoutSeconds, async (sftp) => {
       await fastGetAsync(sftp, remotePath, localPath, (transferred, stepTotal) => {
         emit(transferred, stepTotal)
       })

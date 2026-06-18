@@ -1742,8 +1742,16 @@ ipcMain.handle(
       afterTransfer: Boolean(options?.afterTransfer),
       ...scpProfileForLog(profile),
     })
-    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
-    return sshService.listRemoteDirectoryWithRetry(profile, remotePath, options, enabledKex)
+    const sshOpts = settingsStore.get().ssh
+    const enabledKex = sshOpts.enabledKexAlgorithms
+    const connectTimeoutSeconds = sshOpts.connectTimeoutSeconds
+    return sshService.listRemoteDirectoryWithRetry(
+      profile,
+      remotePath,
+      options,
+      enabledKex,
+      connectTimeoutSeconds,
+    )
   },
 )
 ipcMain.handle(
@@ -1755,8 +1763,15 @@ ipcMain.handle(
     const sendProgress = (progress: ScpTransferProgress) => {
       event.sender.send('ssh:transferProgress', progress)
     }
-    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
-    return sshService.scpUpload(profile, localPath, remotePath, sendProgress, enabledKex)
+    const sshOpts = settingsStore.get().ssh
+    return sshService.scpUpload(
+      profile,
+      localPath,
+      remotePath,
+      sendProgress,
+      sshOpts.enabledKexAlgorithms,
+      sshOpts.connectTimeoutSeconds,
+    )
   },
 )
 ipcMain.handle(
@@ -1768,8 +1783,15 @@ ipcMain.handle(
     const sendProgress = (progress: ScpTransferProgress) => {
       event.sender.send('ssh:transferProgress', progress)
     }
-    const enabledKex = settingsStore.get().ssh.enabledKexAlgorithms
-    return sshService.scpDownload(profile, remotePath, localPath, sendProgress, enabledKex)
+    const sshOpts = settingsStore.get().ssh
+    return sshService.scpDownload(
+      profile,
+      remotePath,
+      localPath,
+      sendProgress,
+      sshOpts.enabledKexAlgorithms,
+      sshOpts.connectTimeoutSeconds,
+    )
   },
 )
 
@@ -1804,6 +1826,7 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
           const session = await terminalService.createSsh2({
             profile,
             enabledKex: sshSettings.enabledKexAlgorithms,
+            connectTimeoutSeconds: sshSettings.connectTimeoutSeconds,
             name: conn.name,
             cols: options.cols,
             rows: options.rows,
@@ -1826,6 +1849,7 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
         conn,
         (text) => vaultStore.resolveText(text),
         options.sshDynamicPasswordSuffix,
+        sshSettings.connectTimeoutSeconds,
       )
     }
   }
@@ -1887,6 +1911,7 @@ ipcMain.on('terminal:resize', (_, id: string, cols: number, rows: number) =>
   terminalService.resize(id, cols, rows),
 )
 ipcMain.on('terminal:kill', (_, id: string) => terminalKillQueue.enqueue(id))
+ipcMain.handle('terminal:isAlive', (_, id: string) => terminalService.isAlive(id))
 ipcMain.on('terminal:setActiveStream', (_, id: string | null) => {
   terminalService.setActiveStream(id)
 })

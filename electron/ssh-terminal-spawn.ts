@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { app } from 'electron'
 import type { CustomConnection, TerminalCreateOptions } from './shared/api-types'
 import { inferSshAuth, resolveSshConnectionPassword } from './ssh-auth'
+import { normalizeConnectTimeoutSeconds } from './shared/ssh-settings'
 
 const MAIN_DIR =
   typeof import.meta.dirname === 'string'
@@ -48,6 +49,7 @@ export function applySshConnectionToTerminalOptions(
   conn: CustomConnection,
   resolveText: (text: string) => string,
   dynamicPasswordSuffix?: string,
+  connectTimeoutSeconds?: number,
 ): TerminalCreateOptions {
   const auth = inferSshAuth(conn)
   const host = resolveText((conn.sshHost ?? conn.command).trim())
@@ -55,6 +57,8 @@ export function applySshConnectionToTerminalOptions(
   const port = conn.sshPort ?? 22
 
   const args: string[] = []
+  const connectTimeout = normalizeConnectTimeoutSeconds(connectTimeoutSeconds)
+  args.push('-o', `ConnectTimeout=${connectTimeout}`)
   if (port !== 22) args.push('-p', String(port))
 
   const env: Record<string, string> = { ...(options.env ?? {}) }

@@ -4,7 +4,9 @@ import { X } from 'lucide-react'
 import type { AppTab } from '@/stores/app-store'
 import { TerminalView } from '@/components/terminal/TerminalView'
 import { WterminalView } from '@/components/terminal/WterminalView'
+import { SshDisconnectedPane } from '@/components/terminal/SshDisconnectedPane'
 import { useAppStore } from '@/stores/app-store'
+import { isSshTerminalTab } from '@/lib/ssh-connection'
 import { getActiveSplitIndex, getSplitPanes } from '@/lib/terminal-tab-utils'
 import { closeSplitPane, setActiveSplitPane } from '@/lib/terminal-split-actions'
 import { cn } from '@/lib/utils'
@@ -22,6 +24,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
   )
   const useWterm = terminalEmulator === 'wterm'
   const superPowerSaving = useAppStore((s) => s.settings?.performance.superPowerSaving === true)
+  const sshDisconnectedTerminalIds = useAppStore((s) => s.sshDisconnectedTerminalIds)
   const TerminalComponent = useWterm ? WterminalView : TerminalView
   const panes = getSplitPanes(tab)
   const activeIndex = getActiveSplitIndex(tab)
@@ -38,6 +41,8 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
       {panes.map((pane, index) => {
         const isPaneActive = index === activeIndex
         const showClose = panes.length > 1 && index > 0
+        const paneDisconnected = !!sshDisconnectedTerminalIds[pane.terminalId]
+        const showDisconnectedPane = isSshTerminalTab(tab) && paneDisconnected
 
         return (
           <div
@@ -62,11 +67,15 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
                 <X className="size-3.5" />
               </button>
             )}
-            <TerminalComponent
-              tab={paneTabs[index]}
-              preferDomRenderer={!useWterm && (panes.length > 1 || superPowerSaving)}
-              isFocused={isTabActive && isPaneActive}
-            />
+            {showDisconnectedPane ? (
+              <SshDisconnectedPane tab={paneTabs[index]} terminalId={pane.terminalId} />
+            ) : (
+              <TerminalComponent
+                tab={paneTabs[index]}
+                preferDomRenderer={!useWterm && (panes.length > 1 || superPowerSaving)}
+                isFocused={isTabActive && isPaneActive}
+              />
+            )}
           </div>
         )
       })}

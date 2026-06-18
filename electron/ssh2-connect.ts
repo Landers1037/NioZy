@@ -2,19 +2,19 @@ import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { Client, type ConnectConfig, type KexAlgorithm } from 'ssh2'
 import { resolveEnabledKexAlgorithms } from './shared/ssh-kex-algorithms'
+import { normalizeConnectTimeoutSeconds } from './shared/ssh-settings'
 import type { SshConnectionProfile } from './shared/ssh-types'
-
-export const SSH2_CONNECT_TIMEOUT_MS = 20_000
 
 export async function buildSsh2ConnectConfig(
   profile: SshConnectionProfile,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ConnectConfig> {
   const config: ConnectConfig = {
     host: profile.host,
     port: profile.port ?? 22,
     username: profile.user,
-    readyTimeout: SSH2_CONNECT_TIMEOUT_MS,
+    readyTimeout: normalizeConnectTimeoutSeconds(connectTimeoutSeconds) * 1000,
     tryKeyboard: Boolean(profile.password),
     algorithms: {
       kex: resolveEnabledKexAlgorithms(enabledKex) as KexAlgorithm[],
