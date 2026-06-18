@@ -428,6 +428,13 @@ function requestOpenSettingsFromTray(): void {
   sendToRenderer(mainWindow, 'app:openSettings')
 }
 
+function requestOpenDevToolsFromTray(): void {
+  showMainWindow()
+  if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+    mainWindow.webContents.openDevTools({ mode: 'detach' })
+  }
+}
+
 function notifyRendererSettingsChanged(): void {
   sendToRenderer(mainWindow, 'settings:changed', settingsStore.get())
 }
@@ -435,6 +442,7 @@ function notifyRendererSettingsChanged(): void {
 type TrayMenuLabels = {
   newTerminal: string
   openSettings: string
+  openDevTools: string
   showApp: string
   enableDesktopPet: string
   disableDesktopPet: string
@@ -447,6 +455,7 @@ function getTrayMenuLabels(): TrayMenuLabels {
     return {
       newTerminal: 'New terminal',
       openSettings: 'Open settings',
+      openDevTools: 'Open DevTools',
       showApp: 'Show NioZy',
       enableDesktopPet: 'Enable desktop pet',
       disableDesktopPet: 'Disable desktop pet',
@@ -457,6 +466,7 @@ function getTrayMenuLabels(): TrayMenuLabels {
     return {
       newTerminal: '新しいターミナル',
       openSettings: '設定を開く',
+      openDevTools: 'DevTools を開く',
       showApp: 'NioZy を表示',
       enableDesktopPet: 'デスクトップペットをオン',
       disableDesktopPet: 'デスクトップペットをオフ',
@@ -466,6 +476,7 @@ function getTrayMenuLabels(): TrayMenuLabels {
   return {
     newTerminal: '新建终端',
     openSettings: '打开设置',
+    openDevTools: '打开 DevTools',
     showApp: '显示 NioZy',
     enableDesktopPet: '打开桌面宠物',
     disableDesktopPet: '关闭桌面宠物',
@@ -492,6 +503,9 @@ function buildTrayContextMenu(): Menu {
   return Menu.buildFromTemplate([
     { label: labels.newTerminal, click: () => requestNewTerminalFromTray() },
     { label: labels.openSettings, click: () => requestOpenSettingsFromTray() },
+    ...(isDev
+      ? [{ label: labels.openDevTools, click: () => requestOpenDevToolsFromTray() }]
+      : []),
     { type: 'separator' },
     {
       label: petEnabled ? labels.disableDesktopPet : labels.enableDesktopPet,
