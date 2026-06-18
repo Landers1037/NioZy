@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useUiClasses } from '@/lib/ui-style'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI, isElectron } from '@/lib/electron-client'
-import { resumeClaudeCodeSession } from '@/lib/session-actions'
+import { resumeClaudeCodeSession, resumeOpenCodeSession } from '@/lib/session-actions'
 import { SESSION_TOOL_ICONS } from '@/components/icons/session-tool-icons'
 import type {
   ClaudeCodeSessionEntry,
@@ -17,6 +17,7 @@ import type {
 import type { SessionSettings } from '../../../electron/shared/session-settings'
 
 const SESSION_TOOLS: SessionTool[] = ['claudeCode', 'openCode', 'piAgent', 'cline', 'codex']
+const IMPLEMENTED_TOOLS = new Set<SessionTool>(['claudeCode', 'openCode'])
 
 function isToolEnabled(tool: SessionTool, session: SessionSettings | undefined): boolean {
   if (!session) return false
@@ -165,8 +166,6 @@ export function SessionManagementPanel() {
   const settings = useAppStore((s) => s.settings)
   const sessionSettings = settings?.session
 
-  const claudeEnabled = sessionSettings?.claudeCodeSessionEnabled === true
-
   const [activeTool, setActiveTool] = useState<SessionTool>(() =>
     firstEnabledTool(sessionSettings),
   )
@@ -177,18 +176,25 @@ export function SessionManagementPanel() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [resumingId, setResumingId] = useState<string | null>(null)
 
+  const activeToolEnabled = isToolEnabled(activeTool, sessionSettings)
+  const activeToolImplemented = IMPLEMENTED_TOOLS.has(activeTool)
+
   const loadSessions = useCallback(async () => {
-    if (!isElectron() || activeTool !== 'claudeCode' || !claudeEnabled) {
+    if (!isElectron() || !activeToolImplemented || !activeToolEnabled) {
       setGroups([])
       setLoadError(null)
       return
     }
+
     setLoading(true)
     setLoadError(null)
     try {
-      const result = await getElectronAPI().session.listClaudeCodeSessions(
-        sessionSettings?.claudeCodeHistoryPath,
-      )
+      const api = getElectronAPI().session
+      const result =
+        activeTool === 'openCode'
+          ? await api.listOpenCodeSessions(sessionSettings?.openCodeDbPath)
+          : await api.listClaudeCodeSessions(sessionSettings?.claudeCodeHistoryPath)
+
       if (!result.ok) {
         setGroups([])
         setLoadError(
@@ -206,7 +212,14 @@ export function SessionManagementPanel() {
     } finally {
       setLoading(false)
     }
-  }, [activeTool, claudeEnabled, sessionSettings?.claudeCodeHistoryPath, t])
+  }, [
+    activeTool,
+    activeToolEnabled,
+    activeToolImplemented,
+    sessionSettings?.claudeCodeHistoryPath,
+    sessionSettings?.openCodeDbPath,
+    t,
+  ])
 
   useEffect(() => {
     void loadSessions()
@@ -226,7 +239,11 @@ export function SessionManagementPanel() {
   const handleResume = async (session: ClaudeCodeSessionEntry, project: string) => {
     setResumingId(session.sessionId)
     try {
-      await resumeClaudeCodeSession(session.sessionId, project || undefined)
+      if (activeTool === 'openCode') {
+        await resumeOpenCodeSession(session.sessionId, project || undefined)
+      } else {
+        await resumeClaudeCodeSession(session.sessionId, project || undefined)
+      }
     } finally {
       setResumingId(null)
     }
@@ -251,7 +268,7 @@ export function SessionManagementPanel() {
       <div className="flex flex-col gap-3 border-b border-border px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-base font-app-bold">{t('session.title')}</h1>
-          {activeTool === 'claudeCode' && claudeEnabled && (
+          {activeToolImplemented && activeToolEnabled && (
             <Button variant="outline" size="sm" onClick={() => void loadSessions()} disabled={loading}>
               <RefreshCw className={cn('size-3.5', loading && 'animate-spin')} />
               {t('session.refresh')}
@@ -303,7 +320,7 @@ export function SessionManagementPanel() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
-        {activeTool !== 'claudeCode' || !claudeEnabled ? (
+        {!activeToolImplemented || !activeToolEnabled ? (
           <p className="text-sm text-muted-foreground">{t('session.toolNotEnabled')}</p>
         ) : loading ? (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">

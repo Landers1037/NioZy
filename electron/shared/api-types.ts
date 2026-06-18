@@ -729,5 +729,8 @@ export interface ElectronAPI {
     listClaudeCodeSessions: (
       historyPath?: string,
     ) => Promise<import('./session-types').ListClaudeCodeSessionsResult>
+    listOpenCodeSessions: (
+      dbPath?: string,
+    ) => Promise<import('./session-types').ListOpenCodeSessionsResult>
   }
 }

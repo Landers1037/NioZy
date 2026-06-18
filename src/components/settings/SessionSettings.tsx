@@ -13,7 +13,7 @@ import {
   CodexIcon,
   OpenCodeIcon,
 } from '@/components/icons/session-tool-icons'
-import { DEFAULT_CLAUDE_CODE_HISTORY_PATH } from '../../../electron/shared/session-settings'
+import { DEFAULT_CLAUDE_CODE_HISTORY_PATH, DEFAULT_OPEN_CODE_DB_PATH } from '../../../electron/shared/session-settings'
 
 export function SessionSettings() {
   const { t } = useTranslation()
@@ -25,10 +25,16 @@ export function SessionSettings() {
   const session = settings.session
   const historyPathFocusRef = useRef(session.claudeCodeHistoryPath)
   const [historyPathDraft, setHistoryPathDraft] = useState(session.claudeCodeHistoryPath)
+  const openCodeDbPathFocusRef = useRef(session.openCodeDbPath)
+  const [openCodeDbPathDraft, setOpenCodeDbPathDraft] = useState(session.openCodeDbPath)
 
   useEffect(() => {
     setHistoryPathDraft(session.claudeCodeHistoryPath)
   }, [session.claudeCodeHistoryPath])
+
+  useEffect(() => {
+    setOpenCodeDbPathDraft(session.openCodeDbPath)
+  }, [session.openCodeDbPath])
 
   const patchSession = (partial: Partial<typeof session>) =>
     patchSettings({
@@ -54,6 +60,18 @@ export function SessionSettings() {
       )
     },
     [patchSession, session.claudeCodeHistoryPath, t],
+  )
+
+  const commitOpenCodeDbPath = useCallback(
+    (raw: string) => {
+      const next = raw.trim() || DEFAULT_OPEN_CODE_DB_PATH
+      setOpenCodeDbPathDraft(next)
+      if (next === session.openCodeDbPath) return
+      void patchSession({ openCodeDbPath: next }).catch(() =>
+        toast.error(t('settings.vault.saveFailed')),
+      )
+    },
+    [patchSession, session.openCodeDbPath, t],
   )
 
   return (
@@ -119,8 +137,37 @@ export function SessionSettings() {
           description={t('settings.session.openCodeSessionEnabledDesc')}
           row
         >
-          <Switch checked={false} disabled />
+          <Switch
+            checked={session.openCodeSessionEnabled === true}
+            onCheckedChange={(enabled) => {
+              if (enabled === session.openCodeSessionEnabled) return
+              patchSession({ openCodeSessionEnabled: enabled })
+            }}
+          />
         </SettingField>
+
+        {session.openCodeSessionEnabled && (
+          <SettingField
+            icon={History}
+            label={t('settings.session.openCodeDbPath')}
+            description={t('settings.session.openCodeDbPathDesc')}
+          >
+            <Input
+              className="max-w-xl font-mono text-sm"
+              value={openCodeDbPathDraft}
+              placeholder={DEFAULT_OPEN_CODE_DB_PATH}
+              onFocus={() => {
+                openCodeDbPathFocusRef.current = session.openCodeDbPath
+              }}
+              onChange={(e) => setOpenCodeDbPathDraft(e.target.value)}
+              onBlur={(e) => {
+                const next = e.target.value.trim() || DEFAULT_OPEN_CODE_DB_PATH
+                if (next === openCodeDbPathFocusRef.current) return
+                commitOpenCodeDbPath(next)
+              }}
+            />
+          </SettingField>
+        )}
 
         <SettingField
           icon={Bot}
