@@ -3,6 +3,9 @@ import { randomUUID } from 'crypto'
 import { ensureConfigDir, getVaultFilePath } from './config-paths'
 import { decryptSecret, encryptSecret } from './vault-crypto'
 import { logErrorPayload, vaultLog } from './app-log'
+import { resolveTextPure } from './shared/vault-resolve-pure'
+import { runMainWorkerTask } from './workers/main-worker-pool'
+import type { VaultResolveBatchResult } from './workers/main-worker-types'
 
 export type VaultVariableType = 'plain' | 'secret'
 
@@ -107,31 +110,51 @@ export class VaultStore {
 
   resolveText(text: string): string {
     this.load()
-    return text.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (_, name: string) => {
-      const variable = this.variables.find((v) => v.key === name)
-      if (!variable) {
-        vaultLog.warn('Variable not found during resolve', { name })
-        return `\${${name}}`
-      }
-      if (variable.type === 'plain') return variable.value
-      try {
-        return decryptSecret(variable.value)
-      } catch (err) {
-        vaultLog.error('Failed to decrypt variable during resolve', {
-          name,
-          ...logErrorPayload(err),
-        })
-        return `\${${name}}`
-      }
-    })
+    return resolveTextPure(text, this.buildPlainVariableMap())
   }
 
-  resolveEnv(env: Record<string, string>): Record<string, string> {
+  async resolveTexts(texts: string[]): Promise<string[]> {
+    this.load()
+    if (texts.length === 0) return []
+    if (texts.length === 1) return [this.resolveText(texts[0]!)]
+    const variables = this.buildPlainVariableMap()
+    const { texts: resolved } = await runMainWorkerTask<VaultResolveBatchResult>(
+      'vault:resolveBatch',
+      { texts, variables },
+    )
+    return resolved
+  }
+
+  async resolveEnv(env: Record<string, string>): Promise<Record<string, string>> {
+    this.load()
+    const keys = Object.keys(env)
+    if (keys.length === 0) return {}
+    const texts = keys.map((key) => env[key]!)
+    const resolved = await this.resolveTexts(texts)
     const out: Record<string, string> = {}
-    for (const [k, v] of Object.entries(env)) {
-      out[k] = this.resolveText(v)
-    }
+    keys.forEach((key, index) => {
+      out[key] = resolved[index]!
+    })
     return out
+  }
+
+  private buildPlainVariableMap(): Record<string, string> {
+    const variables: Record<string, string> = {}
+    for (const variable of this.variables) {
+      if (variable.type === 'plain') {
+        variables[variable.key] = variable.value
+        continue
+      }
+      try {
+        variables[variable.key] = decryptSecret(variable.value)
+      } catch (err) {
+        vaultLog.error('Failed to decrypt variable for resolve map', {
+          name: variable.key,
+          ...logErrorPayload(err),
+        })
+      }
+    }
+    return variables
   }
 
   private persist(): void {

@@ -13,6 +13,7 @@ import type {
   AiSkillSummary,
 } from './shared/ai-context-types'
 import { sanitizeAiRuleId } from './shared/ai-context-types'
+import { runMainWorkerTask } from './workers/main-worker-pool'
 
 const RULE_FILE_EXT = '.md'
 const SKILL_FILE_NAME = 'SKILL.md'
@@ -27,18 +28,6 @@ function skillDirPath(id: string): string {
 
 function skillFilePath(id: string): string {
   return join(skillDirPath(id), SKILL_FILE_NAME)
-}
-
-function parseSkillFrontmatter(content: string): { name?: string; description?: string } {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-  if (!match) return {}
-  const block = match[1]
-  const name = block.match(/^name:\s*(.+)$/m)?.[1]?.trim().replace(/^['"]|['"]$/g, '')
-  const description = block
-    .match(/^description:\s*(.+)$/m)?.[1]
-    ?.trim()
-    .replace(/^['"]|['"]$/g, '')
-  return { name, description }
 }
 
 async function listRuleIds(): Promise<string[]> {
@@ -87,44 +76,60 @@ export async function deleteAiRule(id: string): Promise<void> {
 export async function listAiSkills(): Promise<AiSkillSummary[]> {
   await ensureAiDirs()
   const entries = await readdir(getAiSkillsDir(), { withFileTypes: true })
-  const skills: AiSkillSummary[] = []
+  const skillFiles = (
+    await Promise.all(
+      entries
+        .filter((entry) => entry.isDirectory())
+        .map(async (entry) => {
+          const id = entry.name
+          const skillPath = skillFilePath(id)
+          if (!existsSync(skillPath)) return null
+          const content = await readFile(skillPath, 'utf-8')
+          return { id, content }
+        }),
+    )
+  ).filter((file): file is { id: string; content: string } => file !== null)
 
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue
-    const id = entry.name
-    const skillPath = skillFilePath(id)
-    if (!existsSync(skillPath)) continue
-    const content = await readFile(skillPath, 'utf-8')
-    const meta = parseSkillFrontmatter(content)
-    skills.push({
-      id,
-      name: meta.name || id,
-      description: meta.description,
-    })
-  }
-
-  return skills.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+  return runMainWorkerTask<AiSkillSummary[]>('ai:assembleSkillSummaries', { skillFiles })
 }
 
 export async function buildAiChatContext(ruleStates: AiRuleStates): Promise<AiChatContextPayload> {
   const ruleIds = await listRuleIds()
-  const rules: AiChatContextPayload['rules'] = []
-  for (const id of ruleIds) {
-    if (ruleStates[id] !== true) continue
-    const content = await readAiRule(id)
-    if (content?.trim()) rules.push({ id, content })
-  }
+  const enabledIds = ruleIds.filter((id) => ruleStates[id] === true)
 
-  const skillSummaries = await listAiSkills()
-  const skills: AiChatContextPayload['skills'] = []
-  for (const skill of skillSummaries) {
-    const content = await readFile(skillFilePath(skill.id), 'utf-8')
-    if (content.trim()) {
-      skills.push({ id: skill.id, name: skill.name, content })
-    }
-  }
+  const [ruleFiles, skillEntries] = await Promise.all([
+    Promise.all(
+      enabledIds.map(async (id) => {
+        const content = await readAiRule(id)
+        return { id, content: content ?? '' }
+      }),
+    ),
+    (async () => {
+      await ensureAiDirs()
+      const entries = await readdir(getAiSkillsDir(), { withFileTypes: true })
+      return Promise.all(
+        entries
+          .filter((entry) => entry.isDirectory())
+          .map(async (entry) => {
+            const id = entry.name
+            const path = skillFilePath(id)
+            if (!existsSync(path)) return null
+            const content = await readFile(path, 'utf-8')
+            return { id, content }
+          }),
+      )
+    })(),
+  ])
 
-  return { rules, skills }
+  const skillFiles = skillEntries.filter(
+    (file): file is { id: string; content: string } => file !== null,
+  )
+
+  return runMainWorkerTask<AiChatContextPayload>('ai:assembleChatContext', {
+    ruleFiles,
+    skillFiles,
+    ruleStates,
+  })
 }
 
 export async function ensureAiSkillsDir(): Promise<string> {

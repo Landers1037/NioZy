@@ -1159,16 +1159,24 @@ ipcMain.handle('settings:importFromFile', async () => {
     ? await dialog.showOpenDialog(mainWindow, openOptions)
     : await dialog.showOpenDialog(openOptions)
   if (canceled || !filePaths[0]) return { ok: false, canceled: true }
-  let parsed: unknown
+  let content: string
   try {
-    const content = await readFile(filePaths[0], 'utf8')
-    parsed = JSON.parse(content) as unknown
-  } catch (err) {
-    if (err instanceof SyntaxError) return { ok: false, error: 'INVALID_JSON' as const }
+    content = await readFile(filePaths[0], 'utf8')
+  } catch {
     return { ok: false, error: 'READ_FAILED' as const }
   }
   try {
-    const updated = settingsStore.importFromExport(parsed)
+    const { runMainWorkerTask } = await import('../workers/main-worker-pool')
+    const parsed = await runMainWorkerTask<{ ok: true; body: Record<string, unknown> } | { ok: false; error: string }>(
+      'settings:parseImport',
+      { content },
+    )
+    if (!parsed.ok) {
+      if (parsed.error === 'INVALID_JSON') return { ok: false, error: 'INVALID_JSON' as const }
+      if (parsed.error === 'TOO_LARGE') return { ok: false, error: 'READ_FAILED' as const }
+      return { ok: false, error: 'INVALID_FORMAT' as const }
+    }
+    const updated = settingsStore.importFromExport(parsed.body)
     settingsLog.info('Settings imported from file')
     await syncAllSettingsSideEffects()
     return { ok: true, settings: updated }
@@ -1556,7 +1564,7 @@ ipcMain.handle('repo:getCommitFileDiff', (_, id: string, sha: string, filePath: 
 })
 ipcMain.handle('repo:getById', (_, id: string) => gitService.getRepo(id) ?? null)
 
-ipcMain.handle('session:listClaudeCodeSessions', (_, historyPath?: string) => {
+ipcMain.handle('session:listClaudeCodeSessions', async (_, historyPath?: string) => {
   const settings = settingsStore.get()
   const path =
     typeof historyPath === 'string' && historyPath.trim()
@@ -1807,7 +1815,7 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
     ...options,
     command: options.command ? vaultStore.resolveText(options.command) : undefined,
     args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
-    env: options.env ? vaultStore.resolveEnv(options.env) : undefined,
+    env: options.env ? await vaultStore.resolveEnv(options.env) : undefined,
   }
   let sshConn: CustomConnection | undefined
   if (options.sshConnectionId) {
@@ -1902,6 +1910,10 @@ ipcMain.handle('vault:remove', async (_, id: string) => {
 ipcMain.handle('vault:resolve', (_, text: string) => {
   vaultStore.load()
   return vaultStore.resolveText(text)
+})
+ipcMain.handle('vault:resolveBatch', async (_, texts: string[]) => {
+  vaultStore.load()
+  return vaultStore.resolveTexts(texts)
 })
 ipcMain.on('terminal:write', (_, id: string, data: string) => {
   statisticsStore.recordCommandFromTerminalWrite(data)

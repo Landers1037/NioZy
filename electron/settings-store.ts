@@ -27,6 +27,7 @@ import {
   type TerminalCursorStyle,
 } from './shared/terminal-cursor'
 import { DEFAULT_SHORTCUTS, type AppShortcuts } from './shared/shortcuts'
+import { parseSettingsExportBody } from './shared/settings-import-parse'
 import { DEFAULT_SSH_SETTINGS, normalizeSshSettings } from './shared/ssh-settings'
 import { DEFAULT_SHELL_SETTINGS, normalizeShellSettings } from './shared/shell-settings'
 import {
@@ -415,21 +416,6 @@ function buildAppSettingsFromStored(
     assistive: normalizeAssistiveSettings((stored as Partial<AppSettings>).assistive),
     session: normalizeSessionSettings((stored as Partial<AppSettings>).session),
   }
-}
-
-function parseSettingsExportBody(data: unknown): Record<string, unknown> {
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new Error('INVALID_FORMAT')
-  }
-  const raw = data as Record<string, unknown>
-  if (
-    raw.settings &&
-    typeof raw.settings === 'object' &&
-    !Array.isArray(raw.settings)
-  ) {
-    return raw.settings as Record<string, unknown>
-  }
-  return raw
 }
 
 export class SettingsStore {

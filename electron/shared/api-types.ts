@@ -496,6 +496,7 @@ export interface ElectronAPI {
     }) => Promise<VaultVariablePublic>
     remove: (id: string) => Promise<void>
     resolve: (text: string) => Promise<string>
+    resolveBatch: (texts: string[]) => Promise<string[]>
   }
   shell: {
     openExternal: (url: string) => void

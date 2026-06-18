@@ -158,6 +158,7 @@ const api: ElectronAPI = {
     save: (input) => ipcRenderer.invoke('vault:save', input),
     remove: (id) => ipcRenderer.invoke('vault:remove', id),
     resolve: (text) => ipcRenderer.invoke('vault:resolve', text),
+    resolveBatch: (texts) => ipcRenderer.invoke('vault:resolveBatch', texts),
   },
   shell: {
     openExternal: (url) => ipcRenderer.send('shell:openExternal', url),

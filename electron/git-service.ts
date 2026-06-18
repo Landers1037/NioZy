@@ -4,7 +4,6 @@ import { basename, join, resolve } from 'path'
 import type { BrowserWindow } from 'electron'
 import { dialog } from 'electron'
 import { resolveExecutable } from './resolve-executable'
-import { GIT_GRAPH_ROW_TYPE } from './shared/repo-types'
 import { isValidGitCloneUrl } from './shared/git-url'
 import { gitGraphDebug, summarizeGraphRows } from './shared/git-graph-debug'
 import type {
@@ -26,10 +25,11 @@ import type {
   ManagedRepoSummary,
 } from './shared/repo-types'
 import { RepoStore } from './repo-store'
+import { GIT_FIELD_SEP, GIT_RECORD_SEP } from './shared/git-parse'
+import { runMainWorkerTask } from './workers/main-worker-pool'
+import type { GitParseGraphLogResult } from './workers/main-worker-types'
 
 const GRAPH_PAGE_SIZE = 100
-const RECORD_SEP = '\x1e'
-const FIELD_SEP = '\x1f'
 
 function runGitStreaming(
   gitPath: string,
@@ -139,74 +139,6 @@ function sortBranches(a: GitBranchInfo, b: GitBranchInfo): number {
   return a.name.localeCompare(b.name)
 }
 
-function parseNameStatusLine(line: string): { status: GitCommitDetail['files'][0]['status']; path: string; oldPath?: string } | null {
-  const trimmed = line.trim()
-  if (!trimmed) return null
-  const tabParts = trimmed.split('\t')
-  const code = tabParts[0] ?? ''
-  if (code.startsWith('R') || code.startsWith('C')) {
-    if (tabParts.length < 3) return null
-    return {
-      status: code.startsWith('R') ? 'renamed' : 'copied',
-      oldPath: tabParts[1],
-      path: tabParts[2]!,
-    }
-  }
-  if (tabParts.length < 2) return null
-  const path = tabParts[1]!
-  switch (code) {
-    case 'A':
-      return { status: 'added', path }
-    case 'D':
-      return { status: 'deleted', path }
-    case 'M':
-      return { status: 'modified', path }
-    default:
-      return { status: 'unknown', path }
-  }
-}
-
-function parseNumstatLine(line: string): { path: string; additions: number; deletions: number } | null {
-  const trimmed = line.trim()
-  if (!trimmed) return null
-  const match = trimmed.match(/^(\d+|-)\t(\d+|-)\t(.+)$/)
-  if (!match) return null
-  const [, addRaw, delRaw, filePath] = match
-  return {
-    path: filePath!,
-    additions: addRaw === '-' ? 0 : Number(addRaw),
-    deletions: delRaw === '-' ? 0 : Number(delRaw),
-  }
-}
-function parseCommitType(parentCount: number): GitGraphRow['type'] {
-  if (parentCount >= 2) return GIT_GRAPH_ROW_TYPE.merge
-  return GIT_GRAPH_ROW_TYPE.commit
-}
-
-function parseGraphLog(text: string): GitGraphRow[] {
-  const rows: GitGraphRow[] = []
-  for (const line of text.split('\n')) {
-    if (!line.trim()) continue
-    const parts = line.split(FIELD_SEP)
-    if (parts.length < 6) continue
-    const [sha, parentsRaw, author, email, dateRaw, subject, body = ''] = parts
-    const parents = parentsRaw ? parentsRaw.split(' ').filter(Boolean) : []
-    const date = Number(dateRaw) * 1000
-    if (!sha || !Number.isFinite(date)) continue
-    const message = body ? `${subject}\n\n${body}`.trim() : subject
-    rows.push({
-      sha,
-      parents,
-      author,
-      email,
-      date,
-      message,
-      type: parseCommitType(parents.length),
-    })
-  }
-  return rows
-}
-
 export class GitService {
   private repoStore = new RepoStore()
   private customGitPath = ''
@@ -310,8 +242,8 @@ export class GitService {
     }
     let lastCommitAt: number | null = null
     let lastCommitMessage: string | null = null
-    if (logResult.ok && logResult.stdout.includes(FIELD_SEP)) {
-      const [ts, subject] = logResult.stdout.trim().split(FIELD_SEP)
+    if (logResult.ok && logResult.stdout.includes(GIT_FIELD_SEP)) {
+      const [ts, subject] = logResult.stdout.trim().split(GIT_FIELD_SEP)
       const n = Number(ts)
       if (Number.isFinite(n)) lastCommitAt = n * 1000
       lastCommitMessage = subject?.trim() || null
@@ -538,11 +470,11 @@ export class GitService {
     const repo = this.repoStore.findById(repoId)
     if (!repo) return { error: 'REPO_NOT_FOUND' }
 
-    const format = ['%H', '%P', '%an', '%ae', '%ct', '%s', '%b'].join(FIELD_SEP)
+    const format = ['%H', '%P', '%an', '%ae', '%ct', '%s', '%b'].join(GIT_FIELD_SEP)
 
     const args = [
       'log',
-      `--pretty=format:${format}${RECORD_SEP}`,
+      `--pretty=format:${format}${GIT_RECORD_SEP}`,
       '-n',
       String(GRAPH_PAGE_SIZE + 1),
       '--topo-order',
@@ -557,10 +489,11 @@ export class GitService {
     const result = await runGit(gitPath, args, repo.path)
     if (!result.ok) return { error: result.error }
 
-    let parsed = parseGraphLog(result.stdout.replaceAll(RECORD_SEP, '\n'))
-    if (cursor?.sha) {
-      parsed = parsed.filter((row) => row.sha !== cursor.sha)
-    }
+    const { rows: parsed } = await runMainWorkerTask<GitParseGraphLogResult>('git:parseGraphLog', {
+      stdout: result.stdout,
+      recordSep: GIT_RECORD_SEP,
+      cursorSha: cursor?.sha,
+    })
 
     const hasMore = parsed.length > GRAPH_PAGE_SIZE
     const rows = parsed.slice(0, GRAPH_PAGE_SIZE)
@@ -603,63 +536,19 @@ export class GitService {
     )
     if (!showResult.ok) return { error: showResult.error }
 
-    const parts = showResult.stdout.trim().split(FIELD_SEP)
-    if (parts.length < 6) return { error: 'PARSE_FAILED' }
-    const [fullSha, shortSha, author, email, dateRaw, subject, body = '', parentsRaw = ''] = parts
-    const date = Number(dateRaw) * 1000
-    const parents = parentsRaw ? parentsRaw.split(' ').filter(Boolean) : []
-
     const statResult = await runGit(gitPath, ['show', '--numstat', '--format=', sha], repo.path)
     const statusResult = await runGit(gitPath, ['show', '--name-status', '--format=', sha], repo.path)
 
-    const statsByPath = new Map<string, { additions: number; deletions: number }>()
-    if (statResult.ok) {
-      for (const line of statResult.stdout.split('\n')) {
-        const parsed = parseNumstatLine(line)
-        if (parsed) statsByPath.set(parsed.path, parsed)
-      }
-    }
-
-    const files: GitCommitDetail['files'] = []
-    const seenPaths = new Set<string>()
-
-    if (statusResult.ok) {
-      for (const line of statusResult.stdout.split('\n')) {
-        const parsed = parseNameStatusLine(line)
-        if (!parsed) continue
-        const stats = statsByPath.get(parsed.path)
-        files.push({
-          path: parsed.path,
-          oldPath: parsed.oldPath,
-          additions: stats?.additions ?? 0,
-          deletions: stats?.deletions ?? 0,
-          status: parsed.status,
-        })
-        seenPaths.add(parsed.path)
-      }
-    }
-
-    for (const [path, stats] of statsByPath) {
-      if (seenPaths.has(path)) continue
-      files.push({
-        path,
-        additions: stats.additions,
-        deletions: stats.deletions,
-        status: 'modified',
-      })
-    }
-
-    return {
-      sha: fullSha,
-      shortSha,
-      author,
-      email,
-      date,
-      subject,
-      body: body.trim(),
-      parents,
-      files,
-    }
+    const detail = await runMainWorkerTask<GitCommitDetail | { error: 'PARSE_FAILED' }>(
+      'git:parseCommitDetail',
+      {
+        showStdout: showResult.stdout,
+        numstatStdout: statResult.ok ? statResult.stdout : '',
+        statusStdout: statusResult.ok ? statusResult.stdout : '',
+      },
+    )
+    if ('error' in detail) return { error: detail.error }
+    return detail
   }
 
   async getCommitFileDiff(
