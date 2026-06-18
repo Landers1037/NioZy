@@ -104,6 +104,41 @@ function runGit(
   })
 }
 
+async function resolveCurrentBranch(gitPath: string, repoPath: string): Promise<string | null> {
+  const showCurrent = await runGit(gitPath, ['branch', '--show-current'], repoPath)
+  if (showCurrent.ok) {
+    const name = showCurrent.stdout.trim()
+    if (name) return name
+  }
+
+  const abbrev = await runGit(gitPath, ['rev-parse', '--abbrev-ref', 'HEAD'], repoPath)
+  if (abbrev.ok) {
+    const name = abbrev.stdout.trim()
+    if (name && name !== 'HEAD') return name
+  }
+
+  const symbolic = await runGit(gitPath, ['symbolic-ref', '--short', 'HEAD'], repoPath)
+  if (symbolic.ok) {
+    const name = symbolic.stdout.trim()
+    if (name) return name
+  }
+
+  const describe = await runGit(gitPath, ['describe', '--all', '--exact-match', 'HEAD'], repoPath)
+  if (describe.ok) {
+    const raw = describe.stdout.trim()
+    if (raw.startsWith('heads/')) return raw.slice('heads/'.length)
+    if (raw.startsWith('remotes/')) return raw.slice('remotes/'.length)
+    if (raw) return raw
+  }
+
+  return null
+}
+
+function sortBranches(a: GitBranchInfo, b: GitBranchInfo): number {
+  if (a.remote !== b.remote) return a.remote ? 1 : -1
+  return a.name.localeCompare(b.name)
+}
+
 function parseNameStatusLine(line: string): { status: GitCommitDetail['files'][0]['status']; path: string; oldPath?: string } | null {
   const trimmed = line.trim()
   if (!trimmed) return null
@@ -268,12 +303,11 @@ export class GitService {
         error: validation.error === 'NOT_GIT_REPO' ? 'NOT_GIT_REPO' : 'PATH_INVALID',
       }
     }
-    const branchResult = await runGit(gitPath, ['branch', '--show-current'], repo.path)
+    const branch = await resolveCurrentBranch(gitPath, repo.path)
     const logResult = await runGit(gitPath, ['log', '-1', '--format=%ct%x1f%s'], repo.path)
-    if (!branchResult.ok && !logResult.ok) {
-      return { ...base, error: branchResult.error || logResult.error }
+    if (!branch && !logResult.ok) {
+      return { ...base, error: logResult.error }
     }
-    const branch = branchResult.ok ? branchResult.stdout.trim() || null : null
     let lastCommitAt: number | null = null
     let lastCommitMessage: string | null = null
     if (logResult.ok && logResult.stdout.includes(FIELD_SEP)) {
@@ -357,24 +391,36 @@ export class GitService {
     if (!gitPath) return { error: 'GIT_NOT_FOUND' }
     const repo = this.repoStore.findById(repoId)
     if (!repo) return { error: 'REPO_NOT_FOUND' }
+
+    const currentBranch = await resolveCurrentBranch(gitPath, repo.path)
     const result = await runGit(
       gitPath,
-      ['branch', '-a', '--format=%(refname:short)|%(HEAD)'],
+      [
+        'for-each-ref',
+        '--sort=-committerdate',
+        '--format=%(refname:short)|%(refname)',
+        'refs/heads/',
+        'refs/remotes/',
+      ],
       repo.path,
     )
     if (!result.ok) return { error: result.error }
+
     const branches: GitBranchInfo[] = []
     for (const line of result.stdout.split('\n')) {
       const trimmed = line.trim()
       if (!trimmed) continue
-      const [name, headFlag] = trimmed.split('|')
-      if (!name || name === 'HEAD') continue
+      const [shortName, refname] = trimmed.split('|')
+      if (!shortName || !refname) continue
+      if (refname.endsWith('/HEAD')) continue
+      const remote = refname.startsWith('refs/remotes/')
       branches.push({
-        name,
-        current: headFlag === '*',
-        remote: name.includes('/') && !name.startsWith('remotes/'),
+        name: shortName,
+        current: currentBranch != null && shortName === currentBranch,
+        remote,
       })
     }
+    branches.sort(sortBranches)
     return branches
   }
 
@@ -383,9 +429,59 @@ export class GitService {
     if (!gitPath) return { ok: false, error: 'GIT_NOT_FOUND' }
     const repo = this.repoStore.findById(repoId)
     if (!repo) return { ok: false, error: 'REPO_NOT_FOUND' }
-    const result = await runGit(gitPath, ['checkout', branch], repo.path)
-    if (!result.ok) return { ok: false, error: result.error }
-    return { ok: true }
+
+    const localRef = `refs/heads/${branch}`
+    const remoteRef = `refs/remotes/${branch}`
+
+    const localExists = await runGit(gitPath, ['show-ref', '--verify', localRef], repo.path)
+    if (localExists.ok) {
+      const switched = await runGit(gitPath, ['switch', branch], repo.path)
+      if (switched.ok) return { ok: true }
+      const checkedOut = await runGit(gitPath, ['checkout', branch], repo.path)
+      return checkedOut.ok
+        ? { ok: true }
+        : { ok: false, error: checkedOut.error || switched.error }
+    }
+
+    const remoteExists = await runGit(gitPath, ['show-ref', '--verify', remoteRef], repo.path)
+    if (remoteExists.ok) {
+      const slash = branch.indexOf('/')
+      const localName = slash >= 0 ? branch.slice(slash + 1) : branch
+
+      if (localName !== branch) {
+        const trackingExists = await runGit(
+          gitPath,
+          ['show-ref', '--verify', `refs/heads/${localName}`],
+          repo.path,
+        )
+        if (trackingExists.ok) {
+          const switched = await runGit(gitPath, ['switch', localName], repo.path)
+          if (switched.ok) return { ok: true }
+        }
+      }
+
+      let created = await runGit(gitPath, ['switch', '--track', branch], repo.path)
+      if (created.ok) return { ok: true }
+
+      created = await runGit(gitPath, ['switch', '-c', localName, '--track', branch], repo.path)
+      if (created.ok) return { ok: true }
+
+      const checkedOut = await runGit(
+        gitPath,
+        ['checkout', '-b', localName, '--track', branch],
+        repo.path,
+      )
+      return checkedOut.ok
+        ? { ok: true }
+        : { ok: false, error: checkedOut.error || created.error }
+    }
+
+    const switched = await runGit(gitPath, ['switch', branch], repo.path)
+    if (switched.ok) return { ok: true }
+    const checkedOut = await runGit(gitPath, ['checkout', branch], repo.path)
+    return checkedOut.ok
+      ? { ok: true }
+      : { ok: false, error: checkedOut.error || switched.error }
   }
 
   private async loadRefs(
