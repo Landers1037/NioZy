@@ -1507,6 +1507,7 @@ ipcMain.handle('repo:detectGit', () => {
   return gitService.detectGit()
 })
 ipcMain.handle('repo:pickDirectory', () => gitService.pickDirectory(mainWindow))
+ipcMain.handle('repo:pickParentDirectory', () => gitService.pickParentDirectory(mainWindow))
 ipcMain.handle('repo:validateRepo', (_, path: string) => gitService.validateRepo(path))
 ipcMain.handle('repo:listManaged', () => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
@@ -1521,6 +1522,18 @@ ipcMain.handle('repo:pull', (_, id: string) => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
   return gitService.pull(id)
 })
+ipcMain.handle(
+  'repo:clone',
+  async (
+    _,
+    params: { url: string; branch: string; targetPath: string },
+  ) => {
+    gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+    return gitService.clone(params, (chunk) => {
+      sendToRenderer(mainWindow, 'repo:cloneOutput', chunk)
+    })
+  },
+)
 ipcMain.handle('repo:listBranches', (_, id: string) => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
   return gitService.listBranches(id)

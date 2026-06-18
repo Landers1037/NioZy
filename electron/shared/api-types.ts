@@ -690,6 +690,7 @@ export interface ElectronAPI {
   repo: {
     detectGit: () => Promise<import('./repo-types').GitDetectResult>
     pickDirectory: () => Promise<string | null>
+    pickParentDirectory: () => Promise<string | null>
     validateRepo: (path: string) => Promise<import('./repo-types').GitRepoValidateResult>
     listManaged: () => Promise<import('./repo-types').ManagedRepoSummary[]>
     add: (
@@ -701,6 +702,10 @@ export interface ElectronAPI {
     >
     remove: (id: string) => Promise<boolean>
     pull: (id: string) => Promise<import('./repo-types').GitPullResult>
+    clone: (
+      params: import('./repo-types').GitCloneParams,
+    ) => Promise<import('./repo-types').GitCloneResult>
+    onCloneOutput: (cb: (chunk: string) => void) => () => void
     listBranches: (
       id: string,
     ) => Promise<import('./repo-types').GitBranchInfo[] | { error: string }>

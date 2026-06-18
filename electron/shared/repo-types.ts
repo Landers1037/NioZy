@@ -33,6 +33,18 @@ export interface GitPullResult {
   error?: string
 }
 
+export interface GitCloneParams {
+  url: string
+  branch: string
+  targetPath: string
+}
+
+export interface GitCloneResult {
+  ok: boolean
+  error?: string
+  repo?: ManagedRepo
+}
+
 export interface GitBranchInfo {
   name: string
   current: boolean

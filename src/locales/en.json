@@ -79,6 +79,23 @@
     "empty": "No Git repositories added yet",
     "addFirst": "Add your first repository",
     "add": "Add repository",
+    "clone": "Clone repository",
+    "cloneTitle": "Clone Git repository",
+    "cloneDesc": "Clone a remote repository to a local directory",
+    "cloneUrlLabel": "Git repository URL",
+    "cloneUrlPlaceholder": "https://github.com/user/repo.git or git@github.com:user/repo.git",
+    "cloneBranchLabel": "Branch",
+    "clonePathLabel": "Local storage path",
+    "clonePathPlaceholder": "Directory + repo name after you browse",
+    "cloneBrowse": "Browse directory",
+    "cloneOutputLabel": "Clone output",
+    "cloneStarting": "Starting git clone…",
+    "cloneAction": "Clone",
+    "cloning": "Cloning…",
+    "cloneSuccess": "Repository cloned successfully",
+    "cloneFailed": "Clone failed",
+    "cloneInvalidUrl": "Enter a valid Git URL (https or git protocol)",
+    "clonePathRequired": "Specify a local storage path",
     "refresh": "Refresh",
     "view": "View",
     "pull": "Update",
@@ -133,7 +150,9 @@
     "errors": {
       "GIT_NOT_FOUND": "Git command not found",
       "NOT_GIT_REPO": "Not a Git repository",
-      "PATH_INVALID": "Invalid path"
+      "PATH_INVALID": "Invalid path",
+      "INVALID_URL": "Invalid repository URL",
+      "PATH_EXISTS": "Target path already exists"
     }
   },
   "session": {

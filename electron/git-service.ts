@@ -5,10 +5,13 @@ import type { BrowserWindow } from 'electron'
 import { dialog } from 'electron'
 import { resolveExecutable } from './resolve-executable'
 import { GIT_GRAPH_ROW_TYPE } from './shared/repo-types'
+import { isValidGitCloneUrl } from './shared/git-url'
 import { gitGraphDebug, summarizeGraphRows } from './shared/git-graph-debug'
 import type {
   GitBranchInfo,
   GitCheckoutResult,
+  GitCloneParams,
+  GitCloneResult,
   GitCommitDetail,
   GitCommitFileDiff,
   GitDetectResult,
@@ -27,6 +30,46 @@ import { RepoStore } from './repo-store'
 const GRAPH_PAGE_SIZE = 100
 const RECORD_SEP = '\x1e'
 const FIELD_SEP = '\x1f'
+
+function runGitStreaming(
+  gitPath: string,
+  args: string[],
+  onOutput: (chunk: string) => void,
+  cwd?: string,
+): Promise<{ ok: true; stdout: string; stderr: string } | { ok: false; error: string }> {
+  return new Promise((resolvePromise) => {
+    const child = spawn(gitPath, args, {
+      cwd,
+      windowsHide: true,
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+    })
+    let stdout = ''
+    let stderr = ''
+    const emit = (chunk: Buffer) => {
+      const text = chunk.toString('utf8')
+      if (text) onOutput(text)
+    }
+    child.stdout?.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString('utf8')
+      emit(chunk)
+    })
+    child.stderr?.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString('utf8')
+      emit(chunk)
+    })
+    child.on('error', (err) => {
+      resolvePromise({ ok: false, error: err.message })
+    })
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolvePromise({ ok: true, stdout, stderr })
+      } else {
+        const msg = stderr.trim() || stdout.trim() || `git exited with code ${code}`
+        resolvePromise({ ok: false, error: msg })
+      }
+    })
+  })
+}
 
 function runGit(
   gitPath: string,
@@ -180,6 +223,18 @@ export class GitService {
     return resolve(filePaths[0])
   }
 
+  async pickParentDirectory(mainWindow: BrowserWindow | null): Promise<string | null> {
+    const openOptions = {
+      title: '选择本地存储目录',
+      properties: ['openDirectory'] as ('openDirectory')[],
+    }
+    const { canceled, filePaths } = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, openOptions)
+      : await dialog.showOpenDialog(openOptions)
+    if (canceled || !filePaths[0]) return null
+    return resolve(filePaths[0])
+  }
+
   addRepo(path: string) {
     const validation = this.validateRepo(path)
     if (!validation.ok) return validation
@@ -254,6 +309,47 @@ export class GitService {
     const result = await runGit(gitPath, ['pull'], repo.path)
     if (!result.ok) return { ok: false, error: result.error }
     return { ok: true, output: result.stdout.trim() || result.stderr.trim() }
+  }
+
+  async clone(
+    params: GitCloneParams,
+    onOutput: (chunk: string) => void,
+  ): Promise<GitCloneResult> {
+    const gitPath = this.resolveGitPath()
+    if (!gitPath) return { ok: false, error: 'GIT_NOT_FOUND' }
+
+    const url = params.url.trim()
+    const branch = params.branch.trim() || 'master'
+    const targetPath = resolve(params.targetPath.trim())
+
+    if (!isValidGitCloneUrl(url)) {
+      return { ok: false, error: 'INVALID_URL' }
+    }
+    if (!targetPath) {
+      return { ok: false, error: 'PATH_INVALID' }
+    }
+    if (existsSync(targetPath)) {
+      return { ok: false, error: 'PATH_EXISTS' }
+    }
+
+    const args = ['clone', '--progress', '--branch', branch, url, targetPath]
+    const result = await runGitStreaming(gitPath, args, onOutput)
+    if (!result.ok) return { ok: false, error: result.error }
+
+    const validation = this.validateRepo(targetPath)
+    if (!validation.ok) return { ok: false, error: validation.error ?? 'NOT_GIT_REPO' }
+
+    const addResult = this.repoStore.add(targetPath)
+    if (!addResult.ok) {
+      if (addResult.error === 'DUPLICATE') {
+        const existing = this.repoStore
+          .get()
+          .find((r) => resolve(r.path).toLowerCase() === targetPath.toLowerCase())
+        return { ok: true, repo: existing }
+      }
+      return { ok: false, error: addResult.error }
+    }
+    return { ok: true, repo: addResult.repo }
   }
 
   async listBranches(repoId: string): Promise<GitBranchInfo[] | { error: string }> {

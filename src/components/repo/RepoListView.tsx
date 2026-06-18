@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Plus, RefreshCw, Loader2 } from 'lucide-react'
+import { Plus, RefreshCw, Loader2, GitBranchPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AnimatedLoadingSwap } from '@/components/ui/animated-panel-section'
 import {
@@ -19,6 +19,7 @@ import type { ManagedRepoSummary } from '../../../electron/shared/repo-types'
 import { RepoCard } from './RepoCard'
 import { BranchSwitchDialog } from './BranchSwitchDialog'
 import { RepoPullOverlay } from './RepoPullOverlay'
+import { RepoCloneDialog } from './RepoCloneDialog'
 
 interface RepoListViewProps {
   onOpenRepo: (repoId: string) => void
@@ -32,6 +33,7 @@ export function RepoListView({ onOpenRepo }: RepoListViewProps) {
   const [pullingRepo, setPullingRepo] = useState<ManagedRepoSummary | null>(null)
   const [branchDialogRepoId, setBranchDialogRepoId] = useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = useState<ManagedRepoSummary | null>(null)
+  const [cloneOpen, setCloneOpen] = useState(false)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -107,6 +109,10 @@ export function RepoListView({ onOpenRepo }: RepoListViewProps) {
             <RefreshCw className="size-4" />
             {t('repo.refresh')}
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setCloneOpen(true)}>
+            <GitBranchPlus className="size-4" />
+            {t('repo.clone')}
+          </Button>
           <Button size="sm" onClick={() => void handleAdd()}>
             <Plus className="size-4" />
             {t('repo.add')}
@@ -145,6 +151,12 @@ export function RepoListView({ onOpenRepo }: RepoListViewProps) {
           </div>
         )}
       </AnimatedLoadingSwap>
+
+      <RepoCloneDialog
+        open={cloneOpen}
+        onOpenChange={setCloneOpen}
+        onSuccess={() => void refresh()}
+      />
 
       <BranchSwitchDialog
         repoId={branchDialogRepoId ?? ''}

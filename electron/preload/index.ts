@@ -47,6 +47,7 @@ const onP2pSessionClosed = createIpcMultiplex<[{ sessionId: string }]>(
   ipcRenderer,
   'p2p:sessionClosed',
 )
+const onRepoCloneOutput = createIpcMultiplex<[string]>(ipcRenderer, 'repo:cloneOutput')
 const onP2pConversationHidden = createIpcMultiplex<[{ sessionId: string }]>(
   ipcRenderer,
   'p2p:conversationHidden',
@@ -311,11 +312,15 @@ const api: ElectronAPI = {
   repo: {
     detectGit: () => ipcRenderer.invoke('repo:detectGit'),
     pickDirectory: () => ipcRenderer.invoke('repo:pickDirectory') as Promise<string | null>,
+    pickParentDirectory: () =>
+      ipcRenderer.invoke('repo:pickParentDirectory') as Promise<string | null>,
     validateRepo: (path) => ipcRenderer.invoke('repo:validateRepo', path),
     listManaged: () => ipcRenderer.invoke('repo:listManaged'),
     add: (path) => ipcRenderer.invoke('repo:add', path),
     remove: (id) => ipcRenderer.invoke('repo:remove', id),
     pull: (id) => ipcRenderer.invoke('repo:pull', id),
+    clone: (params) => ipcRenderer.invoke('repo:clone', params),
+    onCloneOutput: (cb) => onRepoCloneOutput(cb),
     listBranches: (id) => ipcRenderer.invoke('repo:listBranches', id),
     checkout: (id, branch) => ipcRenderer.invoke('repo:checkout', id, branch),
     getGraphCommits: (id, cursor) => ipcRenderer.invoke('repo:getGraphCommits', id, cursor),
