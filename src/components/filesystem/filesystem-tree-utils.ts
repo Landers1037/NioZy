@@ -71,7 +71,7 @@ export function getPathChain(targetPath: string): string[] {
 
     let current = driveRoot
     for (const segment of rest.split('\\').filter(Boolean)) {
-      current = `${current}${segment}`
+      current = `${current.replace(/\\+$/, '')}\\${segment}`
       parts.push(current)
     }
     return parts
