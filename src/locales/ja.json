@@ -716,7 +716,11 @@
       "openCodeSessionEnabled": "Open Code セッション管理を有効化",
       "openCodeSessionEnabledDesc": "未実装",
       "piAgentSessionEnabled": "Pi Agent セッション管理を有効化",
-      "piAgentSessionEnabledDesc": "未実装"
+      "piAgentSessionEnabledDesc": "未実装",
+      "clineSessionEnabled": "Cline セッション管理を有効化",
+      "clineSessionEnabledDesc": "未実装",
+      "codexSessionEnabled": "Codex セッション管理を有効化",
+      "codexSessionEnabledDesc": "未実装"
     },
     "experimental": {
       "title": "実験的",
@@ -944,7 +948,9 @@
     "tools": {
       "claudeCode": "Claude Code",
       "openCode": "Open Code",
-      "piAgent": "Pi Agent"
+      "piAgent": "Pi Agent",
+      "cline": "Cline",
+      "codex": "Codex"
     },
     "errors": {
       "fileNotFound": "セッション一覧ファイルが見つかりません。Claude Code のパス設定を確認してください。",

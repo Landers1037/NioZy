@@ -1,4 +1,4 @@
-export type SessionTool = 'claudeCode' | 'openCode' | 'piAgent'
+export type SessionTool = 'claudeCode' | 'openCode' | 'piAgent' | 'cline' | 'codex'
 
 export interface ClaudeCodeSessionEntry {
   display: string

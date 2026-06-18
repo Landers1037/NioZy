@@ -169,7 +169,9 @@
     "tools": {
       "claudeCode": "Claude Code",
       "openCode": "Open Code",
-      "piAgent": "Pi Agent"
+      "piAgent": "Pi Agent",
+      "cline": "Cline",
+      "codex": "Codex"
     },
     "errors": {
       "fileNotFound": "未找到会话列表文件，请检查 Claude Code 会话列表路径设置",
@@ -851,7 +853,11 @@
       "openCodeSessionEnabled": "开启 Open Code 会话管理",
       "openCodeSessionEnabledDesc": "暂未实现",
       "piAgentSessionEnabled": "开启 Pi Agent 会话管理",
-      "piAgentSessionEnabledDesc": "暂未实现"
+      "piAgentSessionEnabledDesc": "暂未实现",
+      "clineSessionEnabled": "开启 Cline 会话管理",
+      "clineSessionEnabledDesc": "暂未实现",
+      "codexSessionEnabled": "开启 Codex 会话管理",
+      "codexSessionEnabledDesc": "暂未实现"
     },
     "experimental": {
       "title": "实验特性",

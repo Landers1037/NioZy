@@ -6,7 +6,13 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
-import { Bot, MessageSquareCode, History } from 'lucide-react'
+import { Bot, History } from 'lucide-react'
+import {
+  ClaudeCodeIcon,
+  ClineIcon,
+  CodexIcon,
+  OpenCodeIcon,
+} from '@/components/icons/session-tool-icons'
 import { DEFAULT_CLAUDE_CODE_HISTORY_PATH } from '../../../electron/shared/session-settings'
 
 export function SessionSettings() {
@@ -70,7 +76,7 @@ export function SessionSettings() {
         </SettingField>
 
         <SettingField
-          icon={MessageSquareCode}
+          icon={ClaudeCodeIcon}
           label={t('settings.session.claudeCodeSessionEnabled')}
           description={t('settings.session.claudeCodeSessionEnabledDesc')}
           row
@@ -108,7 +114,7 @@ export function SessionSettings() {
         )}
 
         <SettingField
-          icon={MessageSquareCode}
+          icon={OpenCodeIcon}
           label={t('settings.session.openCodeSessionEnabled')}
           description={t('settings.session.openCodeSessionEnabledDesc')}
           row
@@ -120,6 +126,24 @@ export function SessionSettings() {
           icon={Bot}
           label={t('settings.session.piAgentSessionEnabled')}
           description={t('settings.session.piAgentSessionEnabledDesc')}
+          row
+        >
+          <Switch checked={false} disabled />
+        </SettingField>
+
+        <SettingField
+          icon={ClineIcon}
+          label={t('settings.session.clineSessionEnabled')}
+          description={t('settings.session.clineSessionEnabledDesc')}
+          row
+        >
+          <Switch checked={false} disabled />
+        </SettingField>
+
+        <SettingField
+          icon={CodexIcon}
+          label={t('settings.session.codexSessionEnabled')}
+          description={t('settings.session.codexSessionEnabledDesc')}
           row
         >
           <Switch checked={false} disabled />
