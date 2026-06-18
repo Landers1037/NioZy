@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+﻿import { useMemo, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import type { TFunction } from 'i18next'
@@ -87,9 +87,7 @@ function builtinConfigSummary(
   if (args.length > 0) parts.push(t('settings.connections.argsCount', { count: args.length }))
   const envCount = Object.keys(env).length
   if (envCount > 0) parts.push(t('settings.connections.envCount', { count: envCount }))
-  return parts.length > 0
-    ? parts.join(t('common.listSeparator'))
-    : t('settings.connections.defaultLaunch')
+  return parts.join(t('common.listSeparator'))
 }
 
 type ConnectionDraftFieldsProps = {
@@ -149,7 +147,7 @@ function ConnectionDraftFields({
           <SettingField icon={Tag} label={t('settings.connections.name')}>
             <Input
               value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, name: e.currentTarget.value })}
             />
           </SettingField>
           <SettingField icon={FolderTree} label={t('settings.connections.group')}>
@@ -157,7 +155,7 @@ function ConnectionDraftFields({
               <Input
                 className="min-w-0 flex-1"
                 value={draft.sshGroup}
-                onChange={(e) => setDraft({ ...draft, sshGroup: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, sshGroup: e.currentTarget.value })}
                 placeholder={t('settings.connections.groupPlaceholder')}
                 list={existingSshGroups.length > 0 ? sshGroupsListId : undefined}
               />
@@ -203,7 +201,7 @@ function ConnectionDraftFields({
             <Input
               className="min-w-0 flex-1"
               value={draft.name}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, name: e.currentTarget.value })}
             />
             {isWindows && (
               <div className="flex shrink-0 items-center gap-2">
@@ -226,7 +224,7 @@ function ConnectionDraftFields({
         <SettingField icon={Tag} label={t('settings.connections.name')}>
           <Input
             value={draft.name}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, name: e.currentTarget.value })}
           />
         </SettingField>
       )}
@@ -237,7 +235,7 @@ function ConnectionDraftFields({
             <SettingField icon={Server} label={t('settings.connections.host')}>
               <Input
                 value={draft.rdpHost}
-                onChange={(e) => setDraft({ ...draft, rdpHost: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, rdpHost: e.currentTarget.value })}
                 placeholder="192.168.1.1"
               />
             </SettingField>
@@ -247,7 +245,7 @@ function ConnectionDraftFields({
                 min={1}
                 max={65535}
                 value={draft.rdpPort}
-                onChange={(e) => setDraft({ ...draft, rdpPort: Number(e.target.value) || 3389 })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, rdpPort: Number(e.currentTarget.value) || 3389 })}
               />
             </SettingField>
           </div>
@@ -255,7 +253,7 @@ function ConnectionDraftFields({
             <SettingField icon={User} label={t('settings.connections.username')}>
               <Input
                 value={draft.rdpUser}
-                onChange={(e) => setDraft({ ...draft, rdpUser: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, rdpUser: e.currentTarget.value })}
               />
             </SettingField>
             <SettingField icon={Lock} label={t('settings.connections.password')}>
@@ -277,7 +275,7 @@ function ConnectionDraftFields({
             <SettingField icon={Server} label={t('settings.connections.host')}>
               <Input
                 value={draft.vncHost}
-                onChange={(e) => setDraft({ ...draft, vncHost: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, vncHost: e.currentTarget.value })}
                 placeholder="192.168.1.1"
               />
             </SettingField>
@@ -287,7 +285,7 @@ function ConnectionDraftFields({
                 min={1}
                 max={65535}
                 value={draft.vncPort}
-                onChange={(e) => setDraft({ ...draft, vncPort: Number(e.target.value) || 5900 })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, vncPort: Number(e.currentTarget.value) || 5900 })}
               />
             </SettingField>
           </div>
@@ -295,7 +293,7 @@ function ConnectionDraftFields({
             <SettingField icon={User} label={t('settings.connections.username')}>
               <Input
                 value={draft.vncUsername}
-                onChange={(e) => setDraft({ ...draft, vncUsername: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, vncUsername: e.currentTarget.value })}
               />
             </SettingField>
             <SettingField icon={Lock} label={t('settings.connections.password')}>
@@ -316,7 +314,7 @@ function ConnectionDraftFields({
           <SettingField icon={Terminal} label={t('settings.connections.wslDistro')}>
             <Input
               value={draft.wslDistro}
-              onChange={(e) => setDraft({ ...draft, wslDistro: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, wslDistro: e.currentTarget.value })}
               placeholder={t('settings.connections.wslDistroPlaceholder')}
             />
           </SettingField>
@@ -328,7 +326,7 @@ function ConnectionDraftFields({
             <SettingField icon={Server} label={t('settings.connections.host')}>
               <Input
                 value={draft.telnetHost}
-                onChange={(e) => setDraft({ ...draft, telnetHost: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, telnetHost: e.currentTarget.value })}
                 placeholder="192.168.1.1"
               />
             </SettingField>
@@ -338,7 +336,7 @@ function ConnectionDraftFields({
                 min={1}
                 max={65535}
                 value={draft.telnetPort}
-                onChange={(e) => setDraft({ ...draft, telnetPort: Number(e.target.value) || 23 })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, telnetPort: Number(e.currentTarget.value) || 23 })}
               />
             </SettingField>
           </div>
@@ -371,7 +369,7 @@ function ConnectionDraftFields({
             <SettingField icon={Server} label={t('settings.connections.host')}>
               <Input
                 value={draft.puttyHost}
-                onChange={(e) => setDraft({ ...draft, puttyHost: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, puttyHost: e.currentTarget.value })}
                 placeholder="192.168.1.1"
               />
             </SettingField>
@@ -381,10 +379,10 @@ function ConnectionDraftFields({
                 min={1}
                 max={65535}
                 value={draft.puttyPort}
-                onChange={(e) =>
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setDraft({
                     ...draft,
-                    puttyPort: Number(e.target.value) || defaultPuttyPort(draft.puttyProtocol),
+                    puttyPort: Number(e.currentTarget.value) || defaultPuttyPort(draft.puttyProtocol),
                   })
                 }
               />
@@ -394,7 +392,7 @@ function ConnectionDraftFields({
             <SettingField icon={User} label={t('settings.connections.username')}>
               <Input
                 value={draft.puttyUser}
-                onChange={(e) => setDraft({ ...draft, puttyUser: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, puttyUser: e.currentTarget.value })}
                 placeholder={t('settings.connections.puttyUserOptional')}
               />
             </SettingField>
@@ -458,7 +456,7 @@ function ConnectionDraftFields({
             <SettingField icon={Server} label={t('settings.connections.host')}>
               <Input
                 value={draft.sshHost}
-                onChange={(e) => setDraft({ ...draft, sshHost: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, sshHost: e.currentTarget.value })}
                 placeholder="192.168.1.1"
               />
             </SettingField>
@@ -468,7 +466,7 @@ function ConnectionDraftFields({
                 min={1}
                 max={65535}
                 value={draft.sshPort}
-                onChange={(e) => setDraft({ ...draft, sshPort: Number(e.target.value) })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, sshPort: Number(e.currentTarget.value) })}
               />
             </SettingField>
           </div>
@@ -477,7 +475,7 @@ function ConnectionDraftFields({
             <SettingField icon={User} label={t('settings.connections.username')}>
               <Input
                 value={draft.sshUser}
-                onChange={(e) => setDraft({ ...draft, sshUser: e.target.value })}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, sshUser: e.currentTarget.value })}
               />
             </SettingField>
             {draft.sshAuth === 'password' ? (
@@ -521,14 +519,14 @@ function ConnectionDraftFields({
           <SettingField icon={Terminal} label={t('settings.connections.command')}>
             <Input
               value={draft.command}
-              onChange={(e) => setDraft({ ...draft, command: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, command: e.currentTarget.value })}
               placeholder={t('settings.connections.commandPlaceholder')}
             />
           </SettingField>
           <SettingField icon={List} label={t('settings.connections.args')}>
             <Input
               value={draft.argsStr}
-              onChange={(e) => setDraft({ ...draft, argsStr: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, argsStr: e.currentTarget.value })}
             />
           </SettingField>
           <SettingField icon={FileCode} label={t('settings.connections.envVars')}>
@@ -704,8 +702,9 @@ export function ConnectionSettings() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {BUILTIN_SHELL_EXECUTABLE[shell]} 路{' '}
-                      {builtinConfigSummary(t, config.args, config.env)}
+                      {[BUILTIN_SHELL_EXECUTABLE[shell], builtinConfigSummary(t, config.args, config.env)]
+                        .filter(Boolean)
+                        .join(' ')}
                     </p>
                   </div>
                   <Button
@@ -724,8 +723,8 @@ export function ConnectionSettings() {
                     <SettingField icon={List} label={t('settings.connections.launchArgs')}>
                       <Input
                         value={builtinDraft.argsStr}
-                        onChange={(e) =>
-                          setBuiltinDraft({ ...builtinDraft, argsStr: e.target.value })
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                          setBuiltinDraft({ ...builtinDraft, argsStr: e.currentTarget.value })
                         }
                         placeholder="-NoLogo -ExecutionPolicy Bypass"
                       />
