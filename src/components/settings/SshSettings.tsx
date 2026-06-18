@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
@@ -13,7 +14,12 @@ import {
   type SshKexAlgorithmId,
 } from '../../../electron/shared/ssh-kex-algorithms'
 import type { SshSettings as SshSettingsType } from '../../../electron/shared/ssh-settings'
-import { Bell, ArrowLeftRight, Server, Search, Terminal, KeyRound } from 'lucide-react'
+import {
+  normalizeConnectTimeoutSeconds,
+  SSH_CONNECT_TIMEOUT_MAX_SECONDS,
+  SSH_CONNECT_TIMEOUT_MIN_SECONDS,
+} from '../../../electron/shared/ssh-settings'
+import { Bell, ArrowLeftRight, Server, Search, Terminal, KeyRound, Timer } from 'lucide-react'
 
 function toggleKex(
   ssh: SshSettingsType,
@@ -100,6 +106,33 @@ export function SshSettings() {
           <Switch
             checked={ssh.useBuiltinSsh2}
             onCheckedChange={(v) => patchSettings({ ssh: { ...ssh, useBuiltinSsh2: v } })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Timer}
+          label={t('settings.ssh.connectTimeoutSeconds')}
+          description={t('settings.ssh.connectTimeoutSecondsDesc', {
+            min: SSH_CONNECT_TIMEOUT_MIN_SECONDS,
+            max: SSH_CONNECT_TIMEOUT_MAX_SECONDS,
+          })}
+        >
+          <Input
+            type="number"
+            className="w-28"
+            min={SSH_CONNECT_TIMEOUT_MIN_SECONDS}
+            max={SSH_CONNECT_TIMEOUT_MAX_SECONDS}
+            value={ssh.connectTimeoutSeconds}
+            onChange={(e) =>
+              patchSettings({
+                ssh: {
+                  ...ssh,
+                  connectTimeoutSeconds: normalizeConnectTimeoutSeconds(
+                    Number(e.target.value),
+                  ),
+                },
+              })
+            }
           />
         </SettingField>
 

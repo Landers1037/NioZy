@@ -97,9 +97,10 @@ export async function listRemoteDirectory(
   profile: SshConnectionProfile,
   remotePath: string,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpListResult> {
   scpLog('listRemote via ssh2/sftp (in-process password/key auth)')
-  return listRemoteViaSsh2(profile, remotePath, enabledKex)
+  return listRemoteViaSsh2(profile, remotePath, enabledKex, connectTimeoutSeconds)
 }
 
 export async function listRemoteDirectoryWithRetry(
@@ -107,6 +108,7 @@ export async function listRemoteDirectoryWithRetry(
   remotePath: string,
   options?: { afterTransfer?: boolean },
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpListResult> {
   const maxAttempts = options?.afterTransfer ? 3 : 1
   if (options?.afterTransfer) {
@@ -122,7 +124,7 @@ export async function listRemoteDirectoryWithRetry(
       scpLog('listRemote retry', { attempt, maxAttempts, remotePath })
       await delay(LIST_REMOTE_RETRY_DELAY_MS)
     }
-    last = await listRemoteDirectory(profile, remotePath, enabledKex)
+    last = await listRemoteDirectory(profile, remotePath, enabledKex, connectTimeoutSeconds)
     if (last.ok) return last
     const retryable = /timed out|timeout|Connection reset|Connection refused|ECONN/i.test(
       last.error ?? '',
@@ -138,8 +140,16 @@ export async function scpUpload(
   remotePath: string,
   onProgress?: ScpProgressCallback,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpTransferResult> {
-  return uploadViaSsh2(profile, localPath, remotePath, onProgress, enabledKex)
+  return uploadViaSsh2(
+    profile,
+    localPath,
+    remotePath,
+    onProgress,
+    enabledKex,
+    connectTimeoutSeconds,
+  )
 }
 
 export async function scpDownload(
@@ -148,6 +158,14 @@ export async function scpDownload(
   localPath: string,
   onProgress?: ScpProgressCallback,
   enabledKex?: string[],
+  connectTimeoutSeconds?: number,
 ): Promise<ScpTransferResult> {
-  return downloadViaSsh2(profile, remotePath, localPath, onProgress, enabledKex)
+  return downloadViaSsh2(
+    profile,
+    remotePath,
+    localPath,
+    onProgress,
+    enabledKex,
+    connectTimeoutSeconds,
+  )
 }

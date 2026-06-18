@@ -512,6 +512,8 @@
       "description": "Built-in ssh2 terminal, key exchange algorithms, disconnect alerts, SCP transfer, and scp.exe detection",
       "useBuiltinSsh2": "Use built-in SSH2 for SSH connections",
       "useBuiltinSsh2Desc": "When enabled, in-app terminals connect via the ssh2 library with saved passwords—no system ssh.exe required (useful for older OpenSSH such as Windows Server 2016)",
+      "connectTimeoutSeconds": "Connection timeout (seconds)",
+      "connectTimeoutSecondsDesc": "Maximum wait time when establishing SSH connections ({{min}}–{{max}} s); applies to OpenSSH, built-in SSH2 terminals, and SCP/SFTP transfers",
       "kexAlgorithms": "Key exchange algorithms (KEX)",
       "kexAlgorithmsDesc": "Used by the built-in SSH2 terminal and SCP/SFTP transfers. Only checked algorithms are offered, in list order.",
       "kexModern": "Modern (enabled by default)",

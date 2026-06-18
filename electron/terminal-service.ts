@@ -45,6 +45,7 @@ interface TerminalSession {
 export interface Ssh2TerminalCreateOptions {
   profile: SshConnectionProfile
   enabledKex?: string[]
+  connectTimeoutSeconds?: number
   name?: string
   cols?: number
   rows?: number
@@ -230,7 +231,11 @@ export class TerminalService extends EventEmitter {
       hasKey: Boolean(profile.keyPath),
     })
 
-    const config = await buildSsh2ConnectConfig(profile, options.enabledKex)
+    const config = await buildSsh2ConnectConfig(
+      profile,
+      options.enabledKex,
+      options.connectTimeoutSeconds,
+    )
 
     return new Promise((resolve, reject) => {
       let settled = false
@@ -397,6 +402,10 @@ export class TerminalService extends EventEmitter {
 
   getCwd(id: string): string | undefined {
     return this.sessions.get(id)?.cwd
+  }
+
+  isAlive(id: string): boolean {
+    return this.sessions.has(id)
   }
 
   kill(id: string): void {

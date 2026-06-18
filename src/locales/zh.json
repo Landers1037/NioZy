@@ -512,6 +512,8 @@
       "description": "内置 ssh2 终端、密钥交换算法、断开告警、SCP 传输与 scp 命令检测",
       "useBuiltinSsh2": "SSH 连接使用内置 SSH2",
       "useBuiltinSsh2Desc": "开启后内嵌终端通过 ssh2 库连接，支持保存的密码自动登录，不依赖系统 ssh.exe（适合 Windows Server 2016 等老版本 OpenSSH）",
+      "connectTimeoutSeconds": "连接超时（秒）",
+      "connectTimeoutSecondsDesc": "建立 SSH 连接的最长等待时间（{{min}}–{{max}} 秒），适用于 OpenSSH 与内置 SSH2 终端及 SCP/SFTP 传输",
       "kexAlgorithms": "密钥交换算法 (KEX)",
       "kexAlgorithmsDesc": "用于内置 SSH2 终端与 SCP/SFTP 传输；按列表顺序协商，勾选的算法才会参与握手",
       "kexModern": "现代化（默认已勾选）",
