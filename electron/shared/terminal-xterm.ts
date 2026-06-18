@@ -1,4 +1,6 @@
 export const DEFAULT_TERMINAL_SCROLLBACK = 1_000
+/** xterm Tab 显示宽度（列数），与常见编辑器 tabSize=4 对齐 */
+export const DEFAULT_TERMINAL_TAB_STOP_WIDTH = 4
 export const MIN_TERMINAL_SCROLLBACK = 0
 export const MAX_TERMINAL_SCROLLBACK = 100_000
 

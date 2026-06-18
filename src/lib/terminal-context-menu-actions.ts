@@ -6,6 +6,7 @@ import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
 import { getTerminal } from '@/lib/terminal-registry'
 import { getTerminalBufferText } from '@/lib/terminal-buffer'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
+import { pasteTerminalClipboard } from '@/lib/terminal-clipboard-paste'
 import { writeTerminalInput } from '@/lib/terminal-write'
 import { formatExportFileName } from '@/lib/tab-actions'
 import { prepareCommandForReplay } from '@/lib/command-replay'
@@ -39,7 +40,7 @@ export async function pasteToTerminalFromContextMenu(): Promise<void> {
   if (!menu) return
   const { terminalId } = menu
   const text = await navigator.clipboard.readText()
-  if (text) writeTerminalInput(terminalId, text)
+  if (text) pasteTerminalClipboard(terminalId, text)
   refocusContextMenuTerminal(terminalId)
 }
 
@@ -53,7 +54,7 @@ export async function copyAndPasteToTerminalFromContextMenu(): Promise<void> {
     return
   }
   await navigator.clipboard.writeText(text)
-  writeTerminalInput(menu.terminalId, text)
+  pasteTerminalClipboard(menu.terminalId, text)
   refocusContextMenuTerminal(menu.terminalId)
 }
 
