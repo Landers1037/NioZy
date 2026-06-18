@@ -89,6 +89,7 @@ import {
 } from '@/lib/attach-pty-scrollback-offload'
 import { writeXtermOutput } from '@/lib/terminal-sync-output'
 import { createTerminalWriteBatcher, type TerminalWriteBatcher } from '@/lib/terminal-write-batcher'
+import { isTerminalRenderPaused } from '@/lib/terminal-render-pause'
 import {
   refreshWebglTextureAtlas,
   scheduleWebglTextureAtlasRefresh,
@@ -545,6 +546,8 @@ export function TerminalView({
       writeBatcher = createTerminalWriteBatcher(
         () => termRef.current,
         () => useAppStore.getState().settings,
+        () => boundTerminalIdRef.current,
+        (terminalId, length) => getElectronAPI().terminal.ackData(terminalId, length),
       )
       writeBatcherRef.current = writeBatcher
 
@@ -636,10 +639,9 @@ export function TerminalView({
       })
 
       unsubData = api.terminal.onData((id, data) => {
-        if (id === boundTerminalIdRef.current) {
-          trackTerminalOutputBracketedPaste(id, data)
-          writeBatcher?.queue(data)
-        }
+        if (id !== boundTerminalIdRef.current || isTerminalRenderPaused()) return
+        trackTerminalOutputBracketedPaste(id, data)
+        writeBatcher?.queue(data)
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
@@ -763,6 +765,8 @@ export function TerminalView({
       writeBatcher = createTerminalWriteBatcher(
         () => termRef.current,
         () => useAppStore.getState().settings,
+        () => boundTerminalIdRef.current,
+        (terminalId, length) => getElectronAPI().terminal.ackData(terminalId, length),
       )
       writeBatcherRef.current = writeBatcher
 
@@ -854,10 +858,9 @@ export function TerminalView({
       })
 
       unsubData = api.terminal.onData((id, data) => {
-        if (id === boundTerminalIdRef.current) {
-          trackTerminalOutputBracketedPaste(id, data)
-          writeBatcher?.queue(data)
-        }
+        if (id !== boundTerminalIdRef.current || isTerminalRenderPaused()) return
+        trackTerminalOutputBracketedPaste(id, data)
+        writeBatcher?.queue(data)
       })
 
       unsubExit = api.terminal.onExit((id, code) => {

@@ -22,7 +22,7 @@ import {
   clearTerminalBracketedPasteState,
   trackTerminalOutputBracketedPaste,
 } from '@/lib/terminal-bracketed-paste'
-import { writeTerminalInput } from '@/lib/terminal-write'
+import { isTerminalRenderPaused } from '@/lib/terminal-render-pause'
 import {
   readWtermCursorCommandFromInstance,
   registerWtermCursorLine,
@@ -168,7 +168,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     const api = getElectronAPI()
 
     const unsubData = api.terminal.onData((id, data) => {
-      if (id !== tab.terminalId) return
+      if (id !== tab.terminalId || isTerminalRenderPaused()) return
       trackTerminalOutputBracketedPaste(id, data)
       write(data)
       queueWtermScrollToBottom(termRef.current?.instance?.element)

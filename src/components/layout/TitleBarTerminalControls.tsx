@@ -214,7 +214,7 @@ export function TitleBarTerminalControls() {
   }, [])
 
   return (
-    <div className="flex items-center gap-1.5 border-r border-border pr-2 mr-0.5">
+    <div className="no-drag flex items-center gap-1.5 border-r border-border pr-2 mr-0.5">
       {showPomodoro ? (
         <Button
           variant="outline"

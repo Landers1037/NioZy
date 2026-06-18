@@ -17,9 +17,19 @@ const FLUSH_INTERVAL_MS = 16
 export function createTerminalOutputFlusher(getWindow: () => BrowserWindow | null) {
   const pending = new Map<string, string>()
   let timer: ReturnType<typeof setTimeout> | null = null
+  let paused = false
+
+  function scheduleFlush(delayMs = FLUSH_INTERVAL_MS): void {
+    if (paused || timer) return
+    timer = setTimeout(flush, delayMs)
+  }
 
   function flush(): void {
     timer = null
+    if (paused) {
+      scheduleFlush()
+      return
+    }
     const win = getWindow()
     if (!canSendToRenderer(win)) {
       pending.clear()
@@ -44,8 +54,22 @@ export function createTerminalOutputFlusher(getWindow: () => BrowserWindow | nul
         TERMINAL_OUTPUT_PENDING_MAX_CHARS,
       ),
     )
-    if (!timer) {
-      timer = setTimeout(flush, FLUSH_INTERVAL_MS)
+    scheduleFlush()
+  }
+
+  function pause(): void {
+    paused = true
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+    }
+  }
+
+  function resume(): void {
+    if (!paused) return
+    paused = false
+    if (pending.size > 0) {
+      scheduleFlush(0)
     }
   }
 
@@ -54,8 +78,9 @@ export function createTerminalOutputFlusher(getWindow: () => BrowserWindow | nul
       clearTimeout(timer)
       timer = null
     }
+    paused = false
     pending.clear()
   }
 
-  return { queue, flush, dispose }
+  return { queue, flush, pause, resume, dispose }
 }

@@ -266,6 +266,21 @@ const isDev = isElectronDev()
 const terminalService = new TerminalService()
 const terminalKillQueue = createTerminalKillQueue((id) => terminalService.kill(id))
 const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
+let windowDragging = false
+
+function setWindowDragging(moving: boolean): void {
+  if (moving) {
+    if (windowDragging) return
+    windowDragging = true
+    terminalOutputFlusher.pause()
+    sendToRenderer(mainWindow, 'window:moving', true)
+    return
+  }
+  if (!windowDragging) return
+  windowDragging = false
+  terminalOutputFlusher.resume()
+  sendToRenderer(mainWindow, 'window:moving', false)
+}
 const settingsStore = new SettingsStore()
 const statisticsStore = new StatisticsStore(
   () => settingsStore.get().statistics.enabled === true,
@@ -625,6 +640,13 @@ function createWindow(): void {
     sendToRenderer(mainWindow, 'window:maximized', false)
   })
 
+  mainWindow.on('will-move', () => {
+    setWindowDragging(true)
+  })
+  mainWindow.on('moved', () => {
+    setWindowDragging(false)
+  })
+
   mainWindow.on('closed', () => {
     mainLog.info('Main window closed')
     mainWindow = null
@@ -777,6 +799,9 @@ ipcMain.on('window:setTransparencyPreview', (_, transparency: number) => {
 })
 
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
+ipcMain.on('window:setDragging', (_, moving: boolean) => {
+  setWindowDragging(moving === true)
+})
 ipcMain.on('pet:ready', () => onPetReady())
 ipcMain.on('pet:pointerDown', () => onPetPointerDown())
 ipcMain.on('pet:pointerMove', () => onPetPointerMove())
@@ -1943,6 +1968,9 @@ ipcMain.on('terminal:setActiveStream', (_, id: string | null) => {
 })
 ipcMain.on('terminal:setActiveStreams', (_, ids: string[]) => {
   terminalService.setActiveStreams(ids)
+})
+ipcMain.on('terminal:ackData', (_, id: string, length: number) => {
+  terminalService.ackActiveOutput(id, length)
 })
 
 terminalService.on('data', (id, data) => {
