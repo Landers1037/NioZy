@@ -18,6 +18,10 @@ import {
 } from '@/lib/terminal-shortcut-actions'
 import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
+import {
+  clearTerminalBracketedPasteState,
+  trackTerminalOutputBracketedPaste,
+} from '@/lib/terminal-bracketed-paste'
 import { writeTerminalInput } from '@/lib/terminal-write'
 import {
   readWtermCursorCommandFromInstance,
@@ -165,12 +169,14 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
 
     const unsubData = api.terminal.onData((id, data) => {
       if (id !== tab.terminalId) return
+      trackTerminalOutputBracketedPaste(id, data)
       write(data)
       queueWtermScrollToBottom(termRef.current?.instance?.element)
     })
 
     const unsubExit = api.terminal.onExit((id, code) => {
       if (id === tab.terminalId) {
+        clearTerminalBracketedPasteState(id)
         write(formatTerminalExitMessage(code))
         markSshTerminalDisconnected(id, tab)
         queueWtermScrollToBottom(termRef.current?.instance?.element, { force: true })
@@ -178,6 +184,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
     })
 
     return () => {
+      if (tab.terminalId) clearTerminalBracketedPasteState(tab.terminalId)
       unsubData()
       unsubExit()
     }

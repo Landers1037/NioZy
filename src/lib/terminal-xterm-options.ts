@@ -3,6 +3,7 @@ import type { AppSettings } from '../../electron/shared/api-types'
 import { resolveTerminalFontFamilyCSSValue } from '../../electron/shared/terminal-builtin-fonts'
 import {
   DEFAULT_TERMINAL_SCROLLBACK,
+  DEFAULT_TERMINAL_TAB_STOP_WIDTH,
   normalizeDrawBoldTextInBrightColors,
   normalizeTerminalScrollback,
   resolveRightClickSelectsWord,
@@ -30,6 +31,7 @@ export function buildTerminalOptions(
     customGlyphs: true,
     lineHeight: 1,
     letterSpacing: 0,
+    tabStopWidth: DEFAULT_TERMINAL_TAB_STOP_WIDTH,
     allowProposedApi,
     ...cursor,
   }
@@ -50,4 +52,5 @@ export function applyTerminalRuntimeOptions(
   term.options.customGlyphs = true
   term.options.lineHeight = 1
   term.options.letterSpacing = 0
+  term.options.tabStopWidth = DEFAULT_TERMINAL_TAB_STOP_WIDTH
 }

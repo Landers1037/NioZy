@@ -32,6 +32,10 @@ import {
 } from '@/lib/terminal-shell-addons'
 import { DEFAULT_SHELL_SETTINGS } from '../../../electron/shared/shell-settings'
 import { notifyTerminalFocusReady } from '@/lib/terminal-focus'
+import {
+  clearTerminalBracketedPasteState,
+  trackTerminalOutputBracketedPaste,
+} from '@/lib/terminal-bracketed-paste'
 import { writeTerminalInput } from '@/lib/terminal-write'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../../electron/shared/preview-settings'
 import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
@@ -633,12 +637,14 @@ export function TerminalView({
 
       unsubData = api.terminal.onData((id, data) => {
         if (id === boundTerminalIdRef.current) {
+          trackTerminalOutputBracketedPaste(id, data)
           writeBatcher?.queue(data)
         }
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
+          clearTerminalBracketedPasteState(id)
           writeBatcher?.dropPending()
           writeXtermOutput(
             term,
@@ -675,6 +681,7 @@ export function TerminalView({
       unsubLayoutFit?.()
       ro?.disconnect()
       if (tab.terminalId) {
+        clearTerminalBracketedPasteState(tab.terminalId)
         unregisterTerminal(tab.terminalId)
       }
       shellAddonsRef.current = createTerminalShellAddonState()
@@ -848,12 +855,14 @@ export function TerminalView({
 
       unsubData = api.terminal.onData((id, data) => {
         if (id === boundTerminalIdRef.current) {
+          trackTerminalOutputBracketedPaste(id, data)
           writeBatcher?.queue(data)
         }
       })
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
+          clearTerminalBracketedPasteState(id)
           writeBatcher?.dropPending()
           writeXtermOutput(
             term,
@@ -890,6 +899,8 @@ export function TerminalView({
       writeBatcherRef.current = null
       unsubLayoutFit?.()
       ro?.disconnect()
+      const clearedTerminalId = boundTerminalIdRef.current
+      if (clearedTerminalId) clearTerminalBracketedPasteState(clearedTerminalId)
       shellAddonsRef.current = createTerminalShellAddonState()
       serializeAddonRef.current?.dispose()
       serializeAddonRef.current = null

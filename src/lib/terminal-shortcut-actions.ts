@@ -1,5 +1,6 @@
 import type { Terminal } from '@xterm/xterm'
 import type { AppShortcuts } from '../../electron/shared/shortcuts'
+import { pasteTerminalClipboard } from '@/lib/terminal-clipboard-paste'
 import { writeTerminalInput } from '@/lib/terminal-write'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
@@ -82,7 +83,7 @@ export function handleTerminalKeyboardShortcut(
   if (matchAccelerator(app.pasteFromClipboard, event)) {
     event.preventDefault()
     void navigator.clipboard.readText().then((text) => {
-      if (text) writeTerminalInput(terminalId, text)
+      if (text) pasteTerminalClipboard(terminalId, text)
     })
     return true
   }
