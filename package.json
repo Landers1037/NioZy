@@ -1,6 +1,6 @@
 {
   "name": "niozy",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "NioZy — Terminal workbench with built-in AI copilot",
   "main": "out/main/index.mjs",
   "type": "module",
