@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FilesystemEntryContextMenu } from '@/components/filesystem/FilesystemEntryContextMenu'
-import { formatFileSize } from '@/components/filesystem/filesystem-tree-utils'
+import { formatFileSize, getPathChain } from '@/components/filesystem/filesystem-tree-utils'
 import type {
   FilesystemCustomOpener,
   FilesystemSettings,
@@ -98,22 +98,16 @@ function Breadcrumb({
     )
   }
 
-  const normalized = currentPath.replace(/\//g, '\\')
   const segments: { label: string; path: string }[] = [
     { label: t('filesystem.modern.thisPc'), path: SCP_LOCAL_ROOTS },
   ]
 
-  if (/^[A-Za-z]:/.test(normalized)) {
-    const driveRoot = `${normalized[0].toUpperCase()}:\\`
-    segments.push({ label: driveRoot, path: driveRoot })
-    const rest = normalized.slice(2).replace(/^\\+/, '')
-    if (rest) {
-      let current = driveRoot
-      for (const part of rest.split('\\').filter(Boolean)) {
-        current = `${current}${part}`
-        segments.push({ label: part, path: current })
-      }
-    }
+  const chain = getPathChain(currentPath)
+  for (let i = 0; i < chain.length; i++) {
+    const path = chain[i]!
+    const label =
+      i === 0 ? path : path.slice(Math.max(path.lastIndexOf('\\'), path.lastIndexOf('/')) + 1)
+    segments.push({ label, path })
   }
 
   return (
