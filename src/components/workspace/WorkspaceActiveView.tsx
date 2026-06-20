@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Loader2, PanelRightOpen, PanelRightClose } from 'lucide-react'
 import { toast } from 'sonner'
@@ -35,12 +35,69 @@ export function WorkspaceActiveView({ tab, isTabActive }: WorkspaceActiveViewPro
   const ensureWorkspaceTerminal = useWorkspaceStore((s) => s.ensureWorkspaceTerminal)
   const resetWorkspaceSession = useWorkspaceStore((s) => s.resetWorkspaceSession)
   const terminalEnsureStartedRef = useRef(false)
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const terminalPaneRef = useRef<HTMLDivElement>(null)
 
   const [terminalWidthPercent, setTerminalWidthPercent] = useState(62)
   const [isResizing, setIsResizing] = useState(false)
   const [terminalStarting, setTerminalStarting] = useState(false)
 
   const rightPanelCollapsed = session.rightPanelCollapsed
+
+  const clampTerminalWidthPercent = useCallback((value: number) => {
+    return Math.min(MAX_TERMINAL_WIDTH_PERCENT, Math.max(MIN_TERMINAL_WIDTH_PERCENT, value))
+  }, [])
+
+  const startPaneResize = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault()
+      const handle = e.currentTarget
+      const layout = layoutRef.current
+      const terminalPane = terminalPaneRef.current
+      if (!layout || !terminalPane) return
+
+      const rect = layout.getBoundingClientRect()
+      if (rect.width <= 0) return
+
+      handle.setPointerCapture(e.pointerId)
+
+      const startX = e.clientX
+      const startPercent = terminalWidthPercent
+
+      setIsResizing(true)
+      setLayoutResizing(true)
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+
+      const onMove = (ev: PointerEvent) => {
+        const delta = ev.clientX - startX
+        const next = clampTerminalWidthPercent(startPercent + (delta / rect.width) * 100)
+        terminalPane.style.width = `${next}%`
+      }
+
+      const finish = (ev: PointerEvent) => {
+        const delta = ev.clientX - startX
+        const next = clampTerminalWidthPercent(startPercent + (delta / rect.width) * 100)
+        terminalPane.style.width = ''
+        setTerminalWidthPercent(next)
+        setIsResizing(false)
+        setLayoutResizing(false)
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+        if (handle.hasPointerCapture(ev.pointerId)) {
+          handle.releasePointerCapture(ev.pointerId)
+        }
+        handle.removeEventListener('pointermove', onMove)
+        handle.removeEventListener('pointerup', finish)
+        handle.removeEventListener('pointercancel', finish)
+      }
+
+      handle.addEventListener('pointermove', onMove)
+      handle.addEventListener('pointerup', finish)
+      handle.addEventListener('pointercancel', finish)
+    },
+    [clampTerminalWidthPercent, terminalWidthPercent],
+  )
 
   useEffect(() => {
     if (!session.isStarted || session.terminalId) {
@@ -86,8 +143,9 @@ export function WorkspaceActiveView({ tab, isTabActive }: WorkspaceActiveViewPro
   }
 
   return (
-    <div className="relative flex h-full min-h-0 overflow-hidden">
+    <div ref={layoutRef} className="relative flex h-full min-h-0 overflow-hidden">
       <div
+        ref={terminalPaneRef}
         className="relative h-full min-h-0 min-w-0 shrink-0 overflow-hidden"
         style={{ width: rightPanelCollapsed ? '100%' : `${terminalWidthPercent}%` }}
       >
@@ -104,39 +162,7 @@ export function WorkspaceActiveView({ tab, isTabActive }: WorkspaceActiveViewPro
               ui.sidebarResizeHover,
               isResizing && ui.sidebarResizeActive,
             )}
-            onPointerDown={(e) => {
-              const parent = e.currentTarget.parentElement
-              if (!parent) return
-              const rect = parent.getBoundingClientRect()
-              const startX = e.clientX
-              const startPercent = terminalWidthPercent
-              e.currentTarget.setPointerCapture(e.pointerId)
-              setIsResizing(true)
-              setLayoutResizing(true)
-              document.body.style.cursor = 'col-resize'
-              document.body.style.userSelect = 'none'
-              const onMove = (ev: PointerEvent) => {
-                const delta = ev.clientX - startX
-                const next = Math.min(
-                  MAX_TERMINAL_WIDTH_PERCENT,
-                  Math.max(MIN_TERMINAL_WIDTH_PERCENT, startPercent + (delta / rect.width) * 100),
-                )
-                setTerminalWidthPercent(next)
-              }
-              const finish = () => {
-                e.currentTarget.releasePointerCapture(e.pointerId)
-                setIsResizing(false)
-                setLayoutResizing(false)
-                document.body.style.cursor = ''
-                document.body.style.userSelect = ''
-                e.currentTarget.removeEventListener('pointermove', onMove)
-                e.currentTarget.removeEventListener('pointerup', finish)
-                e.currentTarget.removeEventListener('pointercancel', finish)
-              }
-              e.currentTarget.addEventListener('pointermove', onMove)
-              e.currentTarget.addEventListener('pointerup', finish)
-              e.currentTarget.addEventListener('pointercancel', finish)
-            }}
+            onPointerDown={startPaneResize}
           />
 
           <motion.div
@@ -147,8 +173,8 @@ export function WorkspaceActiveView({ tab, isTabActive }: WorkspaceActiveViewPro
           >
             <div
               className={cn(
-                'flex shrink-0 items-center gap-2 border-b border-border px-2 py-1.5',
-                gitWorkspaceEnabled && ui.segmentGroupBg,
+                'flex shrink-0 items-center gap-2 border-b border-border px-2 py-1.5 cursor-pointer',
+                gitWorkspaceEnabled && ui.segmentGroupBg, 'rounded-none',
               )}
             >
               {gitWorkspaceEnabled ? (
@@ -156,7 +182,7 @@ export function WorkspaceActiveView({ tab, isTabActive }: WorkspaceActiveViewPro
                   <button
                     type="button"
                     className={cn(
-                      'rounded-md px-3 py-1 text-sm transition-colors',
+                      'rounded-md px-3 py-1 text-sm transition-colors cursor-pointer',
                       session.rightPanel === 'files'
                         ? cn(ui.segmentActive, 'font-app-bold')
                         : cn(ui.segmentInactive, 'font-app-regular'),
@@ -168,7 +194,7 @@ export function WorkspaceActiveView({ tab, isTabActive }: WorkspaceActiveViewPro
                   <button
                     type="button"
                     className={cn(
-                      'rounded-md px-3 py-1 text-sm transition-colors',
+                      'rounded-md px-3 py-1 text-sm transition-colors cursor-pointer',
                       session.rightPanel === 'git'
                         ? cn(ui.segmentActive, 'font-app-bold')
                         : cn(ui.segmentInactive, 'font-app-regular'),
