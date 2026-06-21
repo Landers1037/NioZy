@@ -40,6 +40,11 @@ let petInteraction: {
 const PET_ALWAYS_ON_TOP_LEVEL = 'pop-up-menu' as const
 const PET_CLICK_MOVE_THRESHOLD_PX = 6
 const PET_DRAG_POLL_MS = 16
+/** 主窗口加载完成后额外等待，避免与首屏渲染争抢资源 */
+const DESKTOP_PET_STARTUP_DEFER_MS = 1500
+
+let startupSyncTimer: ReturnType<typeof setTimeout> | null = null
+let startupSyncLoadListener: (() => void) | null = null
 
 type PetMenuLabels = {
   hidePet: string
@@ -478,7 +483,64 @@ export function reloadPetWindowSprite(): void {
   void petWindow.webContents.reload()
 }
 
+function cancelScheduledDesktopPetStartupSync(): void {
+  if (startupSyncTimer !== null) {
+    clearTimeout(startupSyncTimer)
+    startupSyncTimer = null
+  }
+  if (startupSyncLoadListener && hostContext) {
+    const win = hostContext.getMainWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.removeListener('did-finish-load', startupSyncLoadListener)
+    }
+    startupSyncLoadListener = null
+  }
+}
+
+/** 启动阶段延迟加载宠物，待主窗口首屏就绪后在后台异步创建 */
+export function scheduleDesktopPetStartupSync(): void {
+  if (!hostContext) return
+  cancelScheduledDesktopPetStartupSync()
+
+  if (hostContext.settingsStore.get().reminder.desktopPetEnabled !== true) return
+
+  const runDeferredSync = (): void => {
+    startupSyncTimer = null
+    if (!hostContext) return
+    if (hostContext.settingsStore.get().reminder.desktopPetEnabled !== true) return
+    mainLog.info('[desktop-pet] startup deferred sync')
+    syncDesktopPet()
+  }
+
+  const scheduleAfterMainLoad = (): void => {
+    startupSyncLoadListener = null
+    startupSyncTimer = setTimeout(runDeferredSync, DESKTOP_PET_STARTUP_DEFER_MS)
+  }
+
+  const attachMainLoadListener = (win: BrowserWindow): void => {
+    if (win.webContents.isLoading()) {
+      startupSyncLoadListener = scheduleAfterMainLoad
+      win.webContents.once('did-finish-load', startupSyncLoadListener)
+    } else {
+      scheduleAfterMainLoad()
+    }
+  }
+
+  const waitForMainWindow = (): void => {
+    startupSyncTimer = null
+    const win = hostContext?.getMainWindow() ?? null
+    if (!win || win.isDestroyed()) {
+      startupSyncTimer = setTimeout(waitForMainWindow, 50)
+      return
+    }
+    attachMainLoadListener(win)
+  }
+
+  startupSyncTimer = setTimeout(waitForMainWindow, 0)
+}
+
 export function syncDesktopPet(): void {
+  cancelScheduledDesktopPetStartupSync()
   if (!hostContext) return
   const enabled = hostContext.settingsStore.get().reminder.desktopPetEnabled === true
   mainLog.info('[desktop-pet] syncDesktopPet', { enabled })
@@ -495,6 +557,7 @@ export function syncDesktopPet(): void {
 }
 
 export function disposeDesktopPet(): void {
+  cancelScheduledDesktopPetStartupSync()
   hidePetWindow()
   hostContext = null
 }
