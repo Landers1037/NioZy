@@ -87,6 +87,7 @@ import { isElectronDev } from '../shared/is-dev'
 import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
 import { NoteStore } from '../note-store'
 import { FilesystemFavoritesStore } from '../filesystem-favorites-store'
+import { WorkspaceHistoryStore } from '../workspace-history-store'
 import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
@@ -303,6 +304,8 @@ const systemStats = new SystemStats()
 const noteStore = new NoteStore()
 const filesystemFavoritesStore = new FilesystemFavoritesStore()
 filesystemFavoritesStore.load()
+const workspaceHistoryStore = new WorkspaceHistoryStore()
+workspaceHistoryStore.load()
 
 function syncStatisticsPolling(): void {
   statisticsStore.syncPolling()
@@ -1620,6 +1623,14 @@ ipcMain.handle('workspace:gitDiff', (_, workDir: string, filePath: string) => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
   return workspaceService.gitDiff(workDir, filePath)
 })
+ipcMain.handle('workspace:listHistory', () => workspaceHistoryStore.get())
+ipcMain.handle(
+  'workspace:recordHistory',
+  (
+    _,
+    input: import('../shared/workspace-history-types').WorkspaceHistoryRecordInput,
+  ) => workspaceHistoryStore.record(input),
+)
 
 ipcMain.handle('session:listClaudeCodeSessions', async (_, historyPath?: string) => {
   const settings = settingsStore.get()

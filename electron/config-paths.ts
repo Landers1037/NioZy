@@ -32,6 +32,10 @@ export function getRepoFilePath(): string {
   return join(getConfigDir(), 'repo.json')
 }
 
+export function getWorkspaceHistoryFilePath(): string {
+  return join(getConfigDir(), 'workspace-history.json')
+}
+
 export function getFilesystemFavoritesFilePath(): string {
   return join(getConfigDir(), 'filesystem-favorites.json')
 }

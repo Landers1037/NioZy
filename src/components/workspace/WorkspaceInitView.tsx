@@ -20,6 +20,7 @@ import {
   type WorkspaceToolId,
 } from '../../../electron/shared/workspace-types'
 import { basenameFromPath } from '@/lib/path-utils'
+import { WorkspaceHistoryList } from '@/components/workspace/WorkspaceHistoryList'
 
 const TOOL_LABEL_KEYS: Record<WorkspaceToolId, string> = {
   claude: 'workspace.tools.claudeCode',
@@ -63,14 +64,15 @@ export function WorkspaceInitView({ tabId }: WorkspaceInitViewProps) {
     : t('workspace.homeDir')
 
   return (
-    <div className="flex h-full items-center justify-center p-6">
-      <div
-        className={cn(
-          'flex w-full max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-border p-3 shadow-sm',
-          ui.mainPanel,
-        )}
-      >
-        <DropdownMenu>
+    <div className="flex h-full items-center justify-center overflow-y-auto p-6">
+      <div className="flex w-full max-w-3xl flex-col gap-4">
+        <div
+          className={cn(
+            'flex w-full flex-wrap items-center gap-2 rounded-2xl border border-border p-3 shadow-sm',
+            ui.mainPanel,
+          )}
+        >
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -96,9 +98,9 @@ export function WorkspaceInitView({ tabId }: WorkspaceInitViewProps) {
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
 
-        <DropdownMenu>
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -124,9 +126,9 @@ export function WorkspaceInitView({ tabId }: WorkspaceInitViewProps) {
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
 
-        <Input
+          <Input
           className="min-w-[160px] flex-1 font-mono text-sm"
           value={session.commandLine}
           placeholder={WORKSPACE_TOOL_COMMANDS[session.selectedTool]}
@@ -134,12 +136,15 @@ export function WorkspaceInitView({ tabId }: WorkspaceInitViewProps) {
           onKeyDown={(e) => {
             if (e.key === 'Enter') void handleStart()
           }}
-        />
+          />
 
-        <Button onClick={() => void handleStart()} disabled={starting || !session.workingDir}>
-          {starting ? <Loader2 className="size-4 animate-spin" /> : null}
-          {t('workspace.start')}
-        </Button>
+          <Button onClick={() => void handleStart()} disabled={starting || !session.workingDir}>
+            {starting ? <Loader2 className="size-4 animate-spin" /> : null}
+            {t('workspace.start')}
+          </Button>
+        </div>
+
+        <WorkspaceHistoryList tabId={tabId} />
       </div>
     </div>
   )

@@ -209,6 +209,11 @@
     },
     "errors": {
       "noWorkingDir": "请选择工作目录"
+    },
+    "history": {
+      "title": "历史工作区",
+      "empty": "暂无历史记录",
+      "restore": "恢复"
     }
   },
   "locale": {
