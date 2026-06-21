@@ -209,6 +209,11 @@
     },
     "errors": {
       "noWorkingDir": "Select a working directory"
+    },
+    "history": {
+      "title": "Recent workspaces",
+      "empty": "No history yet",
+      "restore": "Restore"
     }
   },
   "locale": {

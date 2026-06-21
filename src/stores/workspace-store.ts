@@ -4,6 +4,7 @@ import type {
   WorkspaceGitFile,
   WorkspaceToolId,
 } from '../../electron/shared/workspace-types'
+import type { WorkspaceHistoryEntry } from '../../electron/shared/workspace-history-types'
 import { WORKSPACE_TOOL_COMMANDS } from '../../electron/shared/workspace-types'
 import { getElectronAPI } from '@/lib/electron-client'
 import { useAppStore } from '@/stores/app-store'
@@ -51,6 +52,11 @@ interface WorkspaceStoreState {
   ) => Promise<{ ok: true; terminalId: string } | { ok: false; error: string }>
   stopWorkspace: (tabId: string) => Promise<void>
   resetWorkspaceSession: (tabId: string) => void
+  restoreFromHistory: (
+    tabId: string,
+    entry: WorkspaceHistoryEntry,
+  ) => Promise<{ ok: true; terminalId: string } | { ok: false; error: string }>
+  recordWorkspaceHistory: (tabId: string) => Promise<void>
   refreshGitStatus: (tabId: string) => Promise<void>
   detectGitSupport: (tabId: string) => Promise<void>
 }
@@ -82,6 +88,11 @@ function parseCommandLine(line: string, fallbackCommand: string): { command: str
   const parts = trimmed.split(/\s+/).filter(Boolean)
   if (parts.length === 0) return { command: fallbackCommand, args: [] }
   return { command: parts[0]!, args: parts.slice(1) }
+}
+
+function formatCommandLine(command: string, args: string[]): string {
+  if (args.length === 0) return command
+  return `${command} ${args.join(' ')}`
 }
 
 function patchSession(
@@ -190,6 +201,8 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
       title: formatWorkspaceTabTitle(session.workingDir),
     })
 
+    void get().recordWorkspaceHistory(tabId)
+
     return { ok: true, terminalId: '' }
   },
 
@@ -267,6 +280,52 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
         rightPanel: 'files',
       }),
     }))
+  },
+
+  restoreFromHistory: async (tabId, entry) => {
+    get().ensureSession(tabId)
+    set((s) => ({
+      sessions: patchSession(s.sessions, tabId, {
+        workingDir: entry.workingDir,
+        selectedTool: entry.selectedTool,
+        commandLine: formatCommandLine(entry.command, entry.args),
+        isStarted: false,
+        terminalId: null,
+      }),
+    }))
+
+    const startResult = await get().startWorkspace(tabId)
+    if (!startResult.ok) return startResult
+
+    const termResult = await get().ensureWorkspaceTerminal(tabId)
+    if (!termResult.ok) {
+      get().resetWorkspaceSession(tabId)
+      useAppStore.getState().patchWorkspaceTab(tabId, {
+        workspaceDir: undefined,
+        terminalId: undefined,
+        title: getWorkspaceTabTitle(),
+      })
+    }
+    return termResult
+  },
+
+  recordWorkspaceHistory: async (tabId) => {
+    const session = get().sessions[tabId]
+    if (!session?.isStarted || !session.workingDir.trim()) return
+
+    const fallback = WORKSPACE_TOOL_COMMANDS[session.selectedTool]
+    const { command, args } = parseCommandLine(session.commandLine, fallback)
+
+    try {
+      await getElectronAPI().workspace.recordHistory({
+        workingDir: session.workingDir,
+        selectedTool: session.selectedTool,
+        command,
+        args,
+      })
+    } catch {
+      // History persistence is best-effort.
+    }
   },
 
   refreshGitStatus: async (tabId) => {

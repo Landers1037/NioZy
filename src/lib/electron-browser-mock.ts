@@ -673,6 +673,8 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       detectGit: async () => ({ ok: true as const, isRepo: false }),
       gitStatus: async () => ({ ok: false as const, error: 'GIT_NOT_FOUND' }),
       gitDiff: async () => ({ ok: false as const, error: 'Browser preview' }),
+      listHistory: async () => [],
+      recordHistory: async () => [],
     },
     notes: {
       list: async () => [],
