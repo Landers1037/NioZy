@@ -136,6 +136,7 @@ import {
   setPetWindowReminderList,
   onPetShowMenu,
   onPetToggleMain,
+  scheduleDesktopPetStartupSync,
   syncDesktopPet,
 } from '../desktop-pet-service'
 
@@ -749,7 +750,7 @@ app.whenReady().then(async () => {
       notifyRendererSettingsChanged()
     },
   })
-  syncDesktopPet()
+  scheduleDesktopPetStartupSync()
   initScreenshotsService(settingsStore.get().locale)
 
   if (settingsStore.get().advanced.shellContextMenu) {
