@@ -1473,6 +1473,8 @@
     "attachPtyPending": "正在连接终端…",
     "superPowerSavingIdle": "超级省电：此 Tab 的终端与 PTY 已挂起。切换回来将自动恢复。",
     "superPowerSavingResuming": "正在恢复终端会话…",
+    "sshDeferredIdle": "此 SSH 连接需要动态密码。切换到其他 Tab 后再切回，将提示输入并连接。",
+    "sshDeferredConnecting": "正在连接 SSH…",
     "restoreSessionLoading": "正在恢复终端会话…",
     "inputAriaLabel": "终端输入",
     "sshReconnectHint": "使用 Enter 键重新尝试连接",

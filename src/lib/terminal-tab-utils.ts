@@ -40,6 +40,11 @@ export function getAllTerminalIds(tab: AppTab): string[] {
   return getSplitPanes(tab).map((p) => p.terminalId)
 }
 
+/** 终端 Tab 是否需要在主区域挂载视图（含已连接 PTY 或待连接的 SSH 动态密码 Tab） */
+export function hasTerminalView(tab: AppTab): boolean {
+  return tab.type === 'terminal' && (getAllTerminalIds(tab).length > 0 || tab.sshDeferredConnect === true)
+}
+
 export function tabHasTerminalId(tab: AppTab, terminalId: string): boolean {
   return getAllTerminalIds(tab).includes(terminalId)
 }

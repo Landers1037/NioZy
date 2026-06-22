@@ -1242,6 +1242,8 @@
     "attachPtyPending": "ターミナルに接続しています…",
     "superPowerSavingIdle": "スーパー省電力：このタブのターミナルと PTY は停止中です。戻ると自動的に復元します。",
     "superPowerSavingResuming": "ターミナルセッションを復元しています…",
+    "sshDeferredIdle": "この SSH 接続には動的パスワードが必要です。他のタブへ切り替えてから戻ると、入力を求められ接続します。",
+    "sshDeferredConnecting": "SSH に接続しています…",
     "restoreSessionLoading": "ターミナルセッションを復元しています…",
     "inputAriaLabel": "ターミナル入力",
     "sshReconnectHint": "Enter キーで再接続",

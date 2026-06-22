@@ -174,7 +174,7 @@ export function checkScpInPath(): ScpCheckResult
 
 `src/lib/terminal-actions.ts` — `createConnection`、`applySshDynamicPasswordToCreateOptions`，设置 `sshConnectionId` 关联 Tab；动态密码弹框由 `src/lib/ssh-dynamic-password-prompt.ts` + `SshDynamicPasswordDialog`（挂载于 `App.tsx`）提供。
 
-需再次输入动态密码的场景：新建连接、断线重连（`ssh-reconnect-actions.ts`）、拆分/克隆 Tab、超级省电恢复、会话恢复（`resume-term-session.ts`）。
+需再次输入动态密码的场景：新建连接、断线重连（`ssh-reconnect-actions.ts`）、拆分/克隆 Tab、超级省电恢复。**会话恢复**（`resume-term-session.ts`）对动态密码 SSH 仅恢复 Tab，切换 Tab 时由 `ssh-deferred-connect.ts` + `useSshDeferredConnectSync` 弹框并连接。
 
 ### 断开状态
 

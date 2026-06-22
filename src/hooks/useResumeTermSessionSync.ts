@@ -22,7 +22,7 @@ export function useResumeTermSessionSync(): void {
     .map((t) => {
       const ids = getAllTerminalIds(t)
       const cwds = ids.map((id) => terminalCwds[id] ?? '').join('|')
-      return `${t.id}:${t.title}:${t.customTitle ?? ''}:${t.activeSplitIndex ?? 0}:${ids.join(',')}:${cwds}`
+      return `${t.id}:${t.title}:${t.customTitle ?? ''}:${t.activeSplitIndex ?? 0}:${t.sshDeferredConnect ? 'd' : ''}:${t.deferredSplitPaneCount ?? 0}:${ids.join(',')}:${cwds}`
     })
     .join(';')
 
