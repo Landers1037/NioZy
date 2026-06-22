@@ -1,4 +1,4 @@
-export type TerminalEmulator = 'xterm' | 'wterm'
+export type TerminalEmulator = 'xterm' | 'wterm' | 'ghostty'
 
 import type { TerminalRenderer } from './terminal-renderer'
 import {
@@ -36,7 +36,7 @@ export const MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 0
 export const MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 5_000
 
 export interface ExperimentalSettings {
-  /** 终端模拟器实现：xterm（默认）或 wterm（实验） */
+  /** 终端模拟器实现：xterm（默认）、ghostty（ghostty-web）或 wterm（实验） */
   terminalEmulator: TerminalEmulator
   /** Wterm 下使用 @wterm/ghostty 作为 VT 解析核心（libghostty WASM） */
   ghosttyCoreEnabled: boolean
@@ -113,7 +113,9 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
 }
 
 export function normalizeTerminalEmulator(value: unknown): TerminalEmulator {
-  return value === 'wterm' ? 'wterm' : 'xterm'
+  if (value === 'wterm') return 'wterm'
+  if (value === 'ghostty') return 'ghostty'
+  return 'xterm'
 }
 
 export function normalizeAttachPtyTabSwitchDwellMs(value: unknown): number {
@@ -185,11 +187,11 @@ export {
   type AiSidebarWidthPreset,
 } from './ai-sidebar-width'
 
-/** 使用 Wterm 时将渲染方式规范为 dom（不支持 Canvas/WebGL） */
+/** Wterm / ghostty-web 仅支持 DOM 渲染（不支持 xterm WebGL） */
 export function normalizeRendererForWterm(
   emulator: TerminalEmulator,
   renderer: TerminalRenderer,
 ): TerminalRenderer {
-  if (emulator === 'wterm') return WTERM_RENDERER
+  if (emulator === 'wterm' || emulator === 'ghostty') return WTERM_RENDERER
   return renderer
 }

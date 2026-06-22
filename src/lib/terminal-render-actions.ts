@@ -1,11 +1,11 @@
 import { useAppStore } from '@/stores/app-store'
-import { isWtermEmulator } from '@/lib/terminal-emulator'
+import { isDomOnlyTerminalEmulator } from '@/lib/terminal-emulator'
 import type { TerminalRenderer } from '../../electron/shared/terminal-renderer'
 
 export function canToggleTerminalRenderMode(): boolean {
   const settings = useAppStore.getState().settings
   if (!settings) return false
-  return !isWtermEmulator(settings)
+  return !isDomOnlyTerminalEmulator(settings)
 }
 
 export function setTerminalRenderer(next: TerminalRenderer): void {

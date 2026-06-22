@@ -272,10 +272,11 @@
     },
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
+    "engineGhostty": "Ghostty",
     "modeDom": "DOM",
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
-    "renderModeWtermHint": "Wterm only supports DOM rendering"
+    "renderModeDomOnlyHint": "Ghostty / Wterm only support DOM rendering"
   },
   "commandReplay": {
     "add": "Add command",
@@ -578,7 +579,7 @@
       "emojiNativeRendering": "Native emoji rendering",
       "emojiNativeRenderingDesc": "Uses the Unicode 11 width table so emoji and wide characters render correctly in the terminal",
       "terminalInlineImages": "Terminal inline images",
-      "terminalInlineImagesDesc": "Use the xterm image addon to display images via SIXEL and iTerm inline image protocol (IIP); use niozy-cat. Press Ctrl+K or run clear/cls to dismiss images",
+      "terminalInlineImagesDesc": "Display images inline: SIXEL and iTerm IIP on Xterm; Kitty graphics protocol when using Ghostty rendering. Use niozy-cat. Press Ctrl+K or run clear/cls to dismiss images",
       "highlightLinks": "Highlight links",
       "highlightLinksDesc": "Highlight http and https URLs in terminal output",
       "clickToOpenLinks": "Click to open links",
@@ -918,8 +919,9 @@
       "title": "Experimental",
       "description": "Unstable features that may change or be removed",
       "terminalEmulator": "Terminal emulator",
-      "terminalEmulatorDesc": "Choose the frontend terminal implementation. Wterm uses WASM/DOM rendering (experimental). Restart open terminals after switching.",
+      "terminalEmulatorDesc": "Choose the frontend terminal implementation: Xterm.js (default), Ghostty (ghostty-web WASM), or Wterm (experimental). Restart the app after switching.",
       "terminalEmulatorXterm": "Xterm.js (default)",
+      "terminalEmulatorGhostty": "Ghostty (ghostty-web)",
       "terminalEmulatorWterm": "Wterm (experimental)",
       "jsSandboxEnabled": "JS sandbox",
       "jsSandboxEnabledDesc": "Show an “Open sandbox” entry in the sidebar. Runs JavaScript in an isolated QuickJS WASM environment (not Node.js; no filesystem or network).",

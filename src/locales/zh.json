@@ -272,10 +272,11 @@
     },
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
+    "engineGhostty": "Ghostty",
     "modeDom": "DOM",
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
-    "renderModeWtermHint": "Wterm 仅支持 DOM 渲染"
+    "renderModeDomOnlyHint": "Ghostty / Wterm 仅支持 DOM 渲染"
   },
   "commandReplay": {
     "add": "新增命令",
@@ -578,7 +579,7 @@
       "emojiNativeRendering": "Emoji 原生渲染",
       "emojiNativeRenderingDesc": "开启后使用 Unicode 11 宽度表，在终端中正确显示 emoji 等宽字符",
       "terminalInlineImages": "终端内联图片",
-      "terminalInlineImagesDesc": "使用 xterm image 插件解析 SIXEL 与 iTerm 内联图片协议（IIP），在终端显示图片；可使用内置命令 niozy-cat。查看后按 Ctrl+K 或执行 clear/cls 清除",
+      "terminalInlineImagesDesc": "在终端内联显示图片：Xterm 下解析 SIXEL 与 iTerm IIP；Ghostty 渲染下使用 Kitty 图形协议。可使用内置命令 niozy-cat。查看后按 Ctrl+K 或执行 clear/cls 清除",
       "highlightLinks": "高亮链接地址",
       "highlightLinksDesc": "开启后高亮终端输出中的 http、https 链接",
       "clickToOpenLinks": "点击打开链接",
@@ -918,8 +919,9 @@
       "title": "实验特性",
       "description": "不稳定功能，可能变更或移除",
       "terminalEmulator": "终端模拟器",
-      "terminalEmulatorDesc": "选择前端终端模拟器实现。Wterm 使用 WASM/DOM 渲染（实验性）。切换后请重新打开终端 Tab 生效。",
+      "terminalEmulatorDesc": "选择前端终端模拟器：Xterm.js（默认）、Ghostty（ghostty-web WASM）或 Wterm（实验）。切换后请重启应用。",
       "terminalEmulatorXterm": "Xterm.js（默认）",
+      "terminalEmulatorGhostty": "Ghostty（ghostty-web）",
       "terminalEmulatorWterm": "Wterm（实验性）",
       "jsSandboxEnabled": "JS 沙箱",
       "jsSandboxEnabledDesc": "在侧栏显示「打开沙箱」入口，使用 QuickJS WASM 在隔离环境中运行 JavaScript（非 Node.js，无文件系统与网络）。",

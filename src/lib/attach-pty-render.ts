@@ -2,10 +2,10 @@ import type { AppSettings } from '../../electron/shared/api-types'
 import {
   DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   normalizeAttachPtyTabSwitchDwellMs,
+  normalizeTerminalEmulator,
 } from '../../electron/shared/experimental-settings'
 import type { AppTab } from '@/stores/app-store'
 import { getActiveTerminalId, getSplitPanes } from '@/lib/terminal-tab-utils'
-import { isWtermEmulator } from '@/lib/terminal-emulator'
 
 export function getAttachPtyTabSwitchDwellMs(
   settings: AppSettings | null | undefined,
@@ -18,7 +18,7 @@ export function getAttachPtyTabSwitchDwellMs(
 
 export function isAttachPtyRenderMode(settings: AppSettings | null | undefined): boolean {
   if (!settings?.experimental.attachPtyRenderMode) return false
-  return !isWtermEmulator(settings)
+  return normalizeTerminalEmulator(settings.experimental.terminalEmulator) === 'xterm'
 }
 
 export function isAttachPtyWebglContextPoolEnabled(

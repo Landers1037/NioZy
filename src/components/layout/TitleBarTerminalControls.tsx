@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
-import { isWtermEmulator, normalizeRendererForEmulator } from '@/lib/terminal-emulator'
+import { isDomOnlyTerminalEmulator, normalizeRendererForEmulator } from '@/lib/terminal-emulator'
 import { cn } from '@/lib/utils'
 import { getElectronAPI } from '@/lib/electron-client'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
@@ -105,7 +105,7 @@ export function TitleBarTerminalControls() {
   if (!settings) return null
 
   const emulator = settings.experimental.terminalEmulator
-  const useWterm = isWtermEmulator(settings)
+  const domOnlyEmulator = isDomOnlyTerminalEmulator(settings)
   const renderer = settings.terminal.renderer
   const aiSidebarEnabled = settings.experimental.aiSidebarEnabled === true
   const showUsageStatistics =
@@ -141,7 +141,11 @@ export function TitleBarTerminalControls() {
   }
 
   const engineLabel =
-    emulator === 'wterm' ? t('titleBar.engineWterm') : t('titleBar.engineXterm')
+    emulator === 'wterm'
+      ? t('titleBar.engineWterm')
+      : emulator === 'ghostty'
+        ? t('titleBar.engineGhostty')
+        : t('titleBar.engineXterm')
   const modeLabel =
     renderer === 'dom' ? t('titleBar.modeDom') : t('titleBar.modeWebgl')
 
@@ -153,14 +157,14 @@ export function TitleBarTerminalControls() {
         ...settings.experimental,
         terminalEmulator: next,
       },
-      ...(next === 'wterm' && normalizedRenderer !== settings.terminal.renderer
+      ...((next === 'wterm' || next === 'ghostty') && normalizedRenderer !== settings.terminal.renderer
         ? { terminal: { ...settings.terminal, renderer: normalizedRenderer } }
         : {}),
     }).then(() => notifyEmulatorRestart(t))
   }
 
   const setRenderer = (next: TerminalRenderer) => {
-    if (useWterm || next === renderer) return
+    if (domOnlyEmulator || next === renderer) return
     void patchSettings({
       terminal: { ...settings.terminal, renderer: next },
     })
@@ -478,6 +482,10 @@ export function TitleBarTerminalControls() {
             <span className="flex-1">{t('titleBar.engineXterm')}</span>
             {emulator === 'xterm' ? <Check className="size-3.5" /> : null}
           </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setEmulator('ghostty')}>
+            <span className="flex-1">{t('titleBar.engineGhostty')}</span>
+            {emulator === 'ghostty' ? <Check className="size-3.5" /> : null}
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setEmulator('wterm')}>
             <span className="flex-1">{t('titleBar.engineWterm')}</span>
             {emulator === 'wterm' ? <Check className="size-3.5" /> : null}
@@ -489,10 +497,10 @@ export function TitleBarTerminalControls() {
           <Button
             variant="outline"
             size="sm"
-            className={cn(titleBarMenuBtnClass, useWterm && 'opacity-60')}
-            disabled={useWterm}
+            className={cn(titleBarMenuBtnClass, domOnlyEmulator && 'opacity-60')}
+            disabled={domOnlyEmulator}
             aria-label={t('titleBar.renderMode')}
-            title={useWterm ? t('titleBar.renderModeWtermHint') : undefined}
+            title={domOnlyEmulator ? t('titleBar.renderModeDomOnlyHint') : undefined}
           >
             <GpuIcon className={titleBarMenuIconClass} />
             <span className="max-w-[5.5rem] truncate">{modeLabel}</span>

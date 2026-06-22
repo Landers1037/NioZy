@@ -29,7 +29,7 @@ import {
   normalizeTerminalScrollback,
 } from '../../../electron/shared/terminal-xterm'
 import { Bold, Cpu, Layers, MousePointer2, Palette, ScrollText, Sparkles, TextCursor, Type } from 'lucide-react'
-import { isWtermEmulator } from '@/lib/terminal-emulator'
+import { isDomOnlyTerminalEmulator } from '@/lib/terminal-emulator'
 import type { TerminalIdleAnimationMode } from '../../../electron/shared/terminal-idle-animation'
 import {
   DEFAULT_TERMINAL_IDLE_DELAY_MS,
@@ -47,7 +47,7 @@ export function TerminalSettings() {
 
   const scheme = settings.terminal.colorScheme
   const cursorOptions = getCursorStyleOptions(t)
-  const useWterm = isWtermEmulator(settings)
+  const domOnlyEmulator = isDomOnlyTerminalEmulator(settings)
   const idleAnimation = settings.terminal.idleAnimation
   const idleAnimationModes: TerminalIdleAnimationMode[] = [
     'blackHole',
@@ -300,7 +300,7 @@ export function TerminalSettings() {
           icon={Layers}
           label={t('settings.terminal.synchronizedOutput')}
           description={
-            useWterm
+            domOnlyEmulator
               ? t('settings.terminal.synchronizedOutputWtermDesc')
               : t('settings.terminal.synchronizedOutputDesc')
           }
@@ -308,7 +308,7 @@ export function TerminalSettings() {
         >
           <Switch
             checked={settings.terminal.synchronizedOutputEnabled}
-            disabled={useWterm}
+            disabled={domOnlyEmulator}
             onCheckedChange={(synchronizedOutputEnabled) =>
               patchSettings({ terminal: { ...settings.terminal, synchronizedOutputEnabled } })
             }
@@ -319,14 +319,14 @@ export function TerminalSettings() {
           icon={Cpu}
           label={t('settings.terminal.renderer')}
           description={
-            useWterm
+            domOnlyEmulator
               ? t('settings.terminal.rendererWtermDesc')
               : t('settings.terminal.rendererDesc')
           }
         >
           <Select
             value={settings.terminal.renderer}
-            disabled={useWterm}
+            disabled={domOnlyEmulator}
             onValueChange={(v) =>
               patchSettings({
                 terminal: {
@@ -350,7 +350,7 @@ export function TerminalSettings() {
           icon={Sparkles}
           label={t('settings.terminal.idleAnimation')}
           description={
-            useWterm
+            domOnlyEmulator
               ? t('settings.terminal.idleAnimationWtermDesc')
               : t('settings.terminal.idleAnimationDesc')
           }
@@ -362,7 +362,7 @@ export function TerminalSettings() {
               </span>
               <Switch
                 checked={idleAnimation.enabled}
-                disabled={useWterm}
+                disabled={domOnlyEmulator}
                 onCheckedChange={(enabled) =>
                   patchSettings({
                     terminal: {
@@ -378,7 +378,7 @@ export function TerminalSettings() {
               className={cn(
                 'inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border p-1',
                 ui.segmentGroupBg,
-                (!idleAnimation.enabled || useWterm) && 'pointer-events-none opacity-50',
+                (!idleAnimation.enabled || domOnlyEmulator) && 'pointer-events-none opacity-50',
               )}
               role="tablist"
               aria-label={t('settings.terminal.idleAnimationModeAria')}
@@ -395,7 +395,7 @@ export function TerminalSettings() {
                       ? cn(ui.segmentActive, 'font-app-bold')
                       : cn(ui.segmentInactive, 'font-app-regular'),
                   )}
-                  disabled={useWterm}
+                  disabled={domOnlyEmulator}
                   onClick={() =>
                     patchSettings({
                       terminal: {
@@ -413,7 +413,7 @@ export function TerminalSettings() {
             <div
               className={cn(
                 'flex items-center gap-2',
-                (!idleAnimation.enabled || useWterm) && 'pointer-events-none opacity-50',
+                (!idleAnimation.enabled || domOnlyEmulator) && 'pointer-events-none opacity-50',
               )}
             >
               <Input
@@ -422,7 +422,7 @@ export function TerminalSettings() {
                 max={MAX_TERMINAL_IDLE_DELAY_MS / 1000}
                 step={1}
                 className="max-w-[120px]"
-                disabled={useWterm}
+                disabled={domOnlyEmulator}
                 value={Math.round(idleAnimation.idleDelayMs / 1000)}
                 onChange={(e) => {
                   const sec = Number.parseInt(e.target.value, 10)

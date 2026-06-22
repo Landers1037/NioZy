@@ -65,7 +65,13 @@ import {
 import { p2pService } from '../p2p/p2p-service'
 import { ensureChatDir, getChatDir } from '../config-paths'
 import { scpLog, scpProfileForLog } from '../scp-logger'
-import type { SshConnectionProfile, TerminalCreateOptions, CustomConnection } from '../shared/api-types'
+import { resolveTerminalImageProtocolFromSettings } from '../shared/shell-settings'
+import { normalizeTerminalEmulator } from '../shared/experimental-settings'
+import type {
+  CustomConnection,
+  SshConnectionProfile,
+  TerminalCreateOptions,
+} from '../shared/api-types'
 import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
@@ -1938,10 +1944,18 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
   }
   try {
     const shellSettings = settingsStore.get().shell
+    const appSettings = settingsStore.get()
+    const terminalImageProtocol = resolveTerminalImageProtocolFromSettings(
+      shellSettings,
+      appSettings.experimental,
+    )
+    const terminalEmulator = normalizeTerminalEmulator(appSettings.experimental.terminalEmulator)
     const session = terminalService.create({
       ...resolved,
       ohMyPoshEnabled: shellSettings.ohMyPoshEnabled,
       ohMyPoshTheme: shellSettings.ohMyPoshTheme,
+      terminalImageProtocol,
+      terminalEmulator,
     })
     if (sshConn) {
       runSshConnectionStartupScript(session.id, sshConn)

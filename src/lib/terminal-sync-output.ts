@@ -1,5 +1,5 @@
 import type { AppSettings } from '../../electron/shared/api-types'
-import { isWtermEmulator } from '@/lib/terminal-emulator'
+import { isGhosttyEmulator, isWtermEmulator } from '@/lib/terminal-emulator'
 import type { Terminal } from '@xterm/xterm'
 import { maybeResetInlineImagesOnErase } from '@/lib/terminal-shell-addons'
 
@@ -23,9 +23,18 @@ export function writeXtermOutput(
   settings: AppSettings | null | undefined,
   callback?: () => void,
 ): void {
-  maybeResetInlineImagesOnErase(term as Terminal, data)
-  term.write(
-    filterSynchronizedOutputSequences(data, isSynchronizedOutputEnabled(settings)),
-    callback,
+  const payload = filterSynchronizedOutputSequences(
+    data,
+    isSynchronizedOutputEnabled(settings),
   )
+
+  // ghostty-web 将 write callback 推迟到 rAF，会拖慢 batcher/反压 ack；WASM 写入本身同步完成
+  if (isGhosttyEmulator(settings)) {
+    term.write(payload)
+    callback?.()
+    return
+  }
+
+  maybeResetInlineImagesOnErase(term as Terminal, data)
+  term.write(payload, callback)
 }

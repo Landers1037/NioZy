@@ -11,6 +11,21 @@ import {
 const SHIFT_SELECT_DRAG_THRESHOLD_PX = 4
 
 /**
+ * 备用屏（less / vim）非左键：阻止 xterm 向 PTY 转发 SGR 鼠标序列，
+ * 以及 mousedown 触发的 focus 报告（`ESC [I` / `ESC [O`）。
+ */
+export function blockAlternateScreenNonPrimaryMouse(
+  term: Terminal,
+  event: MouseEvent,
+): boolean {
+  if (term.buffer.active.type !== 'alternate') return false
+  if (event.button === 0) return false
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  return true
+}
+
+/**
  * 备用屏（vim / less / 交互式 CLI）左键拖选。
  *
  * 原理：在 capture 阶段拦截 mousedown，阻止原始事件到达 xterm 的 "always-on"
