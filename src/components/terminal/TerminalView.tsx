@@ -555,7 +555,6 @@ export function TerminalView({
       const onData = (data: string) => {
         const terminalId = boundTerminalIdRef.current
         if (!terminalId) return
-        touchTabActivity(tabRef.current.id)
         writeTerminalInput(terminalId, data)
       }
       term.onData(onData)
@@ -783,7 +782,6 @@ export function TerminalView({
       const onData = (data: string) => {
         const terminalId = boundTerminalIdRef.current
         if (!terminalId) return
-        touchTabActivity(tabRef.current.id)
         writeTerminalInput(terminalId, data)
       }
       term.onData(onData)

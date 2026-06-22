@@ -139,8 +139,14 @@ export default function App() {
   useAttachPtyTabSwitch(tabs, activeTabId)
   useResumeTermSessionSync()
 
+  const prevActiveTabIdRef = useRef<string | null>(null)
   useEffect(() => {
+    const prevActiveTabId = prevActiveTabIdRef.current
+    if (prevActiveTabId && prevActiveTabId !== activeTabId) {
+      touchTabActivity(prevActiveTabId)
+    }
     if (activeTabId) touchTabActivity(activeTabId)
+    prevActiveTabIdRef.current = activeTabId
   }, [activeTabId])
 
   useEffect(() => {
