@@ -70,7 +70,6 @@ import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
-import { resolveBundleFile } from '../shared/resolve-bundle-file'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
@@ -85,7 +84,10 @@ import { WorkspaceService } from '../workspace-service'
 import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
 import { getWindowBackgroundColor } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
-import { installReleaseDevToolsGuard } from '../shared/release-devtools-guard'
+import {
+  allowDevToolsForContents,
+  installReleaseDevToolsGuard,
+} from '../shared/release-devtools-guard'
 import { NoteStore } from '../note-store'
 import { FilesystemFavoritesStore } from '../filesystem-favorites-store'
 import { WorkspaceHistoryStore } from '../workspace-history-store'
@@ -453,6 +455,7 @@ function requestOpenSettingsFromTray(): void {
 function requestOpenDevToolsFromTray(): void {
   showMainWindow()
   if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+    allowDevToolsForContents(mainWindow.webContents)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
   }
 }
@@ -525,9 +528,7 @@ function buildTrayContextMenu(): Menu {
   return Menu.buildFromTemplate([
     { label: labels.newTerminal, click: () => requestNewTerminalFromTray() },
     { label: labels.openSettings, click: () => requestOpenSettingsFromTray() },
-    ...(isDev
-      ? [{ label: labels.openDevTools, click: () => requestOpenDevToolsFromTray() }]
-      : []),
+    { label: labels.openDevTools, click: () => requestOpenDevToolsFromTray() },
     { type: 'separator' },
     {
       label: petEnabled ? labels.disableDesktopPet : labels.enableDesktopPet,
@@ -563,9 +564,9 @@ function handleOpenDirectoryRequest(directory: string, connectionId?: string | n
 
 function resolvePreloadPath(): string {
   const candidates = [
-    resolveBundleFile(fileURLToPath(new URL('../preload', import.meta.url)), 'index'),
-    resolveBundleFile(join(app.getAppPath(), 'out/preload'), 'index'),
-    resolveBundleFile(join(__dirname, '../preload'), 'index'),
+    fileURLToPath(new URL('../preload/index.mjs', import.meta.url)),
+    join(app.getAppPath(), 'out/preload/index.mjs'),
+    join(__dirname, '../preload/index.mjs'),
   ]
   for (const file of candidates) {
     if (existsSync(file)) return file

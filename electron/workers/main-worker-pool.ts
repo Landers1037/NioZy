@@ -1,6 +1,5 @@
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-import { existsSync } from 'fs'
 import { Worker } from 'worker_threads'
 import { randomUUID } from 'crypto'
 import type { MainWorkerRequest, MainWorkerResponse, MainWorkerTask } from './main-worker-types'
@@ -17,12 +16,7 @@ const queue: Array<{ id: string; task: MainWorkerTask; payload: unknown; resolve
 let draining = false
 
 function getWorkerPath(): string {
-  const dir = join(dirname(fileURLToPath(import.meta.url)), 'workers')
-  for (const ext of ['cjs', 'mjs'] as const) {
-    const file = join(dir, `main-worker.${ext}`)
-    if (existsSync(file)) return file
-  }
-  return join(dir, 'main-worker.cjs')
+  return join(dirname(fileURLToPath(import.meta.url)), 'workers', 'main-worker.mjs')
 }
 
 function ensureWorker(): Worker {

@@ -7,7 +7,6 @@ import type { SettingsStore } from './settings-store'
 import type { ReminderDuePayload } from './shared/reminder-data'
 import type { DesktopPetPosition } from './shared/reminder-settings'
 import { getPetDisplayDimensions, normalizePetDisplayScale } from './shared/pet-atlas'
-import { resolveBundleFile } from './shared/resolve-bundle-file'
 import { getPetUiLabels } from './shared/pet-ui-labels'
 import {
   getPetWindowCompact,
@@ -319,8 +318,8 @@ function unbindMainWindowTopSync(): void {
 
 function resolvePetPreloadPath(): string {
   const candidates = [
-    resolveBundleFile(fileURLToPath(new URL('../preload', import.meta.url)), 'pet-preload'),
-    resolveBundleFile(join(process.cwd(), 'out/preload'), 'pet-preload'),
+    fileURLToPath(new URL('../preload/pet-preload.mjs', import.meta.url)),
+    join(process.cwd(), 'out/preload/pet-preload.mjs'),
   ]
   for (const file of candidates) {
     if (existsSync(file)) return file
