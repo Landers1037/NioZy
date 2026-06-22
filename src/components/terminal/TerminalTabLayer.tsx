@@ -9,6 +9,7 @@ import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-stor
 import { useSuperPowerSavingStore } from '@/stores/super-power-saving-store'
 import { InactiveTerminalPlaceholder } from '@/components/terminal/InactiveTerminalPlaceholder'
 import { SuperPowerSavingPlaceholder } from '@/components/terminal/SuperPowerSavingPlaceholder'
+import { SshDeferredConnectPane } from '@/components/terminal/SshDeferredConnectPane'
 import { TerminalBackgroundLayer } from '@/components/terminal/TerminalBackgroundLayer'
 import { cn } from '@/lib/utils'
 
@@ -50,8 +51,13 @@ export const TerminalTabLayer = memo(function TerminalTabLayer({
 
   const superPowerSaving = performance?.superPowerSaving === true
   const waitForPtyResume = superPowerSaving && isTabActive && (ptySuspended || ptyResuming)
+  const isDeferredSsh = tab.sshDeferredConnect === true
   const mountTerminal = policy.mountTerminal && !waitForPtyResume
   const terminalBody = (() => {
+    if (isDeferredSsh && mountTerminal) {
+      return <SshDeferredConnectPane tab={tab} />
+    }
+
     if (!mountTerminal) {
       if (waitForPtyResume) {
         return <SuperPowerSavingPlaceholder tabId={tab.id} resuming />

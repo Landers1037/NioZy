@@ -16,6 +16,7 @@ import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
+import { useSshDeferredConnectSync } from '@/hooks/useSshDeferredConnectSync'
 import { setTerminalRenderPaused } from '@/lib/terminal-render-pause'
 import { useAttachPtyTabSwitch } from '@/hooks/useAttachPtyTabSwitch'
 import { useResumeTermSessionSync } from '@/hooks/useResumeTermSessionSync'
@@ -26,7 +27,7 @@ import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { TerminalTabLayer } from '@/components/terminal/TerminalTabLayer'
 import { FilePreviewDialog } from '@/components/preview/FilePreviewDialog'
 import { LinkPreviewPanel } from '@/components/preview/LinkPreviewPanel'
-import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
+import { hasTerminalView } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, handleOpenDirectoryPayload } from '@/lib/terminal-actions'
@@ -136,6 +137,7 @@ export default function App() {
   useResourceAutoDegradeMonitor()
   useTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
+  useSshDeferredConnectSync(tabs, activeTabId)
   useAttachPtyTabSwitch(tabs, activeTabId)
   useResumeTermSessionSync()
 
@@ -298,7 +300,7 @@ export default function App() {
   const [aiMountKey, setAiMountKey] = useState(0)
 
   const terminalTabs = useMemo(
-    () => tabs.filter((t) => t.type === 'terminal' && getAllTerminalIds(t).length > 0),
+    () => tabs.filter((t) => t.type === 'terminal' && hasTerminalView(t)),
     [tabs],
   )
 

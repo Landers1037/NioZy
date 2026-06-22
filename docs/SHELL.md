@@ -11,6 +11,8 @@
 - 保存 **横向拆分** pane 数量与活动 pane 索引
 - **本地终端**：保存各 pane 当前工作目录，恢复时在该目录下启动
 - **SSH / 远程**：恢复连接配置（连接仍须存在于 `term.json`）；不保存远程 cwd
+- **SSH 动态密码**：启动时仅恢复 Tab 元数据（不创建 PTY）；切换到该 Tab 时再弹框输入并连接（见 [功能SSH连接.md](./功能SSH连接.md)）
+- **并行恢复**：各 Tab 及同一 Tab 内各分屏 pane 的 `terminal.create` 并发执行，缩短多 Tab 启动时间
 - 关闭开关时 **删除** `resume-term.json`
 - **不恢复**终端 scrollback 历史（PTY 进程已结束）
 
@@ -29,7 +31,10 @@
 | `electron/resume-term-store.ts` | 磁盘读写 |
 | `electron/config-paths.ts` | `getResumeTermFilePath()` |
 | `electron/open-directory.ts` | 启动 argv 解析（与恢复优先级，见下文） |
-| `src/lib/resume-term-session.ts` | 快照构建、恢复、`markResumeTermBootComplete` |
+| `src/lib/resume-term-session.ts` | 快照构建、并行恢复、`markResumeTermBootComplete` |
+| `src/lib/ssh-deferred-connect.ts` | SSH 动态密码 Tab 延迟连接（切换 Tab 时激活） |
+| `src/hooks/useSshDeferredConnectSync.ts` | 监听 `activeTabId`，触发延迟 SSH 连接 |
+| `src/components/terminal/SshDeferredConnectPane.tsx` | 待连接 SSH Tab 占位视图 |
 | `src/hooks/useResumeTermSessionSync.ts` | Tab/cwd 变化防抖保存、`beforeunload` flush |
 | `src/components/settings/ShellSettings.tsx` | 设置 UI 开关 |
 | `src/components/terminal/RestoreTerminalSessionOverlay.tsx` | 启动恢复时的全局加载动画 |
@@ -83,7 +88,8 @@ sequenceDiagram
     Pending-->>App: payload
     App->>Create: handleOpenDirectoryPayload（跳过恢复）
   else 无待打开目录 且 开关开启
-    App->>Restore: 从 resume-term.json 恢复
+    App->>Restore: 从 resume-term.json 并行恢复
+    Note over Restore: 动态密码 SSH 仅恢复 Tab，不 create PTY
     alt 恢复成功
       Restore-->>App: true
     else 恢复失败
@@ -106,6 +112,37 @@ sequenceDiagram
 | 文件夹右键「使用 NioZy 打开」 | **优先**在指定目录开终端，跳过恢复 |
 | 开发模式 `electron-vite dev` | 不将 argv 中的项目目录误判为「打开目录」（`!app.isPackaged`） |
 | 打包后旧注册表 `%V` 裸路径 | 仍兼容解析为打开目录 |
+
+### 并行恢复与 SSH 动态密码
+
+```mermaid
+sequenceDiagram
+  participant Restore as restoreTerminalSessionFromDisk
+  participant Tab as 各 Tab restoreSingleTerminalTab
+  participant Deferred as ssh-deferred-connect
+  participant Hook as useSshDeferredConnectSync
+  participant Prompt as SshDynamicPasswordDialog
+
+  Restore->>Tab: Promise.all 并行恢复各 Tab
+  alt 本地 / 普通 SSH
+    Tab->>Tab: terminal.create（pane 亦并行）
+  else SSH 动态密码
+    Tab-->>Restore: 仅写入 Tab（sshDeferredConnect）
+  end
+  Note over Hook: 用户切换 activeTabId
+  Hook->>Deferred: activateDeferredSshTab
+  Deferred->>Prompt: 输入动态密码
+  Prompt-->>Deferred: 后缀或取消
+  Deferred->>Deferred: terminal.create → 清除 sshDeferredConnect
+```
+
+| 场景 | 行为 |
+|------|------|
+| 多 Tab 启动恢复 | `Promise.all` 并行；单 Tab 内多分屏 pane 亦并行 `create` |
+| SSH 动态密码 Tab | 启动时不弹框、不连 PTY；Tab 带 `sshDeferredConnect` + `deferredSplitPaneCount` |
+| 切换到待连接 Tab | `useSshDeferredConnectSync` → 弹动态密码 → 创建 PTY |
+| 切走 Tab 且密码框未提交 | 取消进行中的密码输入 |
+| 取消密码后重试 | 先切到其他 Tab 再切回 |
 
 显式目录参数：`--niozy-open-dir="路径"`（注册表新格式）。
 
@@ -177,6 +214,8 @@ sequenceDiagram
 |------|------|
 | `boot: attempting session restore` | 开始恢复 |
 | `restore ok` | 恢复成功 |
+| `restore tab deferred (dynamic password)` | 动态密码 SSH Tab 仅恢复元数据 |
+| `deferred ssh connect start/ok` | 切换 Tab 后延迟 SSH 连接 |
 | `boot: pending open directory, skip session restore` | 被「打开目录」抢占 |
 | `persist skipped: boot not complete` | 启动未完成，跳过保存（正常） |
 | `load: normalize failed` | JSON 格式无效 |
@@ -202,6 +241,18 @@ if (pending) { /* 打开目录，跳过恢复 */ }
 else if (s.shell.restoreTerminalSessionOnRestart) {
   await restoreTerminalSessionFromDisk() || createTerminal()
 }
+```
+
+### 并行恢复与延迟 SSH
+
+```typescript
+// src/lib/resume-term-session.ts — 各 Tab 并行
+const restoreResults = await Promise.all(
+  session.tabs.map((saved, i) => restoreSingleTerminalTab(saved, i)),
+)
+
+// 动态密码 SSH：shouldDeferSshDynamicConnect → 仅 AppTab，不 terminal.create
+// src/lib/ssh-deferred-connect.ts — 切换 Tab 时 activateDeferredSshTab
 ```
 
 ### 启动完成前禁止清空

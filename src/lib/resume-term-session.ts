@@ -13,6 +13,8 @@ import {
   resolveTabTerminalSpawn,
 } from '@/lib/terminal-tab-utils'
 import { isSshTerminalTab, getSshConnection } from '@/lib/ssh-connection'
+import { shouldDeferSshDynamicConnect } from '@/lib/ssh-deferred-connect'
+import { randomUUID } from '@/lib/id'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { resumeTermLog } from '@/lib/resume-term-log'
 
@@ -30,6 +32,7 @@ export function isResumeTermBootComplete(): boolean {
 }
 
 function isRemoteTerminalTab(tab: AppTab): boolean {
+  if (tab.sshDeferredConnect) return true
   if (isSshTerminalTab(tab)) return true
   if (tab.shell === 'ssh') return true
   if (tab.terminalSpawn?.sshConnectionId) return true
@@ -48,6 +51,11 @@ export function buildResumeTermSession(): ResumeTermSession | null {
     const spawn = resolveTabTerminalSpawn(tab, settings)
     if (!spawn) continue
 
+    const splitPaneCount = tab.sshDeferredConnect
+      ? Math.max(1, tab.deferredSplitPaneCount ?? 1)
+      : panes.length
+    if (!tab.sshDeferredConnect && panes.length === 0) continue
+
     const isLocal = !isRemoteTerminalTab(tab)
     savedTabs.push({
       title: tab.title,
@@ -56,7 +64,7 @@ export function buildResumeTermSession(): ResumeTermSession | null {
       ...(tab.sshConnectionId ? { sshConnectionId: tab.sshConnectionId } : {}),
       terminalSpawn: spawn,
       ...(tab.activeSplitIndex !== undefined ? { activeSplitIndex: tab.activeSplitIndex } : {}),
-      splitPaneCount: panes.length,
+      splitPaneCount,
       ...(isLocal
         ? {
             panes: panes.map((p) => {
@@ -138,6 +146,35 @@ async function restoreSingleTerminalTab(
 
   const spawn = saved.terminalSpawn
   const paneCount = saved.splitPaneCount
+
+  if (shouldDeferSshDynamicConnect(saved, settings)) {
+    const connId =
+      saved.sshConnectionId ??
+      spawn.sshConnectionId ??
+      spawn.create.sshConnectionId
+    const tabId = `tab-deferred-${randomUUID()}`
+    resumeTermLog.info('restore tab deferred (dynamic password)', {
+      index,
+      title: saved.title,
+      paneCount,
+      connId,
+    })
+    return {
+      id: tabId,
+      type: 'terminal',
+      title: saved.title,
+      ...(saved.customTitle ? { customTitle: saved.customTitle } : {}),
+      shell: saved.shell ?? 'ssh',
+      ...(connId ? { sshConnectionId: connId } : {}),
+      terminalSpawn: spawn,
+      sshDeferredConnect: true,
+      deferredSplitPaneCount: paneCount,
+      ...(saved.activeSplitIndex !== undefined && paneCount > 1
+        ? { activeSplitIndex: saved.activeSplitIndex }
+        : {}),
+    }
+  }
+
   const api = getElectronAPI()
   const newPanes: { terminalId: string }[] = []
   let lastShell = saved.shell
@@ -166,19 +203,46 @@ async function restoreSingleTerminalTab(
       return null
     }
 
-    for (let i = 0; i < paneCount; i++) {
-      const paneCwd = saved.panes?.[i]?.cwd
-      const createPayload = {
-        ...createWithDynamic,
-        ...(paneCwd ? { cwd: paneCwd } : {}),
+    const paneSettled = await Promise.allSettled(
+      Array.from({ length: paneCount }, async (_, i) => {
+        const paneCwd = saved.panes?.[i]?.cwd
+        const createPayload = {
+          ...createWithDynamic,
+          ...(paneCwd ? { cwd: paneCwd } : {}),
+        }
+        resumeTermLog.debug('create pane', { index, pane: i, shell: createPayload.shell, cwd: paneCwd })
+        const result = await api.terminal.create(createPayload)
+        resumeTermLog.debug('pane created', { index, pane: i, terminalId: result.id, cwd: result.cwd })
+        return { result, paneCwd }
+      }),
+    )
+
+    const fulfilled: { result: Awaited<ReturnType<typeof api.terminal.create>>; paneCwd?: string }[] = []
+    let firstPaneError: unknown
+    for (const entry of paneSettled) {
+      if (entry.status === 'fulfilled') {
+        fulfilled.push(entry.value)
+      } else if (firstPaneError === undefined) {
+        firstPaneError = entry.reason
       }
-      resumeTermLog.debug('create pane', { index, pane: i, shell: createPayload.shell, cwd: paneCwd })
-      const result = await api.terminal.create(createPayload)
+    }
+
+    if (firstPaneError !== undefined) {
+      for (const { result } of fulfilled) {
+        try {
+          api.terminal.kill(result.id)
+        } catch {
+          /* 忽略 */
+        }
+      }
+      throw firstPaneError
+    }
+
+    for (const { result, paneCwd } of fulfilled) {
       lastShell = result.shell
       lastName = result.name
       setTerminalCwd(result.id, paneCwd ?? result.cwd)
       newPanes.push({ terminalId: result.id })
-      resumeTermLog.debug('pane created', { index, pane: i, terminalId: result.id, cwd: result.cwd })
     }
   } catch (error) {
     resumeTermLog.error('restore tab failed: terminal.create error', {
@@ -247,14 +311,13 @@ export async function restoreTerminalSessionFromDisk(): Promise<boolean> {
   resumeTermLog.info('restore session loaded', {
     tabCount: session.tabs.length,
     activeTerminalTabIndex: session.activeTerminalTabIndex,
+    parallel: true,
   })
 
-  const restored: AppTab[] = []
-  for (let i = 0; i < session.tabs.length; i++) {
-    const saved = session.tabs[i]!
-    const tab = await restoreSingleTerminalTab(saved, i)
-    if (tab) restored.push(tab)
-  }
+  const restoreResults = await Promise.all(
+    session.tabs.map((saved, i) => restoreSingleTerminalTab(saved, i)),
+  )
+  const restored = restoreResults.filter((tab): tab is AppTab => tab !== null)
 
   if (restored.length === 0) {
     resumeTermLog.error('restore failed: all tabs failed to recreate', {

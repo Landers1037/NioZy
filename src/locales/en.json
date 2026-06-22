@@ -1473,6 +1473,8 @@
     "attachPtyPending": "Connecting terminal…",
     "superPowerSavingIdle": "Super power saving: this tab's terminal and PTY are suspended. Switch back to restore.",
     "superPowerSavingResuming": "Restoring terminal session…",
+    "sshDeferredIdle": "This SSH connection requires a dynamic password. Switch away and back to this tab to enter it and connect.",
+    "sshDeferredConnecting": "Connecting SSH…",
     "restoreSessionLoading": "Restoring terminal session…",
     "inputAriaLabel": "Terminal input",
     "sshReconnectHint": "Press Enter to reconnect",

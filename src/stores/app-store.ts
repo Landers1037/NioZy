@@ -57,6 +57,10 @@ export interface AppTab {
   terminalSpawn?: TabTerminalSpawn
   /** 当前获得输入与输出流的拆分 pane 索引 */
   activeSplitIndex?: number
+  /** SSH 动态密码：已恢复 Tab 元数据，切换到此 Tab 时再连接 */
+  sshDeferredConnect?: true
+  /** 待连接的分屏 pane 数量（sshDeferredConnect 时无 terminalId） */
+  deferredSplitPaneCount?: number
   /** VNC Tab 关联的连接 id */
   vncConnectionId?: string
   /** 工作区目录（Start 后） */
