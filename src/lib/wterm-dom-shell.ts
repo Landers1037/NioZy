@@ -263,6 +263,7 @@ function bindInteractiveCliMouse(
     if (event.button !== 0 && instance.bridge?.usingAltScreen()) {
       event.preventDefault()
       event.stopImmediatePropagation()
+      instance.focus()
       return
     }
     if (event.button !== 0) return

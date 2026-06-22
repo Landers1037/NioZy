@@ -22,16 +22,17 @@ export function blockAlternateScreenNonPrimaryMouse(
   if (event.button === 0) return false
   event.preventDefault()
   event.stopImmediatePropagation()
+  term.focus()
   return true
 }
 
 /**
  * 备用屏（vim / less / 交互式 CLI）左键拖选。
  *
- * 原理：在 capture 阶段拦截 mousedown，阻止原始事件到达 xterm 的 "always-on"
- * mousedown 处理器（该处理器会把鼠标事件转发给 PTY）；同时在 mousemove 期间通过
- * xterm 公开 API term.select() 直接写入选区，无需依赖 SelectionService 的内部
- * mousedown 触发机制，彻底绕过 PTY mouse reporting。
+ * 与 Tabby / xterm 原生行为对齐：备用屏启用 mouse reporting 时，SelectionService
+ * 会禁用普通拖选，仅 Shift+点击（Windows）或 Option+点击（macOS）强制选区。
+ * 因此**不拦截**无修饰键的单击，让 xterm 自行 focus、转发鼠标给 less/vim。
+ * 仅在 Shift/Option+拖选时 capture 拦截，避免 SGR 序列污染 PTY。
  */
 export function handleInteractiveCliMouseDown(
   term: Terminal,
@@ -46,26 +47,32 @@ export function handleInteractiveCliMouseDown(
 
   // 主缓冲区：Shift/Option 强制选区，松开后复制
   if (term.buffer.active.type !== 'alternate') {
-    if (forceModifier) {
-      attachPublicApiDragSelect(term, event, { requireDragThreshold: false, copyOnRelease: true })
-    }
-    return false
+    if (!forceModifier) return false
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    attachPublicApiDragSelect(term, event, { requireDragThreshold: false, copyOnRelease: true })
+    return true
   }
 
-  // 备用屏（vim 等）
+  // 备用屏（vim / less）：Alt+点击留给 xterm 的 altClickMovesCursor
   if (event.altKey && !forceModifier) return false
+
+  if (shiftEnterNewline) {
+    // 交互式 CLI：单击不拦截 PTY，拖选后复制
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    term.focus()
+    attachPublicApiDragSelect(term, event, { requireDragThreshold: true, copyOnRelease: true })
+    return true
+  }
+
+  // 普通备用屏（less/vim）：无修饰键单击交给 xterm（焦点 + less 键盘交互）
+  if (!forceModifier) return false
 
   event.preventDefault()
   event.stopImmediatePropagation()
-
-  if (shiftEnterNewline) {
-    // 交互式 CLI：单击不拦截，拖选后复制
-    attachPublicApiDragSelect(term, event, { requireDragThreshold: true, copyOnRelease: true })
-  } else {
-    // 普通备用屏（vim/less）：直接左键拖选
-    attachPublicApiDragSelect(term, event, { requireDragThreshold: false, copyOnRelease: true })
-  }
-
+  term.focus()
+  attachPublicApiDragSelect(term, event, { requireDragThreshold: false, copyOnRelease: true })
   return true
 }
 
@@ -110,7 +117,7 @@ function attachPublicApiDragSelect(
     cleanup()
     if (e.button !== 0) return
     if (!dragStarted) {
-      if (options.requireDragThreshold) term.focus()
+      term.focus()
       return
     }
     if (options.copyOnRelease) {
