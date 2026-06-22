@@ -33,6 +33,7 @@ function copyMainAssets(): Plugin {
 }
 import preact from '@preact/preset-vite'
 import tailwindcss from '@tailwindcss/vite'
+import { fontWoff2Plugin } from './scripts/vite-plugin-font-woff2'
 
 /** 打进 out/main/copilot-runtime.mjs，避免 asar 内整包 node_modules/@copilotkit/runtime */
 const MAIN_BUNDLE_DEPS = [
@@ -157,7 +158,7 @@ export default defineConfig(({ command }) => {
         'react-dom/client': 'preact/compat/client',
       },
     },
-    plugins: [preact(), tailwindcss()],
+    plugins: [preact(), tailwindcss(), ...(electronDev ? [] : [fontWoff2Plugin()])],
   },
 }
 })
