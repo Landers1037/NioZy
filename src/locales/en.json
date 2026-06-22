@@ -799,6 +799,8 @@
       "manualUpdate": "Download manually",
       "about": "About NioZy",
       "version": "Version {{version}}",
+      "electronVersion": "Electron {{version}}",
+      "chromiumVersion": "Chromium {{version}}",
       "aboutDesc": "Terminal workbench with built-in AI copilot — Electron, React, xterm.js, and Windows ConPTY.",
       "attributionTitle": "Attribution",
       "cardDescription": "Proxy, startup, tray, and about"

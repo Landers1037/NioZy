@@ -358,6 +358,10 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     },
     app: {
       getVersion: async () => '0.1.0',
+      getRuntimeVersions: async () => ({
+        electron: '—',
+        chromium: navigator.userAgent.match(/Chrom(?:e|ium)\/([\d.]+)/)?.[1] ?? '—',
+      }),
       getPendingOpenDirectory: async () => null,
       onOpenDirectory: (_cb) => () => undefined,
       onNewTerminal: () => () => undefined,

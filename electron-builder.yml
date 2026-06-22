@@ -2,9 +2,20 @@ appId: com.niozy.app
 afterPack: scripts/after-pack.mjs
 productName: NioZy
 copyright: Copyright © NioZy
+# 开发用 index.mjs；生产构建（bytecode）产出 index.cjs
+extraMetadata:
+  main: out/main/index.cjs
+  author:
+    name: Lander1037
+    email: mail@renj.io
+  homepage: https://github.com/Landers1037/NioZy
+  repository:
+    type: git
+    url: https://github.com/Landers1037/NioZy.git
 directories:
   buildResources: build
   output: release
+compression: maximum   # 或 store / normal  
 files:
   - out/**/*
   - package.json
