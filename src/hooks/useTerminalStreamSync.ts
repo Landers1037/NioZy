@@ -17,7 +17,6 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
   const settings = useAppStore((s) => s.settings)
   const performance = settings?.performance
   const attachPtyMode = isAttachPtyRenderMode(settings)
-  const tabLastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt)
   const optimizationTick = useInactiveTabOptimizationTick()
 
   const streamTabsKey = tabs
@@ -38,6 +37,7 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
 
   useEffect(() => {
     if (!isElectron()) return
+    const tabLastActivityAt = useInactiveTabActivityStore.getState().tabLastActivityAt
     const ids = collectActiveTerminalStreamIds(
       tabs,
       activeTabId,
@@ -51,7 +51,6 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
     tabs,
     activeTabId,
     performance,
-    tabLastActivityAt,
     terminalTabsKey,
     streamTabsKey,
     optimizationTick,

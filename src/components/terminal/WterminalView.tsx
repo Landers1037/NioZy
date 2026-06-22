@@ -45,6 +45,7 @@ import {
   tryHandleSshReconnectEnter,
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
+import { writeTerminalInput } from '@/lib/terminal-write'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { useCommandPaletteStore } from '@/stores/command-palette-store'
 import { registerTerminalHost, unregisterTerminalHost } from '@/lib/terminal-host-registry'
@@ -253,10 +254,9 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const handleData = useCallback(
     (data: string) => {
       if (!tab.terminalId) return
-      touchTabActivity(tab.id)
       writeTerminalInput(tab.terminalId, data)
     },
-    [tab.id, tab.terminalId],
+    [tab.terminalId],
   )
 
   const handleResize = useCallback(
