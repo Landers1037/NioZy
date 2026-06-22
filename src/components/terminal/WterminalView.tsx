@@ -91,6 +91,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
   const attachShellFeatures = useCallback(
     (instance: WTerm) => {
       detachShellFeatures()
+
       const terminalId = tab.terminalId
       if (!terminalId || !settings) return
 

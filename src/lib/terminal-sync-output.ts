@@ -1,5 +1,7 @@
 import type { AppSettings } from '../../electron/shared/api-types'
 import { isWtermEmulator } from '@/lib/terminal-emulator'
+import type { Terminal } from '@xterm/xterm'
+import { maybeResetInlineImagesOnErase } from '@/lib/terminal-shell-addons'
 
 /** DECSET/DECRST synchronized output (DEC private mode 2026) */
 const SYNC_OUTPUT_TOGGLE = /\x1b\[\?2026[hl]/g
@@ -21,6 +23,7 @@ export function writeXtermOutput(
   settings: AppSettings | null | undefined,
   callback?: () => void,
 ): void {
+  maybeResetInlineImagesOnErase(term as Terminal, data)
   term.write(
     filterSynchronizedOutputSequences(data, isSynchronizedOutputEnabled(settings)),
     callback,

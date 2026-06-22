@@ -577,6 +577,8 @@
       "ohMyPoshThemeDesc": "Choose a bundled prompt theme; applies to new pwsh terminals",
       "emojiNativeRendering": "Native emoji rendering",
       "emojiNativeRenderingDesc": "Uses the Unicode 11 width table so emoji and wide characters render correctly in the terminal",
+      "terminalInlineImages": "Terminal inline images",
+      "terminalInlineImagesDesc": "Use the xterm image addon to display images via SIXEL and iTerm inline image protocol (IIP); use niozy-cat. Press Ctrl+K or run clear/cls to dismiss images",
       "highlightLinks": "Highlight links",
       "highlightLinksDesc": "Highlight http and https URLs in terminal output",
       "clickToOpenLinks": "Click to open links",

@@ -577,6 +577,8 @@
       "ohMyPoshThemeDesc": "选择内置提示符主题；新建 pwsh 终端后生效",
       "emojiNativeRendering": "Emoji 原生渲染",
       "emojiNativeRenderingDesc": "开启后使用 Unicode 11 宽度表，在终端中正确显示 emoji 等宽字符",
+      "terminalInlineImages": "终端内联图片",
+      "terminalInlineImagesDesc": "使用 xterm image 插件解析 SIXEL 与 iTerm 内联图片协议（IIP），在终端显示图片；可使用内置命令 niozy-cat。查看后按 Ctrl+K 或执行 clear/cls 清除",
       "highlightLinks": "高亮链接地址",
       "highlightLinksDesc": "开启后高亮终端输出中的 http、https 链接",
       "clickToOpenLinks": "点击打开链接",

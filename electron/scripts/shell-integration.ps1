@@ -78,4 +78,43 @@ if ($null -eq $Global:NioZyShellIntegration) {
     try { NioZyWriteCwdOsc } catch {}
     return & $Global:NioZyOriginalPrompt
   }
+
+  # 内置 niozy-cat（即使 PATH 未刷新也可通过函数调用）
+  try {
+    function Global:niozy-cat {
+      param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
+      $bin = $env:NIOZY_BIN
+      if ([string]::IsNullOrWhiteSpace($bin)) {
+        throw 'NIOZY_BIN is not set. Open a new NioZy terminal tab.'
+      }
+      $script = Join-Path $bin 'niozy-cat.mjs'
+      if (-not (Test-Path -LiteralPath $script)) {
+        throw "niozy-cat not found: $script"
+      }
+      & node $script @Args
+    }
+  } catch {}
+
+  # niozy-cat：图片路径 Tab 补全
+  try {
+    $imagePattern = '*.{png,jpg,jpeg,gif,webp,bmp}'
+    Register-ArgumentCompleter -CommandName niozy-cat -Native -ScriptBlock {
+      param($wordToComplete, $commandAst, $cursorPosition)
+      $padLength = $cursorPosition - $commandAst.Extent.StartOffset
+      $line = $commandAst.ToString().PadRight($padLength, ' ').Substring(0, $padLength)
+      if ($line -match 'niozy-cat\s+(-\w+\s+)*$') {
+        Get-ChildItem -Path . -File -ErrorAction SilentlyContinue |
+          Where-Object { $_.Extension -match '^\.(png|jpe?g|gif|webp|bmp)$' } |
+          ForEach-Object { $_.Name } |
+          Where-Object { $_ -like "$wordToComplete*" } |
+          Sort-Object
+        return
+      }
+      Get-ChildItem -Path . -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Extension -match '^\.(png|jpe?g|gif|webp|bmp)$' } |
+        ForEach-Object { $_.FullName } |
+        Where-Object { $_ -like "$wordToComplete*" } |
+        Sort-Object
+    }
+  } catch {}
 }

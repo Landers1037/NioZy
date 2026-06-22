@@ -12,10 +12,50 @@ const MAIN_DIR =
     : fileURLToPath(new URL('.', import.meta.url))
 
 const SCRIPT_NAME = 'shell-integration.ps1'
+const NIOZY_BIN_DIR_NAME = 'niozy-bin'
 
 export interface ShellIntegrationOptions {
   ohMyPoshEnabled?: boolean
   ohMyPoshTheme?: OhMyPoshThemeId
+}
+
+function pathEnvKey(env: Record<string, string>): 'Path' | 'PATH' {
+  if (process.platform === 'win32') return 'Path'
+  return env.PATH !== undefined ? 'PATH' : 'Path'
+}
+
+function readPathValue(env: Record<string, string>): string {
+  return env.Path ?? env.PATH ?? ''
+}
+
+/** 将目录前置到进程 PATH（须在合并 process.env 之后调用） */
+export function prependNiozyBinToPath(env: Record<string, string>, dir: string): void {
+  const key = pathEnvKey(env)
+  const current = readPathValue(env)
+  const prefix = `${dir};`
+  if (current.toLowerCase().startsWith(dir.toLowerCase())) return
+  env[key] = `${prefix}${current}`
+  if (key === 'Path') delete env.PATH
+  else delete env.Path
+}
+
+/** NioZy 内置 CLI（niozy-cat 等）所在目录 */
+export function getNiozyBinDir(): string | null {
+  if (app.isPackaged) {
+    const packaged = join(process.resourcesPath, NIOZY_BIN_DIR_NAME)
+    if (existsSync(packaged)) return packaged
+    return null
+  }
+
+  const devCandidates = [
+    join(MAIN_DIR, 'scripts', 'bin'),
+    join(process.cwd(), 'out', 'main', 'scripts', 'bin'),
+    join(process.cwd(), 'electron', 'scripts', 'bin'),
+  ]
+  for (const dir of devCandidates) {
+    if (existsSync(dir)) return dir
+  }
+  return null
 }
 
 /** 安装包 resources 目录下的脚本（asar 外，PowerShell 可直接 dot-source） */
@@ -71,11 +111,18 @@ export function getShellIntegrationEnv(
   shell: ShellType,
   options?: ShellIntegrationOptions,
 ): Record<string, string> {
+  const env: Record<string, string> = {
+    TERM_PROGRAM: 'NioZy',
+    TERM_PROGRAM_VERSION: app.getVersion(),
+  }
+
+  const binDir = getNiozyBinDir()
+  if (binDir) {
+    env.NIOZY_BIN = binDir
+  }
+
   if (shell === 'powershell' || shell === 'pwsh') {
-    const env: Record<string, string> = {
-      NIOZY_SHELL_INTEGRATION: '1',
-      TERM_PROGRAM: 'NioZy',
-    }
+    env.NIOZY_SHELL_INTEGRATION = '1'
 
     if (shouldInjectOhMyPosh(shell, options)) {
       const resources = getOhMyPoshIntegrationResources(options)!
@@ -84,10 +131,9 @@ export function getShellIntegrationEnv(
       env.NIOZY_OMP_CONFIG = resources.config
       env.NIOZY_POSH_GIT_MODULE = resources.poshGitModule
     }
-
-    return env
   }
-  return {}
+
+  return env
 }
 
 export function mergeShellIntegrationArgs(

@@ -55,6 +55,10 @@ extraResources:
     to: shell-integration.ps1
   - from: out/main/scripts/omp-bootstrap.ps1
     to: omp-bootstrap.ps1
+  - from: out/main/scripts/bin
+    to: niozy-bin
+    filter:
+      - '**/*'
   - from: vendor/oh-my-posh
     to: oh-my-posh
     filter:

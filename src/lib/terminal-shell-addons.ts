@@ -1,4 +1,5 @@
 import type { IDisposable, Terminal } from '@xterm/xterm'
+import { ImageAddon } from '@xterm/addon-image'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import type { ShellSettings } from '../../electron/shared/shell-settings'
@@ -66,6 +67,7 @@ function bindHighlightLinkClickHandler(term: Terminal, listeners: IDisposable[])
 
 export interface TerminalShellAddonState {
   unicode11: Unicode11Addon | null
+  imageAddon: ImageAddon | null
   webLinks: WebLinksAddon | null
   webLinksClick: boolean | null
   linkHighlightDisposables: IDisposable[]
@@ -76,9 +78,30 @@ export interface TerminalShellAddonState {
   logHighlightFrame: number
 }
 
+const terminalShellAddonStates = new WeakMap<Terminal, TerminalShellAddonState>()
+
+/** 清屏时同步清除 @xterm/addon-image 的 canvas 叠加层 */
+export function resetTerminalInlineImages(term: Terminal): void {
+  terminalShellAddonStates.get(term)?.imageAddon?.reset()
+}
+
+export function clearXtermTerminal(term: Terminal): void {
+  resetTerminalInlineImages(term)
+  term.clear()
+}
+
+/** 识别 shell 的 clear/cls（ED 2J/3J）并清除内联图片 */
+const ERASE_DISPLAY_RE = /\x1b\[[0-9;]*[23]J/
+
+export function maybeResetInlineImagesOnErase(term: Terminal, data: string): void {
+  if (!data || !ERASE_DISPLAY_RE.test(data)) return
+  resetTerminalInlineImages(term)
+}
+
 export function createTerminalShellAddonState(): TerminalShellAddonState {
   return {
     unicode11: null,
+    imageAddon: null,
     webLinks: null,
     webLinksClick: null,
     linkHighlightDisposables: [],
@@ -391,6 +414,31 @@ function clearLogHighlight(_term: Terminal, state: TerminalShellAddonState): voi
   disposeAll(state.logHighlightListeners)
 }
 
+function syncImageAddon(
+  term: Terminal,
+  state: TerminalShellAddonState,
+  shell: ShellSettings,
+): void {
+  const enable = shell.terminalInlineImages
+  if (!enable) {
+    if (state.imageAddon) {
+      state.imageAddon.dispose()
+      state.imageAddon = null
+    }
+    return
+  }
+
+  if (state.imageAddon) return
+
+  ensureUnicodeProposedApi(term)
+  const addon = new ImageAddon({
+    sixelSupport: true,
+    iipSupport: true,
+  })
+  state.imageAddon = addon
+  term.loadAddon(addon)
+}
+
 function syncWebLinksAddon(
   term: Terminal,
   state: TerminalShellAddonState,
@@ -438,6 +486,7 @@ export function applyTerminalShellAddons(
   shell: ShellSettings,
   preview: PreviewSettings = DEFAULT_PREVIEW_SETTINGS,
 ): void {
+  terminalShellAddonStates.set(term, state)
   const externalPreviewClick =
     isAnyPreviewEnabled(preview) || shell.clickToOpenLinks
   if (shell.emojiNativeRendering) {
@@ -455,6 +504,7 @@ export function applyTerminalShellAddons(
     state.unicode11 = null
   }
 
+  syncImageAddon(term, state, shell)
   syncWebLinksAddon(term, state, shell, preview)
 
   if (shell.highlightLinks) {

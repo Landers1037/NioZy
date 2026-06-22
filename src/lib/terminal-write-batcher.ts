@@ -3,6 +3,7 @@ import {
   TERMINAL_OUTPUT_PENDING_MAX_CHARS,
   TERMINAL_WRITE_FLUSH_CHUNK_CHARS,
   appendTerminalOutputCapped,
+  findSafeTerminalOutputChunkEnd,
 } from '../../electron/shared/terminal-output-limits'
 import { TerminalFlowControl } from '@/lib/terminal-flow-control'
 import {
@@ -54,11 +55,13 @@ export function createTerminalWriteBatcher(
       return
     }
 
-    const chunk =
-      pending.length <= TERMINAL_WRITE_FLUSH_CHUNK_CHARS
-        ? pending
-        : pending.slice(0, TERMINAL_WRITE_FLUSH_CHUNK_CHARS)
-    pending = pending.slice(chunk.length)
+    const chunkEnd = findSafeTerminalOutputChunkEnd(
+      pending,
+      0,
+      TERMINAL_WRITE_FLUSH_CHUNK_CHARS,
+    )
+    const chunk = pending.slice(0, chunkEnd)
+    pending = pending.slice(chunkEnd)
 
     const terminalId = getTerminalId()
     flowControl.write(
