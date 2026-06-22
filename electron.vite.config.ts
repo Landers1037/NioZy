@@ -50,13 +50,6 @@ function fontAssetFileNames(name: string | undefined): string | undefined {
 
 export default defineConfig(({ command }) => {
   const electronDev = command === 'serve'
-  /** 生产构建：将 main/preload 编译为 V8 code cache（需 Electron 42+ 在对应进程类型内编译） */
-  const useBytecode = command === 'build'
-  // 主进程始终 CJS：Electron ESM 具名导出在 dev 下不可靠；生产再启用 bytecode
-  const mainBundleExt = 'cjs'
-  const mainBundleFormat = 'cjs'
-  const preloadBundleExt = useBytecode ? 'cjs' : 'mjs'
-  const preloadBundleFormat = useBytecode ? 'cjs' : 'es'
 
   return {
   main: {
@@ -65,22 +58,20 @@ export default defineConfig(({ command }) => {
     },
     plugins: [externalizeDepsPlugin({ exclude: [...MAIN_BUNDLE_DEPS] })],
     build: {
-      // index 含 agentkeepalive 等依赖，Babel 箭头函数转换会失败；入口走 Electron 42 内置 Node snapshot，worker/preload 走 V8 code cache
-      bytecode: useBytecode ? { chunkAlias: ['workers/main-worker'] } : false,
       minify: 'esbuild',
       lib: {
         entry: {
           index: resolve('electron/main/index.ts'),
           'workers/main-worker': resolve('electron/workers/main-worker.ts'),
         },
-        formats: [mainBundleFormat],
+        formats: ['es'],
       },
       rollupOptions: {
         treeshake: true,
         plugins: [copyMainAssets()],
         output: {
-          entryFileNames: `[name].${mainBundleExt}`,
-          chunkFileNames: `copilot-[hash].${mainBundleExt}`,
+          entryFileNames: '[name].mjs',
+          chunkFileNames: 'copilot-[hash].mjs',
           inlineDynamicImports: false,
         },
       },
@@ -92,20 +83,18 @@ export default defineConfig(({ command }) => {
     },
     plugins: [externalizeDepsPlugin()],
     build: {
-      // preload bytecode 依赖 Node vm；用户开启 renderer sandbox 时无法加载，默认 disableSandbox=true 可兼容
-      bytecode: useBytecode ? { chunkAlias: ['index', 'pet-preload'] } : false,
       minify: 'esbuild',
       lib: {
         entry: {
           index: resolve('electron/preload/index.ts'),
           'pet-preload': resolve('electron/preload/pet-preload.ts'),
         },
-        formats: [preloadBundleFormat],
+        formats: ['es'],
       },
       rollupOptions: {
         treeshake: true,
         output: {
-          entryFileNames: `[name].${preloadBundleExt}`,
+          entryFileNames: '[name].mjs',
         },
       },
     },
@@ -116,7 +105,7 @@ export default defineConfig(({ command }) => {
     server: {
       strictPort: false,
     },
-    // Electron 34+ bundles on modern Chromium; enable top-level await (needed by noVNC).
+    // Electron 34+ / Chromium 现代内核；启用 top-level await（noVNC 需要）
     esbuild: {
       target: 'es2022',
     },

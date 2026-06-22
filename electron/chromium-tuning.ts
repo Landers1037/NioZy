@@ -91,7 +91,8 @@ export function getOptimizedWebPreferences(
     nodeIntegration: false,
     nodeIntegrationInSubFrames: false,
     webviewTag: true,
-    devTools: isElectronDev(),
+    // 主窗口 release 下仍可通过托盘菜单打开 DevTools；未授权打开由 release-devtools-guard 拦截
+    devTools: true,
     spellcheck: false,
     backgroundThrottling: inactiveTabSleep,
     navigateOnDragDrop: false,

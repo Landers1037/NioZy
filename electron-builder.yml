@@ -2,9 +2,8 @@ appId: com.niozy.app
 afterPack: scripts/after-pack.mjs
 productName: NioZy
 copyright: Copyright © NioZy
-# 开发用 index.mjs；生产构建（bytecode）产出 index.cjs
 extraMetadata:
-  main: out/main/index.cjs
+  main: out/main/index.mjs
   author:
     name: Lander1037
     email: mail@renj.io
