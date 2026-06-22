@@ -3,6 +3,7 @@ import { ImageAddon } from '@xterm/addon-image'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import type { ShellSettings } from '../../electron/shared/shell-settings'
+import type { TerminalEmulator } from '../../electron/shared/experimental-settings'
 import type { PreviewSettings } from '../../electron/shared/preview-settings'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { isAnyPreviewEnabled } from '@/lib/terminal-preview'
@@ -418,8 +419,18 @@ function syncImageAddon(
   term: Terminal,
   state: TerminalShellAddonState,
   shell: ShellSettings,
+  emulator: TerminalEmulator,
 ): void {
   const enable = shell.terminalInlineImages
+  if (emulator === 'ghostty') {
+    // ghostty-web VT 原生支持 Kitty 图形协议，无需 @xterm/addon-image
+    if (state.imageAddon) {
+      state.imageAddon.dispose()
+      state.imageAddon = null
+    }
+    return
+  }
+
   if (!enable) {
     if (state.imageAddon) {
       state.imageAddon.dispose()
@@ -439,12 +450,26 @@ function syncImageAddon(
   term.loadAddon(addon)
 }
 
+function supportsXtermShellAddons(emulator: TerminalEmulator): boolean {
+  return emulator === 'xterm'
+}
+
 function syncWebLinksAddon(
   term: Terminal,
   state: TerminalShellAddonState,
   shell: ShellSettings,
   preview: PreviewSettings,
+  emulator: TerminalEmulator,
 ): void {
+  if (!supportsXtermShellAddons(emulator)) {
+    if (state.webLinks) {
+      state.webLinks.dispose()
+      state.webLinks = null
+      state.webLinksClick = null
+    }
+    return
+  }
+
   const enable = shell.highlightLinks || shell.clickToOpenLinks
   /** 高亮 + 点击：由缓冲区坐标处理，避免 WebGL canvas 挡住装饰/WebLinks */
   const click = shell.clickToOpenLinks && !shell.highlightLinks
@@ -485,11 +510,12 @@ export function applyTerminalShellAddons(
   state: TerminalShellAddonState,
   shell: ShellSettings,
   preview: PreviewSettings = DEFAULT_PREVIEW_SETTINGS,
+  emulator: TerminalEmulator = 'xterm',
 ): void {
   terminalShellAddonStates.set(term, state)
   const externalPreviewClick =
     isAnyPreviewEnabled(preview) || shell.clickToOpenLinks
-  if (shell.emojiNativeRendering) {
+  if (shell.emojiNativeRendering && supportsXtermShellAddons(emulator)) {
     if (!state.unicode11) {
       ensureUnicodeProposedApi(term)
       const addon = new Unicode11Addon()
@@ -498,16 +524,18 @@ export function applyTerminalShellAddons(
       term.unicode.activeVersion = '11'
     }
   } else if (state.unicode11) {
-    ensureUnicodeProposedApi(term)
-    term.unicode.activeVersion = '6'
+    if (supportsXtermShellAddons(emulator)) {
+      ensureUnicodeProposedApi(term)
+      term.unicode.activeVersion = '6'
+    }
     state.unicode11.dispose()
     state.unicode11 = null
   }
 
-  syncImageAddon(term, state, shell)
-  syncWebLinksAddon(term, state, shell, preview)
+  syncImageAddon(term, state, shell, emulator)
+  syncWebLinksAddon(term, state, shell, preview, emulator)
 
-  if (shell.highlightLinks) {
+  if (shell.highlightLinks && supportsXtermShellAddons(emulator)) {
     bindLinkHighlightListeners(
       term,
       state,
@@ -517,7 +545,7 @@ export function applyTerminalShellAddons(
     clearLinkHighlight(term, state)
   }
 
-  if (shell.highlightLogLevels) {
+  if (shell.highlightLogLevels && supportsXtermShellAddons(emulator)) {
     bindLogHighlightListeners(term, state)
   } else {
     clearLogHighlight(term, state)

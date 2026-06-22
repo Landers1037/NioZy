@@ -1,12 +1,18 @@
 import { normalizeCommandReplayList, type CommandReplayItem } from './command-replay'
 import { DEFAULT_OH_MY_POSH_THEME, normalizeOhMyPoshTheme, type OhMyPoshThemeId } from './oh-my-posh-themes'
+import {
+  normalizeTerminalEmulator,
+  type TerminalEmulator,
+} from './experimental-settings'
 
 export type { CommandReplayItem }
+
+export type TerminalImageProtocol = 'iip' | 'kitty'
 
 export interface ShellSettings {
   /** 使用 Unicode 11 宽度表，正确渲染 emoji 等宽字符 */
   emojiNativeRendering: boolean
-  /** 使用 @xterm/addon-image 解析 SIXEL / iTerm IIP，在终端内联显示图片 */
+  /** 终端内联图片：xterm 下为 SIXEL/iTerm IIP；ghostty 下为 Kitty 图形协议 */
   terminalInlineImages: boolean
   /** 高亮终端中的 http / https 链接 */
   highlightLinks: boolean
@@ -100,4 +106,23 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
         ? v.showRestoreTerminalSessionLoadingAnimation
         : DEFAULT_SHELL_SETTINGS.showRestoreTerminalSessionLoadingAnimation,
   }
+}
+
+/** 根据终端模拟器与内联图片开关解析 PTY 侧图片协议（供 niozy-cat 等使用） */
+export function resolveTerminalImageProtocol(
+  terminalInlineImages: boolean,
+  terminalEmulator: TerminalEmulator,
+): TerminalImageProtocol | null {
+  if (!terminalInlineImages) return null
+  return terminalEmulator === 'ghostty' ? 'kitty' : 'iip'
+}
+
+export function resolveTerminalImageProtocolFromSettings(
+  shell: Pick<ShellSettings, 'terminalInlineImages'>,
+  experimental: { terminalEmulator?: unknown },
+): TerminalImageProtocol | null {
+  return resolveTerminalImageProtocol(
+    shell.terminalInlineImages,
+    normalizeTerminalEmulator(experimental.terminalEmulator),
+  )
 }

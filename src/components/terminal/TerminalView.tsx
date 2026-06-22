@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import type { Terminal, IDisposable } from '@xterm/xterm'
+import type { Terminal, IDisposable, ITerminalOptions } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
 import type { SerializeAddon } from '@xterm/addon-serialize'
 import type { WebglAddon } from '@xterm/addon-webgl'
@@ -12,15 +12,12 @@ import { registerTerminalHost, unregisterTerminalHost } from '@/lib/terminal-hos
 import { getTerminalCursorOptions } from '@/lib/terminal-cursor'
 import {
   applyInteractiveCliTerminalOptions,
+  blockAlternateScreenNonPrimaryMouse,
   handleInteractiveCliMouseDown,
 } from '@/lib/terminal-interactive-cli'
 import {
-  handleTerminalCopyWhenSelection,
-  handleTerminalKeyboardShortcut,
-  handleTerminalModifiedEnterKey,
   handleTerminalRightClick,
 } from '@/lib/terminal-shortcut-actions'
-import { handleTerminalTabNavigationShortcut } from '@/lib/app-shortcut-actions'
 import { resolveTerminalFontFamilyCSSValue } from '../../../electron/shared/terminal-builtin-fonts'
 import {
   applyTerminalRuntimeOptions,
@@ -62,7 +59,6 @@ import { observeTerminalInputA11y } from '@/lib/terminal-input-a11y'
 import {
   formatTerminalExitMessage,
   markSshTerminalDisconnected,
-  tryHandleSshReconnectEnter,
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
@@ -97,6 +93,9 @@ import {
 } from '@/lib/terminal-webgl-refresh'
 import { useTerminalIdleAnimation } from '@/hooks/useTerminalIdleAnimation'
 import { TerminalIdleAnimationOverlay } from '@/components/terminal/TerminalIdleAnimationOverlay'
+import { getTerminalEmulator, isDomOnlyTerminalEmulator, isWtermEmulator } from '@/lib/terminal-emulator'
+import { loadTerminalModules } from '@/lib/ghostty-web-loader'
+import { attachTerminalCustomKeyHandler } from '@/lib/terminal-custom-key-handler'
 
 import {
   useAttachPtySessionStore,
@@ -200,15 +199,14 @@ export function TerminalView({
   }, [effectiveTerminalId])
 
   const rendererPreference = settings?.terminal.renderer ?? 'webgl'
+  const domOnlyEmulator = isDomOnlyTerminalEmulator(settings)
   const superPowerSavingDom =
-    settings?.performance.superPowerSaving === true &&
-    settings.experimental?.terminalEmulator !== 'wterm'
+    settings?.performance.superPowerSaving === true && !isWtermEmulator(settings)
   const terminalHasBackgroundImage = hasTerminalBackgroundImage(settings?.terminal)
   const idleAnimationSettings = settings?.terminal.idleAnimation
-  const activeRenderer = effectiveRenderer(
-    rendererPreference,
-    preferDomRenderer || superPowerSavingDom,
-  )
+  const activeRenderer = domOnlyEmulator
+    ? 'dom'
+    : effectiveRenderer(rendererPreference, preferDomRenderer || superPowerSavingDom)
 
   const safeFit = useCallback(
     (force = false): boolean => {
@@ -489,15 +487,12 @@ export function TerminalView({
     const captureOpts = { capture: true } as const
 
     void (async () => {
-      await import('@xterm/xterm/css/xterm.css')
-      const [{ Terminal }, { FitAddon }] = await Promise.all([
-        import('@xterm/xterm'),
-        import('@xterm/addon-fit'),
-      ])
+      const s = useAppStore.getState().settings
+      const emulator = getTerminalEmulator(s)
+      const { Terminal, FitAddon, ghostty } = await loadTerminalModules(emulator)
 
       if (disposed || !containerRef.current) return
 
-      const s = useAppStore.getState().settings
       if (s?.terminal?.useBuiltinFont) {
         await waitForTerminalFonts(s.terminal)
       }
@@ -507,14 +502,15 @@ export function TerminalView({
       const theme = resolveTerminalThemeWithBackground(scheme, s?.terminal)
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
       const previewSettings = s?.preview ?? DEFAULT_PREVIEW_SETTINGS
-      const term = new Terminal(
-        buildTerminalOptions(
-          s?.terminal,
-          theme,
-          getTerminalCursorOptions(s?.terminal),
-          shellSettings.emojiNativeRendering,
-        ),
+      const termOptions = buildTerminalOptions(
+        s?.terminal,
+        theme,
+        getTerminalCursorOptions(s?.terminal),
+        shellSettings.emojiNativeRendering,
       )
+      const term = ghostty
+        ? (new Terminal({ ...termOptions, ghostty } as ITerminalOptions) as Terminal)
+        : new Terminal(termOptions)
 
       const fit = new FitAddon()
       term.loadAddon(fit)
@@ -541,7 +537,13 @@ export function TerminalView({
         restoreTerminalBufferText(term, snap.bufferText)
       }
 
-      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
+      applyTerminalShellAddons(
+        term,
+        shellAddonsRef.current,
+        shellSettings,
+        previewSettings,
+        emulator,
+      )
 
       writeBatcher = createTerminalWriteBatcher(
         () => termRef.current,
@@ -559,26 +561,10 @@ export function TerminalView({
       }
       term.onData(onData)
 
-      term.attachCustomKeyEventHandler((event) => {
-        const currentTab = tabRef.current
-        const terminalId = boundTerminalIdRef.current
-        if (!terminalId) return true
-        if (handleTerminalTabNavigationShortcut(event)) return false
-
-        if (tryHandleSshReconnectEnter(currentTab, terminalId, event)) {
-          return false
-        }
-
-        const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-        if (handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)) {
-          return false
-        }
-
-        const shortcuts = useAppStore.getState().settings?.shortcuts.app
-        if (handleTerminalCopyWhenSelection(event, term)) return false
-        if (!shortcuts) return true
-        const handled = handleTerminalKeyboardShortcut(terminalId, shortcuts, event, term)
-        return !handled
+      attachTerminalCustomKeyHandler(term, emulator, {
+        getTab: () => tabRef.current,
+        getTerminalId: () => boundTerminalIdRef.current,
+        term,
       })
 
       termElement = term.element ?? undefined
@@ -602,13 +588,23 @@ export function TerminalView({
       }
 
       onLeftMouseDown = (e: MouseEvent) => {
+        if (blockAlternateScreenNonPrimaryMouse(term, e)) return
         const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
         handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
       }
 
       onRightMouseUp = (e: MouseEvent) => {
         const terminalId = boundTerminalIdRef.current
-        if (e.button !== 2 || !terminalId || !isRightClickCopyPasteEnabled()) return
+        if (e.button !== 2) return
+        if (term.buffer.active.type === 'alternate') {
+          if (terminalId && isRightClickCopyPasteEnabled()) {
+            handleTerminalRightClick(terminalId, e, term)
+          }
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          return
+        }
+        if (!terminalId || !isRightClickCopyPasteEnabled()) return
         handleTerminalRightClick(terminalId, e, term)
       }
 
@@ -719,16 +715,15 @@ export function TerminalView({
     const captureOpts = { capture: true } as const
 
     void (async () => {
-      await import('@xterm/xterm/css/xterm.css')
-      const [{ Terminal }, { FitAddon }, { SerializeAddon }] = await Promise.all([
-        import('@xterm/xterm'),
-        import('@xterm/addon-fit'),
-        import('@xterm/addon-serialize'),
-      ])
+      const s = useAppStore.getState().settings
+      const emulator = getTerminalEmulator(s)
+      const { Terminal, FitAddon, ghostty, SerializeAddon } = await loadTerminalModules(
+        emulator,
+        { includeSerialize: emulator === 'xterm' },
+      )
 
       if (disposed || !containerRef.current) return
 
-      const s = useAppStore.getState().settings
       if (s?.terminal?.useBuiltinFont) {
         await waitForTerminalFonts(s.terminal)
       }
@@ -738,20 +733,23 @@ export function TerminalView({
       const theme = resolveTerminalThemeWithBackground(scheme, s?.terminal)
       const shellSettings = s?.shell ?? DEFAULT_SHELL_SETTINGS
       const previewSettings = s?.preview ?? DEFAULT_PREVIEW_SETTINGS
-      const term = new Terminal(
-        buildTerminalOptions(
-          s?.terminal,
-          theme,
-          getTerminalCursorOptions(s?.terminal),
-          shellSettings.emojiNativeRendering,
-        ),
+      const termOptions = buildTerminalOptions(
+        s?.terminal,
+        theme,
+        getTerminalCursorOptions(s?.terminal),
+        shellSettings.emojiNativeRendering,
       )
+      const term = ghostty
+        ? (new Terminal({ ...termOptions, ghostty } as ITerminalOptions) as Terminal)
+        : new Terminal(termOptions)
 
       const fit = new FitAddon()
       term.loadAddon(fit)
-      const serializeAddon = new SerializeAddon()
-      term.loadAddon(serializeAddon)
-      serializeAddonRef.current = serializeAddon
+      if (SerializeAddon) {
+        const serializeAddon = new SerializeAddon()
+        term.loadAddon(serializeAddon)
+        serializeAddonRef.current = serializeAddon
+      }
       term.open(containerRef.current)
       unsubRenderFit = term.onRender(() => {
         if (safeFit(true)) {
@@ -768,7 +766,13 @@ export function TerminalView({
       termRef.current = term
       fitRef.current = fit
 
-      applyTerminalShellAddons(term, shellAddonsRef.current, shellSettings, previewSettings)
+      applyTerminalShellAddons(
+        term,
+        shellAddonsRef.current,
+        shellSettings,
+        previewSettings,
+        emulator,
+      )
 
       writeBatcher = createTerminalWriteBatcher(
         () => termRef.current,
@@ -786,26 +790,10 @@ export function TerminalView({
       }
       term.onData(onData)
 
-      term.attachCustomKeyEventHandler((event) => {
-        const currentTab = tabRef.current
-        const terminalId = boundTerminalIdRef.current
-        if (!terminalId) return true
-        if (handleTerminalTabNavigationShortcut(event)) return false
-
-        if (tryHandleSshReconnectEnter(currentTab, terminalId, event)) {
-          return false
-        }
-
-        const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
-        if (handleTerminalModifiedEnterKey(terminalId, event, shell.shiftEnterNewline)) {
-          return false
-        }
-
-        const shortcuts = useAppStore.getState().settings?.shortcuts.app
-        if (handleTerminalCopyWhenSelection(event, term)) return false
-        if (!shortcuts) return true
-        const handled = handleTerminalKeyboardShortcut(terminalId, shortcuts, event, term)
-        return !handled
+      attachTerminalCustomKeyHandler(term, emulator, {
+        getTab: () => tabRef.current,
+        getTerminalId: () => boundTerminalIdRef.current,
+        term,
       })
 
       termElement = term.element ?? undefined
@@ -829,13 +817,23 @@ export function TerminalView({
       }
 
       onLeftMouseDown = (e: MouseEvent) => {
+        if (blockAlternateScreenNonPrimaryMouse(term, e)) return
         const shell = useAppStore.getState().settings?.shell ?? DEFAULT_SHELL_SETTINGS
         handleInteractiveCliMouseDown(term, e, shell.shiftEnterNewline)
       }
 
       onRightMouseUp = (e: MouseEvent) => {
         const terminalId = boundTerminalIdRef.current
-        if (e.button !== 2 || !terminalId || !isRightClickCopyPasteEnabled()) return
+        if (e.button !== 2) return
+        if (term.buffer.active.type === 'alternate') {
+          if (terminalId && isRightClickCopyPasteEnabled()) {
+            handleTerminalRightClick(terminalId, e, term)
+          }
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          return
+        }
+        if (!terminalId || !isRightClickCopyPasteEnabled()) return
         handleTerminalRightClick(terminalId, e, term)
       }
 
@@ -949,7 +947,7 @@ export function TerminalView({
   ])
 
   useEffect(() => {
-    if (!termReady || !webglSlotId || activeRenderer !== 'webgl') return
+    if (!termReady || !webglSlotId || activeRenderer !== 'webgl' || domOnlyEmulator) return
 
     const unregisterEvict = registerWebglEvictHandler(webglSlotId, () => {
       disposeWebgl()
@@ -992,7 +990,13 @@ export function TerminalView({
     const shell = settings.shell ?? DEFAULT_SHELL_SETTINGS
     const preview = settings.preview ?? DEFAULT_PREVIEW_SETTINGS
     applyInteractiveCliTerminalOptions(termRef.current, shell.shiftEnterNewline)
-    applyTerminalShellAddons(termRef.current, shellAddonsRef.current, shell, preview)
+    applyTerminalShellAddons(
+      termRef.current,
+      shellAddonsRef.current,
+      shell,
+      preview,
+      getTerminalEmulator(settings),
+    )
     syncPreviewMouse()
   }, [termReady, settings?.shell, settings?.preview, syncPreviewMouse])
 

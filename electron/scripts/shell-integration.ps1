@@ -10,11 +10,14 @@ if ($null -eq $Global:NioZyShellIntegration) {
     if ([string]::IsNullOrWhiteSpace($path)) { return }
     $pathForward = $path -replace '\\', '/'
     $esc = [char]27
-    $bel = [char]7
+    $st = "$esc\"
     $escaped = $path -replace '\\x', '\x5cx' -replace ';', '\x3b'
-    # Use Console.Out to ensure output reaches the PTY stream under ConPTY/PSHost
-    [Console]::Out.Write("$esc]7;file://${env:COMPUTERNAME}/$pathForward$bel")
-    [Console]::Out.Write("$esc]633;P;Cwd=$escaped$bel")
+    # OSC 7：Ghostty 等 VT 可识别；使用 ST 终止（比 BEL 更可靠）
+    [Console]::Out.Write("$esc]7;file://${env:COMPUTERNAME}/$pathForward$st")
+    # VS Code 633：ghostty-web VT 不支持，跳过以免 wasm 警告
+    if ($env:NIOZY_TERMINAL_EMULATOR -ne 'ghostty') {
+      [Console]::Out.Write("$esc]633;P;Cwd=$escaped$st")
+    }
     try { [Console]::Out.Flush() } catch {}
   }
 

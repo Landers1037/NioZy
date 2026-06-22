@@ -29,6 +29,10 @@ export interface TerminalCreateOptions {
   /** 为 pwsh 注入内置 Oh My Posh + posh-git（由主进程根据设置传入） */
   ohMyPoshEnabled?: boolean
   ohMyPoshTheme?: import('./shared/oh-my-posh-themes').OhMyPoshThemeId
+  /** 内联图片协议（iip / kitty），注入 NIOZY_IMAGE_PROTOCOL */
+  terminalImageProtocol?: import('./shared/shell-settings').TerminalImageProtocol | null
+  /** 终端模拟器（xterm / ghostty / wterm），注入 NIOZY_TERMINAL_EMULATOR */
+  terminalEmulator?: import('./shared/experimental-settings').TerminalEmulator
 }
 
 interface TerminalSession {
@@ -91,6 +95,8 @@ export class TerminalService extends EventEmitter {
     const shellIntegrationOptions = {
       ohMyPoshEnabled: options.ohMyPoshEnabled === true,
       ohMyPoshTheme: options.ohMyPoshTheme,
+      terminalImageProtocol: options.terminalImageProtocol ?? null,
+      terminalEmulator: options.terminalEmulator,
     }
     const integrationEnv = getShellIntegrationEnv(options.shell, shellIntegrationOptions)
     const env = {

@@ -116,10 +116,11 @@
     },
     "engineXterm": "Xterm",
     "engineWterm": "Wterm",
+    "engineGhostty": "Ghostty",
     "modeDom": "DOM",
     "modeCanvas": "Canvas",
     "modeWebgl": "WebGL",
-    "renderModeWtermHint": "Wterm は DOM レンダリングのみサポート"
+    "renderModeDomOnlyHint": "Ghostty / Wterm は DOM レンダリングのみ"
   },
   "commandReplay": {
     "add": "コマンドを追加",
@@ -412,7 +413,7 @@
       "emojiNativeRendering": "ネイティブ絵文字レンダリング",
       "emojiNativeRenderingDesc": "Unicode 11 幅テーブルで絵文字と全角文字を正しく表示",
       "terminalInlineImages": "ターミナルインライン画像",
-      "terminalInlineImagesDesc": "xterm image アドオンで SIXEL と iTerm IIP を解析して画像を表示。niozy-cat が利用できます。Ctrl+K または clear/cls で画像を消去",
+      "terminalInlineImagesDesc": "ターミナル内に画像を表示：Xterm では SIXEL と iTerm IIP、Ghostty では Kitty グラフィックス。niozy-cat が利用できます。Ctrl+K または clear/cls で消去",
       "highlightLinks": "リンクをハイライト",
       "highlightLinksDesc": "ターミナル出力の http/https URL をハイライト",
       "clickToOpenLinks": "クリックでリンクを開く",
@@ -734,8 +735,9 @@
       "title": "実験的",
       "description": "不安定で変更または削除される可能性がある機能",
       "terminalEmulator": "ターミナルエミュレータ",
-      "terminalEmulatorDesc": "フロントエンドのターミナル実装を選択。Wterm は WASM/DOM レンダリング（実験的）。切り替え後は開いているターミナルを再起動してください。",
+      "terminalEmulatorDesc": "フロントエンドのターミナル実装を選択：Xterm.js（デフォルト）、Ghostty（ghostty-web WASM）、Wterm（実験的）。切り替え後はアプリを再起動してください。",
       "terminalEmulatorXterm": "Xterm.js（デフォルト）",
+      "terminalEmulatorGhostty": "Ghostty（ghostty-web）",
       "terminalEmulatorWterm": "Wterm（実験的）",
       "jsSandboxEnabled": "JS サンドボックス",
       "jsSandboxEnabledDesc": "サイドバーに「サンドボックスを開く」を表示。QuickJS WASM の隔離環境で JavaScript を実行（Node.js ではなく、ファイルシステム・ネットワーク不可）。",

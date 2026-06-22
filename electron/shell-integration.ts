@@ -4,6 +4,7 @@ import { join } from 'path'
 import { fileURLToPath } from 'node:url'
 import { getOhMyPoshBundledResources, getOmpBootstrapScriptPath } from './oh-my-posh-resources'
 import { normalizeOhMyPoshTheme, type OhMyPoshThemeId } from './shared/oh-my-posh-themes'
+import type { TerminalEmulator } from './shared/experimental-settings'
 import type { ShellType } from './terminal-service'
 
 const MAIN_DIR =
@@ -17,6 +18,10 @@ const NIOZY_BIN_DIR_NAME = 'niozy-bin'
 export interface ShellIntegrationOptions {
   ohMyPoshEnabled?: boolean
   ohMyPoshTheme?: OhMyPoshThemeId
+  /** 内联图片协议：iip（xterm）或 kitty（ghostty-web） */
+  terminalImageProtocol?: import('./shared/shell-settings').TerminalImageProtocol | null
+  /** 当前终端模拟器，注入 NIOZY_TERMINAL_EMULATOR */
+  terminalEmulator?: TerminalEmulator
 }
 
 function pathEnvKey(env: Record<string, string>): 'Path' | 'PATH' {
@@ -119,6 +124,14 @@ export function getShellIntegrationEnv(
   const binDir = getNiozyBinDir()
   if (binDir) {
     env.NIOZY_BIN = binDir
+  }
+
+  if (options?.terminalImageProtocol) {
+    env.NIOZY_IMAGE_PROTOCOL = options.terminalImageProtocol
+  }
+
+  if (options?.terminalEmulator) {
+    env.NIOZY_TERMINAL_EMULATOR = options.terminalEmulator
   }
 
   if (shell === 'powershell' || shell === 'pwsh') {

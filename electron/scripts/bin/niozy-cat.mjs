@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * NioZy built-in image viewer — outputs iTerm inline image protocol (IIP) sequences.
+ * NioZy built-in image viewer — outputs iTerm IIP or Kitty graphics protocol sequences.
  * Usage: niozy-cat [options] <image> [image...]
  */
 
@@ -8,11 +8,19 @@ import { readFileSync, statSync } from 'node:fs'
 import { basename, extname, resolve } from 'node:path'
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'])
-/** IIP base64 输出过大时会在 IPC 分块中被截断，导致终端显示 base64 文本 */
+/** 单帧 base64 过大时会在 IPC 分块中被截断，导致终端显示 base64 文本 */
 const MAX_IMAGE_BYTES = 512 * 1024
+/** Kitty 图形协议单 chunk 载荷上限（字节，base64 字符数） */
+const KITTY_CHUNK_CHARS = 4096
+
+function resolveImageProtocol() {
+  const raw = (process.env.NIOZY_IMAGE_PROTOCOL ?? 'iip').toLowerCase()
+  return raw === 'kitty' ? 'kitty' : 'iip'
+}
 
 function printHelp() {
-  process.stderr.write(`niozy-cat — display images in NioZy terminal via iTerm inline image protocol (IIP)
+  const protocol = resolveImageProtocol()
+  process.stderr.write(`niozy-cat — display images in NioZy terminal (${protocol === 'kitty' ? 'Kitty graphics' : 'iTerm IIP'})
 
 Usage:
   niozy-cat [options] <image> [image...]
@@ -25,6 +33,7 @@ Clear the image: Ctrl+K, or run clear / cls in the terminal.
 
 Supported formats: PNG, JPEG, GIF
 Requires terminal inline images enabled in NioZy Settings -> SHELL.
+Protocol: ${protocol} (from NIOZY_IMAGE_PROTOCOL; ghostty 渲染时为 kitty)
 `)
 }
 
@@ -100,10 +109,33 @@ function computeCellSpan(widthPx, heightPx, maxCols, maxRows = 24) {
 /** iTerm inline image protocol: OSC 1337 ; File = ... : base64 ST */
 function writeIipImage(buffer, { cols, rows }) {
   const b64 = buffer.toString('base64')
-  // @xterm/addon-image 要求 inline=1 与 size（原始字节数），否则序列会被当作普通文本输出
   const params = `inline=1;size=${buffer.length};width=${cols};height=${rows};preserveAspectRatio=1`
-  // 使用 ST（ESC \\）终止：Windows ConPTY 下 BEL 可能被吞掉
   process.stdout.write(`\x1b]1337;File=${params}:${b64}\x1b\\`)
+}
+
+/** Kitty graphics protocol: APC ESC _ G ... ESC \\ */
+function writeKittyImage(buffer, { width, height, cols, rows }) {
+  const b64 = buffer.toString('base64')
+  const header = `a=t,f=100,s=${width},v=${height},c=${cols},r=${rows}`
+
+  if (b64.length <= KITTY_CHUNK_CHARS) {
+    process.stdout.write(`\x1b_G${header};${b64}\x1b\\`)
+    return
+  }
+
+  let offset = 0
+  let first = true
+  while (offset < b64.length) {
+    const chunk = b64.slice(offset, offset + KITTY_CHUNK_CHARS)
+    offset += KITTY_CHUNK_CHARS
+    const isLast = offset >= b64.length
+    if (first) {
+      process.stdout.write(`\x1b_G${header},m=${isLast ? 1 : 0};${chunk}\x1b\\`)
+      first = false
+    } else {
+      process.stdout.write(`\x1b_Gm=${isLast ? 1 : 0};${chunk}\x1b\\`)
+    }
+  }
 }
 
 function displayImage(filePath, maxCols) {
@@ -136,13 +168,19 @@ function displayImage(filePath, maxCols) {
   const format = detectImageFormat(buffer)
   if (!format) {
     throw new Error(
-      `${basename(resolved)}: IIP requires PNG, JPEG, or GIF. Convert the image first.`,
+      `${basename(resolved)}: requires PNG, JPEG, or GIF. Convert the image first.`,
     )
   }
 
   const { width, height } = guessDimensions(buffer)
   const { cols, rows } = computeCellSpan(width, height, maxCols)
-  writeIipImage(buffer, { cols, rows })
+  const protocol = resolveImageProtocol()
+
+  if (protocol === 'kitty') {
+    writeKittyImage(buffer, { width, height, cols, rows })
+  } else {
+    writeIipImage(buffer, { cols, rows })
+  }
   process.stdout.write('\r\n')
 }
 

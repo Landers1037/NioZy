@@ -201,6 +201,7 @@ function bindRightClickBehavior(
   root: HTMLElement,
   options: Pick<WtermDomShellOptions, 'terminalId' | 'tabId' | 'rightClickCopyPaste' | 'advancedRightClickMenu'>,
   listeners: Array<() => void>,
+  isAlternateScreen: () => boolean = () => false,
 ): void {
   const terminalSettings = {
     rightClickCopyPaste: options.rightClickCopyPaste,
@@ -208,18 +209,35 @@ function bindRightClickBehavior(
   }
   const copyPasteEnabled = isTerminalRightClickCopyPasteEnabled(terminalSettings)
   const advancedMenuEnabled = isTerminalAdvancedRightClickMenuEnabled(terminalSettings)
-  if (!copyPasteEnabled && !advancedMenuEnabled) return
 
   const captureOpts = { capture: true } as const
 
   const onRightMouseUp = (e: MouseEvent) => {
-    if (e.button !== 2 || !copyPasteEnabled) return
+    if (e.button !== 2) return
+    if (isAlternateScreen()) {
+      if (copyPasteEnabled) {
+        handleTerminalRightClickCopyPaste(
+          options.terminalId,
+          () => readTerminalSelectionText(),
+          e,
+        )
+      }
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      return
+    }
+    if (!copyPasteEnabled) return
     handleTerminalRightClickCopyPaste(
       options.terminalId,
       () => readTerminalSelectionText(),
       e,
     )
   }
+
+  root.addEventListener('mouseup', onRightMouseUp, captureOpts)
+  listeners.push(() => root.removeEventListener('mouseup', onRightMouseUp, captureOpts))
+
+  if (!copyPasteEnabled && !advancedMenuEnabled) return
 
   const onContextMenu = (e: MouseEvent) => {
     if (copyPasteEnabled) {
@@ -231,12 +249,8 @@ function bindRightClickBehavior(
     openTerminalAdvancedContextMenu(e, options.terminalId, options.tabId)
   }
 
-  root.addEventListener('mouseup', onRightMouseUp, captureOpts)
   root.addEventListener('contextmenu', onContextMenu, captureOpts)
-  listeners.push(() => {
-    root.removeEventListener('mouseup', onRightMouseUp, captureOpts)
-    root.removeEventListener('contextmenu', onContextMenu, captureOpts)
-  })
+  listeners.push(() => root.removeEventListener('contextmenu', onContextMenu, captureOpts))
 }
 
 function bindInteractiveCliMouse(
@@ -245,7 +259,13 @@ function bindInteractiveCliMouse(
   listeners: Array<() => void>,
 ): void {
   const onMouseDown = (event: MouseEvent) => {
-    if (event.type !== 'mousedown' || event.button !== 0) return
+    if (event.type !== 'mousedown') return
+    if (event.button !== 0 && instance.bridge?.usingAltScreen()) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      return
+    }
+    if (event.button !== 0) return
     if (!instance.bridge?.usingAltScreen()) return
     if (event.altKey) return
 
@@ -280,7 +300,12 @@ export function attachWtermDomShellFeatures(
   let highlightFrame = 0
   let observer: MutationObserver | null = null
 
-  bindRightClickBehavior(root, options, listeners)
+  bindRightClickBehavior(
+    root,
+    options,
+    listeners,
+    () => instance.bridge?.usingAltScreen() ?? false,
+  )
   const { highlightLinks, highlightLogLevels, clickToOpenLinks, shiftEnterNewline } = options.shell
   const preview = options.preview ?? DEFAULT_PREVIEW_SETTINGS
   if (clickToOpenLinks || isAnyPreviewEnabled(preview)) {

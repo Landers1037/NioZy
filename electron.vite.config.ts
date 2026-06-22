@@ -143,6 +143,7 @@ export default defineConfig(({ command }) => {
             if (!id.includes('node_modules')) return
             if (id.includes('@radix-ui')) return 'radix'
             if (id.includes('@xterm')) return 'xterm'
+            if (id.includes('ghostty-web')) return 'ghostty-web'
             if (id.includes('@wterm')) return 'wterm'
             if (id.includes('quickjs-emscripten')) return 'quickjs'
             if (id.includes('@excalidraw')) return 'excalidraw'

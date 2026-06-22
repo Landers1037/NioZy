@@ -94,7 +94,7 @@ export function ExperimentalSettings() {
                   ...settings.experimental,
                   terminalEmulator: next,
                 },
-                ...(next === 'wterm' && renderer !== settings.terminal.renderer
+                ...((next === 'wterm' || next === 'ghostty') && renderer !== settings.terminal.renderer
                   ? { terminal: { ...settings.terminal, renderer } }
                   : {}),
               }).then(() => notifyRestartRequired(t, 'toast.terminalEmulatorRestart'))
@@ -105,6 +105,7 @@ export function ExperimentalSettings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="xterm">{t('settings.experimental.terminalEmulatorXterm')}</SelectItem>
+              <SelectItem value="ghostty">{t('settings.experimental.terminalEmulatorGhostty')}</SelectItem>
               <SelectItem value="wterm">{t('settings.experimental.terminalEmulatorWterm')}</SelectItem>
             </SelectContent>
           </Select>
@@ -274,7 +275,7 @@ export function ExperimentalSettings() {
           >
             <Switch
               checked={attachPtyActive}
-              disabled={emulator === 'wterm'}
+              disabled={emulator !== 'xterm'}
               onCheckedChange={(enabled) => {
                 if (enabled === attachPtyEnabled) return
                 void patchSettings({
