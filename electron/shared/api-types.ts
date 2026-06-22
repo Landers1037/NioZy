@@ -388,6 +388,11 @@ export interface SaveImageInput {
   mimeType?: string
 }
 
+export interface AppRuntimeVersions {
+  electron: string
+  chromium: string
+}
+
 export interface ElectronAPI {
   window: {
     minimize: () => void
@@ -451,6 +456,7 @@ export interface ElectronAPI {
   }
   app: {
     getVersion: () => Promise<string>
+    getRuntimeVersions: () => Promise<AppRuntimeVersions>
     getPendingOpenDirectory: () => Promise<AppOpenDirectoryPayload | null>
     onOpenDirectory: (cb: (payload: AppOpenDirectoryPayload) => void) => () => void
     /** 托盘菜单：新建终端 Tab */

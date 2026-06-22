@@ -85,14 +85,23 @@ export function SystemSettings() {
     downloadUrl: string
   } | null>(null)
   const [appVersion, setAppVersion] = useState('…')
+  const [runtimeVersions, setRuntimeVersions] = useState<{
+    electron: string
+    chromium: string
+  } | null>(null)
   const [attributionOpen, setAttributionOpen] = useState(false)
   const logoTapRef = useRef({ count: 0, timer: null as ReturnType<typeof setTimeout> | null })
 
   useEffect(() => {
-    void getElectronAPI()
-      .app.getVersion()
+    const api = getElectronAPI()
+    void api.app
+      .getVersion()
       .then(setAppVersion)
       .catch(() => setAppVersion('0.1.0'))
+    void api.app
+      .getRuntimeVersions()
+      .then(setRuntimeVersions)
+      .catch(() => setRuntimeVersions(null))
   }, [])
 
   useEffect(() => {
@@ -380,6 +389,12 @@ export function SystemSettings() {
             <p className="mt-1 text-sm text-muted-foreground">
               {t('settings.system.version', { version: appVersion })}
             </p>
+            {runtimeVersions ? (
+              <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                <p>{t('settings.system.electronVersion', { version: runtimeVersions.electron })}</p>
+                <p>{t('settings.system.chromiumVersion', { version: runtimeVersions.chromium })}</p>
+              </div>
+            ) : null}
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
               {t('settings.system.aboutDesc')}
             </p>

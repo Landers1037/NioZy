@@ -624,6 +624,8 @@
       "manualUpdate": "手動でダウンロード",
       "about": "NioZy について",
       "version": "バージョン {{version}}",
+      "electronVersion": "Electron {{version}}",
+      "chromiumVersion": "Chromium {{version}}",
       "aboutDesc": "内蔵 AI コパイロット付きターミナルワークベンチ — Electron、React、xterm.js、Windows ConPTY。",
       "cardDescription": "プロキシ、起動、トレイ、について"
     },

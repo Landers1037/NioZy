@@ -142,6 +142,8 @@ const api: ElectronAPI = {
   },
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion') as Promise<string>,
+    getRuntimeVersions: () =>
+      ipcRenderer.invoke('app:getRuntimeVersions') as Promise<import('../shared/api-types').AppRuntimeVersions>,
     getPendingOpenDirectory: () => ipcRenderer.invoke('app:getPendingOpenDirectory'),
     onOpenDirectory: (cb) => onAppOpenDirectory(cb),
     onNewTerminal: (cb) => onAppNewTerminal(() => cb()),

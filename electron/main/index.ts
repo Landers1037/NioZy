@@ -70,6 +70,7 @@ import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
 import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
+import { resolveBundleFile } from '../shared/resolve-bundle-file'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
@@ -562,9 +563,9 @@ function handleOpenDirectoryRequest(directory: string, connectionId?: string | n
 
 function resolvePreloadPath(): string {
   const candidates = [
-    fileURLToPath(new URL('../preload/index.mjs', import.meta.url)),
-    join(app.getAppPath(), 'out/preload/index.mjs'),
-    join(__dirname, '../preload/index.mjs'),
+    resolveBundleFile(fileURLToPath(new URL('../preload', import.meta.url)), 'index'),
+    resolveBundleFile(join(app.getAppPath(), 'out/preload'), 'index'),
+    resolveBundleFile(join(__dirname, '../preload'), 'index'),
   ]
   for (const file of candidates) {
     if (existsSync(file)) return file
@@ -1341,6 +1342,10 @@ ipcMain.handle('resumeTerm:clear', () => {
 
 ipcMain.handle('app:getPendingOpenDirectory', () => takePendingOpenDirectory())
 ipcMain.handle('app:getVersion', () => app.getVersion())
+ipcMain.handle('app:getRuntimeVersions', () => ({
+  electron: process.versions.electron ?? '',
+  chromium: process.versions.chrome ?? '',
+}))
 ipcMain.on('app:relaunch', () => {
   app.relaunch()
   app.exit(0)
