@@ -1,6 +1,6 @@
 # 功能：增强 SHELL
 
-**设置 · SHELL** 分区下的终端增强能力：链接与 Emoji 渲染、交互式 CLI 快捷换行、侧栏 Tab 交互、Oh My Posh 提示符美化、日志关键词着色，以及命令序列录制与一键重放。
+**设置 · SHELL** 分区下的终端增强能力：链接与 Emoji 渲染、终端内联图片（SIXEL / iTerm IIP）、交互式 CLI 快捷换行、侧栏 Tab 交互、Oh My Posh 提示符美化、日志关键词着色，以及命令序列录制与一键重放。
 
 > **重启恢复终端会话**（`restoreTerminalSessionOnRestart`）见 [SHELL.md](./SHELL.md)。
 
@@ -9,6 +9,7 @@
 | 类别 | 能力 |
 |------|------|
 | 终端交互 | Emoji Unicode 11 宽度表；高亮 / 单击打开 http(s) 链接；Shift+Enter / Ctrl+Enter 快捷换行（交互式 CLI）；侧栏 Tab 编号；长按 2s 拖拽排序 |
+| 内联图片 | `@xterm/addon-image` 解析 SIXEL 与 iTerm IIP；内置 `niozy-cat` 命令；Ctrl+K / clear 清除 |
 | 提示符美化 | 离线内置 Oh My Posh + posh-git（仅 pwsh） |
 | 输出增强 | 日志级别关键词着色（MobaXterm 风格） |
 | 命令回放 | 录制终端输入序列、命名保存、标题栏一键播放 |
@@ -538,6 +539,169 @@ export interface CommandReplayItem {
 
 ---
 
+## 五、终端内联图片
+
+在 **xterm** 渲染引擎下，通过 `@xterm/addon-image` 解析 **SIXEL** 与 **iTerm 内联图片协议（IIP / OSC 1337）**，在终端光标处叠加显示图片。协议序列由解析器消费，**不写入字符缓冲区**，因此正常显示时不会影响原有终端文本（不会出现 base64 乱码）。
+
+> **Wterm 渲染引擎暂不支持** ImageAddon；需使用 xterm 终端 Tab。Kitty 图形协议需 xterm 6.1 beta + addon-image 0.10 beta，当前未启用。
+
+### 功能列表
+
+- **终端内联图片**：`shell.terminalInlineImages` 开关（默认 **关闭**）
+- **协议支持**：SIXEL（`img2sixel` 等工具输出）+ iTerm IIP（`OSC 1337 ; File=...`）
+- **内置命令 `niozy-cat`**：读取本地 PNG / JPEG / GIF，输出 IIP 序列并在终端显示
+- **清除图片**：Ctrl+K（清屏快捷键）、或 shell 执行 `clear` / `cls`（ED 2J / 3J）
+- **设置迁移**：旧键 `kittyImageProtocol` 自动映射为 `terminalInlineImages`
+
+### 生效范围
+
+| 条件 | 是否生效 |
+|------|----------|
+| `shell.terminalInlineImages === true` | ✅ |
+| 终端 Tab 使用 **xterm** 渲染 | ✅ |
+| 新建或重开终端 Tab（开关变更后） | ✅ 需重开 |
+| Wterm 渲染引擎 | ❌ |
+| 图片 &gt; 512 KB（`niozy-cat` 限制） | ❌ 需先压缩 |
+
+### 使用示例
+
+```powershell
+# 开启「设置 · SHELL → 终端内联图片」后，在新 xterm Tab 中：
+niozy-cat .\photo.png
+niozy-cat --width 60 .\a.png .\b.jpg
+
+# 查看完毕后清除（任选其一）：
+# Ctrl+K
+clear   # 或 cls（Windows）
+```
+
+`niozy-cat` 通过 Shell 集成注入 PATH（`NIOZY_BIN` / `prependNiozyBinToPath`），开发态位于 `electron/scripts/bin/`，打包后位于 `resources/niozy-bin/`。
+
+### 架构与数据流
+
+xterm.js 将图片渲染在 **Canvas 叠加层**，与文本 buffer 分离；`term.clear()` 只清文本，须额外调用 `ImageAddon.reset()` 才能清除 canvas 上的图片（NioZy 已在 Ctrl+K 与 `clear`/`cls` 路径中同步处理）。
+
+```mermaid
+flowchart TB
+  subgraph Settings["设置 · SHELL"]
+    IMG["terminalInlineImages"]
+  end
+
+  subgraph Shell["Shell 会话"]
+    Cat["niozy-cat.mjs"]
+    Other["img2sixel / 远端 IIP"]
+  end
+
+  subgraph Main["主进程"]
+    PTY["PTY stdout"]
+    Chunk["forEachTerminalOutputChunk\n安全分块（不切断 OSC）"]
+  end
+
+  subgraph Renderer["xterm 渲染层"]
+    Sync["terminal-sync-output"]
+    Addon["ImageAddon\nsixel + iip"]
+    Canvas["Canvas 叠加层"]
+    Buffer["文本 buffer"]
+  end
+
+  Disk[("settings.json shell.*")]
+
+  IMG --> Disk
+  Cat --> PTY
+  Other --> PTY
+  PTY --> Chunk --> Sync
+  Sync --> Addon
+  Addon --> Canvas
+  Sync --> Buffer
+```
+
+```mermaid
+sequenceDiagram
+  participant User as 用户
+  participant Cat as niozy-cat
+  participant PTY as PTY
+  participant Main as 主进程 IPC
+  participant Xterm as xterm + ImageAddon
+
+  User->>Cat: niozy-cat photo.png
+  Cat->>PTY: OSC 1337 IIP + base64 + ST
+  PTY->>Main: terminal:data
+  Main->>Xterm: 安全分块写入
+  Xterm->>Xterm: 解析 IIP，消费 OSC
+  Xterm->>Xterm: Canvas 绘制图片
+  Note over Xterm: 文本 buffer 无 base64
+
+  User->>Xterm: Ctrl+K 或 clear
+  Xterm->>Xterm: ImageAddon.reset() + term.clear()
+```
+
+#### 与原生终端（WezTerm / Kitty）的差异
+
+| | WezTerm / Kitty | NioZy（xterm + ImageAddon） |
+|--|-----------------|----------------------------|
+| 图片存储 | 绑定到 cell 元数据 | Canvas 叠加层 + buffer marker |
+| 清屏 | 原生一体清除 | 需 `ImageAddon.reset()` |
+| 滚屏 | 图片随行进入 scrollback | marker dispose 时回收图片 |
+| 协议序列 | 解析器消费，不进 buffer | 同上（成功时） |
+
+### 进程归属
+
+| 层级 | 文件 |
+|------|------|
+| **设置** | `src/components/settings/ShellSettings.tsx` — 「终端内联图片」开关 |
+| **类型** | `electron/shared/shell-settings.ts` — `terminalInlineImages`；旧键 `kittyImageProtocol` 迁移 |
+| **xterm 插件** | `src/lib/terminal-shell-addons.ts` — 加载 `ImageAddon`；`resetTerminalInlineImages` / `clearXtermTerminal` |
+| **清屏联动** | `src/lib/terminal-shortcut-actions.ts` — Ctrl+K → `clearXtermTerminal` |
+| **PTY 输出** | `src/lib/terminal-sync-output.ts` — 检测 ED 2J/3J 并重置图片 |
+| **安全分块** | `electron/shared/terminal-output-limits.ts` — `findSafeTerminalOutputChunkEnd` |
+| **写入批处理** | `src/lib/terminal-write-batcher.ts` — IPC / flush 时使用安全分块 |
+| **内置 CLI** | `electron/scripts/bin/niozy-cat.mjs`（及 `.cmd` / 无扩展名 shim） |
+| **PATH 注入** | `electron/shell-integration.ts` — `getNiozyBinDir` / `prependNiozyBinToPath` / `NIOZY_BIN` |
+| **打包** | `electron.vite.config.ts` 复制 bin；`electron-builder.yml` → `resources/niozy-bin` |
+
+### IIP 输出格式（`niozy-cat`）
+
+```text
+ESC ] 1337 ; File = inline=1;size=<bytes>;width=<cols>;height=<rows>;preserveAspectRatio=1 : <base64> ESC \
+```
+
+- **`inline=1`** 与 **`size=`** 为 `@xterm/addon-image` 校验必需，缺省会导致 base64 当普通文本显示
+- 终止符使用 **ST（`\x1b\\`）** 而非 BEL，避免 Windows ConPTY 吞掉 `\x07`
+- 单图上限 **512 KB**；默认最大宽度 **40 列**，高度按宽高比估算（上限约 24 行）
+
+### 内联图片核心代码
+
+```typescript
+// electron/shared/shell-settings.ts
+terminalInlineImages: boolean  // 默认 false
+```
+
+```typescript
+// src/lib/terminal-shell-addons.ts
+const addon = new ImageAddon({ sixelSupport: true, iipSupport: true })
+term.loadAddon(addon)
+
+export function clearXtermTerminal(term: Terminal): void {
+  resetTerminalInlineImages(term)  // ImageAddon.reset()
+  term.clear()
+}
+```
+
+```javascript
+// electron/scripts/bin/niozy-cat.mjs
+process.stdout.write(`\x1b]1337;File=${params}:${b64}\x1b\\`)
+```
+
+### 传输层注意
+
+IIP 序列含大量 base64，经主进程 IPC 以 **64 KB** 分块传输。`findSafeTerminalOutputChunkEnd` 保证不在 OSC 序列中间切断；pending 缓冲上限 **1 MB**（`TERMINAL_OUTPUT_PENDING_MAX_CHARS`）。若序列被截断，终端会把 base64 当普通文本显示——属异常路径，非协议设计本身。
+
+### 实验特性
+
+否（依赖稳定版 `@xterm/addon-image@0.9.0` + `@xterm/xterm@6.0.0`）。
+
+---
+
 ## 配置文件
 
 `settings.json` → `shell`：
@@ -546,6 +710,7 @@ export interface CommandReplayItem {
 {
   "shell": {
     "emojiNativeRendering": false,
+    "terminalInlineImages": false,
     "highlightLinks": false,
     "highlightLogLevels": true,
     "clickToOpenLinks": false,
@@ -569,6 +734,7 @@ export interface CommandReplayItem {
 // electron/shared/shell-settings.ts
 export interface ShellSettings {
   emojiNativeRendering: boolean
+  terminalInlineImages: boolean
   highlightLinks: boolean
   highlightLogLevels: boolean
   clickToOpenLinks: boolean

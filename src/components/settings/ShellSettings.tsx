@@ -13,6 +13,7 @@ import { SettingField } from './SettingField'
 import {
   TerminalSquare,
   Smile,
+  ImageIcon,
   Link2,
   MousePointerClick,
   CornerDownLeft,
@@ -92,6 +93,18 @@ export function ShellSettings() {
           <Switch
             checked={shell.emojiNativeRendering}
             onCheckedChange={(v) => patchShell({ emojiNativeRendering: v })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={ImageIcon}
+          label={t('settings.shell.terminalInlineImages')}
+          description={t('settings.shell.terminalInlineImagesDesc')}
+          row
+        >
+          <Switch
+            checked={shell.terminalInlineImages}
+            onCheckedChange={(v) => patchShell({ terminalInlineImages: v })}
           />
         </SettingField>
 

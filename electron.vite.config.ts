@@ -10,9 +10,11 @@ function copyMainAssets(): Plugin {
   const elevWorkerSrc = resolve('electron/scripts/elevated-shell-bridge-worker.ps1')
   const askpassCmdSrc = resolve('electron/scripts/ssh-askpass.cmd')
   const askpassShSrc = resolve('electron/scripts/ssh-askpass.sh')
+  const niozyBinSrc = resolve('electron/scripts/bin')
   const traySrc = resolve('electron/assets/tray.png')
   const mainOut = resolve('out/main')
   const scriptsOut = resolve(mainOut, 'scripts')
+  const binOut = resolve(scriptsOut, 'bin')
   return {
     name: 'copy-main-assets',
     writeBundle() {
@@ -27,6 +29,11 @@ function copyMainAssets(): Plugin {
       writePs1(elevWorkerSrc, 'elevated-shell-bridge-worker.ps1')
       writeFileSync(resolve(scriptsOut, 'ssh-askpass.cmd'), readFileSync(askpassCmdSrc))
       writeFileSync(resolve(scriptsOut, 'ssh-askpass.sh'), readFileSync(askpassShSrc))
+      mkdirSync(binOut, { recursive: true })
+      for (const name of ['niozy-cat.mjs', 'niozy-cat.cmd', 'niozy-cat']) {
+        const src = resolve(niozyBinSrc, name)
+        writeFileSync(resolve(binOut, name), readFileSync(src))
+      }
       writeFileSync(resolve(mainOut, 'tray.png'), readFileSync(traySrc))
     },
   }

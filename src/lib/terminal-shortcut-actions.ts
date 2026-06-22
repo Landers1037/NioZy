@@ -2,6 +2,7 @@ import type { Terminal } from '@xterm/xterm'
 import type { AppShortcuts } from '../../electron/shared/shortcuts'
 import { pasteTerminalClipboard } from '@/lib/terminal-clipboard-paste'
 import { writeTerminalInput } from '@/lib/terminal-write'
+import { clearXtermTerminal } from '@/lib/terminal-shell-addons'
 import { handleTerminalRightClickCopyPaste } from '@/lib/terminal-right-click'
 import { readTerminalSelectionText } from '@/lib/terminal-selection'
 import { matchAccelerator } from '@/lib/shortcut-utils'
@@ -103,7 +104,7 @@ export function handleTerminalKeyboardShortcut(
   if (matchAccelerator(app.clearTerminal, event)) {
     if (!term) return false
     event.preventDefault()
-    term.clear()
+    clearXtermTerminal(term)
     return true
   }
 

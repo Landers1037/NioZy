@@ -411,6 +411,8 @@
       "ohMyPoshThemeDesc": "同梱プロンプトテーマを選択。新しい pwsh ターミナルで反映",
       "emojiNativeRendering": "ネイティブ絵文字レンダリング",
       "emojiNativeRenderingDesc": "Unicode 11 幅テーブルで絵文字と全角文字を正しく表示",
+      "terminalInlineImages": "ターミナルインライン画像",
+      "terminalInlineImagesDesc": "xterm image アドオンで SIXEL と iTerm IIP を解析して画像を表示。niozy-cat が利用できます。Ctrl+K または clear/cls で画像を消去",
       "highlightLinks": "リンクをハイライト",
       "highlightLinksDesc": "ターミナル出力の http/https URL をハイライト",
       "clickToOpenLinks": "クリックでリンクを開く",

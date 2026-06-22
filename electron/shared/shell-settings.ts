@@ -6,6 +6,8 @@ export type { CommandReplayItem }
 export interface ShellSettings {
   /** 使用 Unicode 11 宽度表，正确渲染 emoji 等宽字符 */
   emojiNativeRendering: boolean
+  /** 使用 @xterm/addon-image 解析 SIXEL / iTerm IIP，在终端内联显示图片 */
+  terminalInlineImages: boolean
   /** 高亮终端中的 http / https 链接 */
   highlightLinks: boolean
   /** 按日志级别为终端输出行着色（ERROR / WARNING 等，类似 MobaXterm） */
@@ -32,6 +34,7 @@ export interface ShellSettings {
 
 export const DEFAULT_SHELL_SETTINGS: ShellSettings = {
   emojiNativeRendering: false,
+  terminalInlineImages: false,
   highlightLinks: false,
   highlightLogLevels: true,
   clickToOpenLinks: false,
@@ -52,6 +55,12 @@ export function normalizeShellSettings(value: unknown): ShellSettings {
       typeof v.emojiNativeRendering === 'boolean'
         ? v.emojiNativeRendering
         : DEFAULT_SHELL_SETTINGS.emojiNativeRendering,
+    terminalInlineImages:
+      typeof v.terminalInlineImages === 'boolean'
+        ? v.terminalInlineImages
+        : typeof (v as { kittyImageProtocol?: boolean }).kittyImageProtocol === 'boolean'
+          ? (v as { kittyImageProtocol: boolean }).kittyImageProtocol
+          : DEFAULT_SHELL_SETTINGS.terminalInlineImages,
     highlightLinks:
       typeof v.highlightLinks === 'boolean'
         ? v.highlightLinks

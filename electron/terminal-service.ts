@@ -6,7 +6,7 @@ import { appendTerminalOutputCapped } from './shared/terminal-output-limits'
 import { TerminalActiveOutputGate } from './terminal-active-output-gate'
 import { resolveExecutable } from './resolve-executable'
 import { extractCwdFromTerminalData } from './terminal-cwd-parser'
-import { getShellIntegrationEnv, mergeShellIntegrationArgs } from './shell-integration'
+import { getShellIntegrationEnv, mergeShellIntegrationArgs, prependNiozyBinToPath } from './shell-integration'
 import { buildElevatedPtySpawn } from './elevated-terminal-spawn'
 import { canSpawnElevatedTerminal } from './windows-admin'
 import { logErrorPayload, terminalLog } from './app-log'
@@ -92,11 +92,15 @@ export class TerminalService extends EventEmitter {
       ohMyPoshEnabled: options.ohMyPoshEnabled === true,
       ohMyPoshTheme: options.ohMyPoshTheme,
     }
+    const integrationEnv = getShellIntegrationEnv(options.shell, shellIntegrationOptions)
     const env = {
       ...process.env,
-      ...getShellIntegrationEnv(options.shell, shellIntegrationOptions),
+      ...integrationEnv,
       ...options.env,
     } as Record<string, string>
+    if (integrationEnv.NIOZY_BIN) {
+      prependNiozyBinToPath(env, integrationEnv.NIOZY_BIN)
+    }
 
     if (options.shell === 'custom' && options.command) {
       file = options.command
