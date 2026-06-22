@@ -46,6 +46,7 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
+import { useCommandPaletteStore } from '@/stores/command-palette-store'
 import { registerTerminalHost, unregisterTerminalHost } from '@/lib/terminal-host-registry'
 import type { TerminalViewProps } from './terminal-view-props'
 
@@ -110,6 +111,13 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
       )
 
       const onKeyDown = (event: KeyboardEvent) => {
+        if (useCommandPaletteStore.getState().open) {
+          event.preventDefault()
+          event.stopPropagation()
+          event.stopImmediatePropagation()
+          return
+        }
+
         if (handleTerminalTabNavigationShortcut(event)) {
           event.preventDefault()
           event.stopPropagation()

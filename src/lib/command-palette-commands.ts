@@ -325,8 +325,6 @@ export async function executeCommandPaletteCommand(
   const command = getCommandById(id)
   if (!command?.isEnabled()) return { type: 'unavailable' }
 
-  const tab = resolveTerminalTabForCommand()
-
   switch (id) {
     case 'newTerminal':
       await createTerminal()
@@ -337,18 +335,26 @@ export async function executeCommandPaletteCommand(
       return { type: 'dialog', dialog: 'closeConfirm' }
     case 'addTabToGroup':
       return { type: 'dialog', dialog: 'addToGroup' }
-    case 'removeTabFromGroup':
+    case 'removeTabFromGroup': {
+      const tab = resolveTerminalTabForCommand()
       if (tab) useTabGroupStore.getState().removeTabFromAllGroups(tab.id)
       return { type: 'done' }
-    case 'cloneTerminalTab':
+    }
+    case 'cloneTerminalTab': {
+      const tab = resolveTerminalTabForCommand()
       if (tab) await cloneTerminalTab(tab.id)
       return { type: 'done' }
-    case 'splitTerminal':
+    }
+    case 'splitTerminal': {
+      const tab = resolveTerminalTabForCommand()
       if (tab) await splitTerminalTab(tab.id)
       return { type: 'done' }
-    case 'exportTerminal':
+    }
+    case 'exportTerminal': {
+      const tab = resolveTerminalTabForCommand()
       if (tab) await exportTerminalTab(tab.id)
       return { type: 'done' }
+    }
     case 'terminalScreenshot':
       return { type: 'dialog', dialog: 'screenshot' }
     case 'openSettings':

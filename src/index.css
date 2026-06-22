@@ -1208,6 +1208,15 @@ html[data-ui-style='claude'] .ui-btn.bg-primary:hover {
   background-color: color-mix(in srgb, var(--claude-ink) 88%, #ffffff);
 }
 
+html.dark[data-ui-style='claude'] .ui-btn.bg-primary {
+  background-color: var(--claude-coral);
+  color: var(--background);
+}
+
+html.dark[data-ui-style='claude'] .ui-btn.bg-primary:hover {
+  background-color: color-mix(in srgb, var(--claude-coral) 88%, #ffffff);
+}
+
 html[data-ui-style='claude'] .ui-label {
   font-weight: var(--app-font-weight, 500);
 }

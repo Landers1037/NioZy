@@ -114,7 +114,7 @@ export function CommandPalette() {
       return
     }
     window.setTimeout(() => inputRef.current?.focus(), 0)
-  }, [open, resetState])
+  }, [open, subPanel, resetState])
 
   useEffect(() => {
     if (inSubPanel) {
@@ -210,36 +210,72 @@ export function CommandPalette() {
     setEditOpen(false)
   }
 
+  const handlePaletteNavigationKey = useCallback(
+    (e: Pick<KeyboardEvent, 'key' | 'preventDefault' | 'stopPropagation' | 'stopImmediatePropagation'>) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation?.()
+        setSelectedIndex((i) => Math.min(i + 1, Math.max(0, listCount - 1)))
+        return true
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation?.()
+        setSelectedIndex((i) => Math.max(i - 1, 0))
+        return true
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation?.()
+        if (inSubPanel) {
+          const item = pickerItems[selectedIndex]
+          if (item) runPickerSelection(item.id)
+          return true
+        }
+        const item = commandItems[selectedIndex]
+        if (item) void runCommand(item.command.id, item.enabled)
+        return true
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation?.()
+        if (inSubPanel) {
+          exitSubPanel()
+          return true
+        }
+        closePalette()
+        return true
+      }
+      return false
+    },
+    [
+      listCount,
+      inSubPanel,
+      pickerItems,
+      selectedIndex,
+      commandItems,
+      runPickerSelection,
+      runCommand,
+      exitSubPanel,
+      closePalette,
+    ],
+  )
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      handlePaletteNavigationKey(e)
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [open, handlePaletteNavigationKey])
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex((i) => Math.min(i + 1, Math.max(0, listCount - 1)))
-      return
-    }
-    if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex((i) => Math.max(i - 1, 0))
-      return
-    }
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      if (inSubPanel) {
-        const item = pickerItems[selectedIndex]
-        if (item) runPickerSelection(item.id)
-        return
-      }
-      const item = commandItems[selectedIndex]
-      if (item) void runCommand(item.command.id, item.enabled)
-      return
-    }
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      if (inSubPanel) {
-        exitSubPanel()
-        return
-      }
-      closePalette()
-    }
+    handlePaletteNavigationKey(e.nativeEvent)
   }
 
   if (!open && !editOpen && !closeOpen && !addToGroupOpen && !screenshotOpen) {
