@@ -147,7 +147,11 @@ export default defineConfig(({ command }) => {
           pet: resolve('src/pet/index.html'),
         },
         output: {
-          manualChunks: rendererManualChunks,
+          manualChunks(id) {
+            const normalized = id.replace(/\\/g, '/')
+            if (normalized.includes('/src/pet/')) return 'pet'
+            return rendererManualChunks(id)
+          },
           assetFileNames(assetInfo) {
             if (assetInfo.name?.endsWith('.wasm')) return 'assets/[name][extname]'
             return fontAssetFileNames(assetInfo.name) ?? 'assets/[name]-[hash][extname]'

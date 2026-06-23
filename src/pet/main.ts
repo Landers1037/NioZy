@@ -21,6 +21,7 @@ const petEl: HTMLElement = petRoot
 let frameIndex = 0
 let animationTimer: ReturnType<typeof setTimeout> | null = null
 let randomTimer: ReturnType<typeof setInterval> | null = null
+let animationPaused = false
 let allStates: PetAnimationStateDto[] = []
 let currentState: PetAnimationStateDto | null = null
 let displayScale = PET_DISPLAY_SCALE_DEFAULT
@@ -43,12 +44,26 @@ function clearAnimationTimers(): void {
   }
 }
 
+function pauseAnimation(): void {
+  animationPaused = true
+  if (animationTimer !== null) {
+    clearTimeout(animationTimer)
+    animationTimer = null
+  }
+}
+
+function resumeAnimation(): void {
+  if (!animationPaused || !currentState) return
+  animationPaused = false
+  scheduleNextFrame()
+}
+
 function setFrame(col: number, row: number): void {
   petEl.style.backgroundPosition = `-${col * PET_ATLAS.cellWidth * displayScale}px -${row * PET_ATLAS.cellHeight * displayScale}px`
 }
 
 function scheduleNextFrame(): void {
-  if (!currentState) return
+  if (!currentState || animationPaused) return
   const { row, frames, durationsMs } = currentState
   setFrame(frameIndex, row)
   const delay = durationsMs[frameIndex] ?? durationsMs[0] ?? 110
@@ -86,13 +101,16 @@ function startRandomRotation(intervalMs: number, initialStateId: string): void {
 function showPlaceholder(scale: number): void {
   applyDisplayScale(scale)
   clearAnimationTimers()
+  animationPaused = false
   currentState = null
   petEl.classList.add('placeholder')
   petEl.style.backgroundImage = 'none'
   petEl.textContent = ''
 }
 
-function showSprite(config: Extract<Awaited<ReturnType<Window['petAPI']['getSpriteConfig']>>, { mode: 'sprite' }>): void {
+function showSprite(
+  config: Extract<Awaited<ReturnType<Window['petAPI']['getSpriteConfig']>>, { mode: 'sprite' }>,
+): void {
   applyDisplayScale(config.displayScale)
   petEl.classList.remove('placeholder')
   petEl.textContent = ''
@@ -103,6 +121,7 @@ function showSprite(config: Extract<Awaited<ReturnType<Window['petAPI']['getSpri
   const initial = findStateById(config.animationStateId) ?? allStates[0]
   if (!initial) return
 
+  animationPaused = false
   playState(initial)
   if (config.randomState && allStates.length > 1) {
     startRandomRotation(config.randomIntervalMs, initial.id)
@@ -119,10 +138,19 @@ async function initPetVisual(): Promise<void> {
   }
 }
 
-void initPetVisual().then(() => {
-  initPetReminderUi(window.petAPI)
-  window.petAPI.ready()
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseAnimation()
+  else resumeAnimation()
 })
+
+void initPetVisual()
+  .then(() => {
+    initPetReminderUi(window.petAPI)
+    window.petAPI.ready()
+  })
+  .catch((err) => {
+    console.error('[pet] init failed', err)
+  })
 
 const body = document.body
 let activePointerId: number | null = null

@@ -45,6 +45,9 @@ const DESKTOP_PET_STARTUP_DEFER_MS = 1500
 
 let startupSyncTimer: ReturnType<typeof setTimeout> | null = null
 let startupSyncLoadListener: (() => void) | null = null
+let ensureOnTopTimer: ReturnType<typeof setTimeout> | null = null
+
+const PET_ENSURE_ON_TOP_DEBOUNCE_MS = 200
 
 type PetMenuLabels = {
   hidePet: string
@@ -292,10 +295,32 @@ function popupPetContextMenu(win: BrowserWindow): void {
   menu.popup({ window: win })
 }
 
-function ensurePetWindowOnTop(): void {
+function syncPetBackgroundThrottling(): void {
+  if (!petWindow || petWindow.isDestroyed()) return
+  // 透明置顶宠物窗口通常不获焦，Chromium 仍视为 background；不可对其启用节流，否则精灵图不绘制
+  petWindow.webContents.setBackgroundThrottling(false)
+}
+
+export function setPetOverlayInteractive(_active: boolean): void {
+  /* 保留 IPC 供渲染层调用；节流策略见 syncPetBackgroundThrottling */
+}
+
+function ensurePetWindowOnTopImmediate(): void {
   if (!petWindow || petWindow.isDestroyed()) return
   petWindow.setAlwaysOnTop(true, PET_ALWAYS_ON_TOP_LEVEL)
   petWindow.moveTop()
+}
+
+function scheduleEnsurePetWindowOnTop(): void {
+  if (ensureOnTopTimer !== null) return
+  ensureOnTopTimer = setTimeout(() => {
+    ensureOnTopTimer = null
+    ensurePetWindowOnTopImmediate()
+  }, PET_ENSURE_ON_TOP_DEBOUNCE_MS)
+}
+
+function ensurePetWindowOnTop(): void {
+  ensurePetWindowOnTopImmediate()
 }
 
 function bindMainWindowTopSync(): void {
@@ -409,6 +434,7 @@ function createPetWindow(): BrowserWindow {
       sandbox: false,
       devTools: isElectronDev(),
       backgroundThrottling: false,
+      spellcheck: false,
     },
   })
 
@@ -429,10 +455,11 @@ function createPetWindow(): BrowserWindow {
     mainLog.info('[desktop-pet] ready-to-show', { bounds: win.getBounds() })
   })
 
-  win.on('blur', () => ensurePetWindowOnTop())
+  win.on('blur', () => scheduleEnsurePetWindowOnTop())
 
   win.webContents.on('did-finish-load', () => {
     mainLog.info('[desktop-pet] did-finish-load')
+    syncPetBackgroundThrottling()
   })
 
   win.webContents.on('preload-error', (_event, path, error) => {
@@ -464,6 +491,10 @@ function hidePetWindow(): void {
   unbindMainWindowTopSync()
   stopDragPolling()
   petInteraction = null
+  if (ensureOnTopTimer !== null) {
+    clearTimeout(ensureOnTopTimer)
+    ensureOnTopTimer = null
+  }
   if (!petWindow || petWindow.isDestroyed()) {
     petWindow = null
     return

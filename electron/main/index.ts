@@ -151,6 +151,7 @@ import {
   setPetWindowDueAlert,
   setPetWindowReminderAndDue,
   setPetWindowReminderList,
+  setPetOverlayInteractive,
   onPetShowMenu,
   onPetToggleMain,
   scheduleDesktopPetStartupSync,
@@ -903,6 +904,9 @@ ipcMain.on('pet:setWindowCompact', () => setPetWindowCompact())
 ipcMain.on('pet:setWindowReminderList', () => setPetWindowReminderList())
 ipcMain.on('pet:setWindowDueAlert', () => setPetWindowDueAlert())
 ipcMain.on('pet:setWindowReminderAndDue', () => setPetWindowReminderAndDue())
+ipcMain.on('pet:setOverlayInteractive', (_, active: unknown) => {
+  setPetOverlayInteractive(active === true)
+})
 ipcMain.on('window:maximize', () => {
   if (mainWindow?.isMaximized()) mainWindow.unmaximize()
   else mainWindow?.maximize()

@@ -1,11 +1,8 @@
-import { createRequire } from 'node:module'
+import { contextBridge, ipcRenderer } from 'electron'
 import type { DesktopPetSpriteConfig } from '../pet-store'
 import type { PetReminderListItemDto } from '../shared/pet-reminder-dto'
 import type { ReminderDuePayload } from '../shared/reminder-data'
 import type { PetUiLabels } from '../shared/pet-ui-labels'
-
-const require = createRequire(import.meta.url)
-const { contextBridge, ipcRenderer } = require('electron') as typeof import('electron')
 
 export interface PetElectronAPI {
   ready: () => void
@@ -23,6 +20,8 @@ export interface PetElectronAPI {
   setWindowReminderList: () => void
   setWindowDueAlert: () => void
   setWindowReminderAndDue: () => void
+  /** 提醒面板展开时关闭后台节流，收起后恢复 */
+  setOverlayInteractive: (active: boolean) => void
   onOpenReminders: (callback: () => void) => () => void
   onReminderDue: (callback: (payload: ReminderDuePayload) => void) => () => void
 }
@@ -44,6 +43,7 @@ const api: PetElectronAPI = {
   setWindowReminderList: () => ipcRenderer.send('pet:setWindowReminderList'),
   setWindowDueAlert: () => ipcRenderer.send('pet:setWindowDueAlert'),
   setWindowReminderAndDue: () => ipcRenderer.send('pet:setWindowReminderAndDue'),
+  setOverlayInteractive: (active) => ipcRenderer.send('pet:setOverlayInteractive', active),
   onOpenReminders: (callback) => {
     const handler = () => callback()
     ipcRenderer.on('pet:openReminders', handler)

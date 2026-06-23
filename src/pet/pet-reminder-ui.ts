@@ -43,6 +43,7 @@ export function initPetReminderUi(api: PetElectronAPI): void {
     else if (listOpen) api.setWindowReminderList()
     else if (dueOpen) api.setWindowDueAlert()
     else api.setWindowCompact()
+    api.setOverlayInteractive(listOpen || dueOpen)
   }
 
   const loadLabels = async (): Promise<PetUiLabels> => {
