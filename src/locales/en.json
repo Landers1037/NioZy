@@ -550,6 +550,14 @@
         "pacman": "Pacman",
         "logo": "Logo",
         "niozy": "NioZy"
+      },
+      "welcomePage": "Welcome page",
+      "welcomePageDesc": "When enabled, shows a welcome animation on startup if no terminal session needs restoring, instead of opening a default terminal. Also shown when all tabs are closed.",
+      "welcomePageEnabled": "Use welcome page",
+      "welcomePageAnimationAria": "Welcome page animation",
+      "welcomePageAnimation": {
+        "niozy3d": "NioZy 3D animation",
+        "pixel": "Pixel animation"
       }
     },
     "ssh": {

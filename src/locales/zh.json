@@ -550,6 +550,14 @@
         "pacman": "Pacman",
         "logo": "Logo",
         "niozy": "NioZy"
+      },
+      "welcomePage": "欢迎页面",
+      "welcomePageDesc": "开启后，启动时若无需恢复终端会话，将展示欢迎动画而非自动新建终端；关闭全部标签后也会显示欢迎页。",
+      "welcomePageEnabled": "使用欢迎页面",
+      "welcomePageAnimationAria": "欢迎页面动画类型",
+      "welcomePageAnimation": {
+        "niozy3d": "NioZy 3D 动画",
+        "pixel": "像素动画"
       }
     },
     "ssh": {

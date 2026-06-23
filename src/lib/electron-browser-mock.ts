@@ -23,6 +23,7 @@ import { DEFAULT_SESSION_SETTINGS } from '../../electron/shared/session-settings
 import { DEFAULT_WORKSPACE_SETTINGS } from '../../electron/shared/workspace-settings'
 import { createEmptyUsageStatisticData, localTodayDate } from '../../electron/shared/usage-statistics-data'
 import { DEFAULT_TERMINAL_SCROLLBACK } from '../../electron/shared/terminal-xterm'
+import { DEFAULT_WELCOME_PAGE_SETTINGS } from '../../electron/shared/welcome-page-settings'
 
 const DEFAULT_SETTINGS: AppSettings = {
   locale: 'zh',
@@ -55,6 +56,7 @@ const DEFAULT_SETTINGS: AppSettings = {
       mode: 'blackHole',
       idleDelayMs: 5000,
     },
+    welcomePage: { ...DEFAULT_WELCOME_PAGE_SETTINGS },
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },

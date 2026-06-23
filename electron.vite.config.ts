@@ -114,6 +114,9 @@ export default defineConfig(({ command }) => {
     publicDir: resolve('public'),
     server: {
       strictPort: false,
+      watch: {
+        ignored: ['**/docs/**'],
+      },
     },
     // Electron 42+ / Chromium 现代内核；启用 top-level await（noVNC 需要）
     css: {

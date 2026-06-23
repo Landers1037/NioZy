@@ -384,6 +384,14 @@
         "pacman": "Pacman",
         "logo": "Logo",
         "niozy": "NioZy"
+      },
+      "welcomePage": "ウェルカムページ",
+      "welcomePageDesc": "有効にすると、起動時にターミナルセッションの復元が不要な場合、既定のターミナルを自動作成せずウェルカムアニメーションを表示します。すべてのタブを閉じた後も表示されます。",
+      "welcomePageEnabled": "ウェルカムページを使用",
+      "welcomePageAnimationAria": "ウェルカムページのアニメーション",
+      "welcomePageAnimation": {
+        "niozy3d": "NioZy 3D アニメーション",
+        "pixel": "ピクセルアニメーション"
       }
     },
     "ssh": {

@@ -32,6 +32,7 @@ export function rendererManualChunks(id: string): string | undefined {
 
   if (nm.includes('@novnc')) return 'novnc'
   if (nm.includes('/three/')) return 'three'
+  if (nm.includes('/pixi.js')) return 'pixi'
 
   if (
     nm.includes('/motion/') ||

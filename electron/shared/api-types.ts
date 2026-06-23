@@ -246,6 +246,8 @@ export interface AppSettings {
     backgroundOpacity: number
     /** 终端闲置时的屏幕动画 */
     idleAnimation: import('./terminal-idle-animation').TerminalIdleAnimationSettings
+    /** 无 Tab 时的欢迎页 */
+    welcomePage: import('./welcome-page-settings').WelcomePageSettings
   }
   connections: CustomConnection[]
   builtinConnections: import('./builtin-shells').BuiltinConnections

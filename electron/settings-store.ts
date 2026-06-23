@@ -64,6 +64,10 @@ import {
   normalizeTerminalIdleAnimation,
 } from './shared/terminal-idle-animation'
 import {
+  DEFAULT_WELCOME_PAGE_SETTINGS,
+  normalizeWelcomePageSettings,
+} from './shared/welcome-page-settings'
+import {
   normalizeSavedWindowState,
   type SavedWindowState,
 } from './shared/window-state'
@@ -140,6 +144,7 @@ export interface AppSettings {
     backgroundImageExt?: string
     backgroundOpacity: number
     idleAnimation: import('./shared/terminal-idle-animation').TerminalIdleAnimationSettings
+    welcomePage: import('./shared/welcome-page-settings').WelcomePageSettings
   }
   connections: CustomConnection[]
   builtinConnections: BuiltinConnections
@@ -250,6 +255,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     synchronizedOutputEnabled: true,
     backgroundOpacity: DEFAULT_TERMINAL_BACKGROUND_OPACITY,
     idleAnimation: { ...DEFAULT_TERMINAL_IDLE_ANIMATION },
+    welcomePage: { ...DEFAULT_WELCOME_PAGE_SETTINGS },
   },
   connections: [],
   builtinConnections: { ...DEFAULT_BUILTIN_CONNECTIONS },
@@ -350,6 +356,7 @@ function buildAppSettingsFromStored(
         stored.terminal?.backgroundOpacity ?? DEFAULT_SETTINGS.terminal.backgroundOpacity,
       ),
       idleAnimation: normalizeTerminalIdleAnimation(stored.terminal?.idleAnimation),
+      welcomePage: normalizeWelcomePageSettings(stored.terminal?.welcomePage),
     },
     advanced: {
       ...DEFAULT_SETTINGS.advanced,

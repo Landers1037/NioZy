@@ -55,7 +55,8 @@ import {
   AnimatedMinimalTabBar,
   AnimatedSidebarSlot,
 } from '@/components/ui/animated-layout-chrome'
-import { EmptyWelcomeView } from '@/components/welcome/EmptyWelcomeView'
+import { EmptyWelcomeView, EmptyWorkspaceHint } from '@/components/welcome/EmptyWelcomeView'
+import { isWelcomePageEnabled } from '../electron/shared/welcome-page-settings'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -207,13 +208,19 @@ export default function App() {
                 resumeTermLog.info('boot: attempting session restore')
                 const restored = await restoreTerminalSessionFromDisk()
                 if (!restored) {
-                  resumeTermLog.warn('boot: restore failed, creating default terminal')
-                  await createTerminal()
+                  if (isWelcomePageEnabled(s)) {
+                    resumeTermLog.info('boot: welcome page enabled, skip default terminal')
+                  } else {
+                    resumeTermLog.warn('boot: restore failed, creating default terminal')
+                    await createTerminal()
+                  }
                 }
               } finally {
                 setTerminalSessionRestoreInProgress(false)
                 if (showRestoreLoading) setRestoringTerminalSession(false)
               }
+            } else if (isWelcomePageEnabled(s)) {
+              resumeTermLog.info('boot: welcome page enabled, skip default terminal')
             } else {
               resumeTermLog.info('boot: restore disabled, creating default terminal')
               await createTerminal()
@@ -582,7 +589,13 @@ export default function App() {
                 </Suspense>
               </div>
             )}
-            {tabs.length === 0 && appBootComplete && <EmptyWelcomeView />}
+            {tabs.length === 0 &&
+              appBootComplete &&
+              (isWelcomePageEnabled(settings) ? (
+                <EmptyWelcomeView />
+              ) : (
+                <EmptyWorkspaceHint />
+              ))}
           </div>
         </main>
       </div>

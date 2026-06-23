@@ -28,7 +28,7 @@ import {
   MIN_TERMINAL_SCROLLBACK,
   normalizeTerminalScrollback,
 } from '../../../electron/shared/terminal-xterm'
-import { Bold, Cpu, Layers, MousePointer2, Palette, ScrollText, Sparkles, TextCursor, Type } from 'lucide-react'
+import { Bold, Cpu, Home, Layers, MousePointer2, Palette, ScrollText, Sparkles, TextCursor, Type } from 'lucide-react'
 import { isDomOnlyTerminalEmulator } from '@/lib/terminal-emulator'
 import type { TerminalIdleAnimationMode } from '../../../electron/shared/terminal-idle-animation'
 import {
@@ -37,6 +37,11 @@ import {
   MIN_TERMINAL_IDLE_DELAY_MS,
   normalizeTerminalIdleDelayMs,
 } from '../../../electron/shared/terminal-idle-animation'
+import type { WelcomePageAnimationMode } from '../../../electron/shared/welcome-page-settings'
+import {
+  DEFAULT_WELCOME_PAGE_SETTINGS,
+  WELCOME_PAGE_ANIMATION_MODES,
+} from '../../../electron/shared/welcome-page-settings'
 
 export function TerminalSettings() {
   const { t } = useTranslation()
@@ -49,6 +54,7 @@ export function TerminalSettings() {
   const cursorOptions = getCursorStyleOptions(t)
   const domOnlyEmulator = isDomOnlyTerminalEmulator(settings)
   const idleAnimation = settings.terminal.idleAnimation
+  const welcomePage = settings.terminal.welcomePage ?? DEFAULT_WELCOME_PAGE_SETTINGS
   const idleAnimationModes: TerminalIdleAnimationMode[] = [
     'blackHole',
     'blackHole2',
@@ -459,6 +465,67 @@ export function TerminalSettings() {
               <span className="text-sm text-muted-foreground">
                 {t('settings.terminal.idleAnimationDelayUnit')}
               </span>
+            </div>
+          </div>
+        </SettingField>
+
+        <SettingField
+          icon={Home}
+          label={t('settings.terminal.welcomePage')}
+          description={t('settings.terminal.welcomePageDesc')}
+        >
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-muted-foreground">
+                {t('settings.terminal.welcomePageEnabled')}
+              </span>
+              <Switch
+                checked={welcomePage.enabled}
+                onCheckedChange={(enabled) =>
+                  patchSettings({
+                    terminal: {
+                      ...settings.terminal,
+                      welcomePage: { ...welcomePage, enabled },
+                    },
+                  })
+                }
+              />
+            </div>
+
+            <div
+              className={cn(
+                'inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border p-1',
+                ui.segmentGroupBg,
+                !welcomePage.enabled && 'pointer-events-none opacity-50',
+              )}
+              role="tablist"
+              aria-label={t('settings.terminal.welcomePageAnimationAria')}
+            >
+              {WELCOME_PAGE_ANIMATION_MODES.map((mode: WelcomePageAnimationMode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  role="tab"
+                  aria-selected={welcomePage.animation === mode}
+                  className={cn(
+                    'rounded-md px-3 py-1.5 text-sm transition-colors',
+                    welcomePage.animation === mode
+                      ? cn(ui.segmentActive, 'font-app-bold')
+                      : cn(ui.segmentInactive, 'font-app-regular'),
+                  )}
+                  disabled={!welcomePage.enabled}
+                  onClick={() =>
+                    patchSettings({
+                      terminal: {
+                        ...settings.terminal,
+                        welcomePage: { ...welcomePage, animation: mode },
+                      },
+                    })
+                  }
+                >
+                  {t(`settings.terminal.welcomePageAnimation.${mode}`)}
+                </button>
+              ))}
             </div>
           </div>
         </SettingField>
