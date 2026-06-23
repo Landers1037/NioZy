@@ -54,6 +54,7 @@ export function TerminalSettings() {
     'blackHole2',
     'pacman',
     'logo',
+    'niozy',
   ]
 
   return (

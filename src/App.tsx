@@ -54,6 +54,7 @@ import {
   AnimatedMinimalTabBar,
   AnimatedSidebarSlot,
 } from '@/components/ui/animated-layout-chrome'
+import { EmptyWelcomeView } from '@/components/welcome/EmptyWelcomeView'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -570,11 +571,7 @@ export default function App() {
                 </Suspense>
               </div>
             )}
-            {tabs.length === 0 && (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                {t('app.emptyHint')}
-              </div>
-            )}
+            {tabs.length === 0 && <EmptyWelcomeView />}
           </div>
         </main>
       </div>

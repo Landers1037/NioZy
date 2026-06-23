@@ -539,7 +539,7 @@
       "backgroundPickFailed": "Could not set background image",
       "backgroundClearFailed": "Could not clear background image",
       "idleAnimation": "Idle animation",
-      "idleAnimationDesc": "Play a screen animation after the terminal has been idle; BlackHole works best with the WebGL renderer.",
+      "idleAnimationDesc": "Play a screen animation after the terminal has been idle; BlackHole works best with the WebGL renderer; NioZy requires WebGPU acceleration.",
       "idleAnimationWtermDesc": "Idle animations are not supported for Wterm; switch back to Xterm to enable.",
       "idleAnimationEnabled": "Enable idle animation",
       "idleAnimationModeAria": "Idle animation type",
@@ -548,7 +548,8 @@
         "blackHole": "BlackHole",
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
-        "logo": "Logo"
+        "logo": "Logo",
+        "niozy": "NioZy"
       }
     },
     "ssh": {
