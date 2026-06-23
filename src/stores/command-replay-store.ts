@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { getActiveReplayContext } from '@/lib/command-replay'
 import {
   mergeRecordedWithCursorLine,
   readTerminalCursorCommand,
@@ -27,7 +28,13 @@ export const useCommandReplayStore = create<CommandReplayRecordingState>((set, g
   stop: () => {
     const { terminalId, buffer: raw } = get()
     const normalized = normalizeRecordedCommandInput(raw)
-    const cursorCommand = terminalId ? readTerminalCursorCommand(terminalId) : null
+    let cursorCommand = terminalId ? readTerminalCursorCommand(terminalId) : null
+    if (!cursorCommand?.trim()) {
+      const active = getActiveReplayContext()
+      if (active?.terminalId && active.terminalId !== terminalId) {
+        cursorCommand = readTerminalCursorCommand(active.terminalId)
+      }
+    }
     const buffer = mergeRecordedWithCursorLine(normalized, cursorCommand)
     set({ isRecording: false, terminalId: null, buffer: '' })
     return buffer
@@ -37,9 +44,9 @@ export const useCommandReplayStore = create<CommandReplayRecordingState>((set, g
     set({ isRecording: false, terminalId: null, buffer: '' })
   },
 
-  appendInput: (terminalId, data) => {
+  appendInput: (_terminalId, data) => {
     const state = get()
-    if (!state.isRecording || state.terminalId !== terminalId) return
+    if (!state.isRecording || !data) return
     set({ buffer: state.buffer + data })
   },
 }))
