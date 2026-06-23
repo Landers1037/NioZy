@@ -373,7 +373,7 @@
       "backgroundPickFailed": "背景画像を設定できませんでした",
       "backgroundClearFailed": "背景画像をクリアできませんでした",
       "idleAnimation": "ターミナル待機アニメーション",
-      "idleAnimationDesc": "入力がない状態が続くと画面アニメーションを再生します。BlackHole は WebGL レンダラーで最も効果的です。",
+      "idleAnimationDesc": "入力がない状態が続くと画面アニメーションを再生します。BlackHole は WebGL レンダラーで最も効果的です。NioZy は WebGPU アクセラレーションが必要です。",
       "idleAnimationWtermDesc": "Wterm では待機アニメーションに未対応です。Xterm に戻すと有効にできます。",
       "idleAnimationEnabled": "待機アニメーションを有効化",
       "idleAnimationModeAria": "待機アニメーションの種類",
@@ -382,7 +382,8 @@
         "blackHole": "BlackHole",
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
-        "logo": "Logo"
+        "logo": "Logo",
+        "niozy": "NioZy"
       }
     },
     "ssh": {
