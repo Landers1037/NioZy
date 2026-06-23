@@ -290,7 +290,7 @@ html[data-ui-style='glass'] {
   --ring: #4a7fd4;
   --glass-highlight: rgb(255 255 255 / 0.52);
   --glass-shadow: rgb(15 23 42 / 0.08);
-  --glass-blur: 18px;
+  --glass-blur: 10px;
 }
 
 html.dark[data-ui-style='glass'] {
@@ -998,8 +998,8 @@ html[data-ui-style='glass'] .ui-card {
   border-radius: 0.75rem;
   border-color: var(--border);
   background: var(--card);
+  /* 仅写 backdrop-filter：若与 -webkit-backdrop-filter 成对出现，Lightning CSS 打包后会丢弃标准属性 */
   backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   box-shadow:
     0 4px 20px var(--glass-shadow),
     inset 0 1px 0 var(--glass-highlight);
@@ -1010,8 +1010,7 @@ html[data-ui-style='glass'] .ui-overlay-panel {
   background: var(--popover);
   background-clip: padding-box;
   isolation: isolate;
-  backdrop-filter: blur(calc(var(--glass-blur) + 6px));
-  -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px));
+  backdrop-filter: blur(calc(var(--glass-blur) - 8px));
   box-shadow:
     0 10px 40px var(--glass-shadow),
     inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 72%, transparent);
@@ -1040,7 +1039,6 @@ html[data-ui-style='glass'] .ui-btn {
   font-weight: var(--app-font-weight, 500);
   border-radius: 0.5rem;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 html[data-ui-style='glass'] .ui-btn.bg-primary {
@@ -1067,7 +1065,6 @@ html[data-ui-style='glass'] .ui-card-title {
 html[data-ui-style='glass'] .ui-switch-track {
   border: 1px solid var(--border);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 html[data-ui-style='glass'] .ui-switch-track[data-state='checked'] {
@@ -1175,7 +1172,6 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-panel {
   isolation: isolate;
   border-color: var(--border);
   backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   box-shadow:
     0 16px 48px var(--glass-shadow),
     inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 72%, transparent),
@@ -1217,14 +1213,12 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-dialog-overlay {
   /* 遮罩仅 10% 压暗，不做全局 backdrop 磨砂，保留背后界面清晰可见 */
   background-color: rgb(0 0 0 / 0.1);
   backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-btn {
   background: color-mix(in srgb, var(--card) 88%, transparent);
   border: 1px solid var(--border);
   backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   box-shadow:
     inset 0 1px 0 var(--glass-highlight),
     0 2px 10px var(--glass-shadow);
@@ -1245,7 +1239,6 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-btn.bg-primary {
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-switch-track {
   background: var(--muted);
   backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-switch-thumb {
