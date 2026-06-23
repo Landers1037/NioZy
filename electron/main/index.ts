@@ -76,7 +76,13 @@ import type {
 import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
-import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
+import {
+  applyWindowBounds,
+  captureWindowState,
+  getInitialWindowOptions,
+  windowBoundsMatchSaved,
+  type InitialWindowBounds,
+} from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
@@ -113,6 +119,7 @@ import {
 import { listPetReminderItems } from '../shared/pet-reminder-dto'
 import { getPetUiLabels } from '../shared/pet-ui-labels'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
+import type { SavedWindowState } from '../shared/window-state'
 import { summarizeSettingsPatch } from '../settings-patch-log'
 import {
   applyLoggingSettings,
@@ -189,6 +196,7 @@ let vncProxyManager: import('../vnc-proxy').VncWsProxyManager | null = null
 
 /** 由“点击布局面板分屏”触发的可还原状态 */
 let mainWindowSnapRestoreBounds: Electron.Rectangle | null = null
+let persistWindowBoundsTimer: ReturnType<typeof setTimeout> | null = null
 
 type SnapLayout =
   | 'left'
@@ -429,6 +437,44 @@ function persistWindowBoundsIfEnabled(): void {
   })
 }
 
+function schedulePersistWindowBounds(): void {
+  if (persistWindowBoundsTimer) clearTimeout(persistWindowBoundsTimer)
+  persistWindowBoundsTimer = setTimeout(() => {
+    persistWindowBoundsTimer = null
+    persistWindowBoundsIfEnabled()
+  }, 400)
+}
+
+function clearPersistWindowBoundsTimer(): void {
+  if (!persistWindowBoundsTimer) return
+  clearTimeout(persistWindowBoundsTimer)
+  persistWindowBoundsTimer = null
+}
+
+function restoreSavedWindowBoundsIfNeeded(
+  win: BrowserWindow | null | undefined,
+  initialBounds: InitialWindowBounds,
+  savedState: SavedWindowState | undefined,
+): void {
+  if (!win || win.isDestroyed() || win.isMaximized() || initialBounds.startMaximized) return
+  if (!savedState || savedState.isMaximized) return
+  if (windowBoundsMatchSaved(win, savedState)) return
+  try {
+    applyWindowBounds(win, initialBounds)
+  } catch {
+    // ignore
+  }
+}
+
+/** 渲染进程不得覆盖主进程写入的 lastWindowState */
+function stripRendererOwnedAdvancedKeys(
+  partial: Parameters<SettingsStore['update']>[0],
+): Parameters<SettingsStore['update']>[0] {
+  if (!partial.advanced) return partial
+  const { lastWindowState: _drop, ...advanced } = partial.advanced
+  return { ...partial, advanced }
+}
+
 function destroyTray(): void {
   if (!tray) return
   tray.destroy()
@@ -637,10 +683,14 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     syncWindowOpacity()
+    restoreSavedWindowBoundsIfNeeded(mainWindow, initialBounds, savedState)
     if (initialBounds.startMaximized) {
       mainWindow?.maximize()
     }
-    mainLog.info('Main window ready')
+    mainLog.info('Main window ready', {
+      bounds: mainWindow?.getBounds(),
+      restored: Boolean(savedState),
+    })
     mainWindow?.show()
     if (isDev) {
       mainWindow?.webContents.openDevTools({ mode: 'detach' })
@@ -667,6 +717,23 @@ function createWindow(): void {
   })
   mainWindow.on('moved', () => {
     setWindowDragging(false)
+    schedulePersistWindowBounds()
+  })
+
+  mainWindow.on('resize', () => {
+    schedulePersistWindowBounds()
+  })
+
+  mainWindow.on('show', () => {
+    const latest = settingsStore.get()
+    if (!latest.advanced.preserveWindowBounds) return
+    const latestState = latest.advanced.lastWindowState
+    if (!latestState) return
+    restoreSavedWindowBoundsIfNeeded(
+      mainWindow,
+      getInitialWindowOptions(latestState),
+      latestState,
+    )
   })
 
   mainWindow.on('closed', () => {
@@ -794,6 +861,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   isQuitting = true
   mainLog.info('Application quitting')
+  clearPersistWindowBoundsTimer()
   persistWindowBoundsIfEnabled()
   destroyTray()
   linkPreviewManager?.closeAll()
@@ -1289,7 +1357,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   const webviewCustomHeadersBefore = settingsBefore.preview.webviewCustomHeaders
 
   const prevConnections = settingsBefore.connections
-  const updated = settingsStore.update(partial)
+  const updated = settingsStore.update(stripRendererOwnedAdvancedKeys(partial))
   if (
     settingsPatchValueChanged(
       partial.advanced?.shellContextMenu,
@@ -1435,8 +1503,11 @@ ipcMain.handle('app:getRuntimeVersions', () => ({
   chromium: process.versions.chrome ?? '',
 }))
 ipcMain.on('app:relaunch', () => {
+  isQuitting = true
+  clearPersistWindowBoundsTimer()
+  persistWindowBoundsIfEnabled()
   app.relaunch()
-  app.exit(0)
+  app.quit()
 })
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())
