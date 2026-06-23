@@ -392,6 +392,10 @@ html[data-ui-style='neumorphism'] {
     2px 2px 5px color-mix(in srgb, var(--neu-dark) 65%, transparent);
   --neu-shadow-panel:
     inset 1px 1px 2px var(--neu-light), 6px 6px 14px var(--neu-dark);
+  /* 弹框、右键菜单等浮层：比 panel 更轻，避免阴影过重 */
+  --neu-shadow-overlay:
+    inset 1px 1px 1px color-mix(in srgb, var(--neu-light) 32%, transparent),
+    2px 2px 6px color-mix(in srgb, var(--neu-dark) 38%, transparent);
 }
 
 html.dark[data-ui-style='neumorphism'] {
@@ -421,6 +425,9 @@ html.dark[data-ui-style='neumorphism'] {
     2px 2px 5px color-mix(in srgb, var(--neu-dark) 70%, transparent);
   --neu-shadow-panel:
     inset 1px 1px 2px var(--neu-light), 6px 6px 14px var(--neu-dark);
+  --neu-shadow-overlay:
+    inset 1px 1px 1px color-mix(in srgb, var(--neu-light) 55%, transparent),
+    2px 2px 6px color-mix(in srgb, var(--neu-dark) 42%, transparent);
 }
 
 html.dark[data-ui-style='windows-classic'] {
@@ -1416,7 +1423,7 @@ html[data-ui-style='neumorphism'] .ui-card {
 html[data-ui-style='neumorphism'] .ui-overlay-panel {
   border: none;
   background: var(--popover);
-  box-shadow: var(--neu-shadow-panel);
+  box-shadow: var(--neu-shadow-overlay);
 }
 
 html[data-ui-style='neumorphism'] .ui-dialog-overlay {
