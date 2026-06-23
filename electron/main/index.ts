@@ -1247,22 +1247,58 @@ ipcMain.handle('settings:importFromFile', async () => {
   }
 })
 
+function settingsPatchValueChanged<T>(
+  patchValue: T | undefined,
+  before: T,
+  after: T,
+): boolean {
+  return patchValue !== undefined && before !== after
+}
+
+function settingsPatchSectionChanged(
+  patchSection: unknown,
+  before: unknown,
+  after: unknown,
+): boolean {
+  return patchSection !== undefined && JSON.stringify(before) !== JSON.stringify(after)
+}
+
 ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['update']>[0]) => {
   const changes = summarizeSettingsPatch(partial)
   if (Object.keys(changes).length > 0) {
     settingsLog.info('Settings updated', changes)
   }
+  const settingsBefore = settingsStore.get()
   const liveBefore = isStatusBarLiveStatsEnabled()
   const batteryBefore = isStatusBarBatteryEnabled()
-  const pollPriorityBefore = settingsStore.get().advanced.statusBarPollPriority
-  const shortcutsBefore = settingsStore.get().shortcuts.global
-  const screenshotEnabledBefore = settingsStore.get().assistive.screenshotEnabled
-  if (partial.advanced?.shellContextMenu !== undefined) {
-    await syncShellContextMenuRegistry(partial.advanced.shellContextMenu)
-  }
+  const pollPriorityBefore = settingsBefore.advanced.statusBarPollPriority
+  const shortcutsBefore = settingsBefore.shortcuts.global
+  const screenshotEnabledBefore = settingsBefore.assistive.screenshotEnabled
+  const shellContextMenuBefore = settingsBefore.advanced.shellContextMenu
+  const transparencyBefore = settingsBefore.advanced.transparency
+  const launchOnStartupBefore = settingsBefore.system.launchOnStartup
+  const inactiveTabSleepBefore = settingsBefore.performance.inactiveTabSleep
+  const themeBefore = settingsBefore.theme
+  const uiStyleBefore = settingsBefore.uiStyle
+  const localeBefore = settingsBefore.locale
+  const proxyBefore = settingsBefore.system.proxy
+  const loggingBefore = settingsBefore.logging
+  const p2pBefore = settingsBefore.p2p
+  const statisticsBefore = settingsBefore.statistics
+  const reminderBefore = settingsBefore.reminder
+  const webviewCustomHeadersBefore = settingsBefore.preview.webviewCustomHeaders
 
-  const prevConnections = settingsStore.get().connections
+  const prevConnections = settingsBefore.connections
   const updated = settingsStore.update(partial)
+  if (
+    settingsPatchValueChanged(
+      partial.advanced?.shellContextMenu,
+      shellContextMenuBefore,
+      updated.advanced.shellContextMenu,
+    )
+  ) {
+    await syncShellContextMenuRegistry(updated.advanced.shellContextMenu)
+  }
   if (partial.connections !== undefined) {
     try {
       await syncConnectionContextMenus(prevConnections, updated.connections)
@@ -1288,7 +1324,13 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   ) {
     syncSystemStatsPolling()
   }
-  if (partial.system?.launchOnStartup !== undefined) {
+  if (
+    settingsPatchValueChanged(
+      partial.system?.launchOnStartup,
+      launchOnStartupBefore,
+      updated.system.launchOnStartup,
+    )
+  ) {
     app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
   }
   const globalShortcutsChanged =
@@ -1301,40 +1343,67 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (globalShortcutsChanged || screenshotEnabledChanged) {
     syncGlobalShortcuts(settingsStore, () => mainWindow)
   }
-  if (partial.advanced?.transparency !== undefined) {
+  if (
+    settingsPatchValueChanged(
+      partial.advanced?.transparency,
+      transparencyBefore,
+      updated.advanced.transparency,
+    )
+  ) {
     syncWindowOpacity()
   }
-  if (partial.logging !== undefined) {
+  if (settingsPatchSectionChanged(partial.logging, loggingBefore, updated.logging)) {
     applyLoggingSettings(updated.logging)
   }
-  if (partial.p2p !== undefined) {
+  if (settingsPatchSectionChanged(partial.p2p, p2pBefore, updated.p2p)) {
     await syncP2PFromSettings()
   }
-  if (partial.locale !== undefined) {
+  if (settingsPatchValueChanged(partial.locale, localeBefore, updated.locale)) {
     void syncScreenshotsLang(updated.locale)
   }
-  if (partial.theme !== undefined || partial.uiStyle !== undefined) {
+  if (
+    settingsPatchValueChanged(partial.theme, themeBefore, updated.theme) ||
+    settingsPatchValueChanged(partial.uiStyle, uiStyleBefore, updated.uiStyle)
+  ) {
     mainWindow?.setBackgroundColor(
       getWindowBackgroundColor(updated.theme, updated.uiStyle),
     )
   }
-  if (partial.performance?.inactiveTabSleep !== undefined) {
+  if (
+    settingsPatchValueChanged(
+      partial.performance?.inactiveTabSleep,
+      inactiveTabSleepBefore,
+      updated.performance.inactiveTabSleep,
+    )
+  ) {
     syncInactiveTabSleepThrottling(mainWindow, updated.performance.inactiveTabSleep)
   }
-  if (partial.system?.proxy !== undefined) {
+  if (settingsPatchSectionChanged(partial.system?.proxy, proxyBefore, updated.system.proxy)) {
     await syncSessionProxyFromSettings()
     await syncWebviewPreviewProxy(updated.system.proxy)
   }
-  if (partial.preview?.webviewCustomHeaders !== undefined) {
+  if (
+    settingsPatchSectionChanged(
+      partial.preview?.webviewCustomHeaders,
+      webviewCustomHeadersBefore,
+      updated.preview.webviewCustomHeaders,
+    )
+  ) {
     syncWebviewPreviewCustomHeaders(updated.preview.webviewCustomHeaders)
   }
-  if (partial.statistics !== undefined) {
+  if (settingsPatchSectionChanged(partial.statistics, statisticsBefore, updated.statistics)) {
     syncStatisticsPolling()
   }
-  if (partial.reminder !== undefined) {
+  if (settingsPatchSectionChanged(partial.reminder, reminderBefore, updated.reminder)) {
     syncReminderScheduler()
     syncDesktopPet()
-    if (partial.reminder.desktopPetEnabled !== undefined) {
+    if (
+      settingsPatchValueChanged(
+        partial.reminder?.desktopPetEnabled,
+        reminderBefore.desktopPetEnabled,
+        updated.reminder.desktopPetEnabled,
+      )
+    ) {
       refreshTrayMenu()
     }
   }
