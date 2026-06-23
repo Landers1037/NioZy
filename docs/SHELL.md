@@ -140,7 +140,8 @@ sequenceDiagram
 |------|------|
 | 多 Tab 启动恢复 | `Promise.all` 并行；单 Tab 内多分屏 pane 亦并行 `create` |
 | SSH 动态密码 Tab | 启动时不弹框、不连 PTY；Tab 带 `sshDeferredConnect` + `deferredSplitPaneCount` |
-| 切换到待连接 Tab | `useSshDeferredConnectSync` → 弹动态密码 → 创建 PTY |
+| 切换到待连接 Tab | 启动完成后 `connectDeferredSshForActiveTabIfNeeded` 或切换 Tab 时 `useSshDeferredConnectSync` → 弹动态密码 |
+| 恢复加载动画 | 恢复阶段绝不 `await` 动态密码；动画结束后再弹密码框 |
 | 切走 Tab 且密码框未提交 | 取消进行中的密码输入 |
 | 取消密码后重试 | 先切到其他 Tab 再切回 |
 
@@ -251,8 +252,8 @@ const restoreResults = await Promise.all(
   session.tabs.map((saved, i) => restoreSingleTerminalTab(saved, i)),
 )
 
-// 动态密码 SSH：shouldDeferSshDynamicConnect → 仅 AppTab，不 terminal.create
-// src/lib/ssh-deferred-connect.ts — 切换 Tab 时 activateDeferredSshTab
+// 动态密码 SSH：shouldDeferSshDynamicConnect → 仅 AppTab，恢复阶段不 terminal.create / 不弹框
+// markResumeTermBootComplete 后 connectDeferredSshForActiveTabIfNeeded
 ```
 
 ### 启动完成前禁止清空

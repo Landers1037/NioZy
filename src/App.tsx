@@ -30,7 +30,8 @@ import { hasTerminalView } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
 import { useUiClasses } from '@/lib/ui-style'
 import { createTerminal, handleOpenDirectoryPayload } from '@/lib/terminal-actions'
-import { restoreTerminalSessionFromDisk, markResumeTermBootComplete } from '@/lib/resume-term-session'
+import { restoreTerminalSessionFromDisk, markResumeTermBootComplete, setTerminalSessionRestoreInProgress } from '@/lib/resume-term-session'
+import { connectDeferredSshForActiveTabIfNeeded } from '@/lib/ssh-deferred-connect'
 import { RestoreTerminalSessionOverlay } from '@/components/terminal/RestoreTerminalSessionOverlay'
 import { resumeTermLog } from '@/lib/resume-term-log'
 import { waitForTerminalFonts } from '@/lib/terminal-webgl-refresh'
@@ -134,6 +135,8 @@ export default function App() {
   const booted = useRef(false)
   const bootInFlight = useRef(false)
   const [restoringTerminalSession, setRestoringTerminalSession] = useState(false)
+  /** 启动引导（含会话恢复）完成前不展示空 Tab 欢迎页，避免恢复期间闪现 3D 动画 */
+  const [appBootComplete, setAppBootComplete] = useState(false)
 
   useAppShortcuts()
   useSshDisconnectAlert()
@@ -198,6 +201,7 @@ export default function App() {
               await handleOpenDirectoryPayload(pending)
             } else if (s.shell.restoreTerminalSessionOnRestart) {
               const showRestoreLoading = s.shell.showRestoreTerminalSessionLoadingAnimation
+              setTerminalSessionRestoreInProgress(true)
               if (showRestoreLoading) setRestoringTerminalSession(true)
               try {
                 resumeTermLog.info('boot: attempting session restore')
@@ -207,6 +211,7 @@ export default function App() {
                   await createTerminal()
                 }
               } finally {
+                setTerminalSessionRestoreInProgress(false)
                 if (showRestoreLoading) setRestoringTerminalSession(false)
               }
             } else {
@@ -214,10 +219,16 @@ export default function App() {
               await createTerminal()
             }
 
-            if (!cancelled) booted.current = true
+            if (!cancelled) {
+              booted.current = true
+              setAppBootComplete(true)
+            }
           } finally {
             bootInFlight.current = false
-            if (!cancelled) markResumeTermBootComplete()
+            if (!cancelled) {
+              markResumeTermBootComplete()
+              connectDeferredSshForActiveTabIfNeeded()
+            }
           }
         })()
       } else if (booted.current) {
@@ -571,7 +582,7 @@ export default function App() {
                 </Suspense>
               </div>
             )}
-            {tabs.length === 0 && <EmptyWelcomeView />}
+            {tabs.length === 0 && appBootComplete && <EmptyWelcomeView />}
           </div>
         </main>
       </div>

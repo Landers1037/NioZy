@@ -7,6 +7,7 @@ import {
   cancelSshDeferredConnectActivation,
   isSshDeferredConnectActivating,
 } from '@/lib/ssh-deferred-connect'
+import { isResumeTermBootComplete, isTerminalSessionRestoreInProgress } from '@/lib/resume-term-session'
 
 /**
  * SSH 动态密码 Tab：切换到此 Tab 时再弹框连接；切走则取消进行中的密码输入。
@@ -35,6 +36,7 @@ export function useSshDeferredConnectSync(tabs: AppTab[], activeTabId: string | 
 
   useEffect(() => {
     if (!isElectron() || !activeTabId) return
+    if (!isResumeTermBootComplete() || isTerminalSessionRestoreInProgress()) return
 
     const tab = useAppStore.getState().tabs.find((t) => t.id === activeTabId)
     if (!tab?.sshDeferredConnect) return

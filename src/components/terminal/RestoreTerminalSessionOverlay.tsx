@@ -13,7 +13,7 @@ export function RestoreTerminalSessionOverlay({ visible }: RestoreTerminalSessio
 
   return (
     <div
-      className={`${UI_DIALOG_OVERLAY} fixed inset-0 z-[300] flex items-center justify-center bg-background/75 backdrop-blur-sm`}
+      className={`${UI_DIALOG_OVERLAY} fixed inset-0 z-40 flex items-center justify-center bg-background/75 backdrop-blur-sm`}
       role="status"
       aria-live="polite"
       aria-busy="true"

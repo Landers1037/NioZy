@@ -41,8 +41,7 @@ function IdleAnimationLayer({
       }}
       aria-hidden
     >
-      <div className="terminal-idle-frost" />
-      <div className="terminal-idle-frost__content">{children}</div>
+      {children}
     </div>
   )
 }

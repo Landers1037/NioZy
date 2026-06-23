@@ -2,16 +2,13 @@ import { useSyncExternalStore } from 'react'
 import type { AppTab } from '@/stores/app-store'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
-import { isSshDynamicPasswordEnabled } from '../../electron/ssh-auth'
-import type { AppSettings } from '../../electron/shared/api-types'
-import type { SavedTerminalTab } from '../../electron/shared/resume-term-session'
 import {
   normalizeTabAfterSplitChange,
   resolveTabTerminalSpawn,
 } from '@/lib/terminal-tab-utils'
-import { getSshConnection } from '@/lib/ssh-connection'
 import { applySshDynamicPasswordToCreateOptions, toastTerminalError } from '@/lib/terminal-actions'
 import { cancelSshDynamicPassword } from '@/lib/ssh-dynamic-password-prompt'
+import { isTerminalSessionRestoreInProgress, isResumeTermBootComplete } from '@/lib/resume-term-session'
 import { resumeTermLog } from '@/lib/resume-term-log'
 
 const activatingTabIds = new Set<string>()
@@ -40,29 +37,21 @@ export function cancelSshDeferredConnectActivation(): void {
   cancelSshDynamicPassword()
 }
 
-function resolveSavedTabSshConnectionId(saved: SavedTerminalTab): string | undefined {
-  return (
-    saved.sshConnectionId ??
-    saved.terminalSpawn?.sshConnectionId ??
-    saved.terminalSpawn?.create.sshConnectionId
-  )
-}
-
-/** 会话恢复时：动态密码 SSH 仅恢复 Tab，不创建 PTY */
-export function shouldDeferSshDynamicConnect(
-  saved: SavedTerminalTab,
-  settings: AppSettings,
-): boolean {
-  if (!saved.terminalSpawn) return false
-  const connId = resolveSavedTabSshConnectionId(saved)
-  const conn = getSshConnection(settings, connId)
-  return !!conn && isSshDynamicPasswordEnabled(conn)
-}
-
 function updateTab(tabId: string, updater: (tab: AppTab) => AppTab): void {
   useAppStore.setState((s) => ({
     tabs: s.tabs.map((t) => (t.id === tabId ? updater(t) : t)),
   }))
+}
+
+/** 启动恢复结束后，若活动 Tab 为待连接 SSH 则触发连接 */
+export function connectDeferredSshForActiveTabIfNeeded(): void {
+  if (!isResumeTermBootComplete() || isTerminalSessionRestoreInProgress()) return
+  const { activeTabId, tabs } = useAppStore.getState()
+  if (!activeTabId) return
+  const tab = tabs.find((t) => t.id === activeTabId)
+  if (tab?.sshDeferredConnect) {
+    void activateDeferredSshTab(tab)
+  }
 }
 
 /** 切换到待连接 Tab 时：弹动态密码并创建 PTY */

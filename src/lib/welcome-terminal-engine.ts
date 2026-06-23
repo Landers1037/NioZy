@@ -4,6 +4,7 @@ import { getElectronAPI } from '@/lib/electron-client'
 const SCREEN_W = 768
 const SCREEN_H = 768
 const PARTICLE_COUNT = 720
+const TRAFFIC_LIGHT_COLORS = ['#ff5f57', '#febc2e', '#28c840'] as const
 
 const LOGO_BLUE_LEFT = 0x378de5
 const LOGO_BLUE_LIGHT = 0x6ec8ff
@@ -108,6 +109,12 @@ function buildTerminalSequences(appVersion: string, versionOutput: string[]): Te
   ]
 }
 
+/** buildTerminalSequences 演示文本的打印速度（字符/秒）；初版约 28 / 36，现减半 */
+const TERMINAL_SEQUENCE_TYPING = {
+  commandCharsPerSec: 14,
+  outputCharsPerSec: 18,
+} as const
+
 type TerminalPhase = 'typing-cmd' | 'typing-out' | 'hold' | 'clearing'
 
 type TerminalState = {
@@ -186,6 +193,9 @@ export class WelcomeTerminalEngine {
     cursorOn: true,
     cursorBlink: 0,
   }
+
+  /** 打字速度小数累积，避免每帧至少 1 字导致调速失效 */
+  private typingCharCarry = 0
 
   isUsingWebGpu = false
 
@@ -561,10 +571,16 @@ export class WelcomeTerminalEngine {
     if (state.phase === 'typing-cmd') {
       const full = seq.command
       if (state.charIndex < full.length) {
-        state.charIndex = Math.min(full.length, state.charIndex + Math.max(1, Math.floor(delta * 28)))
+        state.charIndex = this.advanceTypingChars(
+          delta,
+          TERMINAL_SEQUENCE_TYPING.commandCharsPerSec,
+          state.charIndex,
+          full.length,
+        )
         state.cmdTyped = full.slice(0, state.charIndex)
         this.drawTerminalFrame(true)
       } else {
+        this.typingCharCarry = 0
         state.phase = 'typing-out'
         state.outLineIndex = 0
         state.charIndex = 0
@@ -577,16 +593,23 @@ export class WelcomeTerminalEngine {
     if (state.phase === 'typing-out') {
       const line = seq.output[state.outLineIndex]
       if (!line) {
+        this.typingCharCarry = 0
         state.phase = 'hold'
         state.holdElapsed = 0
         this.drawTerminalFrame(true)
         return
       }
-      state.charIndex = Math.min(line.length, state.charIndex + Math.max(1, Math.floor(delta * 36)))
+      state.charIndex = this.advanceTypingChars(
+        delta,
+        TERMINAL_SEQUENCE_TYPING.outputCharsPerSec,
+        state.charIndex,
+        line.length,
+      )
       const partial = line.slice(0, state.charIndex)
       const nextLines = [...state.lines.slice(0, state.outLineIndex + 1), partial]
       state.lines = nextLines
       if (state.charIndex >= line.length) {
+        this.typingCharCarry = 0
         state.outLineIndex += 1
         state.charIndex = 0
       }
@@ -609,6 +632,7 @@ export class WelcomeTerminalEngine {
     if (state.phase === 'clearing') {
       state.holdElapsed += delta
       if (state.holdElapsed > 0.35) {
+        this.typingCharCarry = 0
         state.seqIndex = (state.seqIndex + 1) % this.terminalSequences.length
         state.outLineIndex = 0
         state.charIndex = 0
@@ -618,6 +642,43 @@ export class WelcomeTerminalEngine {
         state.holdElapsed = 0
       }
       this.drawTerminalFrame(true)
+    }
+  }
+
+  private advanceTypingChars(
+    delta: number,
+    charsPerSec: number,
+    currentIndex: number,
+    maxLength: number,
+  ): number {
+    this.typingCharCarry += delta * charsPerSec
+    let next = currentIndex
+    while (this.typingCharCarry >= 1 && next < maxLength) {
+      next += 1
+      this.typingCharCarry -= 1
+    }
+    return next
+  }
+
+  private drawMacTrafficLights(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+    const radius = 9
+    const gap = 10
+    for (let i = 0; i < TRAFFIC_LIGHT_COLORS.length; i++) {
+      const cx = x + i * (radius * 2 + gap)
+      ctx.beginPath()
+      ctx.arc(cx, y, radius, 0, Math.PI * 2)
+      ctx.fillStyle = TRAFFIC_LIGHT_COLORS[i]!
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(0,0,0,0.22)'
+      ctx.lineWidth = 1
+      ctx.stroke()
+      const highlight = ctx.createRadialGradient(cx - 2, y - 2, 0, cx, y, radius)
+      highlight.addColorStop(0, 'rgba(255,255,255,0.45)')
+      highlight.addColorStop(1, 'rgba(255,255,255,0)')
+      ctx.fillStyle = highlight
+      ctx.beginPath()
+      ctx.arc(cx, y, radius, 0, Math.PI * 2)
+      ctx.fill()
     }
   }
 
@@ -644,6 +705,17 @@ export class WelcomeTerminalEngine {
     }
 
     const margin = 48
+    const titleBarH = 52
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'
+    ctx.fillRect(0, 0, SCREEN_W, titleBarH)
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(0, titleBarH)
+    ctx.lineTo(SCREEN_W, titleBarH)
+    ctx.stroke()
+    this.drawMacTrafficLights(ctx, margin, titleBarH / 2)
+
     const topPad = 72
     let y = topPad
     const lineH = 38

@@ -115,35 +115,3 @@
   user-select: none;
   pointer-events: none;
 }
-
-.terminal-idle-frost {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: color-mix(in srgb, var(--card) 68%, transparent);
-  backdrop-filter: blur(14px) saturate(1.18);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
-}
-
-.dark .terminal-idle-frost {
-  background: color-mix(in srgb, var(--background) 38%, black);
-  backdrop-filter: blur(18px) saturate(1.04);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 7%, transparent);
-}
-
-html[data-ui-style='glass'] .terminal-idle-frost {
-  background: color-mix(in srgb, var(--glass-overlay, var(--card)) 72%, transparent);
-  backdrop-filter: blur(var(--glass-blur, 14px)) saturate(1.2);
-}
-
-html.dark[data-ui-style='glass'] .terminal-idle-frost {
-  background: color-mix(in srgb, var(--glass-overlay, var(--background)) 42%, black);
-  backdrop-filter: blur(var(--glass-blur, 18px)) saturate(1.05);
-}
-
-.terminal-idle-frost__content {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-}

@@ -6,20 +6,30 @@ import { RESUME_TERM_SESSION_VERSION } from '../../electron/shared/resume-term-s
 import type { AppTab } from '@/stores/app-store'
 import { useAppStore } from '@/stores/app-store'
 import { getElectronAPI } from '@/lib/electron-client'
-import { toastTerminalError, applySshDynamicPasswordToCreateOptions } from '@/lib/terminal-actions'
+import { toastTerminalError } from '@/lib/terminal-actions'
 import {
   getSplitPanes,
   normalizeTabAfterSplitChange,
   resolveTabTerminalSpawn,
 } from '@/lib/terminal-tab-utils'
 import { isSshTerminalTab, getSshConnection } from '@/lib/ssh-connection'
-import { shouldDeferSshDynamicConnect } from '@/lib/ssh-deferred-connect'
+import { isSshDynamicPasswordEnabled } from '../../electron/ssh-auth'
 import { randomUUID } from '@/lib/id'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { resumeTermLog } from '@/lib/resume-term-log'
 
 /** 启动恢复完成前禁止写入/清空 resume-term.json，避免空 Tab 状态误删已保存会话 */
 let resumeTermBootComplete = false
+/** 正在执行 restoreTerminalSessionFromDisk（含加载动画时段） */
+let terminalSessionRestoreInProgress = false
+
+export function setTerminalSessionRestoreInProgress(value: boolean): void {
+  terminalSessionRestoreInProgress = value
+}
+
+export function isTerminalSessionRestoreInProgress(): boolean {
+  return terminalSessionRestoreInProgress
+}
 
 export function markResumeTermBootComplete(): void {
   resumeTermLog.info('boot complete, enabling persist')
@@ -133,6 +143,25 @@ function canRestoreSavedTab(
   return true
 }
 
+function resolveSavedTabSshConnectionId(saved: SavedTerminalTab): string | undefined {
+  return (
+    saved.sshConnectionId ??
+    saved.terminalSpawn?.sshConnectionId ??
+    saved.terminalSpawn?.create.sshConnectionId
+  )
+}
+
+/** 会话恢复时：动态密码 SSH 仅恢复 Tab，不创建 PTY、不弹框 */
+function shouldDeferSshDynamicConnect(
+  saved: SavedTerminalTab,
+  settings: ReturnType<typeof useAppStore.getState>['settings'],
+): boolean {
+  if (!settings || !saved.terminalSpawn) return false
+  const connId = resolveSavedTabSshConnectionId(saved)
+  const conn = getSshConnection(settings, connId)
+  return !!conn && isSshDynamicPasswordEnabled(conn)
+}
+
 async function restoreSingleTerminalTab(
   saved: SavedTerminalTab,
   index: number,
@@ -190,24 +219,11 @@ async function restoreSingleTerminalTab(
   })
 
   try {
-    const connId =
-      saved.sshConnectionId ??
-      spawn.sshConnectionId ??
-      spawn.create.sshConnectionId
-    const baseCreate = {
-      ...spawn.create,
-    }
-    const createWithDynamic = await applySshDynamicPasswordToCreateOptions(baseCreate, connId)
-    if (!createWithDynamic) {
-      resumeTermLog.warn('restore tab skipped: dynamic password cancelled', { index, title: saved.title })
-      return null
-    }
-
     const paneSettled = await Promise.allSettled(
       Array.from({ length: paneCount }, async (_, i) => {
         const paneCwd = saved.panes?.[i]?.cwd
         const createPayload = {
-          ...createWithDynamic,
+          ...spawn.create,
           ...(paneCwd ? { cwd: paneCwd } : {}),
         }
         resumeTermLog.debug('create pane', { index, pane: i, shell: createPayload.shell, cwd: paneCwd })
