@@ -96,7 +96,7 @@ export function AppMetricsDialog({ open, onOpenChange }: AppMetricsDialogProps) 
           <p className="text-sm text-destructive">{error}</p>
         ) : data ? (
           <>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-lg border border-border bg-muted/30 p-3 text-sm sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 overflow-hidden rounded-lg border border-border bg-card p-3 text-sm sm:grid-cols-3">
               <MetricSummary label={t('appMetrics.totalWorkingSet')} value={`${data.totalWorkingSetMb} MB`} />
               <MetricSummary label={t('appMetrics.totalPeak')} value={`${data.totalPeakWorkingSetMb} MB`} />
               <MetricSummary label={t('appMetrics.mainRss')} value={`${data.mainRssMb} MB`} />
@@ -110,21 +110,26 @@ export function AppMetricsDialog({ open, onOpenChange }: AppMetricsDialogProps) 
               />
             </dl>
 
-            <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border">
-              <table className="w-full min-w-[480px] border-collapse text-left text-xs">
-                <thead className="sticky top-0 bg-muted/80 backdrop-blur-sm">
-                  <tr className="border-b border-border text-muted-foreground">
-                    <th className="px-3 py-2 font-medium">{t('appMetrics.colType')}</th>
-                    <th className="px-3 py-2 font-medium">{t('appMetrics.colPid')}</th>
-                    <th className="px-3 py-2 font-medium text-right">
-                      {t('appMetrics.colWorkingSet')}
-                    </th>
-                    <th className="px-3 py-2 font-medium text-right">{t('appMetrics.colPeak')}</th>
-                    <th className="px-3 py-2 font-medium text-right">{t('appMetrics.colCpu')}</th>
-                    <th className="px-3 py-2 font-medium">{t('appMetrics.colSandbox')}</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="app-metrics-table-shell min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-card">
+              <div className="app-metrics-table-scroll overflow-auto">
+                <table className="w-full min-w-[480px] border-collapse text-left text-xs">
+                  <thead className="sticky top-0 z-[1] bg-card">
+                    <tr className="border-b border-border text-muted-foreground">
+                      <th className="rounded-tl-lg px-3 py-2 font-medium">
+                        {t('appMetrics.colType')}
+                      </th>
+                      <th className="px-3 py-2 font-medium">{t('appMetrics.colPid')}</th>
+                      <th className="px-3 py-2 font-medium text-right">
+                        {t('appMetrics.colWorkingSet')}
+                      </th>
+                      <th className="px-3 py-2 font-medium text-right">{t('appMetrics.colPeak')}</th>
+                      <th className="px-3 py-2 font-medium text-right">{t('appMetrics.colCpu')}</th>
+                      <th className="rounded-tr-lg px-3 py-2 font-medium">
+                        {t('appMetrics.colSandbox')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
                   {data.processes.map((p) => (
                     <tr key={p.pid} className="border-b border-border/60 last:border-0">
                       <td className="px-3 py-2">{processTypeLabel(p.type)}</td>
@@ -145,6 +150,7 @@ export function AppMetricsDialog({ open, onOpenChange }: AppMetricsDialogProps) 
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </>
         ) : loading ? (

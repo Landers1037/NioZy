@@ -1008,11 +1008,23 @@ html[data-ui-style='glass'] .ui-card {
 html[data-ui-style='glass'] .ui-overlay-panel {
   border: 1px solid var(--border);
   background: var(--popover);
+  background-clip: padding-box;
+  isolation: isolate;
   backdrop-filter: blur(calc(var(--glass-blur) + 6px));
   -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px));
   box-shadow:
     0 10px 40px var(--glass-shadow),
-    inset 0 1px 0 var(--glass-highlight);
+    inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 72%, transparent);
+}
+
+/* metrics 弹框等：内嵌圆角滚动区与表头贴合外框，避免玻璃风格圆角露白 */
+html[data-ui-style='glass'] .app-metrics-table-shell,
+html[data-ui-style='glass'] .app-metrics-table-shell thead {
+  background: var(--popover);
+}
+
+html[data-ui-style='glass'] .app-metrics-table-scroll thead {
+  box-shadow: inset 0 -1px 0 var(--border);
 }
 
 /* 弹框遮罩：默认 50% 黑；glass 风格更轻，保留背后磨砂感 */
@@ -1159,13 +1171,20 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-card,
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-overlay-panel,
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-panel {
   background: var(--popover);
+  background-clip: padding-box;
+  isolation: isolate;
   border-color: var(--border);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow:
     0 16px 48px var(--glass-shadow),
-    inset 0 1px 0 var(--glass-highlight),
+    inset 0 1px 0 color-mix(in srgb, var(--glass-highlight) 72%, transparent),
     inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+html[data-ui-style='glass'][data-glass-vibrancy='true'] .app-metrics-table-shell,
+html[data-ui-style='glass'][data-glass-vibrancy='true'] .app-metrics-table-shell thead {
+  background: var(--popover);
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-zone {
