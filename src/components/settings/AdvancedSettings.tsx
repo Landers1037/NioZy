@@ -7,7 +7,14 @@ import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { Activity, AppWindow, Battery, Cpu, Droplets, FolderOpen, ShieldOff, TrendingDown } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Activity, AppWindow, Battery, Cpu, Droplets, FolderOpen, Gauge, ShieldOff, TrendingDown } from 'lucide-react'
 import { GpuIcon } from '@/components/icons/GpuIcon'
 import { getElectronAPI } from '@/lib/electron-client'
 
@@ -184,6 +191,36 @@ export function AdvancedSettings() {
             }
           />
         </SettingField>
+
+        {settings.advanced.statusBarLiveStats !== false ? (
+          <SettingField
+            icon={Gauge}
+            label={t('settings.advanced.statusBarPollPriority')}
+            description={t('settings.advanced.statusBarPollPriorityDesc')}
+            className="ml-6 max-w-md border-l border-border pl-4"
+          >
+            <Select
+              value={settings.advanced.statusBarPollPriority ?? 'high'}
+              onValueChange={(value) => {
+                if (value !== 'high' && value !== 'medium' && value !== 'low') return
+                patchSettings({
+                  advanced: { ...settings.advanced, statusBarPollPriority: value },
+                })
+              }}
+            >
+              <SelectTrigger className="max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">{t('settings.advanced.statusBarPollPriorityHigh')}</SelectItem>
+                <SelectItem value="medium">
+                  {t('settings.advanced.statusBarPollPriorityMedium')}
+                </SelectItem>
+                <SelectItem value="low">{t('settings.advanced.statusBarPollPriorityLow')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </SettingField>
+        ) : null}
 
         <SettingField
           icon={Battery}

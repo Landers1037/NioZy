@@ -71,6 +71,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     transparency: 100,
     statusBarLiveStats: true,
     statusBarBattery: false,
+    statusBarPollPriority: 'high',
     shellContextMenu: false,
     preserveWindowBounds: false,
     resourceAutoDegrade: false,

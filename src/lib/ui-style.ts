@@ -47,6 +47,13 @@ export const ACCENT_PRESETS_CLAUDE = [
   '#C4A484',
   '#5C6B7A',
 ]
+export const ACCENT_PRESETS_NEUMORPHISM = [
+  '#6B8FAD',
+  '#8B9A8B',
+  '#9A8B9E',
+  '#7A8B9C',
+  '#A08B7A',
+]
 
 export function getUiStyle(settings?: Pick<AppSettings, 'uiStyle'> | null): UiStyle {
   return normalizeUiStyle(settings?.uiStyle)
@@ -59,6 +66,7 @@ export function getAccentPresets(style: UiStyle): string[] {
   if (style === 'cyberpunk') return ACCENT_PRESETS_CYBERPUNK
   if (style === 'glass') return ACCENT_PRESETS_GLASS
   if (style === 'claude') return ACCENT_PRESETS_CLAUDE
+  if (style === 'neumorphism') return ACCENT_PRESETS_NEUMORPHISM
   return ACCENT_PRESETS_MINIMAL
 }
 
@@ -69,6 +77,7 @@ export function getTabCornerRadius(style: UiStyle): string {
   if (style === 'cyberpunk') return 'rounded-sm'
   if (style === 'glass') return 'rounded-xl'
   if (style === 'claude') return 'rounded-xl'
+  if (style === 'neumorphism') return 'rounded-xl'
   return 'rounded-lg'
 }
 
@@ -265,6 +274,40 @@ export function getUiClasses(style: UiStyle): UiClassSet {
       statusTag: '',
       connectionEditing: 'rounded-xl border border-primary/30 bg-primary/5 px-3 py-2',
       fontPickerSelected: 'rounded-xl border border-primary/25 bg-card font-app-bold',
+    }
+  }
+
+  if (style === 'neumorphism') {
+    return {
+      segmentActive:
+        'ui-neu-raised rounded-xl border-0 bg-card text-primary',
+      segmentInactive:
+        'text-muted-foreground hover:text-foreground ui-neu-flat rounded-xl border-0 bg-card',
+      tabActive:
+        'ui-neu-raised rounded-xl border-0 bg-card text-foreground ring-1 ring-primary/22',
+      tabActiveIcon:
+        'ui-neu-raised rounded-xl border-0 bg-card text-primary ring-1 ring-primary/22',
+      tabInactive:
+        'text-muted-foreground hover:text-foreground ui-neu-flat rounded-xl border-0 bg-card',
+      tabInactiveIcon:
+        'text-muted-foreground hover:text-foreground ui-neu-flat rounded-xl border-0 bg-card',
+      sidebarBg: 'bg-background',
+      tabBarBg: 'bg-background',
+      segmentGroupBg: 'ui-neu-inset gap-1.5 rounded-xl border-0 p-1.5',
+      mainPanel: 'ui-neu-panel rounded-xl border-0 bg-card',
+      mainPanelTerminal: 'ui-neu-panel rounded-xl border-0 bg-card',
+      sidebarResizeHover: 'hover:bg-primary/10',
+      sidebarResizeActive: 'bg-primary/18',
+      titleBar: 'ui-neu-titlebar h-10 border-0 bg-background',
+      titleTagline: 'text-xs text-muted-foreground',
+      titleWeight: 'font-app-bold',
+      windowControlBtn: 'rounded-xl ui-neu-flat hover:text-primary',
+      windowCloseBtn: 'rounded-xl ui-neu-flat hover:bg-destructive/12 hover:text-destructive',
+      statusBar: 'ui-neu-statusbar h-8 border-0 bg-background px-3 gap-3',
+      statusTag: '',
+      connectionEditing:
+        'ui-neu-inset rounded-xl border-0 bg-card px-3 py-2 ring-1 ring-primary/18',
+      fontPickerSelected: 'ui-neu-raised rounded-xl border-0 bg-card font-app-bold text-primary',
     }
   }
 

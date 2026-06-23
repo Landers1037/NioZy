@@ -268,6 +268,10 @@
     "claude": {
       "label": "Claude",
       "description": "Claude 編集スタイル：暖かいクリーム #F4F1EA、コーラルアクセント、全体 Noto Serif UI フォント、12px 角丸"
+    },
+    "neumorphism": {
+      "label": "ニューモーフィズム",
+      "description": "Neumorphism Soft UI：低彩度グレーブルー単色、凹凸デュアルシャドウ、無枠パネル、アクセントはアクティブ状態と主ボタンのみ"
     }
   },
   "settings": {
@@ -369,7 +373,7 @@
       "backgroundPickFailed": "背景画像を設定できませんでした",
       "backgroundClearFailed": "背景画像をクリアできませんでした",
       "idleAnimation": "ターミナル待機アニメーション",
-      "idleAnimationDesc": "入力がない状態が続くと画面アニメーションを再生します。BlackHole は WebGL レンダラーで最も効果的です。",
+      "idleAnimationDesc": "入力がない状態が続くと画面アニメーションを再生します。BlackHole は WebGL レンダラーで最も効果的です。NioZy は WebGPU アクセラレーションが必要です。",
       "idleAnimationWtermDesc": "Wterm では待機アニメーションに未対応です。Xterm に戻すと有効にできます。",
       "idleAnimationEnabled": "待機アニメーションを有効化",
       "idleAnimationModeAria": "待機アニメーションの種類",
@@ -378,7 +382,8 @@
         "blackHole": "BlackHole",
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
-        "logo": "Logo"
+        "logo": "Logo",
+        "niozy": "NioZy"
       }
     },
     "ssh": {
@@ -769,6 +774,11 @@
       "disableSandboxDesc": "オン時、レンダラーのサンドボックスをオフ。反映にはアプリ再起動",
       "statusBarLiveStats": "ステータスバーでシステム情報をライブ表示",
       "statusBarLiveStatsDesc": "オフ時、CPU/メモリのポーリングを停止して UI 更新を削減",
+      "statusBarPollPriority": "状態取得の優先度",
+      "statusBarPollPriorityDesc": "CPU/メモリ/バッテリー指標の更新間隔（日付・時刻は常に毎秒更新）",
+      "statusBarPollPriorityHigh": "高（2 秒ごと）",
+      "statusBarPollPriorityMedium": "中（5 秒ごと）",
+      "statusBarPollPriorityLow": "低（10 秒ごと）",
       "statusBarBattery": "バッテリー状態を表示",
       "statusBarBatteryDesc": "ステータスバーのメモリ表示の右にバッテリー残量と充電状態を表示（デスクトップは 100% 固定）",
       "shellContextMenu": "エクスプローラーで NioZy で開く",
@@ -1016,6 +1026,28 @@
     "terminalScreenshotWatermarkCustomPlaceholder": "透かしテキストを入力",
     "terminalScreenshotExport": "エクスポート",
     "terminalScreenshotExporting": "エクスポート中…",
+    "terminalProperties": "プロパティ",
+    "terminalPropertiesTitle": "ターミナルプロパティ",
+    "terminalPropertiesDesc": "「{{title}}」の起動・接続情報。",
+    "terminalPropertiesCreatedAt": "作成日時",
+    "terminalPropertiesTitleLabel": "タイトル",
+    "terminalPropertiesDefaultTitle": "デフォルトタイトル",
+    "terminalPropertiesType": "種類",
+    "terminalPropertiesConnectionName": "接続名",
+    "terminalPropertiesHost": "ホスト",
+    "terminalPropertiesPort": "ポート",
+    "terminalPropertiesUsername": "ユーザー名",
+    "terminalPropertiesAuthMethod": "認証方式",
+    "terminalPropertiesGroup": "グループ",
+    "terminalPropertiesDynamicPassword": "動的パスワード",
+    "terminalPropertiesCommand": "コマンド",
+    "terminalPropertiesArgs": "引数",
+    "terminalPropertiesWslDistro": "ディストリビューション",
+    "terminalPropertiesCwd": "作業ディレクトリ",
+    "terminalPropertiesElevated": "管理者",
+    "terminalPropertiesSplitPanes": "分割ペイン",
+    "terminalPropertiesDeferredConnect": "遅延接続",
+    "terminalPropertiesYes": "はい",
     "closeTerminalTitle": "ターミナルを閉じる",
     "closeTerminalDesc": "「{{title}}」を閉じますか？プロセスが終了し、未保存の出力は失われます。",
     "editTitle": "タイトルを編集",

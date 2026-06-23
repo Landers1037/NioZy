@@ -424,6 +424,10 @@
     "claude": {
       "label": "Claude",
       "description": "Claude editorial style: warm cream #F4F1EA, coral accent, global Noto Serif UI font, 12px radius"
+    },
+    "neumorphism": {
+      "label": "Neumorphism",
+      "description": "Neumorphism Soft UI: low-saturation gray-blue monochrome, dual-shadow emboss, borderless panels, accent color only on active states and primary buttons"
     }
   },
   "settings": {
@@ -535,7 +539,7 @@
       "backgroundPickFailed": "Could not set background image",
       "backgroundClearFailed": "Could not clear background image",
       "idleAnimation": "Idle animation",
-      "idleAnimationDesc": "Play a screen animation after the terminal has been idle; BlackHole works best with the WebGL renderer.",
+      "idleAnimationDesc": "Play a screen animation after the terminal has been idle; BlackHole works best with the WebGL renderer; NioZy requires WebGPU acceleration.",
       "idleAnimationWtermDesc": "Idle animations are not supported for Wterm; switch back to Xterm to enable.",
       "idleAnimationEnabled": "Enable idle animation",
       "idleAnimationModeAria": "Idle animation type",
@@ -544,7 +548,8 @@
         "blackHole": "BlackHole",
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
-        "logo": "Logo"
+        "logo": "Logo",
+        "niozy": "NioZy"
       }
     },
     "ssh": {
@@ -977,6 +982,11 @@
       "disableSandboxDesc": "When on, renderer sandbox is off; restart the app to apply",
       "statusBarLiveStats": "Live system info in status bar",
       "statusBarLiveStatsDesc": "When off, stops polling CPU/memory to reduce UI updates",
+      "statusBarPollPriority": "Stats poll priority",
+      "statusBarPollPriorityDesc": "Refresh interval for CPU, memory, and battery stats only",
+      "statusBarPollPriorityHigh": "High (every 2s)",
+      "statusBarPollPriorityMedium": "Medium (every 5s)",
+      "statusBarPollPriorityLow": "Low (every 10s)",
       "statusBarBattery": "Show battery status",
       "statusBarBatteryDesc": "Show battery level and charging state to the right of RAM in the status bar (desktops show 100%)",
       "shellContextMenu": "Open with NioZy in Explorer",
@@ -1206,6 +1216,28 @@
     "terminalScreenshotWatermarkCustomPlaceholder": "Enter watermark text",
     "terminalScreenshotExport": "Export",
     "terminalScreenshotExporting": "Exporting…",
+    "terminalProperties": "Properties",
+    "terminalPropertiesTitle": "Terminal properties",
+    "terminalPropertiesDesc": "Startup and connection details for \"{{title}}\".",
+    "terminalPropertiesCreatedAt": "Created",
+    "terminalPropertiesTitleLabel": "Title",
+    "terminalPropertiesDefaultTitle": "Default title",
+    "terminalPropertiesType": "Type",
+    "terminalPropertiesConnectionName": "Connection name",
+    "terminalPropertiesHost": "Host",
+    "terminalPropertiesPort": "Port",
+    "terminalPropertiesUsername": "Username",
+    "terminalPropertiesAuthMethod": "Authentication",
+    "terminalPropertiesGroup": "Group",
+    "terminalPropertiesDynamicPassword": "Dynamic password",
+    "terminalPropertiesCommand": "Command",
+    "terminalPropertiesArgs": "Arguments",
+    "terminalPropertiesWslDistro": "Distribution",
+    "terminalPropertiesCwd": "Working directory",
+    "terminalPropertiesElevated": "Administrator",
+    "terminalPropertiesSplitPanes": "Split panes",
+    "terminalPropertiesDeferredConnect": "Deferred connect",
+    "terminalPropertiesYes": "Yes",
     "closeTerminalTitle": "Close terminal",
     "closeTerminalDesc": "Close \"{{title}}\"? The process will end and unsaved output will be lost.",
     "editTitle": "Edit title",

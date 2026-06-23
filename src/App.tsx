@@ -25,7 +25,6 @@ import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { AttachPtyTerminalHost } from '@/components/terminal/AttachPtyTerminalHost'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { TerminalTabLayer } from '@/components/terminal/TerminalTabLayer'
-import { FilePreviewDialog } from '@/components/preview/FilePreviewDialog'
 import { LinkPreviewPanel } from '@/components/preview/LinkPreviewPanel'
 import { hasTerminalView } from '@/lib/terminal-tab-utils'
 import { useAppStore, applyThemeToDocument } from '@/stores/app-store'
@@ -55,6 +54,7 @@ import {
   AnimatedMinimalTabBar,
   AnimatedSidebarSlot,
 } from '@/components/ui/animated-layout-chrome'
+import { EmptyWelcomeView } from '@/components/welcome/EmptyWelcomeView'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -109,6 +109,11 @@ const ExcalidrawPanel = lazy(() =>
 const DrawioPanel = lazy(() =>
   import('@/components/drawing/DrawioPanel').then((m) => ({
     default: m.DrawioPanel,
+  })),
+)
+const FilePreviewDialog = lazy(() =>
+  import('@/components/preview/FilePreviewDialog').then((m) => ({
+    default: m.FilePreviewDialog,
   })),
 )
 export default function App() {
@@ -566,17 +571,15 @@ export default function App() {
                 </Suspense>
               </div>
             )}
-            {tabs.length === 0 && (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                {t('app.emptyHint')}
-              </div>
-            )}
+            {tabs.length === 0 && <EmptyWelcomeView />}
           </div>
         </main>
       </div>
       <StatusBar />
       <RestoreTerminalSessionOverlay visible={restoringTerminalSession} />
-      <FilePreviewDialog />
+      <Suspense fallback={null}>
+        <FilePreviewDialog />
+      </Suspense>
       <ReminderDueDialog />
       <SshDynamicPasswordDialog />
       <TerminalContextMenuHost />

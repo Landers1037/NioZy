@@ -54,7 +54,6 @@ export async function clearWebviewPreviewBrowsingData(): Promise<{ ok: boolean; 
         'indexdb',
         'localstorage',
         'shadercache',
-        'websql',
         'serviceworkers',
         'cachestorage',
       ],

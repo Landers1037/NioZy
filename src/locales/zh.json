@@ -424,6 +424,10 @@
     "claude": {
       "label": "Claude",
       "description": "Claude 编辑风：暖奶油白底 #F4F1EA、珊瑚橙强调、全局 Noto Serif 界面字体、12px 圆角"
+    },
+    "neumorphism": {
+      "label": "拟态",
+      "description": "Neumorphism Soft UI：低饱和灰蓝单色底、凹凸双阴影浮雕、无描边面板，主题色仅点缀激活态与主按钮"
     }
   },
   "settings": {
@@ -535,7 +539,7 @@
       "backgroundPickFailed": "无法设置背景图片",
       "backgroundClearFailed": "无法清除背景图片",
       "idleAnimation": "终端闲置动画",
-      "idleAnimationDesc": "终端无输入一段时间后播放屏幕动画；BlackHole 在 WebGL 渲染下效果最佳。",
+      "idleAnimationDesc": "终端无输入一段时间后播放屏幕动画；BlackHole 在 WebGL 渲染下效果最佳；NioZy 需开启 WebGPU 加速。",
       "idleAnimationWtermDesc": "Wterm 终端暂不支持闲置动画；切换回 Xterm 后可启用。",
       "idleAnimationEnabled": "启用闲置动画",
       "idleAnimationModeAria": "闲置动画类型",
@@ -544,7 +548,8 @@
         "blackHole": "BlackHole",
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
-        "logo": "Logo"
+        "logo": "Logo",
+        "niozy": "NioZy"
       }
     },
     "ssh": {
@@ -977,6 +982,11 @@
       "disableSandboxDesc": "开启后关闭 renderer sandbox，可能提升兼容性；需重启应用后生效",
       "statusBarLiveStats": "状态栏实时系统信息",
       "statusBarLiveStatsDesc": "关闭后停止轮询 CPU/内存，可减轻界面刷新开销",
+      "statusBarPollPriority": "状态抓取优先级",
+      "statusBarPollPriorityDesc": "控制 CPU/内存/电池等系统指标的刷新频率（日期、时间每秒本地更新）",
+      "statusBarPollPriorityHigh": "高（每 2 秒）",
+      "statusBarPollPriorityMedium": "中（每 5 秒）",
+      "statusBarPollPriorityLow": "低（每 10 秒）",
       "statusBarBattery": "展示电池状态",
       "statusBarBatteryDesc": "在状态栏内存占用右侧显示电池电量与充电状态（台式机固定为 100%）",
       "shellContextMenu": "右键使用 NioZy 打开",
@@ -1206,6 +1216,28 @@
     "terminalScreenshotWatermarkCustomPlaceholder": "输入水印文字",
     "terminalScreenshotExport": "导出",
     "terminalScreenshotExporting": "导出中…",
+    "terminalProperties": "属性",
+    "terminalPropertiesTitle": "终端属性",
+    "terminalPropertiesDesc": "查看「{{title}}」的启动与连接信息。",
+    "terminalPropertiesCreatedAt": "创建时间",
+    "terminalPropertiesTitleLabel": "标题",
+    "terminalPropertiesDefaultTitle": "默认标题",
+    "terminalPropertiesType": "类型",
+    "terminalPropertiesConnectionName": "连接名称",
+    "terminalPropertiesHost": "主机",
+    "terminalPropertiesPort": "端口",
+    "terminalPropertiesUsername": "用户名",
+    "terminalPropertiesAuthMethod": "认证方式",
+    "terminalPropertiesGroup": "分组",
+    "terminalPropertiesDynamicPassword": "动态密码",
+    "terminalPropertiesCommand": "命令",
+    "terminalPropertiesArgs": "参数",
+    "terminalPropertiesWslDistro": "发行版",
+    "terminalPropertiesCwd": "工作目录",
+    "terminalPropertiesElevated": "管理员",
+    "terminalPropertiesSplitPanes": "拆分窗格",
+    "terminalPropertiesDeferredConnect": "延迟连接",
+    "terminalPropertiesYes": "是",
     "closeTerminalTitle": "关闭终端",
     "closeTerminalDesc": "确定要关闭「{{title}}」吗？终端进程将结束，未导出的内容将丢失。",
     "editTitle": "编辑标题",

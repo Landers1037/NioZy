@@ -226,19 +226,19 @@ function udpConnectProbe(
       })
     })
 
-    socket.connect(port, host, (err) => {
-      if (err) {
-        clearTimeout(timer)
-        finish({
-          ok: true,
-          reachable: false,
-          latencyMs: Date.now() - start,
-          message: 'UDP connect failed',
-          detail: err.message,
-        })
-        return
-      }
-      socket.write(Buffer.from('NIOZY_PROBE'))
+    socket.connect(port, host, () => {
+      socket.send(Buffer.from('NIOZY_PROBE'), (err) => {
+        if (err) {
+          clearTimeout(timer)
+          finish({
+            ok: true,
+            reachable: false,
+            latencyMs: Date.now() - start,
+            message: 'UDP send failed',
+            detail: err.message,
+          })
+        }
+      })
     })
   })
 }

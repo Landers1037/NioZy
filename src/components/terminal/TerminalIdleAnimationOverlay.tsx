@@ -6,6 +6,8 @@ import { BlackHole2Renderer } from '@/lib/terminal-idle-animation/black-hole2-re
 import { devError } from '../../../electron/shared/dev-log'
 import { LogoIdleAnimation } from '@/components/terminal/idle-animation/LogoIdleAnimation'
 import { PacmanIdleAnimation } from '@/components/terminal/idle-animation/PacmanIdleAnimation'
+import { NioZyIdleAnimation } from '@/components/terminal/idle-animation/NioZyIdleAnimation'
+import '@/components/terminal/idle-animation/terminal-idle-animation.css'
 
 interface TerminalIdleAnimationOverlayProps {
   term: Terminal
@@ -39,7 +41,8 @@ function IdleAnimationLayer({
       }}
       aria-hidden
     >
-      {children}
+      <div className="terminal-idle-frost" />
+      <div className="terminal-idle-frost__content">{children}</div>
     </div>
   )
 }
@@ -155,6 +158,14 @@ export function TerminalIdleAnimationOverlay({
     return (
       <IdleAnimationLayer box={screenBox}>
         <LogoIdleAnimation width={screenBox.width} height={screenBox.height} />
+      </IdleAnimationLayer>
+    )
+  }
+
+  if (mode === 'niozy') {
+    return (
+      <IdleAnimationLayer box={screenBox}>
+        <NioZyIdleAnimation width={screenBox.width} height={screenBox.height} />
       </IdleAnimationLayer>
     )
   }

@@ -19,6 +19,7 @@ import { resumeTermStore } from '../resume-term-store'
 import { ReminderStore } from '../reminder-store'
 import { ReminderScheduler } from '../reminder-scheduler'
 import { SystemStats } from '../system-stats'
+import { statusBarPollIntervalMs, normalizeStatusBarPollPriority } from '../shared/status-bar-poll'
 import { getAppMetricsSnapshot } from '../app-metrics'
 import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
@@ -75,7 +76,13 @@ import type {
 import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
 import * as fsService from '../fs-service'
-import { captureWindowState, getInitialWindowOptions } from '../window-bounds'
+import {
+  applyWindowBounds,
+  captureWindowState,
+  getInitialWindowOptions,
+  windowBoundsMatchSaved,
+  type InitialWindowBounds,
+} from '../window-bounds'
 import { reloadSystemEnvironment } from '../reload-system-env'
 import { isWindowsProcessElevated } from '../windows-admin'
 import { checkForAppUpdate, downloadAndInstallUpdate } from '../app-update'
@@ -112,6 +119,7 @@ import {
 import { listPetReminderItems } from '../shared/pet-reminder-dto'
 import { getPetUiLabels } from '../shared/pet-ui-labels'
 import { buildInitialSettingsArgv } from '../shared/initial-settings'
+import type { SavedWindowState } from '../shared/window-state'
 import { summarizeSettingsPatch } from '../settings-patch-log'
 import {
   applyLoggingSettings,
@@ -188,6 +196,7 @@ let vncProxyManager: import('../vnc-proxy').VncWsProxyManager | null = null
 
 /** 由“点击布局面板分屏”触发的可还原状态 */
 let mainWindowSnapRestoreBounds: Electron.Rectangle | null = null
+let persistWindowBoundsTimer: ReturnType<typeof setTimeout> | null = null
 
 type SnapLayout =
   | 'left'
@@ -387,16 +396,23 @@ function isStatusBarBatteryEnabled(): boolean {
   return settingsStore.get().advanced.statusBarBattery === true
 }
 
-function isSystemStatsPollingEnabled(): boolean {
-  return isStatusBarLiveStatsEnabled() || isStatusBarBatteryEnabled()
+function getStatusBarPollIntervalMs(): number {
+  const priority = normalizeStatusBarPollPriority(settingsStore.get().advanced.statusBarPollPriority)
+  return statusBarPollIntervalMs(priority)
 }
 
 function syncSystemStatsPolling(): void {
   systemStats.stop()
-  if (!isSystemStatsPollingEnabled()) return
-  systemStats.start((stats) => {
-    sendToRenderer(mainWindow, 'system:stats', stats)
-  })
+  const liveStats = isStatusBarLiveStatsEnabled()
+  const battery = isStatusBarBatteryEnabled()
+  if (!liveStats && !battery) return
+  systemStats.start(
+    (stats) => {
+      sendToRenderer(mainWindow, 'system:stats', stats)
+    },
+    getStatusBarPollIntervalMs(),
+    { liveStats, battery },
+  )
 }
 
 /** 将设置中的透明度百分比 (70–100) 映射为 Electron 窗口不透明度 (0.7–1) */
@@ -419,6 +435,44 @@ function persistWindowBoundsIfEnabled(): void {
       lastWindowState: captureWindowState(mainWindow),
     },
   })
+}
+
+function schedulePersistWindowBounds(): void {
+  if (persistWindowBoundsTimer) clearTimeout(persistWindowBoundsTimer)
+  persistWindowBoundsTimer = setTimeout(() => {
+    persistWindowBoundsTimer = null
+    persistWindowBoundsIfEnabled()
+  }, 400)
+}
+
+function clearPersistWindowBoundsTimer(): void {
+  if (!persistWindowBoundsTimer) return
+  clearTimeout(persistWindowBoundsTimer)
+  persistWindowBoundsTimer = null
+}
+
+function restoreSavedWindowBoundsIfNeeded(
+  win: BrowserWindow | null | undefined,
+  initialBounds: InitialWindowBounds,
+  savedState: SavedWindowState | undefined,
+): void {
+  if (!win || win.isDestroyed() || win.isMaximized() || initialBounds.startMaximized) return
+  if (!savedState || savedState.isMaximized) return
+  if (windowBoundsMatchSaved(win, savedState)) return
+  try {
+    applyWindowBounds(win, initialBounds)
+  } catch {
+    // ignore
+  }
+}
+
+/** 渲染进程不得覆盖主进程写入的 lastWindowState */
+function stripRendererOwnedAdvancedKeys(
+  partial: Parameters<SettingsStore['update']>[0],
+): Parameters<SettingsStore['update']>[0] {
+  if (!partial.advanced) return partial
+  const { lastWindowState: _drop, ...advanced } = partial.advanced
+  return { ...partial, advanced }
 }
 
 function destroyTray(): void {
@@ -629,10 +683,14 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     syncWindowOpacity()
+    restoreSavedWindowBoundsIfNeeded(mainWindow, initialBounds, savedState)
     if (initialBounds.startMaximized) {
       mainWindow?.maximize()
     }
-    mainLog.info('Main window ready')
+    mainLog.info('Main window ready', {
+      bounds: mainWindow?.getBounds(),
+      restored: Boolean(savedState),
+    })
     mainWindow?.show()
     if (isDev) {
       mainWindow?.webContents.openDevTools({ mode: 'detach' })
@@ -659,6 +717,23 @@ function createWindow(): void {
   })
   mainWindow.on('moved', () => {
     setWindowDragging(false)
+    schedulePersistWindowBounds()
+  })
+
+  mainWindow.on('resize', () => {
+    schedulePersistWindowBounds()
+  })
+
+  mainWindow.on('show', () => {
+    const latest = settingsStore.get()
+    if (!latest.advanced.preserveWindowBounds) return
+    const latestState = latest.advanced.lastWindowState
+    if (!latestState) return
+    restoreSavedWindowBoundsIfNeeded(
+      mainWindow,
+      getInitialWindowOptions(latestState),
+      latestState,
+    )
   })
 
   mainWindow.on('closed', () => {
@@ -786,6 +861,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   isQuitting = true
   mainLog.info('Application quitting')
+  clearPersistWindowBoundsTimer()
   persistWindowBoundsIfEnabled()
   destroyTray()
   linkPreviewManager?.closeAll()
@@ -796,6 +872,7 @@ app.on('before-quit', () => {
   void disposeScreenshotsService()
   disposeDesktopPet()
   systemStats.stop()
+  systemStats.dispose()
   statisticsStore.dispose()
   void disposeCopilotRuntime(true).catch((err) =>
     copilotLog.error('Failed to stop runtime', logErrorPayload(err)),
@@ -1238,21 +1315,58 @@ ipcMain.handle('settings:importFromFile', async () => {
   }
 })
 
+function settingsPatchValueChanged<T>(
+  patchValue: T | undefined,
+  before: T,
+  after: T,
+): boolean {
+  return patchValue !== undefined && before !== after
+}
+
+function settingsPatchSectionChanged(
+  patchSection: unknown,
+  before: unknown,
+  after: unknown,
+): boolean {
+  return patchSection !== undefined && JSON.stringify(before) !== JSON.stringify(after)
+}
+
 ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['update']>[0]) => {
   const changes = summarizeSettingsPatch(partial)
   if (Object.keys(changes).length > 0) {
     settingsLog.info('Settings updated', changes)
   }
+  const settingsBefore = settingsStore.get()
   const liveBefore = isStatusBarLiveStatsEnabled()
   const batteryBefore = isStatusBarBatteryEnabled()
-  const shortcutsBefore = settingsStore.get().shortcuts.global
-  const screenshotEnabledBefore = settingsStore.get().assistive.screenshotEnabled
-  if (partial.advanced?.shellContextMenu !== undefined) {
-    await syncShellContextMenuRegistry(partial.advanced.shellContextMenu)
-  }
+  const pollPriorityBefore = settingsBefore.advanced.statusBarPollPriority
+  const shortcutsBefore = settingsBefore.shortcuts.global
+  const screenshotEnabledBefore = settingsBefore.assistive.screenshotEnabled
+  const shellContextMenuBefore = settingsBefore.advanced.shellContextMenu
+  const transparencyBefore = settingsBefore.advanced.transparency
+  const launchOnStartupBefore = settingsBefore.system.launchOnStartup
+  const inactiveTabSleepBefore = settingsBefore.performance.inactiveTabSleep
+  const themeBefore = settingsBefore.theme
+  const uiStyleBefore = settingsBefore.uiStyle
+  const localeBefore = settingsBefore.locale
+  const proxyBefore = settingsBefore.system.proxy
+  const loggingBefore = settingsBefore.logging
+  const p2pBefore = settingsBefore.p2p
+  const statisticsBefore = settingsBefore.statistics
+  const reminderBefore = settingsBefore.reminder
+  const webviewCustomHeadersBefore = settingsBefore.preview.webviewCustomHeaders
 
-  const prevConnections = settingsStore.get().connections
-  const updated = settingsStore.update(partial)
+  const prevConnections = settingsBefore.connections
+  const updated = settingsStore.update(stripRendererOwnedAdvancedKeys(partial))
+  if (
+    settingsPatchValueChanged(
+      partial.advanced?.shellContextMenu,
+      shellContextMenuBefore,
+      updated.advanced.shellContextMenu,
+    )
+  ) {
+    await syncShellContextMenuRegistry(updated.advanced.shellContextMenu)
+  }
   if (partial.connections !== undefined) {
     try {
       await syncConnectionContextMenus(prevConnections, updated.connections)
@@ -1272,11 +1386,19 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     (partial.advanced?.statusBarLiveStats !== undefined &&
       liveBefore !== isStatusBarLiveStatsEnabled()) ||
     (partial.advanced?.statusBarBattery !== undefined &&
-      batteryBefore !== isStatusBarBatteryEnabled())
+      batteryBefore !== isStatusBarBatteryEnabled()) ||
+    (partial.advanced?.statusBarPollPriority !== undefined &&
+      pollPriorityBefore !== updated.advanced.statusBarPollPriority)
   ) {
     syncSystemStatsPolling()
   }
-  if (partial.system?.launchOnStartup !== undefined) {
+  if (
+    settingsPatchValueChanged(
+      partial.system?.launchOnStartup,
+      launchOnStartupBefore,
+      updated.system.launchOnStartup,
+    )
+  ) {
     app.setLoginItemSettings({ openAtLogin: updated.system.launchOnStartup })
   }
   const globalShortcutsChanged =
@@ -1289,40 +1411,67 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (globalShortcutsChanged || screenshotEnabledChanged) {
     syncGlobalShortcuts(settingsStore, () => mainWindow)
   }
-  if (partial.advanced?.transparency !== undefined) {
+  if (
+    settingsPatchValueChanged(
+      partial.advanced?.transparency,
+      transparencyBefore,
+      updated.advanced.transparency,
+    )
+  ) {
     syncWindowOpacity()
   }
-  if (partial.logging !== undefined) {
+  if (settingsPatchSectionChanged(partial.logging, loggingBefore, updated.logging)) {
     applyLoggingSettings(updated.logging)
   }
-  if (partial.p2p !== undefined) {
+  if (settingsPatchSectionChanged(partial.p2p, p2pBefore, updated.p2p)) {
     await syncP2PFromSettings()
   }
-  if (partial.locale !== undefined) {
+  if (settingsPatchValueChanged(partial.locale, localeBefore, updated.locale)) {
     void syncScreenshotsLang(updated.locale)
   }
-  if (partial.theme !== undefined || partial.uiStyle !== undefined) {
+  if (
+    settingsPatchValueChanged(partial.theme, themeBefore, updated.theme) ||
+    settingsPatchValueChanged(partial.uiStyle, uiStyleBefore, updated.uiStyle)
+  ) {
     mainWindow?.setBackgroundColor(
       getWindowBackgroundColor(updated.theme, updated.uiStyle),
     )
   }
-  if (partial.performance?.inactiveTabSleep !== undefined) {
+  if (
+    settingsPatchValueChanged(
+      partial.performance?.inactiveTabSleep,
+      inactiveTabSleepBefore,
+      updated.performance.inactiveTabSleep,
+    )
+  ) {
     syncInactiveTabSleepThrottling(mainWindow, updated.performance.inactiveTabSleep)
   }
-  if (partial.system?.proxy !== undefined) {
+  if (settingsPatchSectionChanged(partial.system?.proxy, proxyBefore, updated.system.proxy)) {
     await syncSessionProxyFromSettings()
     await syncWebviewPreviewProxy(updated.system.proxy)
   }
-  if (partial.preview?.webviewCustomHeaders !== undefined) {
+  if (
+    settingsPatchSectionChanged(
+      partial.preview?.webviewCustomHeaders,
+      webviewCustomHeadersBefore,
+      updated.preview.webviewCustomHeaders,
+    )
+  ) {
     syncWebviewPreviewCustomHeaders(updated.preview.webviewCustomHeaders)
   }
-  if (partial.statistics !== undefined) {
+  if (settingsPatchSectionChanged(partial.statistics, statisticsBefore, updated.statistics)) {
     syncStatisticsPolling()
   }
-  if (partial.reminder !== undefined) {
+  if (settingsPatchSectionChanged(partial.reminder, reminderBefore, updated.reminder)) {
     syncReminderScheduler()
     syncDesktopPet()
-    if (partial.reminder.desktopPetEnabled !== undefined) {
+    if (
+      settingsPatchValueChanged(
+        partial.reminder?.desktopPetEnabled,
+        reminderBefore.desktopPetEnabled,
+        updated.reminder.desktopPetEnabled,
+      )
+    ) {
       refreshTrayMenu()
     }
   }
@@ -1354,8 +1503,11 @@ ipcMain.handle('app:getRuntimeVersions', () => ({
   chromium: process.versions.chrome ?? '',
 }))
 ipcMain.on('app:relaunch', () => {
+  isQuitting = true
+  clearPersistWindowBoundsTimer()
+  persistWindowBoundsIfEnabled()
   app.relaunch()
-  app.exit(0)
+  app.quit()
 })
 
 ipcMain.handle('system:getStats', () => systemStats.getCurrent())

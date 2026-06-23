@@ -41,6 +41,7 @@ function copyMainAssets(): Plugin {
 import preact from '@preact/preset-vite'
 import tailwindcss from '@tailwindcss/vite'
 import { fontWoff2Plugin } from './scripts/vite-plugin-font-woff2'
+import { rendererManualChunks } from './scripts/renderer-manual-chunks'
 
 /** 打进 out/main/copilot-runtime.mjs，避免 asar 内整包 node_modules/@copilotkit/runtime */
 const MAIN_BUNDLE_DEPS = [
@@ -71,6 +72,7 @@ export default defineConfig(({ command }) => {
         entry: {
           index: resolve('electron/main/index.ts'),
           'workers/main-worker': resolve('electron/workers/main-worker.ts'),
+          'workers/system-stats-worker': resolve('electron/workers/system-stats-worker.ts'),
         },
         formats: ['es'],
       },
@@ -113,7 +115,13 @@ export default defineConfig(({ command }) => {
     server: {
       strictPort: false,
     },
-    // Electron 34+ / Chromium 现代内核；启用 top-level await（noVNC 需要）
+    // Electron 42+ / Chromium 现代内核；启用 top-level await（noVNC 需要）
+    css: {
+      lightningcss: {
+        // 与 Chromium 渲染目标对齐；避免 Lightning CSS 将 backdrop-filter 降级为仅 -webkit- 前缀
+        targets: { chrome: 120 << 16, edge: 120 << 16 },
+      },
+    },
     esbuild: {
       target: 'es2022',
     },
@@ -139,20 +147,7 @@ export default defineConfig(({ command }) => {
           pet: resolve('src/pet/index.html'),
         },
         output: {
-          manualChunks(id) {
-            if (!id.includes('node_modules')) return
-            if (id.includes('@radix-ui')) return 'radix'
-            if (id.includes('@xterm')) return 'xterm'
-            if (id.includes('ghostty-web')) return 'ghostty-web'
-            if (id.includes('@wterm')) return 'wterm'
-            if (id.includes('quickjs-emscripten')) return 'quickjs'
-            if (id.includes('@excalidraw')) return 'excalidraw'
-            if (id.includes('react-drawio')) return 'drawio'
-            // lucide-react 与 react 等 vendor 依赖互相引用，单独拆出会形成 icons↔vendor 循环 chunk，生产环境可能白屏
-            if (id.includes('@copilotkit')) return 'copilotkit'
-            if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n'
-            return 'vendor'
-          },
+          manualChunks: rendererManualChunks,
           assetFileNames(assetInfo) {
             if (assetInfo.name?.endsWith('.wasm')) return 'assets/[name][extname]'
             return fontAssetFileNames(assetInfo.name) ?? 'assets/[name]-[hash][extname]'
