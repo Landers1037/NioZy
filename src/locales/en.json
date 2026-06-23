@@ -424,6 +424,10 @@
     "claude": {
       "label": "Claude",
       "description": "Claude editorial style: warm cream #F4F1EA, coral accent, global Noto Serif UI font, 12px radius"
+    },
+    "neumorphism": {
+      "label": "Neumorphism",
+      "description": "Neumorphism Soft UI: low-saturation gray-blue monochrome, dual-shadow emboss, borderless panels, accent color only on active states and primary buttons"
     }
   },
   "settings": {

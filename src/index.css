@@ -359,6 +359,67 @@ html.dark[data-ui-style='claude'] {
   --claude-ink: #f4f1ea;
 }
 
+/* —— 拟态（neumorphism）：Neumorphism Soft UI，低饱和单色 + 少许主题色 —— */
+html[data-ui-style='neumorphism'] {
+  --radius: 1rem;
+  --background: #e4e9f0;
+  --foreground: #4a5568;
+  --card: #e4e9f0;
+  --card-foreground: #4a5568;
+  --popover: #e4e9f0;
+  --popover-foreground: #4a5568;
+  --muted: #dce1e8;
+  --muted-foreground: #7a8494;
+  --border: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --primary: #6b8fad;
+  --primary-foreground: #f8fafc;
+  --accent: #dce1e8;
+  --accent-foreground: #4a5568;
+  --destructive: #c47a7a;
+  --ring: #6b8fad;
+  --neu-light: color-mix(in srgb, #ffffff 58%, var(--background));
+  --neu-dark: color-mix(in srgb, #a3b1c6 46%, var(--background));
+  /* 内凹高光 + 右下外阴影，避免左上外扩白光在圆角处露白 */
+  --neu-shadow-raised:
+    inset 1px 1px 1px var(--neu-light), 5px 5px 10px var(--neu-dark);
+  --neu-shadow-inset:
+    inset 4px 4px 8px var(--neu-dark), inset -3px -3px 6px var(--neu-light);
+  --neu-shadow-flat:
+    inset 1px 1px 1px color-mix(in srgb, var(--neu-light) 50%, transparent),
+    2px 2px 5px color-mix(in srgb, var(--neu-dark) 65%, transparent);
+  --neu-shadow-panel:
+    inset 1px 1px 2px var(--neu-light), 6px 6px 14px var(--neu-dark);
+}
+
+html.dark[data-ui-style='neumorphism'] {
+  --background: #2b3038;
+  --foreground: #c8cdd4;
+  --card: #2b3038;
+  --card-foreground: #c8cdd4;
+  --popover: #2b3038;
+  --popover-foreground: #c8cdd4;
+  --muted: #252930;
+  --muted-foreground: #8b939e;
+  --border: color-mix(in srgb, var(--foreground) 8%, transparent);
+  --primary: #7ba3c4;
+  --primary-foreground: #1e2329;
+  --accent: #252930;
+  --accent-foreground: #c8cdd4;
+  --destructive: #d48a8a;
+  --ring: #7ba3c4;
+  --neu-light: color-mix(in srgb, #ffffff 9%, var(--background));
+  --neu-dark: color-mix(in srgb, #000000 52%, var(--background));
+  --neu-shadow-raised:
+    inset 1px 1px 1px var(--neu-light), 5px 5px 12px var(--neu-dark);
+  --neu-shadow-inset:
+    inset 4px 4px 8px var(--neu-dark), inset -3px -3px 6px var(--neu-light);
+  --neu-shadow-flat:
+    inset 1px 1px 1px color-mix(in srgb, var(--neu-light) 80%, transparent),
+    2px 2px 5px color-mix(in srgb, var(--neu-dark) 70%, transparent);
+  --neu-shadow-panel:
+    inset 1px 1px 2px var(--neu-light), 6px 6px 14px var(--neu-dark);
+}
+
 html.dark[data-ui-style='windows-classic'] {
   --background: #2a2a2a;
   --foreground: #ffffff;
@@ -495,6 +556,20 @@ html.dark[data-ui-style='windows-classic'] {
     font-family: var(--font-sans);
     font-weight: var(--app-font-weight-bold, 400);
     letter-spacing: -0.01em;
+  }
+
+  html[data-ui-style='neumorphism'] body {
+    letter-spacing: 0.01em;
+  }
+
+  html[data-ui-style='neumorphism'] h1,
+  html[data-ui-style='neumorphism'] h2,
+  html[data-ui-style='neumorphism'] h3,
+  html[data-ui-style='neumorphism'] h4,
+  html[data-ui-style='neumorphism'] h5,
+  html[data-ui-style='neumorphism'] h6 {
+    font-weight: var(--app-font-weight-bold, 600);
+    letter-spacing: 0.01em;
   }
 }
 
@@ -1259,6 +1334,141 @@ html.dark[data-ui-style='claude'] .ui-switch-thumb {
 html[data-ui-style='claude'] .ui-slider-thumb {
   border-color: color-mix(in srgb, var(--primary) 40%, transparent);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+/* 拟态：Neumorphism Soft UI — 凹凸双阴影、无描边、主题色点缀 */
+html[data-ui-style='neumorphism'] .ui-neu-raised,
+html[data-ui-style='neumorphism'] .ui-neu-flat,
+html[data-ui-style='neumorphism'] .ui-neu-inset {
+  background-color: var(--card);
+  background-clip: padding-box;
+}
+
+html[data-ui-style='neumorphism'] .ui-neu-raised {
+  box-shadow: var(--neu-shadow-raised);
+}
+
+html[data-ui-style='neumorphism'] .ui-neu-inset {
+  box-shadow: var(--neu-shadow-inset);
+  border: none;
+}
+
+html[data-ui-style='neumorphism'] .ui-neu-flat {
+  box-shadow: var(--neu-shadow-flat);
+}
+
+html[data-ui-style='neumorphism'] .ui-neu-panel {
+  background-color: var(--card);
+  background-clip: padding-box;
+  box-shadow: var(--neu-shadow-panel);
+  isolation: isolate;
+}
+
+html[data-ui-style='neumorphism'] .ui-neu-titlebar {
+  box-shadow: inset 0 -3px 6px var(--neu-dark);
+}
+
+html[data-ui-style='neumorphism'] .ui-neu-statusbar {
+  box-shadow: inset 0 3px 6px var(--neu-dark);
+}
+
+/* 覆盖设置页等处的 hover:bg-muted，保持拟态底色一致 */
+html[data-ui-style='neumorphism'] button.ui-neu-flat:hover,
+html[data-ui-style='neumorphism'] button.ui-neu-raised:hover {
+  background-color: var(--card);
+}
+
+html[data-ui-style='neumorphism'] .ui-card {
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--card);
+  box-shadow: var(--neu-shadow-raised);
+}
+
+html[data-ui-style='neumorphism'] .ui-overlay-panel {
+  border: none;
+  background: var(--popover);
+  box-shadow: var(--neu-shadow-panel);
+}
+
+html[data-ui-style='neumorphism'] .ui-dialog-overlay {
+  background-color: color-mix(in srgb, var(--background) 35%, rgb(0 0 0 / 0.22));
+}
+
+html[data-ui-style='neumorphism'] .ui-btn {
+  font-weight: var(--app-font-weight, 500);
+  border-radius: 0.875rem;
+  border: none;
+  background: var(--card);
+  box-shadow: var(--neu-shadow-raised);
+  transition:
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+html[data-ui-style='neumorphism'] .ui-btn:hover {
+  color: var(--primary);
+}
+
+html[data-ui-style='neumorphism'] .ui-btn:active {
+  box-shadow: var(--neu-shadow-inset);
+}
+
+html[data-ui-style='neumorphism'] .ui-btn.bg-primary {
+  background: color-mix(in srgb, var(--primary) 88%, var(--card));
+  color: var(--primary-foreground);
+  box-shadow:
+    var(--neu-shadow-raised),
+    0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+html[data-ui-style='neumorphism'] .ui-btn.bg-primary:hover {
+  background: color-mix(in srgb, var(--primary) 94%, var(--card));
+}
+
+html[data-ui-style='neumorphism'] .ui-btn.bg-primary:active {
+  box-shadow: var(--neu-shadow-inset);
+}
+
+html[data-ui-style='neumorphism'] .ui-label {
+  font-weight: var(--app-font-weight, 500);
+}
+
+html[data-ui-style='neumorphism'] .ui-card-title {
+  font-weight: var(--app-font-weight-bold, 600);
+}
+
+html[data-ui-style='neumorphism'] .ui-switch-track {
+  border: none;
+  border-radius: 9999px;
+  background: var(--card);
+  box-shadow: var(--neu-shadow-inset);
+}
+
+html[data-ui-style='neumorphism'] .ui-switch-track[data-state='checked'] {
+  background: color-mix(in srgb, var(--primary) 14%, var(--card));
+  box-shadow:
+    var(--neu-shadow-inset),
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+html[data-ui-style='neumorphism'] .ui-switch-thumb {
+  border: none;
+  border-radius: 9999px;
+  background: var(--card);
+  box-shadow: var(--neu-shadow-raised);
+}
+
+html[data-ui-style='neumorphism'] .ui-slider-thumb {
+  border: none;
+  background: var(--card);
+  box-shadow: var(--neu-shadow-raised);
+}
+
+html[data-ui-style='neumorphism'] .ui-slider-thumb:focus-visible {
+  box-shadow:
+    var(--neu-shadow-raised),
+    0 0 0 2px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 /* Claude 风格下终端区域沿用终端设置字体，不继承全局 Noto Serif */

@@ -424,6 +424,10 @@
     "claude": {
       "label": "Claude",
       "description": "Claude 编辑风：暖奶油白底 #F4F1EA、珊瑚橙强调、全局 Noto Serif 界面字体、12px 圆角"
+    },
+    "neumorphism": {
+      "label": "拟态",
+      "description": "Neumorphism Soft UI：低饱和灰蓝单色底、凹凸双阴影浮雕、无描边面板，主题色仅点缀激活态与主按钮"
     }
   },
   "settings": {
