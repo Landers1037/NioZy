@@ -116,6 +116,12 @@ export default defineConfig(({ command }) => {
       strictPort: false,
     },
     // Electron 42+ / Chromium 现代内核；启用 top-level await（noVNC 需要）
+    css: {
+      lightningcss: {
+        // 与 Chromium 渲染目标对齐；避免 Lightning CSS 将 backdrop-filter 降级为仅 -webkit- 前缀
+        targets: { chrome: 120 << 16, edge: 120 << 16 },
+      },
+    },
     esbuild: {
       target: 'es2022',
     },
