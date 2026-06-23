@@ -65,6 +65,8 @@ export interface AppTab {
   vncConnectionId?: string
   /** 工作区目录（Start 后） */
   workspaceDir?: string
+  /** 终端 Tab 创建时间（ISO 8601） */
+  createdAt?: string
 }
 
 interface AppState {
@@ -175,8 +177,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   addTerminalTab: (tab) => {
     useInactiveTabActivityStore.getState().touchTabActivity(tab.id)
     recordTerminalTabOpened(get().settings)
+    const withCreatedAt = tab.createdAt ? tab : { ...tab, createdAt: new Date().toISOString() }
     set((s) => ({
-      tabs: [...s.tabs, tab],
+      tabs: [...s.tabs, withCreatedAt],
       activeTabId: tab.id,
     }))
   },

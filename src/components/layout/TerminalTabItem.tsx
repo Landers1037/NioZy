@@ -7,6 +7,7 @@ import {
   Download,
   FolderOpen,
   Image,
+  Info,
   PackagePlus,
   ListX,
   Pencil,
@@ -70,6 +71,7 @@ import {
 } from '@/lib/terminal-drop-actions'
 import { AddToGroupDialog } from '@/components/layout/AddToGroupDialog'
 import { TerminalScreenshotDialog } from '@/components/layout/TerminalScreenshotDialog'
+import { TerminalPropertiesDialog } from '@/components/layout/TerminalPropertiesDialog'
 import { findGroupForTab } from '@/lib/tab-groups'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 
@@ -144,6 +146,7 @@ export const TerminalTabItem = memo(function TerminalTabItem({
   const [editOpen, setEditOpen] = useState(false)
   const [addToGroupOpen, setAddToGroupOpen] = useState(false)
   const [screenshotOpen, setScreenshotOpen] = useState(false)
+  const [propertiesOpen, setPropertiesOpen] = useState(false)
   const [editValue, setEditValue] = useState('')
   const [appElevated, setAppElevated] = useState(false)
   const [fileDragOver, setFileDragOver] = useState(false)
@@ -361,6 +364,11 @@ export const TerminalTabItem = memo(function TerminalTabItem({
             <Image className="size-4 text-muted-foreground" />
             {t('tab.terminalScreenshot')}
           </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={() => setPropertiesOpen(true)}>
+            <Info className="size-4 text-muted-foreground" />
+            {t('tab.terminalProperties')}
+          </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
@@ -394,6 +402,12 @@ export const TerminalTabItem = memo(function TerminalTabItem({
         tabId={tab.id}
         open={screenshotOpen}
         onOpenChange={setScreenshotOpen}
+      />
+
+      <TerminalPropertiesDialog
+        tabId={tab.id}
+        open={propertiesOpen}
+        onOpenChange={setPropertiesOpen}
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
