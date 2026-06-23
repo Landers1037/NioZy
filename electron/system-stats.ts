@@ -1,16 +1,14 @@
-import si from 'systeminformation'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import { Worker } from 'worker_threads'
+import type {
+  SystemStatsData,
+  SystemStatsPollScope,
+  SystemStatsWorkerCommand,
+  SystemStatsWorkerEvent,
+} from './shared/system-stats-types'
 
-export interface SystemStatsData {
-  date: string
-  time: string
-  cpuPercent: number
-  memoryPercent: number
-  memoryUsedMb: number
-  memoryTotalMb: number
-  batteryPercent: number
-  batteryCharging: boolean
-  batteryHasBattery: boolean
-}
+export type { SystemStatsData, SystemStatsPollScope } from './shared/system-stats-types'
 
 const EMPTY_STATS: SystemStatsData = {
   date: '----/--/--',
@@ -24,81 +22,91 @@ const EMPTY_STATS: SystemStatsData = {
   batteryHasBattery: false,
 }
 
+function getWorkerPath(): string {
+  return join(dirname(fileURLToPath(import.meta.url)), 'workers', 'system-stats-worker.mjs')
+}
+
+/**
+ * 主进程侧：通过专用 worker 线程轮询系统指标，避免 systeminformation 阻塞主进程事件循环。
+ */
 export class SystemStats {
-  private interval: ReturnType<typeof setInterval> | null = null
-  private polling = false
+  private worker: Worker | null = null
+  private workerFailed = false
   private current: SystemStatsData = { ...EMPTY_STATS }
+  private onStatsCallback: ((stats: SystemStatsData) => void) | null = null
+  private running = false
 
   getCurrent(): SystemStatsData {
     return this.current
   }
 
-  start(callback: (stats: SystemStatsData) => void, ms = 2000): void {
+  start(
+    callback: (stats: SystemStatsData) => void,
+    intervalMs: number,
+    scope: SystemStatsPollScope,
+  ): void {
     this.stop()
-    const tick = () => {
-      void this.poll(callback)
-    }
-    tick()
-    this.interval = setInterval(tick, ms)
+    this.onStatsCallback = callback
+    this.running = true
+    this.postToWorker({ type: 'start', scope, intervalMs })
   }
 
   stop(): void {
-    if (this.interval) {
-      clearInterval(this.interval)
-      this.interval = null
+    this.running = false
+    this.onStatsCallback = null
+    if (this.worker) {
+      this.postToWorker({ type: 'stop' })
     }
-    this.polling = false
   }
 
-  private async poll(callback: (stats: SystemStatsData) => void): Promise<void> {
-    if (this.polling) return
-    this.polling = true
+  dispose(): void {
+    this.stop()
+    if (this.worker) {
+      void this.worker.terminate()
+      this.worker = null
+    }
+    this.workerFailed = false
+  }
+
+  private postToWorker(command: SystemStatsWorkerCommand): void {
     try {
-      this.current = await this.buildStats()
-      callback(this.current)
+      const worker = this.ensureWorker()
+      worker.postMessage(command)
     } catch {
-      // 保留上一轮数据，避免状态栏闪烁
-    } finally {
-      this.polling = false
+      this.workerFailed = true
     }
   }
 
-  private async buildStats(): Promise<SystemStatsData> {
-    const [load, mem, battery] = await Promise.all([
-      si.currentLoad(),
-      si.mem(),
-      si.battery(),
-    ])
-
-    const totalMem = mem.total
-    const usedMem = mem.used
-    const cpuPercent = Math.min(100, Math.max(0, Math.round(load.currentLoad)))
-    const hasBattery = battery.hasBattery === true
-    const batteryPercent = hasBattery
-      ? Math.min(100, Math.max(0, Math.round(battery.percent)))
-      : 100
-    const pluggedIn = battery.acConnected === true
-    const activelyCharging = battery.isCharging === true
-
-    const now = new Date()
-    return {
-      date: formatDate(now),
-      time: now.toLocaleTimeString('zh-CN', { hour12: false }),
-      cpuPercent,
-      memoryPercent: totalMem > 0 ? Math.round((usedMem / totalMem) * 100) : 0,
-      memoryUsedMb: Math.round(usedMem / 1024 / 1024),
-      memoryTotalMb: Math.round(totalMem / 1024 / 1024),
-      batteryPercent,
-      // Windows 在满电插电时常报告 isCharging=false，但 acConnected=true
-      batteryCharging: hasBattery ? activelyCharging || pluggedIn : false,
-      batteryHasBattery: hasBattery,
+  private ensureWorker(): Worker {
+    if (this.workerFailed) {
+      throw new Error('System stats worker unavailable')
     }
-  }
-}
+    if (this.worker) return this.worker
 
-function formatDate(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+    const worker = new Worker(getWorkerPath())
+    worker.on('message', (event: SystemStatsWorkerEvent) => {
+      if (event.type === 'error') return
+      this.current = event.data
+      this.onStatsCallback?.(event.data)
+    })
+    worker.on('error', () => {
+      this.workerFailed = true
+      if (this.worker) {
+        void this.worker.terminate()
+        this.worker = null
+      }
+    })
+    worker.on('exit', (code) => {
+      this.worker = null
+      if (code !== 0) {
+        this.workerFailed = true
+      }
+      if (this.running && !this.workerFailed) {
+        // worker 意外退出时尝试恢复轮询
+        this.workerFailed = false
+      }
+    })
+    this.worker = worker
+    return worker
+  }
 }

@@ -267,6 +267,8 @@ export interface AppSettings {
     statusBarLiveStats: boolean
     /** 为 true 时在状态栏内存右侧展示电池电量与充电状态 */
     statusBarBattery: boolean
+    /** 状态栏系统信息轮询优先级：高 2s / 中 5s / 低 10s */
+    statusBarPollPriority: 'high' | 'medium' | 'low'
     /** Windows：文件夹 / 目录背景右键「使用 NioZy 打开」 */
     shellContextMenu: boolean
     /** 关闭窗口时记住大小与位置，下次启动恢复 */

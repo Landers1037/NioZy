@@ -75,7 +75,6 @@ export function getEmbeddedWebPreferences(options: {
     backgroundThrottling: false,
     navigateOnDragDrop: false,
     autoplayPolicy: 'document-user-activation-required',
-    enableWebSQL: false,
   }
 }
 
@@ -97,6 +96,5 @@ export function getOptimizedWebPreferences(
     backgroundThrottling: inactiveTabSleep,
     navigateOnDragDrop: false,
     autoplayPolicy: 'document-user-activation-required',
-    enableWebSQL: false,
   }
 }

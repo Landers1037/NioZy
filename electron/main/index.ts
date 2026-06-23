@@ -19,6 +19,7 @@ import { resumeTermStore } from '../resume-term-store'
 import { ReminderStore } from '../reminder-store'
 import { ReminderScheduler } from '../reminder-scheduler'
 import { SystemStats } from '../system-stats'
+import { statusBarPollIntervalMs, normalizeStatusBarPollPriority } from '../shared/status-bar-poll'
 import { getAppMetricsSnapshot } from '../app-metrics'
 import { VaultStore } from '../vault-store'
 import { listSystemFonts } from '../font-store'
@@ -387,16 +388,23 @@ function isStatusBarBatteryEnabled(): boolean {
   return settingsStore.get().advanced.statusBarBattery === true
 }
 
-function isSystemStatsPollingEnabled(): boolean {
-  return isStatusBarLiveStatsEnabled() || isStatusBarBatteryEnabled()
+function getStatusBarPollIntervalMs(): number {
+  const priority = normalizeStatusBarPollPriority(settingsStore.get().advanced.statusBarPollPriority)
+  return statusBarPollIntervalMs(priority)
 }
 
 function syncSystemStatsPolling(): void {
   systemStats.stop()
-  if (!isSystemStatsPollingEnabled()) return
-  systemStats.start((stats) => {
-    sendToRenderer(mainWindow, 'system:stats', stats)
-  })
+  const liveStats = isStatusBarLiveStatsEnabled()
+  const battery = isStatusBarBatteryEnabled()
+  if (!liveStats && !battery) return
+  systemStats.start(
+    (stats) => {
+      sendToRenderer(mainWindow, 'system:stats', stats)
+    },
+    getStatusBarPollIntervalMs(),
+    { liveStats, battery },
+  )
 }
 
 /** 将设置中的透明度百分比 (70–100) 映射为 Electron 窗口不透明度 (0.7–1) */
@@ -796,6 +804,7 @@ app.on('before-quit', () => {
   void disposeScreenshotsService()
   disposeDesktopPet()
   systemStats.stop()
+  systemStats.dispose()
   statisticsStore.dispose()
   void disposeCopilotRuntime(true).catch((err) =>
     copilotLog.error('Failed to stop runtime', logErrorPayload(err)),
@@ -1245,6 +1254,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   }
   const liveBefore = isStatusBarLiveStatsEnabled()
   const batteryBefore = isStatusBarBatteryEnabled()
+  const pollPriorityBefore = settingsStore.get().advanced.statusBarPollPriority
   const shortcutsBefore = settingsStore.get().shortcuts.global
   const screenshotEnabledBefore = settingsStore.get().assistive.screenshotEnabled
   if (partial.advanced?.shellContextMenu !== undefined) {
@@ -1272,7 +1282,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
     (partial.advanced?.statusBarLiveStats !== undefined &&
       liveBefore !== isStatusBarLiveStatsEnabled()) ||
     (partial.advanced?.statusBarBattery !== undefined &&
-      batteryBefore !== isStatusBarBatteryEnabled())
+      batteryBefore !== isStatusBarBatteryEnabled()) ||
+    (partial.advanced?.statusBarPollPriority !== undefined &&
+      pollPriorityBefore !== updated.advanced.statusBarPollPriority)
   ) {
     syncSystemStatsPolling()
   }
