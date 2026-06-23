@@ -16,7 +16,6 @@ import {
 
 interface TerminalPropertiesDialogProps {
   tabId: string
-  open: boolean
   onOpenChange: (open: boolean) => void
 }
 
@@ -33,7 +32,6 @@ function resolvePropertyValue(
 
 export function TerminalPropertiesDialog({
   tabId,
-  open,
   onOpenChange,
 }: TerminalPropertiesDialogProps) {
   const { t, i18n } = useTranslation()
@@ -58,7 +56,12 @@ export function TerminalPropertiesDialog({
   const displayTitle = tab ? getTabDisplayTitle(tab) : ''
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onOpenChange(false)
+      }}
+    >
       <DialogContent className="max-w-md select-none">
         <DialogHeader>
           <DialogTitle>{t('tab.terminalPropertiesTitle')}</DialogTitle>

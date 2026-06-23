@@ -59,7 +59,9 @@ export async function copyAndPasteToTerminalFromContextMenu(): Promise<void> {
 }
 
 export function openTerminalSearchFromContextMenu(): void {
-  useTerminalUiStore.getState().requestTerminalSearch()
+  window.setTimeout(() => {
+    useTerminalUiStore.getState().requestTerminalSearch()
+  }, 0)
 }
 
 export async function exportTerminalFromContextMenu(): Promise<void> {

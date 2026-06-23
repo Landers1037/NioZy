@@ -23,6 +23,7 @@ import { closeWorkspaceTab } from '@/lib/workspace-actions'
 import { cn } from '@/lib/utils'
 import { getTabHighlightClasses } from '@/lib/tab-display'
 import { getTabCornerRadius, useUiStyle } from '@/lib/ui-style'
+import { scheduleOverlayOpen } from '@/lib/context-menu-overlay'
 
 interface WorkspaceTabItemProps {
   tab: AppTab
@@ -49,7 +50,7 @@ export function WorkspaceTabItem({
 
   const requestClose = () => {
     if (session.isStarted) {
-      setConfirmOpen(true)
+      scheduleOverlayOpen(() => setConfirmOpen(true))
       return
     }
     void closeWorkspaceTab(tab.id)

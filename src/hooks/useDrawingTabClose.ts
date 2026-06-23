@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAppStore } from '@/stores/app-store'
 import { useDrawingSessionStore } from '@/stores/drawing-session-store'
+import { scheduleOverlayOpen } from '@/lib/context-menu-overlay'
 
 export function useDrawingTabClose(tabId: string, kind: 'excalidraw' | 'drawio') {
   const removeTab = useAppStore((s) => s.removeTab)
@@ -12,7 +13,7 @@ export function useDrawingTabClose(tabId: string, kind: 'excalidraw' | 'drawio')
 
   const requestClose = () => {
     if (dirty) {
-      setConfirmOpen(true)
+      scheduleOverlayOpen(() => setConfirmOpen(true))
       return
     }
     removeTab(tabId)

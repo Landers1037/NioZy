@@ -404,11 +404,12 @@ export const TerminalTabItem = memo(function TerminalTabItem({
         onOpenChange={setScreenshotOpen}
       />
 
-      <TerminalPropertiesDialog
-        tabId={tab.id}
-        open={propertiesOpen}
-        onOpenChange={setPropertiesOpen}
-      />
+      {propertiesOpen ? (
+        <TerminalPropertiesDialog
+          tabId={tab.id}
+          onOpenChange={setPropertiesOpen}
+        />
+      ) : null}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>

@@ -69,8 +69,10 @@ export function AddToGroupDialog({ tabId, open, onOpenChange }: AddToGroupDialog
     onOpenChange(false)
   }
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('tab.addToGroup')}</DialogTitle>

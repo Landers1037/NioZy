@@ -78,8 +78,10 @@ export function TerminalScreenshotDialog({
     }
   }
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('tab.terminalScreenshotTitle')}</DialogTitle>

@@ -2,6 +2,7 @@ import * as React from 'react'
 import { useEffect } from 'react'
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog'
 import { acquireLinkPreviewOverlaySuppression } from '@/lib/link-preview-overlay'
+import { scheduleReleaseStuckBodyScrollLock } from '@/lib/body-scroll-lock'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import {
@@ -38,10 +39,16 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 const AlertDialogContent = React.forwardRef<
   React.ComponentRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => {
+>(({ className, onCloseAutoFocus, ...props }, ref) => {
   const animate = useDialogAnimationEnabled()
 
-  useEffect(() => acquireLinkPreviewOverlaySuppression(), [])
+  useEffect(() => {
+    const releasePreview = acquireLinkPreviewOverlaySuppression()
+    return () => {
+      releasePreview()
+      scheduleReleaseStuckBodyScrollLock()
+    }
+  }, [])
 
   return (
     <AlertDialogPortal>
@@ -54,6 +61,10 @@ const AlertDialogContent = React.forwardRef<
           className,
         )}
         {...props}
+        onCloseAutoFocus={(e) => {
+          onCloseAutoFocus?.(e)
+          e.preventDefault()
+        }}
       />
     </AlertDialogPortal>
   )

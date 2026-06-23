@@ -11,6 +11,7 @@ import {
   useDialogAnimationEnabled,
 } from '@/lib/dialog-animations'
 import { acquireLinkPreviewOverlaySuppression } from '@/lib/link-preview-overlay'
+import { scheduleReleaseStuckBodyScrollLock } from '@/lib/body-scroll-lock'
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -40,10 +41,16 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+>(({ className, children, onCloseAutoFocus, ...props }, ref) => {
   const animate = useDialogAnimationEnabled()
 
-  useEffect(() => acquireLinkPreviewOverlaySuppression(), [])
+  useEffect(() => {
+    const releasePreview = acquireLinkPreviewOverlaySuppression()
+    return () => {
+      releasePreview()
+      scheduleReleaseStuckBodyScrollLock()
+    }
+  }, [])
 
   return (
     <DialogPortal>
@@ -57,6 +64,10 @@ const DialogContent = React.forwardRef<
           className,
         )}
         {...props}
+        onCloseAutoFocus={(e) => {
+          onCloseAutoFocus?.(e)
+          e.preventDefault()
+        }}
       >
         {children}
         <DialogPrimitive.Close
