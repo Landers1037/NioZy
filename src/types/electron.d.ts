@@ -1,3 +1,4 @@
+import type { HTMLAttributes, Ref } from 'preact'
 import type { ElectronAPI } from '../../electron/shared/api-types'
 
 declare global {
@@ -6,23 +7,19 @@ declare global {
   }
 }
 
-declare namespace React {
+declare module 'preact' {
   namespace JSX {
     interface IntrinsicElements {
-      webview: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          src?: string
-          allowpopups?: string
-          partition?: string
-          useragent?: string
-          disablewebsecurity?: string
-          nodeintegration?: string
-          webpreferences?: string
-          partition?: string
-          ref?: React.Ref<HTMLElement & { loadURL: (url: string) => Promise<void> }>
-        },
-        HTMLElement
-      >
+      webview: HTMLAttributes<HTMLElement> & {
+        src?: string
+        allowpopups?: string
+        partition?: string
+        useragent?: string
+        disablewebsecurity?: string
+        nodeintegration?: string
+        webpreferences?: string
+        ref?: Ref<HTMLElement & { loadURL: (url: string) => Promise<void> }>
+      }
     }
   }
 }

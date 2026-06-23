@@ -9,6 +9,7 @@ import {
   normalizeTerminalBackgroundOpacity,
   DEFAULT_TERMINAL_BACKGROUND_OPACITY,
 } from './shared/terminal-background-settings'
+import { normalizeStatusBarPollPriority, type StatusBarPollPriority } from './shared/status-bar-poll'
 
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
@@ -158,6 +159,8 @@ export interface AppSettings {
     statusBarLiveStats: boolean
     /** 为 true 时在状态栏内存右侧展示电池电量与充电状态 */
     statusBarBattery: boolean
+    /** 状态栏系统信息轮询优先级：高 2s / 中 5s / 低 10s */
+    statusBarPollPriority: StatusBarPollPriority
     /** Windows：在文件夹与目录背景右键注册「使用 NioZy 打开」 */
     shellContextMenu: boolean
     /** 关闭窗口时记住大小与位置，下次启动恢复 */
@@ -263,6 +266,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     transparency: 100,
     statusBarLiveStats: true,
     statusBarBattery: false,
+    statusBarPollPriority: 'high',
     shellContextMenu: false,
     preserveWindowBounds: false,
     resourceAutoDegrade: false,
@@ -384,6 +388,7 @@ function buildAppSettingsFromStored(
         typeof stored.advanced?.statusBarBattery === 'boolean'
           ? stored.advanced.statusBarBattery
           : DEFAULT_SETTINGS.advanced.statusBarBattery,
+      statusBarPollPriority: normalizeStatusBarPollPriority(stored.advanced?.statusBarPollPriority),
       lastWindowState: normalizeSavedWindowState(stored.advanced?.lastWindowState),
     },
     logging: normalizeLoggingSettings(

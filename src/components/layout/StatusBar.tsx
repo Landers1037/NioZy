@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 import { AppMetricsDialog } from '@/components/layout/AppMetricsDialog'
 import { BatteryStatusIndicator } from '@/components/layout/BatteryStatusIndicator'
+import { useStatusBarClock } from '@/hooks/useStatusBarClock'
 import type { ThemeMode } from '../../../electron/shared/api-types'
 import type { UiStyle } from '../../../electron/shared/ui-style'
 
@@ -285,6 +286,7 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
   const theme: ThemeMode = useAppStore((s) => s.settings?.theme ?? 'light')
   const liveStats = useAppStore((s) => s.settings?.advanced.statusBarLiveStats !== false)
   const showBattery = useAppStore((s) => s.settings?.advanced.statusBarBattery === true)
+  const { date: statusDate, time: statusTime } = useStatusBarClock(liveStats)
   const isClassic = uiStyle === 'windowsClassic'
   const coloredTags = usesColoredStatusTags(uiStyle)
   const fieldClass = ui.statusTag
@@ -313,20 +315,22 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
     [stats.memoryPercent, stats.memoryUsedMb, stats.memoryTotalMb, t],
   )
 
-  const batteryIndicator =
-    showBattery && liveStats ? (
-      <BatteryStatusIndicator
-        percent={stats.batteryPercent}
-        isCharging={stats.batteryCharging}
-        theme={theme}
-        uiStyle={uiStyle}
-        isClassic={isClassic}
-        fieldClass={fieldClass}
-        renderTag={renderTag}
-      />
-    ) : null
+  const batteryIndicator = showBattery ? (
+    <BatteryStatusIndicator
+      percent={stats.batteryPercent}
+      isCharging={stats.batteryCharging}
+      theme={theme}
+      uiStyle={uiStyle}
+      isClassic={isClassic}
+      fieldClass={fieldClass}
+      renderTag={renderTag}
+    />
+  ) : null
 
   if (!liveStats) {
+    if (showBattery) {
+      return <>{batteryIndicator}</>
+    }
     if (coloredTags) {
       return (
         <NiozyStatusTag variant="off" theme={theme} uiStyle={uiStyle}>
@@ -343,10 +347,10 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
     return (
       <>
         <NiozyStatusTag variant="date" theme={theme} uiStyle={uiStyle}>
-          <StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>
+          <StatusTagLabel icon={CalendarDays}>{statusDate}</StatusTagLabel>
         </NiozyStatusTag>
         <NiozyStatusTag variant="time" theme={theme} uiStyle={uiStyle}>
-          <StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>
+          <StatusTagLabel icon={Clock}>{statusTime}</StatusTagLabel>
         </NiozyStatusTag>
         <NiozyStatusTag variant="cpu" theme={theme} uiStyle={uiStyle}>
           <StatusTagLabel icon={Cpu}>
@@ -374,8 +378,8 @@ const StatusBarLiveStats = memo(function StatusBarLiveStats({
 
   return (
     <>
-      {renderTag(<StatusTagLabel icon={CalendarDays}>{stats.date}</StatusTagLabel>)}
-      {renderTag(<StatusTagLabel icon={Clock}>{stats.time}</StatusTagLabel>)}
+      {renderTag(<StatusTagLabel icon={CalendarDays}>{statusDate}</StatusTagLabel>)}
+      {renderTag(<StatusTagLabel icon={Clock}>{statusTime}</StatusTagLabel>)}
       {renderTag(
         <StatusTagLabel icon={Cpu}>
           {t('statusBar.cpu', { percent: stats.cpuPercent })}
