@@ -1,18 +1,54 @@
 import type { CommandReplayItem } from '../../electron/shared/command-replay'
 import type { AppSettings } from '../../electron/shared/api-types'
 import { useAppStore } from '@/stores/app-store'
+import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
+import { useWorkspaceStore } from '@/stores/workspace-store'
+import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import { getActiveTerminalId } from '@/lib/terminal-tab-utils'
 import { focusActiveTerminal } from '@/lib/terminal-focus'
 import { getElectronAPI } from '@/lib/electron-client'
+
 export function getCommandReplays(settings: AppSettings | null | undefined): CommandReplayItem[] {
   return settings?.shell?.commandReplays ?? []
 }
 
-export function getActiveReplayTerminalId(): string | undefined {
-  const { tabs, activeTabId } = useAppStore.getState()
-  const tab = tabs.find((t) => t.id === activeTabId && t.type === 'terminal')
+export interface ActiveReplayContext {
+  tabId: string
+  terminalId: string
+}
+
+/** 当前可录制/重放的终端 Tab（含工作区与 Attach-PTY 已提交终端） */
+export function getActiveReplayContext(): ActiveReplayContext | undefined {
+  const { tabs, activeTabId, settings } = useAppStore.getState()
+  if (!activeTabId) return undefined
+
+  const tab = tabs.find((t) => t.id === activeTabId)
   if (!tab) return undefined
-  return getActiveTerminalId(tab)
+
+  if (tab.type === 'terminal') {
+    if (isAttachPtyRenderMode(settings)) {
+      const committed = useAttachPtySessionStore.getState().committed
+      if (committed?.tabId === tab.id) {
+        return { tabId: tab.id, terminalId: committed.terminalId }
+      }
+    }
+    const terminalId = getActiveTerminalId(tab)
+    if (!terminalId) return undefined
+    return { tabId: tab.id, terminalId }
+  }
+
+  if (tab.type === 'workspace') {
+    const session = useWorkspaceStore.getState().sessions[tab.id]
+    const terminalId = session?.terminalId ?? tab.terminalId
+    if (!terminalId || session?.isStarted !== true) return undefined
+    return { tabId: tab.id, terminalId }
+  }
+
+  return undefined
+}
+
+export function getActiveReplayTerminalId(): string | undefined {
+  return getActiveReplayContext()?.terminalId
 }
 
 /**

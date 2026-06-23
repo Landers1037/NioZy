@@ -25,6 +25,18 @@ export function extractCommandFromPromptLine(line: string): string {
   const genericMatch = trimmed.match(/^[^>\r\n]*>\s*(.*)$/)
   if (genericMatch) return (genericMatch[1] ?? '').trimEnd()
 
+  // [user@host path]# cmd
+  const bracketUnix = trimmed.match(/^\[[^\]]+\]\s*[#$]?\s*(.*)$/)
+  if (bracketUnix) return (bracketUnix[1] ?? '').trimEnd()
+
+  // user@host:path# cmd / user@host:path$ cmd
+  const unixAt = trimmed.match(/^[^\s]*@[^:#$]*:[^#$\r\n]*[#$]\s*(.*)$/)
+  if (unixAt) return (unixAt[1] ?? '').trimEnd()
+
+  // path# cmd（无 @ 的 root 提示符等）
+  const unixHash = trimmed.match(/^[^#$\r\n]*[#$]\s*(.*)$/)
+  if (unixHash) return (unixHash[1] ?? '').trimEnd()
+
   return trimmed
 }
 
@@ -86,11 +98,10 @@ export function mergeRecordedWithCursorLine(
   const lastRecorded = lines[lastIndex] ?? ''
 
   const shouldReplace =
-    cursorCommand.length > lastRecorded.length ||
-    (lastRecorded.length > 0 && cursorCommand.startsWith(lastRecorded)) ||
+    (lastRecorded.length === 0 && cursorCommand.length > 0) ||
     (lastRecorded.length > 0 &&
-      cursorCommand.length >= lastRecorded.length &&
-      cursorCommand.includes(lastRecorded))
+      cursorCommand.length > lastRecorded.length &&
+      cursorCommand.startsWith(lastRecorded))
 
   if (shouldReplace) {
     lines[lastIndex] = cursorCommand
