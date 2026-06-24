@@ -16,6 +16,7 @@ import { useTabGroupStore } from '@/stores/tab-group-store'
 import { isSshDynamicPasswordEnabled } from '../../electron/ssh-auth'
 import { promptSshDynamicPassword } from '@/lib/ssh-dynamic-password-prompt'
 import { getSshConnection } from '@/lib/ssh-connection'
+import { isMuxCoreEnabled } from '@/lib/mux-terminal-render'
 
 type ShellType = BuiltinShellType | 'custom' | 'ssh'
 
@@ -68,8 +69,13 @@ async function openTerminalTab(
 }
 
 export async function createTerminal(shell?: BuiltinShellType): Promise<void> {
-  const resolved =
-    shell ?? getDefaultBuiltinShell(useAppStore.getState().settings)
+  const settings = useAppStore.getState().settings
+  const resolved = shell ?? getDefaultBuiltinShell(settings)
+  if (isMuxCoreEnabled(settings)) {
+    const { createMuxTerminal } = await import('@/lib/mux-terminal-actions')
+    await createMuxTerminal(resolved)
+    return
+  }
   try {
     await openTerminalTab(builtinShellOptions(resolved))
   } catch (error) {

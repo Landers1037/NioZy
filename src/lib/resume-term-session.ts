@@ -31,6 +31,7 @@ let lastActiveRestorableTabId: string | null = null
 let hadPersistableSessionTabs = false
 
 function isRestorableTab(tab: AppTab): tab is AppTab & { type: 'terminal' | 'markdown' } {
+  if (tab.type === 'terminal' && tab.muxMode) return false
   return tab.type === 'terminal' || tab.type === 'markdown'
 }
 
@@ -122,6 +123,7 @@ export function buildResumeTermSession(): ResumeTermSession | null {
   const savedTabs: SavedSessionTab[] = []
   for (const tab of tabs) {
     if (tab.type === 'terminal') {
+      if (tab.muxMode) continue
       const saved = buildSavedTerminalTab(tab, settings, terminalCwds)
       if (!saved) continue
       savedTabs.push(saved)
