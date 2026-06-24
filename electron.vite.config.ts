@@ -152,6 +152,8 @@ export default defineConfig(({ command }) => {
         output: {
           manualChunks(id) {
             const normalized = id.replace(/\\/g, '/')
+            // 与主窗口设置页共享；须独立于 src/pet 入口，避免 pet/main.ts 副作用随设置面板加载
+            if (normalized.includes('/electron/shared/pet-atlas')) return 'pet-atlas'
             if (normalized.includes('/src/pet/')) return 'pet'
             return rendererManualChunks(id)
           },
