@@ -346,7 +346,7 @@ html[data-ui-style='glass'][data-glass-vibrancy='true']
 html[data-ui-style='glass'][data-glass-vibrancy='true']
   .niozy-ai-copilot-scope
   [data-copilot-sidebar] {
-  background: color-mix(in srgb, var(--card) 58%, transparent);
+  background: color-mix(in srgb, var(--card) 78%, transparent);
   box-shadow:
     inset 1px 0 0 var(--glass-highlight),
     -12px 0 40px var(--glass-shadow);
@@ -355,7 +355,7 @@ html[data-ui-style='glass'][data-glass-vibrancy='true']
 html[data-ui-style='glass'][data-glass-vibrancy='true']
   .niozy-ai-copilot-scope
   .copilotKitHeader {
-  background: color-mix(in srgb, var(--card) 52%, transparent);
+  background: color-mix(in srgb, var(--card) 72%, transparent);
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true']
@@ -363,7 +363,7 @@ html[data-ui-style='glass'][data-glass-vibrancy='true']
   [data-testid='copilot-chat-input'].copilotKitInput,
 html[data-ui-style='glass'][data-glass-vibrancy='true']
   [data-testid='copilot-chat-input'].copilotKitInput {
-  background: color-mix(in srgb, var(--card) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--card) 68%, transparent) !important;
 }
 
 /* —— Claude：暖奶油底、白卡片输入、衬线标题、珊瑚强调 —— */

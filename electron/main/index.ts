@@ -95,7 +95,7 @@ import { runConnectivityCheck } from '../connectivity-check-service'
 import { GitService } from '../git-service'
 import { WorkspaceService } from '../workspace-service'
 import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
-import { getWindowBackgroundColor } from '../shared/ui-style'
+import { getWindowBackgroundColor, shouldUseGlassWindowTransparency } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
 import {
   allowDevToolsForContents,
@@ -192,6 +192,9 @@ installReleaseDevToolsGuard()
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
+let isRecreatingMainWindow = false
+/** 当前主窗口是否以 transparent 创建（与 shouldUseGlassWindowTransparency 同步） */
+let mainWindowHasGlassTransparency = false
 let linkPreviewManager: LinkPreviewManager | null = null
 let vncProxyManager: import('../vnc-proxy').VncWsProxyManager | null = null
 
@@ -266,6 +269,16 @@ function syncGitPathFromSettings(): void {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
 }
 
+function syncGlassWindowTransparencyIfNeeded(): void {
+  const needed = shouldUseGlassWindowTransparency(
+    settingsStore.get().uiStyle,
+    settingsStore.get().enableGlassTransparency,
+  )
+  if (needed !== mainWindowHasGlassTransparency) {
+    recreateMainWindowForGlassTransparency()
+  }
+}
+
 async function syncAllSettingsSideEffects(): Promise<void> {
   const updated = settingsStore.get()
   syncGitPathFromSettings()
@@ -274,9 +287,16 @@ async function syncAllSettingsSideEffects(): Promise<void> {
   syncGlobalShortcuts(settingsStore, () => mainWindow)
   syncWindowOpacity()
   applyLoggingSettings(updated.logging)
-  mainWindow?.setBackgroundColor(
-    getWindowBackgroundColor(updated.theme, updated.uiStyle),
-  )
+  syncGlassWindowTransparencyIfNeeded()
+  if (!mainWindowHasGlassTransparency) {
+    mainWindow?.setBackgroundColor(
+      getWindowBackgroundColor(
+        updated.theme,
+        updated.uiStyle,
+        updated.enableGlassTransparency,
+      ),
+    )
+  }
   syncInactiveTabSleepThrottling(mainWindow, updated.performance.inactiveTabSleep)
   await syncSessionProxyFromSettings()
   await syncWebviewPreviewFromSettings()
@@ -482,6 +502,36 @@ function destroyTray(): void {
   tray = null
 }
 
+/** 玻璃透明效果开关变更时需重建主窗口（transparent 仅能在创建时设定） */
+function recreateMainWindowForGlassTransparency(): void {
+  if (!mainWindow || mainWindow.isDestroyed() || isRecreatingMainWindow || isQuitting) return
+  isRecreatingMainWindow = true
+  const wasVisible = mainWindow.isVisible()
+  const wasMinimized = mainWindow.isMinimized()
+  const wasMaximized = mainWindow.isMaximized()
+  const bounds = mainWindow.getBounds()
+  mainWindow.removeAllListeners('close')
+  mainWindow.removeAllListeners('closed')
+  mainWindow.destroy()
+  mainWindow = null
+  createWindow()
+  if (!mainWindow) {
+    isRecreatingMainWindow = false
+    return
+  }
+  const win = mainWindow
+  win.once('ready-to-show', () => {
+    if (wasMaximized) {
+      win.maximize()
+    } else {
+      win.setBounds(bounds)
+    }
+    if (wasMinimized) win.minimize()
+    if (wasVisible) win.show()
+    isRecreatingMainWindow = false
+  })
+}
+
 function showMainWindow(): void {
   if (!mainWindow || mainWindow.isDestroyed()) {
     if (!isQuitting) createWindow()
@@ -642,11 +692,17 @@ function createWindow(): void {
     ? settings.advanced.lastWindowState
     : undefined
   const initialBounds = getInitialWindowOptions(savedState)
+  const glassTransparent = shouldUseGlassWindowTransparency(
+    settings.uiStyle,
+    settings.enableGlassTransparency,
+  )
+  mainWindowHasGlassTransparency = glassTransparent
 
   mainLog.debug('Creating main window', {
     preloadPath,
     preloadExists: existsSync(preloadPath),
     preserveBounds: Boolean(savedState),
+    glassTransparent,
   })
 
   mainWindow = new BrowserWindow({
@@ -661,7 +717,12 @@ function createWindow(): void {
     frame: false,
     titleBarStyle: 'hidden',
     autoHideMenuBar: true,
-    backgroundColor: getWindowBackgroundColor(settings.theme, settings.uiStyle),
+    transparent: glassTransparent,
+    backgroundColor: getWindowBackgroundColor(
+      settings.theme,
+      settings.uiStyle,
+      settings.enableGlassTransparency,
+    ),
     opacity: transparencyToOpacity(settings.advanced.transparency),
     webPreferences: {
       ...getOptimizedWebPreferences(preloadPath, {
@@ -1352,6 +1413,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   const inactiveTabSleepBefore = settingsBefore.performance.inactiveTabSleep
   const themeBefore = settingsBefore.theme
   const uiStyleBefore = settingsBefore.uiStyle
+  const enableGlassTransparencyBefore = settingsBefore.enableGlassTransparency
   const localeBefore = settingsBefore.locale
   const proxyBefore = settingsBefore.system.proxy
   const loggingBefore = settingsBefore.logging
@@ -1433,12 +1495,39 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (settingsPatchValueChanged(partial.locale, localeBefore, updated.locale)) {
     void syncScreenshotsLang(updated.locale)
   }
+  const glassTransparencyBefore = shouldUseGlassWindowTransparency(
+    uiStyleBefore,
+    enableGlassTransparencyBefore,
+  )
+  const glassTransparencyAfter = shouldUseGlassWindowTransparency(
+    updated.uiStyle,
+    updated.enableGlassTransparency,
+  )
   if (
+    (settingsPatchValueChanged(partial.uiStyle, uiStyleBefore, updated.uiStyle) ||
+      settingsPatchValueChanged(
+        partial.enableGlassTransparency,
+        enableGlassTransparencyBefore,
+        updated.enableGlassTransparency,
+      )) &&
+    glassTransparencyBefore !== glassTransparencyAfter
+  ) {
+    syncGlassWindowTransparencyIfNeeded()
+  } else if (
     settingsPatchValueChanged(partial.theme, themeBefore, updated.theme) ||
-    settingsPatchValueChanged(partial.uiStyle, uiStyleBefore, updated.uiStyle)
+    settingsPatchValueChanged(partial.uiStyle, uiStyleBefore, updated.uiStyle) ||
+    settingsPatchValueChanged(
+      partial.enableGlassTransparency,
+      enableGlassTransparencyBefore,
+      updated.enableGlassTransparency,
+    )
   ) {
     mainWindow?.setBackgroundColor(
-      getWindowBackgroundColor(updated.theme, updated.uiStyle),
+      getWindowBackgroundColor(
+        updated.theme,
+        updated.uiStyle,
+        updated.enableGlassTransparency,
+      ),
     )
   }
   if (

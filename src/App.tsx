@@ -420,6 +420,8 @@ export default function App() {
   } = tabLayout
 
   const browserDevPreview = isBrowserDevPreview()
+  const glassChromeVibrancy =
+    settings?.uiStyle === 'glass' && settings?.enableGlassTransparency === true
 
   const handleScpTransferOpenChange = useCallback(
     (open: boolean) => {
@@ -461,7 +463,8 @@ export default function App() {
   return (
     <div
       className={cn(
-        'flex h-full flex-col bg-background',
+        'flex h-full flex-col',
+        glassChromeVibrancy ? 'bg-transparent' : 'bg-background',
         aiSidebarEnabled &&
           aiSidebarOpen &&
           'transition-[padding-inline-end] duration-300 ease-out',

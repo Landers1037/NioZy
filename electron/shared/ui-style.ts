@@ -56,6 +56,21 @@ const WINDOW_BG: Record<UiStyle, Record<ThemeMode, string>> = {
   neumorphism: { light: '#E4E9F0', dark: '#2B3038' },
 }
 
-export function getWindowBackgroundColor(theme: ThemeMode, uiStyle: UiStyle): string {
+/** 玻璃风格 +「透明效果」：窗口需透明以便顶栏/侧栏 backdrop-filter 透出桌面 */
+export function shouldUseGlassWindowTransparency(
+  uiStyle: UiStyle,
+  enableGlassTransparency?: boolean,
+): boolean {
+  return uiStyle === 'glass' && enableGlassTransparency === true
+}
+
+export function getWindowBackgroundColor(
+  theme: ThemeMode,
+  uiStyle: UiStyle,
+  enableGlassTransparency?: boolean,
+): string {
+  if (shouldUseGlassWindowTransparency(uiStyle, enableGlassTransparency)) {
+    return '#00000000'
+  }
   return WINDOW_BG[uiStyle][theme]
 }

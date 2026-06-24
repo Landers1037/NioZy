@@ -275,16 +275,16 @@ html[data-ui-style='glass'] {
   --radius: 0.75rem;
   --background: #e8ebf0;
   --foreground: #1a1d24;
-  --card: rgb(255 255 255 / 0.38);
+  --card: rgb(255 255 255 / 0.58);
   --card-foreground: #1a1d24;
-  --popover: rgb(255 255 255 / 0.52);
+  --popover: rgb(255 255 255 / 0.72);
   --popover-foreground: #1a1d24;
-  --muted: rgb(255 255 255 / 0.28);
+  --muted: rgb(255 255 255 / 0.48);
   --muted-foreground: #5c6370;
-  --border: rgb(255 255 255 / 0.42);
+  --border: rgb(255 255 255 / 0.62);
   --primary: #4a7fd4;
   --primary-foreground: #ffffff;
-  --accent: rgb(255 255 255 / 0.36);
+  --accent: rgb(255 255 255 / 0.56);
   --accent-foreground: #1a1d24;
   --destructive: #d64545;
   --ring: #4a7fd4;
@@ -292,29 +292,29 @@ html[data-ui-style='glass'] {
   --glass-shadow: rgb(15 23 42 / 0.08);
   --glass-blur: 10px;
   /* 右键菜单、下拉等浮层：高于面板透明度，避免叠在深色终端上发暗 */
-  --glass-overlay: rgb(252 253 255 / 0.5);
+  --glass-overlay: rgb(252 253 255 / 0.7);
 }
 
 html.dark[data-ui-style='glass'] {
   --background: #12141a;
   --foreground: #e8eaef;
-  --card: rgb(28 30 38 / 0.48);
+  --card: rgb(28 30 38 / 0.68);
   --card-foreground: #e8eaef;
-  --popover: rgb(32 34 42 / 0.62);
+  --popover: rgb(32 34 42 / 0.82);
   --popover-foreground: #e8eaef;
-  --muted: rgb(255 255 255 / 0.06);
+  --muted: rgb(255 255 255 / 0.26);
   --muted-foreground: #9aa3b2;
   --border: rgb(255 255 255 / 0.12);
   --primary: #6b9ae8;
   --primary-foreground: #0f141c;
-  --accent: rgb(255 255 255 / 0.08);
+  --accent: rgb(255 255 255 / 0.28);
   --accent-foreground: #e8eaef;
   --destructive: #e86a6a;
   --ring: #6b9ae8;
   --glass-highlight: rgb(255 255 255 / 0.1);
   --glass-shadow: rgb(0 0 0 / 0.42);
   --glass-blur: 20px;
-  --glass-overlay: rgb(46 50 62 / 0.45);
+  --glass-overlay: rgb(46 50 62 / 0.65);
 }
 
 /* —— Claude：暖奶油白、珊瑚橙强调、全局 Noto Serif（终端除外）—— */
@@ -1042,7 +1042,7 @@ html[data-ui-style='glass'] .app-metrics-table-scroll thead {
 }
 
 html[data-ui-style='glass'] .ui-dialog-overlay {
-  background-color: rgb(0 0 0 / 0.1);
+  background-color: rgb(0 0 0 / 0.2);
 }
 
 html[data-ui-style='glass'] .ui-btn {
@@ -1101,53 +1101,62 @@ html[data-ui-style='glass'] .ui-slider-thumb {
 }
 
 /*
- * 玻璃 + 透明效果：半透明纯色 + 渐变模拟毛玻璃
- * 不使用 backdrop-filter，避免 Chromium 合成层持续重绘导致 CPU 占用过高
+ * 玻璃 + 透明效果：窗口透明 + 系统 Acrylic；顶栏/侧栏用半透明底色
+ * 顶栏/侧栏不使用 backdrop-filter（由 OS 材质负责模糊）；卡片/按钮等仍见各 .ui-* 规则
  */
 html[data-ui-style='glass'][data-glass-vibrancy='true'] {
-  --card: rgb(225 228 235 / 0.82);
-  --popover: rgb(232 235 242 / 0.88);
-  --muted: rgb(220 224 232 / 0.55);
-  --accent: rgb(215 220 230 / 0.65);
-  --border: rgb(255 255 255 / 0.45);
+  --card: rgb(225 228 235 / 0.98);
+  --popover: rgb(232 235 242 / 0.98);
+  --muted: rgb(220 224 232 / 0.75);
+  --accent: rgb(215 220 230 / 0.85);
+  --border: rgb(255 255 255 / 0.65);
   --glass-highlight: rgb(255 255 255 / 0.72);
   --glass-shadow: rgb(15 23 42 / 0.06);
-  --glass-overlay: rgb(240 243 250 / 0.96);
+  --glass-overlay: rgb(240 243 250 / 0.98);
 }
 
 html.dark[data-ui-style='glass'][data-glass-vibrancy='true'] {
-  --card: rgb(22 24 32 / 0.78);
-  --popover: rgb(26 28 36 / 0.84);
-  --muted: rgb(32 36 48 / 0.55);
-  --accent: rgb(38 42 56 / 0.5);
-  --border: rgb(255 255 255 / 0.14);
+  --card: rgb(22 24 32 / 0.98);
+  --popover: rgb(26 28 36 / 0.98);
+  --muted: rgb(32 36 48 / 0.75);
+  --accent: rgb(38 42 56 / 0.7);
+  --border: rgb(255 255 255 / 0.34);
   --glass-highlight: rgb(255 255 255 / 0.14);
   --glass-shadow: rgb(0 0 0 / 0.48);
-  --glass-overlay: rgb(36 40 50 / 0.94);
+  --glass-overlay: rgb(36 40 50 / 0.98);
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] {
-  background-image:
-    radial-gradient(ellipse 95% 75% at 18% -5%, rgb(255 255 255 / 0.72), transparent 62%),
-    radial-gradient(ellipse 85% 65% at 82% 105%, rgb(74 127 212 / 0.14), transparent 55%),
-    linear-gradient(168deg, #d8dee8 0%, #e4e8ef 42%, #eef1f6 100%);
+  --glass-backdrop: blur(calc(var(--glass-blur) + 16px)) saturate(195%) brightness(1.04);
+  background: transparent;
+  background-image: none;
 }
 
 html.dark[data-ui-style='glass'][data-glass-vibrancy='true'] {
-  background-image:
-    radial-gradient(ellipse 90% 70% at 12% 0%, rgb(107 154 232 / 0.18), transparent 58%),
-    radial-gradient(ellipse 80% 60% at 88% 100%, rgb(255 255 255 / 0.06), transparent 52%),
-    linear-gradient(168deg, #0a0c12 0%, #10131a 48%, #161a24 100%);
+  --glass-backdrop: blur(calc(var(--glass-blur) + 16px)) saturate(195%) brightness(1.02);
+  background: transparent;
+  background-image: none;
+}
+
+html[data-ui-style='glass'][data-glass-vibrancy='true'] body,
+html[data-ui-style='glass'][data-glass-vibrancy='true'] #root {
+  background: transparent;
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-glass-titlebar,
+html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-glass-sidebar,
+html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-glass-tabbar {
+  background: color-mix(in srgb, var(--card) 90%, transparent) !important;
+  border-color: var(--border) !important;
+}
+
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-glass-statusbar {
   background: var(--card) !important;
   border-color: var(--border) !important;
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-glass-panel {
-  background: color-mix(in srgb, var(--card) 92%, transparent) !important;
+  background: color-mix(in srgb, var(--card) 100%, transparent) !important;
   border-color: var(--border) !important;
   box-shadow:
     0 12px 40px var(--glass-shadow),
@@ -1207,12 +1216,12 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .app-metrics-table-shell
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-zone {
-  background: color-mix(in srgb, var(--card) 70%, transparent);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
   border-color: var(--border);
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-slot {
-  background: color-mix(in srgb, var(--card) 78%, transparent);
+  background: color-mix(in srgb, var(--card) 98%, transparent);
   border-color: color-mix(in srgb, var(--border) 90%, transparent);
   transition:
     background 0.15s ease,
@@ -1221,12 +1230,12 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-slot {
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-slot:hover {
-  background: color-mix(in srgb, #0ea5e9 20%, color-mix(in srgb, var(--card) 46%, transparent));
+  background: color-mix(in srgb, #0ea5e9 20%, color-mix(in srgb, var(--card) 66%, transparent));
   border-color: color-mix(in srgb, #0ea5e9 28%, var(--border));
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-slot:focus-visible {
-  background: color-mix(in srgb, #0ea5e9 20%, color-mix(in srgb, var(--card) 46%, transparent));
+  background: color-mix(in srgb, #0ea5e9 20%, color-mix(in srgb, var(--card) 66%, transparent));
   border-color: color-mix(in srgb, var(--ring) 40%, var(--border));
   outline: none;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--ring) 40%, transparent);
@@ -1234,12 +1243,12 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-snap-layout-slot:foc
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-dialog-overlay {
   /* 遮罩仅 10% 压暗，不做全局 backdrop 磨砂，保留背后界面清晰可见 */
-  background-color: rgb(0 0 0 / 0.1);
+  background-color: rgb(0 0 0 / 0.2);
   backdrop-filter: none;
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-btn {
-  background: color-mix(in srgb, var(--card) 88%, transparent);
+  background: color-mix(in srgb, var(--card) 100%, transparent);
   border: 1px solid var(--border);
   backdrop-filter: none;
   box-shadow:
@@ -1248,11 +1257,11 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-btn {
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-btn:hover {
-  background: color-mix(in srgb, var(--card) 95%, transparent);
+  background: color-mix(in srgb, var(--card) 100%, transparent);
 }
 
 html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-btn.bg-primary {
-  background: color-mix(in srgb, var(--primary) 88%, transparent);
+  background: color-mix(in srgb, var(--primary) 100%, transparent);
   border-color: color-mix(in srgb, var(--primary) 55%, transparent);
   box-shadow:
     0 4px 20px color-mix(in srgb, var(--primary) 32%, transparent),

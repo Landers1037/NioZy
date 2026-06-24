@@ -206,42 +206,42 @@ export function getUiClasses(style: UiStyle): UiClassSet {
   if (style === 'glass') {
     return {
       segmentActive:
-        'border border-white/45 bg-card/42 text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_2px_12px_rgb(0_0_0/0.05)] dark:border-white/14 dark:bg-card/38 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_2px_16px_rgb(0_0_0/0.28)]',
+        'border border-white/45 bg-card/62 text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_2px_12px_rgb(0_0_0/0.05)] dark:border-white/14 dark:bg-card/58 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_2px_16px_rgb(0_0_0/0.28)]',
       segmentInactive:
-        'text-muted-foreground hover:text-foreground hover:bg-card/22 dark:hover:bg-card/18',
+        'text-muted-foreground hover:text-foreground hover:bg-card/42 dark:hover:bg-card/38',
       tabActive:
-        'border border-white/45 bg-card/42 text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_2px_12px_rgb(0_0_0/0.05)] dark:border-white/14 dark:bg-card/38 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_2px_16px_rgb(0_0_0/0.28)]',
+        'border border-white/45 bg-card/62 text-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_2px_12px_rgb(0_0_0/0.05)] dark:border-white/14 dark:bg-card/58 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_2px_16px_rgb(0_0_0/0.28)]',
       tabActiveIcon:
-        'border border-white/45 bg-card/42 text-foreground dark:border-white/14 dark:bg-card/38',
+        'border border-white/45 bg-card/62 text-foreground dark:border-white/14 dark:bg-card/58',
       tabInactive:
-        'text-muted-foreground hover:bg-card/28 hover:text-foreground dark:hover:bg-card/20',
+        'text-muted-foreground hover:bg-card/48 hover:text-foreground dark:hover:bg-card/40',
       tabInactiveIcon:
-        'text-muted-foreground hover:bg-card/28 hover:text-foreground dark:hover:bg-card/20',
+        'text-muted-foreground hover:bg-card/48 hover:text-foreground dark:hover:bg-card/40',
       sidebarBg:
-        'bg-card/22 border-r border-white/30 dark:bg-card/16 dark:border-white/10',
+        'ui-glass-sidebar bg-card/38 border-r border-white/30 dark:bg-card/32 dark:border-white/10',
       tabBarBg:
-        'bg-card/22 border-b border-white/30 dark:bg-card/16 dark:border-white/10',
+        'ui-glass-tabbar bg-card/38 border-b border-white/30 dark:bg-card/32 dark:border-white/10',
       segmentGroupBg:
-        'rounded-xl border border-white/35 bg-card/28 p-1 dark:border-white/12 dark:bg-card/22',
+        'rounded-xl border border-white/35 bg-card/48 p-1 dark:border-white/12 dark:bg-card/42',
       mainPanel:
-        'ui-glass-panel rounded-xl border border-white/38 bg-card/40 shadow-[0_8px_28px_rgb(0_0_0/0.07),inset_0_1px_0_rgb(255_255_255/0.45)] dark:border-white/12 dark:bg-card/32 dark:shadow-[0_8px_36px_rgb(0_0_0/0.38),inset_0_1px_0_rgb(255_255_255/0.08)]',
+        'ui-glass-panel rounded-xl border border-white/38 bg-card/60 shadow-[0_8px_28px_rgb(0_0_0/0.07),inset_0_1px_0_rgb(255_255_255/0.45)] dark:border-white/12 dark:bg-card/52 dark:shadow-[0_8px_36px_rgb(0_0_0/0.38),inset_0_1px_0_rgb(255_255_255/0.08)]',
       mainPanelTerminal:
-        'ui-glass-panel rounded-xl border border-white/38 bg-card/28 shadow-[0_8px_28px_rgb(0_0_0/0.07),inset_0_1px_0_rgb(255_255_255/0.45)] dark:border-white/12 dark:bg-card/22 dark:shadow-[0_8px_36px_rgb(0_0_0/0.38),inset_0_1px_0_rgb(255_255_255/0.08)]',
+        'ui-glass-panel rounded-xl border border-white/38 bg-card/48 shadow-[0_8px_28px_rgb(0_0_0/0.07),inset_0_1px_0_rgb(255_255_255/0.45)] dark:border-white/12 dark:bg-card/42 dark:shadow-[0_8px_36px_rgb(0_0_0/0.38),inset_0_1px_0_rgb(255_255_255/0.08)]',
       sidebarResizeHover: 'hover:bg-primary/12',
       sidebarResizeActive: 'bg-primary/20',
       titleBar:
-        'ui-glass-titlebar h-10 border-b border-white/32 bg-card/38 dark:border-white/10 dark:bg-card/28',
+        'ui-glass-titlebar h-10 border-b border-white/32 bg-card/50 dark:border-white/10 dark:bg-card/40',
       titleTagline: 'text-xs text-muted-foreground',
       titleWeight: 'font-app-bold',
       windowControlBtn: 'rounded-lg hover:bg-foreground/6 dark:hover:bg-white/8',
       windowCloseBtn: 'rounded-lg hover:bg-destructive hover:text-white',
       statusBar:
-        'ui-glass-statusbar h-8 border-t border-white/32 bg-card/38 px-3 gap-3 dark:border-white/10 dark:bg-card/28',
+        'ui-glass-statusbar h-8 border-t border-white/32 bg-card/58 px-3 gap-3 dark:border-white/10 dark:bg-card/48',
       statusTag: '',
       connectionEditing:
         'rounded-lg border border-primary/28 bg-primary/6 px-3 py-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.35)]',
       fontPickerSelected:
-        'border border-primary/30 bg-card/55 font-app-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.38)]',
+        'border border-primary/30 bg-card/75 font-app-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.38)]',
     }
   }
 
