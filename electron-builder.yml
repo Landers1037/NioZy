@@ -14,7 +14,7 @@ extraMetadata:
 directories:
   buildResources: build
   output: release
-compression: maximum   # 或 store / normal  
+compression: normal   # 或 store / normal  
 files:
   - out/**/*
   - package.json
