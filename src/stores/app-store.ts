@@ -540,6 +540,11 @@ export function applyThemeToDocument(settings: AppSettings): void {
   } else {
     delete root.dataset.glassVibrancy
   }
+  if (settings.enableSmoothFonts) {
+    root.dataset.smoothFonts = 'true'
+  } else {
+    delete root.dataset.smoothFonts
+  }
   root.style.setProperty('--primary', settings.accentColor)
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)

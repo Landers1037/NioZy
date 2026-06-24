@@ -215,6 +215,8 @@ export interface AppSettings {
   enableDialogAnimations: boolean
   /** 玻璃界面风格下启用 macOS 风格增强毛玻璃透明效果 */
   enableGlassTransparency: boolean
+  /** 启用类似 macOS 的平滑字体渲染（需重启；Windows 下配合 DirectWrite / 高 DPI 清单） */
+  enableSmoothFonts: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string

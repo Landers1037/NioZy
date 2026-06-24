@@ -11,6 +11,8 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
+import { relaunchApp } from '@/lib/app-relaunch'
+import { toast } from 'sonner'
 import { SettingField } from './SettingField'
 import {
   Languages,
@@ -23,6 +25,7 @@ import {
   Wand2,
   Bold,
   Layers2,
+  ALargeSmall,
 } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
@@ -181,6 +184,29 @@ export function AppearanceSettings() {
             onCheckedChange={(enableGlassTransparency) =>
               patchSettings({ enableGlassTransparency })
             }
+          />
+        </SettingField>
+
+        <SettingField
+          icon={ALargeSmall}
+          label={t('settings.appearance.enableSmoothFonts')}
+          description={t('settings.appearance.enableSmoothFontsDesc')}
+          row
+        >
+          <Switch
+            checked={settings.enableSmoothFonts}
+            onCheckedChange={(enableSmoothFonts) => {
+              if (enableSmoothFonts === settings.enableSmoothFonts) return
+              void patchSettings({ enableSmoothFonts }).then(() =>
+                toast.info(t('toast.smoothFontsRestart'), {
+                  duration: 10_000,
+                  action: {
+                    label: t('toast.restartApp'),
+                    onClick: () => relaunchApp(),
+                  },
+                }),
+              )
+            }}
           />
         </SettingField>
 

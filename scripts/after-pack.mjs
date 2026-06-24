@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, rmSync } from 'fs'
 import { join } from 'path'
 import { getNativeKeepSets } from './native-arch-filter.mjs'
+import { embedWinHighDpiManifest } from './embed-win-dpi-manifest.mjs'
 
 /**
  * 打包后清理 Chromium locales 目录，只保留 zh / en / ja 相关语言包
@@ -107,11 +108,22 @@ function pruneNativeArchBinaries(appOutDir, platform, arch) {
   pruneNodeScreenshots(nodeModulesDir, keep)
 }
 
-export default function afterPack(context) {
+async function embedHighDpiManifest(appOutDir, platform) {
+  if (platform !== 'win32') return
+  const exePath = join(appOutDir, 'NioZy.exe')
+  if (!existsSync(exePath)) {
+    console.warn(`[after-pack] 未找到 ${exePath}，跳过高 DPI 清单嵌入`)
+    return
+  }
+  await embedWinHighDpiManifest(exePath)
+}
+
+export default async function afterPack(context) {
   pruneLocales(context.appOutDir)
   pruneNativeArchBinaries(
     context.appOutDir,
     context.electronPlatformName,
     context.arch,
   )
+  await embedHighDpiManifest(context.appOutDir, context.electronPlatformName)
 }

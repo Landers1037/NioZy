@@ -496,7 +496,9 @@
       "enableDialogAnimations": "Animations",
       "enableDialogAnimationsDesc": "When on, dialogs (including image preview) fade in from below and fade out downward",
       "enableGlassTransparency": "Transparency",
-      "enableGlassTransparencyDesc": "Only applies to the Glass interface style: enhances dialogs, buttons, and the overall UI with macOS-like frosted glass"
+      "enableGlassTransparencyDesc": "Only applies to the Glass interface style: enhances dialogs, buttons, and the overall UI with macOS-like frosted glass",
+      "enableSmoothFonts": "Smooth fonts",
+      "enableSmoothFontsDesc": "Enables HiDPI support and DirectWrite smoothing for macOS-like text rendering (restart required)"
     },
     "terminal": {
       "title": "Terminal",
@@ -1468,6 +1470,7 @@
     "p2pConnectFailed": "Connection failed",
     "p2pSendFailed": "Send failed",
     "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
+    "smoothFontsRestart": "Smooth fonts saved. Quit and restart the app for it to take effect.",
     "webGpuAccelerationRestart": "WebGPU acceleration saved. Quit and restart the app for it to take effect.",
     "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
     "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry.",

@@ -496,7 +496,9 @@
       "enableDialogAnimations": "动画效果",
       "enableDialogAnimationsDesc": "开启后弹框（含图片预览）打开与关闭时自底部向上淡入、向下淡出",
       "enableGlassTransparency": "透明效果",
-      "enableGlassTransparencyDesc": "仅在「玻璃」界面风格下生效：增强弹框、按钮与整体界面的 macOS 风格半透明毛玻璃质感"
+      "enableGlassTransparencyDesc": "仅在「玻璃」界面风格下生效：增强弹框、按钮与整体界面的 macOS 风格半透明毛玻璃质感",
+      "enableSmoothFonts": "开启平滑字体",
+      "enableSmoothFontsDesc": "启用高 DPI 支持与 DirectWrite 平滑渲染，界面文字更接近 macOS 观感（需重启应用后生效）"
     },
     "terminal": {
       "title": "终端设置",
@@ -1468,6 +1470,7 @@
     "p2pConnectFailed": "连接失败",
     "p2pSendFailed": "发送失败",
     "hardwareAccelerationRestart": "硬件加速已保存，请完全退出并重启应用后生效",
+    "smoothFontsRestart": "平滑字体已保存，请完全退出并重启应用后生效",
     "webGpuAccelerationRestart": "WebGPU 加速已保存，请完全退出并重启应用后生效",
     "disableSandboxRestart": "沙箱设置已保存，请完全退出并重启应用后生效",
     "shellContextMenuFailed": "无法更新资源管理器右键菜单，请确认具有当前用户注册表写入权限",
