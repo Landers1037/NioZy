@@ -74,6 +74,7 @@ import { TerminalScreenshotDialog } from '@/components/layout/TerminalScreenshot
 import { TerminalPropertiesDialog } from '@/components/layout/TerminalPropertiesDialog'
 import { findGroupForTab } from '@/lib/tab-groups'
 import { useTabGroupStore } from '@/stores/tab-group-store'
+import { scheduleOverlayOpen } from '@/lib/context-menu-overlay'
 
 interface TerminalTabItemProps {
   tab: AppTab
@@ -170,8 +171,10 @@ export const TerminalTabItem = memo(function TerminalTabItem({
   const canSplit = splitCount < MAX_TERMINAL_SPLITS
 
   const openEditDialog = () => {
-    setEditValue(tab.customTitle ?? tab.title)
-    setEditOpen(true)
+    scheduleOverlayOpen(() => {
+      setEditValue(tab.customTitle ?? tab.title)
+      setEditOpen(true)
+    })
   }
 
   const saveEditTitle = () => {
@@ -297,7 +300,7 @@ export const TerminalTabItem = memo(function TerminalTabItem({
             <FolderOpen className="size-4 text-muted-foreground" />
             {t('common.open')}
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => setCloseOpen(true)}>
+          <ContextMenuItem onSelect={() => scheduleOverlayOpen(() => setCloseOpen(true))}>
             <X className="size-4 text-muted-foreground" />
             {t('common.close')}
           </ContextMenuItem>
@@ -343,7 +346,7 @@ export const TerminalTabItem = memo(function TerminalTabItem({
             </>
           ) : null}
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setAddToGroupOpen(true)}>
+          <ContextMenuItem onSelect={() => scheduleOverlayOpen(() => setAddToGroupOpen(true))}>
             <PackagePlus className="size-4 text-muted-foreground" />
             {existingGroup ? t('tab.moveToGroup') : t('tab.addToGroup')}
           </ContextMenuItem>
@@ -356,41 +359,45 @@ export const TerminalTabItem = memo(function TerminalTabItem({
             {t('tab.exportTerminal')}
           </ContextMenuItem>
           <ContextMenuItem
-            onSelect={() => {
-              if (!isActive) setActiveTab(tab.id)
-              setScreenshotOpen(true)
-            }}
+            onSelect={() =>
+              scheduleOverlayOpen(() => {
+                if (!isActive) setActiveTab(tab.id)
+                setScreenshotOpen(true)
+              })
+            }
           >
             <Image className="size-4 text-muted-foreground" />
             {t('tab.terminalScreenshot')}
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={() => setPropertiesOpen(true)}>
+          <ContextMenuItem onSelect={() => scheduleOverlayOpen(() => setPropertiesOpen(true))}>
             <Info className="size-4 text-muted-foreground" />
             {t('tab.terminalProperties')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
-      <AlertDialog open={closeOpen} onOpenChange={setCloseOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('tab.closeTerminalTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('tab.closeTerminalDesc', { title: displayTitle })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:opacity-90"
-              onClick={() => closeTerminalTabs([tab.id])}
-            >
-              {t('common.close')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {closeOpen ? (
+        <AlertDialog open onOpenChange={setCloseOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('tab.closeTerminalTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('tab.closeTerminalDesc', { title: displayTitle })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-white hover:opacity-90"
+                onClick={() => closeTerminalTabs([tab.id])}
+              >
+                {t('common.close')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
 
       <AddToGroupDialog
         tabId={tab.id}
@@ -411,31 +418,33 @@ export const TerminalTabItem = memo(function TerminalTabItem({
         />
       ) : null}
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('tab.editTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('tab.editTitleDesc', { defaultTitle: tab.title })}
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            placeholder={tab.title}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') saveEditTitle()
-            }}
-            autoFocus
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={saveEditTitle}>{t('common.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {editOpen ? (
+        <Dialog open onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('tab.editTitle')}</DialogTitle>
+              <DialogDescription>
+                {t('tab.editTitleDesc', { defaultTitle: tab.title })}
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              placeholder={tab.title}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveEditTitle()
+              }}
+              autoFocus
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button onClick={saveEditTitle}>{t('common.save')}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </>
   )
 }, terminalTabItemPropsEqual)

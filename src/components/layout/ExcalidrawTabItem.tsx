@@ -96,20 +96,22 @@ export function ExcalidrawTabItem({
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('drawing.closeTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('drawing.closeDesc', { title: tab.title })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmClose}>{t('common.close')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {confirmOpen ? (
+        <AlertDialog open onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('drawing.closeTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('drawing.closeDesc', { title: tab.title })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmClose}>{t('common.close')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
     </>
   )
 }

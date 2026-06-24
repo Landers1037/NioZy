@@ -1191,7 +1191,11 @@
     "openJsSandbox": "Open sandbox",
     "excalidraw": "Excalidraw",
     "drawio": "Draw.io",
-    "newPowerShell": "New PowerShell"
+    "newPowerShell": "New PowerShell",
+    "terminalFilter": "Filter terminal tabs",
+    "terminalFilterPlaceholder": "Search by title or command…",
+    "terminalFilterClose": "Close filter",
+    "terminalFilterNoMatch": "No matching terminal tabs"
   },
   "drawing": {
     "loading": "Loading drawing editor…",

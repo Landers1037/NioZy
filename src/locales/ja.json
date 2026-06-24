@@ -1001,7 +1001,11 @@
     "openJsSandbox": "サンドボックスを開く",
     "excalidraw": "Excalidraw",
     "drawio": "Draw.io",
-    "newPowerShell": "新しい PowerShell"
+    "newPowerShell": "新しい PowerShell",
+    "terminalFilter": "ターミナル Tab をフィルター",
+    "terminalFilterPlaceholder": "タイトルまたはコマンドで検索…",
+    "terminalFilterClose": "フィルターを閉じる",
+    "terminalFilterNoMatch": "一致するターミナル Tab がありません"
   },
   "drawing": {
     "loading": "描画コンポーネントを読み込み中…",

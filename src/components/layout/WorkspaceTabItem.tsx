@@ -117,25 +117,27 @@ export function WorkspaceTabItem({
         </ContextMenuContent>
       </ContextMenu>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('workspace.closeConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('workspace.closeConfirmDesc')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setConfirmOpen(false)
-                void closeWorkspaceTab(tab.id)
-              }}
-            >
-              {t('common.close')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {confirmOpen ? (
+        <AlertDialog open onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('workspace.closeConfirmTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('workspace.closeConfirmDesc')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setConfirmOpen(false)
+                  void closeWorkspaceTab(tab.id)
+                }}
+              >
+                {t('common.close')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
     </>
   )
 }

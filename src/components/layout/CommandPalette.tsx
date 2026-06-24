@@ -421,25 +421,27 @@ export function CommandPalette() {
 
       {activeTab ? (
         <>
-          <AlertDialog open={closeOpen} onOpenChange={setCloseOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t('tab.closeTerminalTitle')}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('tab.closeTerminalDesc', { title: displayTitle })}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-white hover:opacity-90"
-                  onClick={() => confirmCloseActiveTerminalTab()}
-                >
-                  {t('common.close')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {closeOpen ? (
+            <AlertDialog open onOpenChange={setCloseOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('tab.closeTerminalTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('tab.closeTerminalDesc', { title: displayTitle })}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-white hover:opacity-90"
+                    onClick={() => confirmCloseActiveTerminalTab()}
+                  >
+                    {t('common.close')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
 
           <AddToGroupDialog
             tabId={activeTab.id}
@@ -453,31 +455,33 @@ export function CommandPalette() {
             onOpenChange={setScreenshotOpen}
           />
 
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t('tab.editTitle')}</DialogTitle>
-                <DialogDescription>
-                  {t('tab.editTitleDesc', { defaultTitle: activeTab.title })}
-                </DialogDescription>
-              </DialogHeader>
-              <Input
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                placeholder={activeTab.title}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') saveEditTitle()
-                }}
-                autoFocus
-              />
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditOpen(false)}>
-                  {t('common.cancel')}
-                </Button>
-                <Button onClick={saveEditTitle}>{t('common.save')}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {editOpen ? (
+            <Dialog open onOpenChange={setEditOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('tab.editTitle')}</DialogTitle>
+                  <DialogDescription>
+                    {t('tab.editTitleDesc', { defaultTitle: activeTab.title })}
+                  </DialogDescription>
+                </DialogHeader>
+                <Input
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  placeholder={activeTab.title}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveEditTitle()
+                  }}
+                  autoFocus
+                />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setEditOpen(false)}>
+                    {t('common.cancel')}
+                  </Button>
+                  <Button onClick={saveEditTitle}>{t('common.save')}</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : null}
         </>
       ) : null}
     </>

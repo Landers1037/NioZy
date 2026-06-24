@@ -1191,7 +1191,11 @@
     "openJsSandbox": "打开沙箱",
     "excalidraw": "Excalidraw",
     "drawio": "Draw.io",
-    "newPowerShell": "新建 PowerShell"
+    "newPowerShell": "新建 PowerShell",
+    "terminalFilter": "过滤终端 Tab",
+    "terminalFilterPlaceholder": "按标题或命令搜索…",
+    "terminalFilterClose": "关闭过滤",
+    "terminalFilterNoMatch": "没有匹配的终端 Tab"
   },
   "drawing": {
     "loading": "正在加载绘图组件…",

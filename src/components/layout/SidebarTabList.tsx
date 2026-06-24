@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, PackageOpen } from 'lucide-react'
 import { useAppStore } from '@/stores/app-store'
@@ -11,19 +11,46 @@ import { useTabGroupStore } from '@/stores/tab-group-store'
 import { Button } from '@/components/ui/button'
 import { AnimatedSidebarViewSwap } from '@/components/ui/animated-panel-section'
 import type { SidebarNavDirection } from '@/lib/panel-animations'
+import { matchesTerminalTabFilter } from '@/lib/terminal-tab-filter'
 
 interface SidebarTabListProps {
   collapsed: boolean
+  terminalFilterQuery?: string
 }
 
-export function SidebarTabList({ collapsed }: SidebarTabListProps) {
+export function SidebarTabList({ collapsed, terminalFilterQuery = '' }: SidebarTabListProps) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const activeTabId = useAppStore((s) => s.activeTabId)
   const settings = useAppStore((s) => s.settings)
+  const terminalCwds = useAppStore((s) => s.terminalCwds)
   const exitGroup = useTabGroupStore((s) => s.exitGroup)
 
   const { sidebarItems, activeGroup, inGroupView } = useSidebarTabItems()
+
+  const filterActive = terminalFilterQuery.trim().length > 0
+
+  const visibleItems = useMemo(() => {
+    if (!filterActive) return sidebarItems
+    return sidebarItems.filter((item) => {
+      if (item.kind === 'group') return true
+      if (item.tab.type !== 'terminal') return true
+      return matchesTerminalTabFilter(item.tab, terminalFilterQuery, settings, terminalCwds)
+    })
+  }, [filterActive, sidebarItems, settings, terminalCwds, terminalFilterQuery])
+
+  const filteredTerminalCount = useMemo(
+    () =>
+      visibleItems.filter((item) => item.kind === 'tab' && item.tab.type === 'terminal').length,
+    [visibleItems],
+  )
+
+  const hasTerminalTabs = useMemo(
+    () => sidebarItems.some((item) => item.kind === 'tab' && item.tab.type === 'terminal'),
+    [sidebarItems],
+  )
+
+  const showNoTerminalMatch = filterActive && hasTerminalTabs && filteredTerminalCount === 0
 
   const showTerminalIndex = settings?.shell.showTerminalIndex ?? false
   const enableTabDrag = settings?.shell.enableTabDrag ?? false
@@ -87,7 +114,12 @@ export function SidebarTabList({ collapsed }: SidebarTabListProps) {
       <AnimatedSidebarViewSwap viewKey={viewKey} direction={navDirection}>
         {groupHeader}
         <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2 no-drag">
-          {sidebarItems.map((item, index) => {
+          {showNoTerminalMatch ? (
+            <p className="px-1 py-2 text-center text-xs text-muted-foreground">
+              {t('sidebar.terminalFilterNoMatch')}
+            </p>
+          ) : null}
+          {visibleItems.map((item, index) => {
             if (item.kind === 'group') {
               return (
                 <div key={item.group.id} className="relative" data-sidebar-tab-id={item.group.id}>
@@ -135,7 +167,7 @@ export function SidebarTabList({ collapsed }: SidebarTabListProps) {
               </div>
             )
           })}
-          {dropIndex === sidebarItems.length && draggingTabId ? (
+          {dropIndex === visibleItems.length && draggingTabId ? (
             <div className="h-0.5 shrink-0 rounded-full bg-primary" />
           ) : null}
         </div>

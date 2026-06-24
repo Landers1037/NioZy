@@ -1,7 +1,7 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
 import { createTerminal } from '@/lib/terminal-actions'
 import { SidebarTabList } from '@/components/layout/SidebarTabList'
+import { SidebarTerminalFilter } from '@/components/layout/SidebarTerminalFilter'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
 import { DEFAULT_SIDEBAR_WIDTH } from '../../../electron/shared/sidebar-width'
 import { useUiClasses } from '@/lib/ui-style'
@@ -58,6 +59,28 @@ export function Sidebar() {
     onCommit: commitWidth,
   })
 
+  const [terminalFilterOpen, setTerminalFilterOpen] = useState(false)
+  const [terminalFilterQuery, setTerminalFilterQuery] = useState('')
+
+  const closeTerminalFilter = useCallback(() => {
+    setTerminalFilterOpen(false)
+    setTerminalFilterQuery('')
+  }, [])
+
+  const toggleTerminalFilter = useCallback(() => {
+    if (terminalFilterOpen) {
+      closeTerminalFilter()
+      return
+    }
+    setTerminalFilterOpen(true)
+  }, [closeTerminalFilter, terminalFilterOpen])
+
+  useEffect(() => {
+    if (collapsed) closeTerminalFilter()
+  }, [collapsed, closeTerminalFilter])
+
+  const terminalFilterActive = terminalFilterOpen || terminalFilterQuery.trim().length > 0
+
   return (
     <motion.div
       ref={containerRef}
@@ -74,18 +97,44 @@ export function Sidebar() {
           ui.sidebarBg,
         )}
       >
-        <div className="flex items-center justify-between border-b border-border p-2 no-drag">
+        <div
+          className={cn(
+            'flex items-center border-b border-border p-2 no-drag',
+            collapsed ? 'justify-center' : 'justify-between',
+          )}
+        >
           {!collapsed && (
             <span className="px-1 text-xs font-app-bold text-muted-foreground">
               {t('sidebar.terminals')}
             </span>
           )}
-          <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
-            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
-          </Button>
+          <div className="flex gap-1">
+            {!collapsed && (
+              <Button
+                variant={terminalFilterActive ? 'secondary' : 'ghost'}
+                size="icon"
+                title={t('sidebar.terminalFilter')}
+                onClick={toggleTerminalFilter}
+              >
+                <Search className="size-4" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
+              {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+            </Button>
+          </div>
         </div>
 
-        <SidebarTabList collapsed={collapsed} />
+        {terminalFilterOpen && !collapsed ? (
+          <SidebarTerminalFilter
+            query={terminalFilterQuery}
+            onQueryChange={setTerminalFilterQuery}
+            onClose={closeTerminalFilter}
+            autoFocus
+          />
+        ) : null}
+
+        <SidebarTabList collapsed={collapsed} terminalFilterQuery={terminalFilterQuery} />
 
         <div
           className={cn(

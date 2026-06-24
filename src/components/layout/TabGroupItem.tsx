@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { scheduleOverlayOpen } from '@/lib/context-menu-overlay'
 
 interface TabGroupItemProps {
   group: TabGroup
@@ -59,8 +60,10 @@ export function TabGroupItem({
   const [closeOpen, setCloseOpen] = useState(false)
 
   const openEditDialog = () => {
-    setEditValue(group.name)
-    setEditOpen(true)
+    scheduleOverlayOpen(() => {
+      setEditValue(group.name)
+      setEditOpen(true)
+    })
   }
 
   const saveEditName = () => {
@@ -111,61 +114,65 @@ export function TabGroupItem({
             <Pencil className="size-4 text-muted-foreground" />
             {t('tab.editGroupName')}
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => setCloseOpen(true)}>
+          <ContextMenuItem onSelect={() => scheduleOverlayOpen(() => setCloseOpen(true))}>
             <PackageX className="size-4 text-muted-foreground" />
             {t('tab.closeGroup')}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
-      <AlertDialog open={closeOpen} onOpenChange={setCloseOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('tab.closeGroupTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('tab.closeGroupDesc', {
-                name: group.name,
-                count: group.tabIds.length,
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:opacity-90"
-              onClick={() => closeTabGroup(group.id)}
-            >
-              {t('common.close')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {closeOpen ? (
+        <AlertDialog open onOpenChange={setCloseOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('tab.closeGroupTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('tab.closeGroupDesc', {
+                  name: group.name,
+                  count: group.tabIds.length,
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-white hover:opacity-90"
+                onClick={() => closeTabGroup(group.id)}
+              >
+                {t('common.close')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      ) : null}
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('tab.editGroupName')}</DialogTitle>
-            <DialogDescription>{t('tab.editGroupNameDesc')}</DialogDescription>
-          </DialogHeader>
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            placeholder={group.name}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') saveEditName()
-            }}
-            autoFocus
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button disabled={!editValue.trim()} onClick={saveEditName}>
-              {t('common.save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {editOpen ? (
+        <Dialog open onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('tab.editGroupName')}</DialogTitle>
+              <DialogDescription>{t('tab.editGroupNameDesc')}</DialogDescription>
+            </DialogHeader>
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              placeholder={group.name}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveEditName()
+              }}
+              autoFocus
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button disabled={!editValue.trim()} onClick={saveEditName}>
+                {t('common.save')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </>
   )
 }
