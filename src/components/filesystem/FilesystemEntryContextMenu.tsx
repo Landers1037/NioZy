@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, FileCode, Star, Terminal } from 'lucide-react'
+import { ExternalLink, FileCode, FileText, Star, Terminal } from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -9,7 +9,9 @@ import {
 } from '@/components/ui/context-menu'
 import { openTerminalInDirectory } from '@/lib/terminal-actions'
 import { openPathWithCustom, openPathWithEditor } from '@/lib/filesystem-open'
+import { openMarkdownFile } from '@/lib/markdown-tab-actions'
 import { parentDirectory } from '@/lib/path-utils'
+import { isMarkdownFilePath } from '../../../electron/shared/markdown-file-limits'
 import type {
   FilesystemCustomOpener,
   FilesystemSettings,
@@ -39,6 +41,7 @@ export function FilesystemEntryContextMenu({
   const { t } = useTranslation()
   const terminalCwd = entry.isDirectory ? entry.path : parentDirectory(entry.path)
   const targetPath = entry.path
+  const isMarkdownFile = !entry.isDirectory && isMarkdownFilePath(entry.path)
 
   return (
     <ContextMenu>
@@ -66,6 +69,19 @@ export function FilesystemEntryContextMenu({
                 {t('filesystem.addToFavorites')}
               </ContextMenuItem>
             )}
+          </>
+        )}
+        {isMarkdownFile && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              onSelect={() => {
+                void openMarkdownFile(targetPath)
+              }}
+            >
+              <FileText className="size-4 text-muted-foreground" />
+              {t('common.open')}
+            </ContextMenuItem>
           </>
         )}
         {(filesystem.openWithVsCode ||

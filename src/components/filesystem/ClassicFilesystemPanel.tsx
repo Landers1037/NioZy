@@ -6,6 +6,7 @@ import {
   ChevronRight,
   File,
   FileCode,
+  FileText,
   Folder,
   ExternalLink,
   ImageIcon,
@@ -22,7 +23,9 @@ import {
 import { getElectronAPI } from '@/lib/electron-client'
 import { openTerminalInDirectory } from '@/lib/terminal-actions'
 import { openPathWithCustom, openPathWithEditor } from '@/lib/filesystem-open'
+import { openMarkdownFile } from '@/lib/markdown-tab-actions'
 import { parentDirectory } from '@/lib/path-utils'
+import { isMarkdownFilePath } from '../../../electron/shared/markdown-file-limits'
 import { useAppStore } from '@/stores/app-store'
 import type {
   FilesystemCustomOpener,
@@ -67,6 +70,7 @@ function TreeRow({
 
   const terminalCwd = isDir ? entry.path : parentDirectory(entry.path)
   const targetPath = entry.path
+  const isMarkdownFile = !isDir && isMarkdownFilePath(entry.path)
 
   const handleRowClick = () => {
     onSelect(entry)
@@ -147,6 +151,19 @@ function TreeRow({
             <Terminal className="size-4 text-muted-foreground" />
             {t('filesystem.newTerminalHere')}
           </ContextMenuItem>
+          {isMarkdownFile && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                onSelect={() => {
+                  void openMarkdownFile(targetPath)
+                }}
+              >
+                <FileText className="size-4 text-muted-foreground" />
+                {t('common.open')}
+              </ContextMenuItem>
+            </>
+          )}
           {(filesystem.openWithVsCode ||
             filesystem.openWithCursor ||
             customOpeners.length > 0) && <ContextMenuSeparator />}
