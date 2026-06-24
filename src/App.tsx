@@ -592,7 +592,9 @@ export default function App() {
             {tabs.length === 0 &&
               appBootComplete &&
               (isWelcomePageEnabled(settings) ? (
-                <EmptyWelcomeView />
+                <div className="absolute inset-0 z-20">
+                  <EmptyWelcomeView />
+                </div>
               ) : (
                 <EmptyWorkspaceHint />
               ))}

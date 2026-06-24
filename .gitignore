@@ -7,6 +7,9 @@ build/icon.png
 *.log
 .DS_Store
 
+# Agent skills（本地安装，不纳入版本库）
+.agents/skills
+
 # Oh My Posh / posh-git（prebuild / prestart 时由 vendor:oh-my-posh 下载）
 vendor/oh-my-posh/oh-my-posh.exe
 vendor/oh-my-posh/themes/

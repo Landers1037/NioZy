@@ -557,7 +557,7 @@
       "welcomePageAnimationAria": "欢迎页面动画类型",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D 动画",
-        "pixel": "像素动画"
+        "particles": "Logo 粒子动画"
       }
     },
     "ssh": {

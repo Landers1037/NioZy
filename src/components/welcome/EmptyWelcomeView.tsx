@@ -10,9 +10,9 @@ const WelcomeTerminalCanvas = lazy(() =>
   })),
 )
 
-const WelcomePixelAnimation = lazy(() =>
-  import('@/components/welcome/WelcomePixelAnimation').then((m) => ({
-    default: m.WelcomePixelAnimation,
+const WelcomeLogoParticleAnimation = lazy(() =>
+  import('@/components/welcome/WelcomeLogoParticleAnimation').then((m) => ({
+    default: m.WelcomeLogoParticleAnimation,
   })),
 )
 
@@ -79,7 +79,7 @@ function WelcomePage3DView() {
   )
 }
 
-function WelcomePagePixelView() {
+function WelcomePageParticleView() {
   const { t } = useTranslation()
   const [sceneFailed, setSceneFailed] = useState(false)
   const handleInitFailed = useCallback(() => setSceneFailed(true), [])
@@ -97,7 +97,9 @@ function WelcomePagePixelView() {
           </div>
         }
       >
-        <WelcomePixelAnimation onInitFailed={handleInitFailed} />
+        <div className="absolute inset-0 z-0">
+          <WelcomeLogoParticleAnimation onInitFailed={handleInitFailed} />
+        </div>
       </Suspense>
       <WelcomePageCaption />
     </div>
@@ -120,8 +122,8 @@ export function EmptyWelcomeView() {
   const animation: WelcomePageAnimationMode =
     useAppStore((s) => s.settings?.terminal.welcomePage.animation) ?? 'niozy3d'
 
-  if (animation === 'pixel') {
-    return <WelcomePagePixelView />
+  if (animation === 'particles') {
+    return <WelcomePageParticleView />
   }
   return <WelcomePage3DView />
 }

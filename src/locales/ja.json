@@ -391,7 +391,7 @@
       "welcomePageAnimationAria": "ウェルカムページのアニメーション",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D アニメーション",
-        "pixel": "ピクセルアニメーション"
+        "particles": "Logo パーティクル"
       }
     },
     "ssh": {

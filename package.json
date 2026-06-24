@@ -72,7 +72,6 @@
     "mammoth": "^1.12.0",
     "motion": "^12.40.0",
     "node-pty": "^1.0.0",
-    "pixi.js": "^8.19.0",
     "preact": "^10.26.4",
     "quickjs-emscripten": "^0.32.0",
     "react-drawio": "^1.0.7",

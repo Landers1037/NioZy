@@ -1,4 +1,4 @@
-export type WelcomePageAnimationMode = 'niozy3d' | 'pixel'
+export type WelcomePageAnimationMode = 'niozy3d' | 'particles'
 
 export interface WelcomePageSettings {
   /** 启动且无会话恢复时展示欢迎页，不自动新建终端 */
@@ -6,7 +6,7 @@ export interface WelcomePageSettings {
   animation: WelcomePageAnimationMode
 }
 
-export const WELCOME_PAGE_ANIMATION_MODES: WelcomePageAnimationMode[] = ['niozy3d', 'pixel']
+export const WELCOME_PAGE_ANIMATION_MODES: WelcomePageAnimationMode[] = ['niozy3d', 'particles']
 
 export const DEFAULT_WELCOME_PAGE_SETTINGS: WelcomePageSettings = {
   enabled: false,
@@ -14,6 +14,7 @@ export const DEFAULT_WELCOME_PAGE_SETTINGS: WelcomePageSettings = {
 }
 
 export function normalizeWelcomePageAnimationMode(value: unknown): WelcomePageAnimationMode {
+  if (value === 'pixel') return 'particles'
   return WELCOME_PAGE_ANIMATION_MODES.includes(value as WelcomePageAnimationMode)
     ? (value as WelcomePageAnimationMode)
     : DEFAULT_WELCOME_PAGE_SETTINGS.animation

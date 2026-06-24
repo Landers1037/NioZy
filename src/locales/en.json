@@ -557,7 +557,7 @@
       "welcomePageAnimationAria": "Welcome page animation",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D animation",
-        "pixel": "Pixel animation"
+        "particles": "Logo particle animation"
       }
     },
     "ssh": {
