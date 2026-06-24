@@ -190,6 +190,12 @@ export class WelcomeLogoParticleEngine {
   private targetTilt = new THREE.Vector2(0, 0)
   private currentTilt = new THREE.Vector2(0, 0)
   private dummy = new THREE.Object3D()
+  private brushCursor: HTMLDivElement | null = null
+  private brushCenterWorld = new THREE.Vector3()
+  private brushEdgeWorld = new THREE.Vector3()
+  private brushCenterNdc = new THREE.Vector3()
+  private brushEdgeNdc = new THREE.Vector3()
+  private brushCursorVisible = false
 
   isUsingWebGpu = false
 
@@ -254,7 +260,15 @@ export class WelcomeLogoParticleEngine {
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.touchAction = 'none'
+    renderer.domElement.style.cursor = 'none'
     this.host.appendChild(renderer.domElement)
+
+    this.host.style.cursor = 'none'
+    const brush = document.createElement('div')
+    brush.className = 'welcome-particle-brush-cursor'
+    brush.style.display = 'none'
+    this.host.appendChild(brush)
+    this.brushCursor = brush
 
     this.resizeObserver = new ResizeObserver(() => this.handleResize())
     this.resizeObserver.observe(this.host)
@@ -342,6 +356,56 @@ export class WelcomeLogoParticleEngine {
     )
   }
 
+  /** 排斥半径（logo 局部 → 屏幕像素，与 3D 透视投影一致） */
+  private getRepelRadiusScreenPx(clientX: number, clientY: number): number {
+    const camera = this.camera
+    const root = this.particleRoot
+    const rect = this.getInteractionRect()
+    if (!camera || !root || rect.width <= 0 || rect.height <= 0) return 0
+    if (!this.mapClientToLogoLocal(clientX, clientY)) return 0
+
+    root.updateMatrixWorld(true)
+
+    this.brushCenterWorld.set(this.mouseLocal.x, this.mouseLocal.y, 0).applyMatrix4(root.matrixWorld)
+    this.brushEdgeWorld
+      .set(this.mouseLocal.x + REPEL_RADIUS, this.mouseLocal.y, 0)
+      .applyMatrix4(root.matrixWorld)
+
+    this.brushCenterNdc.copy(this.brushCenterWorld).project(camera)
+    this.brushEdgeNdc.copy(this.brushEdgeWorld).project(camera)
+
+    const cx = (this.brushCenterNdc.x * 0.5 + 0.5) * rect.width
+    const cy = (-this.brushCenterNdc.y * 0.5 + 0.5) * rect.height
+    const ex = (this.brushEdgeNdc.x * 0.5 + 0.5) * rect.width
+    const ey = (-this.brushEdgeNdc.y * 0.5 + 0.5) * rect.height
+
+    return Math.hypot(ex - cx, ey - cy)
+  }
+
+  private updateBrushCursor(clientX: number, clientY: number, visible: boolean): void {
+    const brush = this.brushCursor
+    if (!brush) return
+    this.brushCursorVisible = visible
+    if (!visible) {
+      brush.style.display = 'none'
+      return
+    }
+    const rect = this.getInteractionRect()
+    const radius = this.getRepelRadiusScreenPx(clientX, clientY)
+    if (radius <= 0) {
+      brush.style.display = 'none'
+      this.brushCursorVisible = false
+      return
+    }
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+    brush.style.display = 'block'
+    brush.style.width = `${radius * 2}px`
+    brush.style.height = `${radius * 2}px`
+    brush.style.left = `${x - radius}px`
+    brush.style.top = `${y - radius}px`
+  }
+
   private bindPointerHandlers(): void {
     if (this.pointerBound) return
 
@@ -350,17 +414,24 @@ export class WelcomeLogoParticleEngine {
         this.pointerOver = false
         this.mouseLocalValid = false
         this.hasPrevMouseLocal = false
+        this.updateBrushCursor(e.clientX, e.clientY, false)
         return
       }
-      this.pointerOver = true
       this.handlePointerAt(e.clientX, e.clientY)
+      const nearLogo = this.isMouseNearLogoBounds()
+      this.pointerOver = nearLogo
+      this.updateBrushCursor(e.clientX, e.clientY, true)
+      if (!nearLogo) {
+        this.hasPrevMouseLocal = false
+      }
     }
 
     this.onWindowPointerDown = (e: PointerEvent) => {
       if (e.button !== 0) return
       if (!this.isPointerInside(e.clientX, e.clientY)) return
-      this.pointerOver = true
       this.handlePointerAt(e.clientX, e.clientY)
+      if (!this.isMouseNearLogoBounds()) return
+      this.pointerOver = true
       this.triggerClickBurst()
     }
 
@@ -403,6 +474,9 @@ export class WelcomeLogoParticleEngine {
     }
 
     this.renderer?.dispose()
+    this.brushCursor?.remove()
+    this.brushCursor = null
+    this.host.style.cursor = ''
     this.renderer?.domElement.remove()
     this.renderer = null
     this.scene = null
@@ -423,6 +497,9 @@ export class WelcomeLogoParticleEngine {
 
     renderer.setSize(clientWidth, clientHeight, false)
     this.updateViewportFit()
+    if (this.brushCursor?.style.display !== 'none') {
+      this.updateBrushCursor(this.lastPointerClientX, this.lastPointerClientY, true)
+    }
   }
 
   /** 根据容器宽高与 logo 边界，计算相机距离使 logo 完整落入视口 */
@@ -554,13 +631,12 @@ export class WelcomeLogoParticleEngine {
         if (distSq < repelRadiusSq && distSq > 1e-8) {
           const dist = Math.sqrt(distSq)
           const falloff = 1 - dist / REPEL_RADIUS
-          const f2 = falloff * falloff
           const nx = dx / dist
           const ny = dy / dist
-          const drag = REPEL_DRAG * f2 * moveFactor * frameMoveLen
+          const drag = REPEL_DRAG * falloff * moveFactor * frameMoveLen
           ox += nx * drag
           oy += ny * drag
-          const velPush = REPEL_VELOCITY * f2 * moveFactor * dt
+          const velPush = REPEL_VELOCITY * falloff * moveFactor * dt
           vx += nx * velPush
           vy += ny * velPush
         }
@@ -636,12 +712,13 @@ export class WelcomeLogoParticleEngine {
       )
     }
 
-    const tiltScale =
-      this.pointerOver && this.mouseLocalValid && this.isMouseNearLogoBounds()
-        ? 0.08
-        : 1
-    this.targetTilt.x = this.mouse.y * 0.14 * tiltScale
-    this.targetTilt.y = this.mouse.x * 0.2 * tiltScale
+    if (this.pointerOver && this.mouseLocalValid) {
+      this.targetTilt.x = this.mouse.y * 0.14 * 0.08
+      this.targetTilt.y = this.mouse.x * 0.2 * 0.08
+    } else {
+      this.targetTilt.x = 0
+      this.targetTilt.y = 0
+    }
     this.currentTilt.x += (this.targetTilt.x - this.currentTilt.x) * 0.07
     this.currentTilt.y += (this.targetTilt.y - this.currentTilt.y) * 0.07
 
@@ -649,6 +726,10 @@ export class WelcomeLogoParticleEngine {
       root.rotation.x = this.currentTilt.x
       root.rotation.y = this.currentTilt.y
       root.position.y = Math.sin(elapsed * 0.55) * 0.03
+    }
+
+    if (this.brushCursorVisible) {
+      this.updateBrushCursor(this.lastPointerClientX, this.lastPointerClientY, true)
     }
 
     this.simulateParticles(elapsed, dt)

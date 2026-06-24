@@ -40,7 +40,7 @@ export function WelcomeLogoParticleAnimation({ onInitFailed }: WelcomeLogoPartic
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0"
+      className="absolute inset-0 overflow-hidden"
     />
   )
 }
