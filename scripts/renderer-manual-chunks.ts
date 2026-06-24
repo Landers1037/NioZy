@@ -22,6 +22,27 @@ export function rendererManualChunks(id: string): string | undefined {
   if (nm.includes('i18next') || nm.includes('react-i18next')) return 'i18n'
 
   if (nm.includes('@excalidraw')) return 'excalidraw'
+  if (
+    nm.includes('@codemirror') ||
+    nm.includes('@uiw/') ||
+    nm.includes('/@lezer/') ||
+    nm.includes('/@marijn/')
+  ) {
+    return 'codemirror'
+  }
+
+  if (
+    nm.includes('/unified/') ||
+    nm.includes('/remark-') ||
+    nm.includes('/rehype-') ||
+    nm.includes('/mdast-') ||
+    nm.includes('/hast-') ||
+    nm.includes('/micromark') ||
+    nm.includes('/unist-')
+  ) {
+    return 'markdown'
+  }
+
   if (nm.includes('/mermaid/') || nm.includes('@mermaid-js')) return 'mermaid'
 
   if (nm.includes('react-drawio') || nm.includes('/drawio/')) return 'drawio'

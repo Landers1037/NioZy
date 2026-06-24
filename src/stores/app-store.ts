@@ -24,6 +24,7 @@ import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-stor
 import { randomUUID } from '@/lib/id'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useTabGroupStore } from '@/stores/tab-group-store'
+import { useMarkdownEditorStore } from '@/stores/markdown-editor-store'
 
 export type TabType =
   | 'terminal'
@@ -38,6 +39,7 @@ export type TabType =
   | 'workspace'
   | 'excalidraw'
   | 'drawio'
+  | 'markdown'
 
 export interface AppTab {
   id: string
@@ -63,6 +65,8 @@ export interface AppTab {
   deferredSplitPaneCount?: number
   /** VNC Tab 关联的连接 id */
   vncConnectionId?: string
+  /** Markdown Tab 关联的文件绝对路径 */
+  markdownFilePath?: string
   /** 工作区目录（Start 后） */
   workspaceDir?: string
   /** 终端 Tab 创建时间（ISO 8601） */
@@ -125,6 +129,11 @@ interface AppState {
   closeVncTabsIfPresent: () => void
   addVncTab: (connectionId: string) => void
   addWebviewTab: (url: string, title?: string) => void
+  addMarkdownTab: (filePath: string, title?: string) => string
+  patchMarkdownTab: (
+    tabId: string,
+    patch: { markdownFilePath?: string; title?: string },
+  ) => void
   removeTab: (id: string) => void
   removeTabs: (ids: string[]) => void
   setTabCustomTitle: (id: string, customTitle: string | undefined) => void
@@ -410,6 +419,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeTabId: tab.id,
     }))
   },
+  addMarkdownTab: (filePath, title) => {
+    const tabId = `markdown-${randomUUID()}`
+    const tab: AppTab = {
+      id: tabId,
+      type: 'markdown',
+      title: title ?? filePath.split(/[/\\]/).pop() ?? 'Markdown',
+      markdownFilePath: filePath,
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tabId,
+    }))
+    useTabGroupStore.getState().addTabToActiveGroupIfAny(tabId)
+    return tabId
+  },
+  patchMarkdownTab: (tabId, patch) => {
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.id === tabId && t.type === 'markdown' ? { ...t, ...patch } : t)),
+    }))
+  },
   removeTab: (id) => {
     get().removeTabs([id])
   },
@@ -425,6 +454,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       .map((t) => t.terminalId!)
     if (workspaceTerminalIds.length > 0) {
       scheduleTerminalKills(workspaceTerminalIds)
+    }
+    for (const tab of removed) {
+      if (tab.type === 'markdown') {
+        useMarkdownEditorStore.getState().removeSession(tab.id)
+      }
     }
 
     set((s) => {

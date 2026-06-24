@@ -11,6 +11,7 @@ import { WebviewTabItem } from '@/components/layout/WebviewTabItem'
 import { VncTabItem } from '@/components/layout/VncTabItem'
 import { ExcalidrawTabItem } from '@/components/layout/ExcalidrawTabItem'
 import { DrawioTabItem } from '@/components/layout/DrawioTabItem'
+import { MarkdownTabItem } from '@/components/layout/MarkdownTabItem'
 
 interface SpecialTabItemProps {
   tab: AppTab
@@ -60,6 +61,9 @@ export const SpecialTabItem = memo(function SpecialTabItem(props: SpecialTabItem
   }
   if (props.tab.type === 'drawio') {
     return <DrawioTabItem {...props} />
+  }
+  if (props.tab.type === 'markdown') {
+    return <MarkdownTabItem {...props} />
   }
   return <SettingsTabItem {...props} />
 }, specialTabItemPropsEqual)

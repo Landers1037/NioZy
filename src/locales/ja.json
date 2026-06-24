@@ -1017,6 +1017,28 @@
     "closeTitle": "描画を閉じる",
     "closeDesc": "「{{title}}」に未保存の変更があります。閉じますか？"
   },
+  "markdownEditor": {
+    "untitled": "無題",
+    "loading": "読み込み中…",
+    "wysiwygMode": "プレビュー",
+    "sourceMode": "ソース",
+    "menu": "メニュー",
+    "new": "新規",
+    "open": "開く",
+    "save": "保存",
+    "saveAs": "名前を付けて保存",
+    "exportHtml": "HTML をエクスポート",
+    "copyMarkdown": "Markdown をコピー",
+    "theme": "テーマ",
+    "fileTooLarge": "Markdown ファイルが 10MB を超えているため開けません",
+    "openFailed": "ファイルを開けませんでした",
+    "saveFailed": "保存に失敗しました",
+    "saveSuccess": "保存しました",
+    "copySuccess": "クリップボードにコピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "closeTitle": "Markdown を閉じる",
+    "closeDesc": "「{{title}}」に未保存の変更があります。閉じますか？"
+  },
   "tab": {
     "closeAria": "{{title}} を閉じる",
     "closeOther": "他を閉じる",

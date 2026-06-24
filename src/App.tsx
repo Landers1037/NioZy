@@ -57,6 +57,7 @@ import {
 } from '@/components/ui/animated-layout-chrome'
 import { EmptyWelcomeView, EmptyWorkspaceHint } from '@/components/welcome/EmptyWelcomeView'
 import { isWelcomePageEnabled } from '../electron/shared/welcome-page-settings'
+import { useMarkdownFileDrop } from '@/hooks/useMarkdownFileDrop'
 
 const SettingsPanel = lazy(() =>
   import('@/components/settings/SettingsPanel').then((m) => ({
@@ -113,6 +114,11 @@ const DrawioPanel = lazy(() =>
     default: m.DrawioPanel,
   })),
 )
+const MarkdownEditorPanel = lazy(() =>
+  import('@/components/markdown-editor').then((m) => ({
+    default: m.MarkdownEditorPanel,
+  })),
+)
 const FilePreviewDialog = lazy(() =>
   import('@/components/preview/FilePreviewDialog').then((m) => ({
     default: m.FilePreviewDialog,
@@ -143,6 +149,7 @@ export default function App() {
   useSshDisconnectAlert()
   useSshTabAliveCheck(activeTabId)
   useReminderAlerts()
+  useMarkdownFileDrop()
   useResourceAutoDegradeMonitor()
   useTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
@@ -332,6 +339,11 @@ export default function App() {
     [tabs],
   )
 
+  const markdownTabs = useMemo(
+    () => tabs.filter((t) => t.type === 'markdown'),
+    [tabs],
+  )
+
   const tabLayout = useMemo(() => {
     const activeTab = tabs.find((t) => t.id === activeTabId)
     const activeType = activeTab?.type
@@ -363,6 +375,8 @@ export default function App() {
       excalidrawTabActive: activeType === 'excalidraw',
       hasDrawioTab: tabs.some((t) => t.type === 'drawio'),
       drawioTabActive: activeType === 'drawio',
+      hasMarkdownTab: markdownTabs.length > 0,
+      markdownTabActive: activeType === 'markdown',
       excalidrawEnabled: settings?.drawing?.excalidrawEnabled === true,
       drawioEnabled: settings?.drawing?.drawioEnabled === true,
       p2pChatEnabled: settings?.p2p.enabled === true,
@@ -384,6 +398,7 @@ export default function App() {
     settings,
     attachCommitted,
     workspaceTabs,
+    markdownTabs,
   ])
 
   const {
@@ -409,6 +424,7 @@ export default function App() {
     excalidrawTabActive,
     hasDrawioTab,
     drawioTabActive,
+    hasMarkdownTab,
     excalidrawEnabled,
     drawioEnabled,
     p2pChatEnabled,
@@ -542,6 +558,23 @@ export default function App() {
                 {workspaceTabs.map((tab) => (
                   <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
                     <WorkspacePanel tab={tab} />
+                  </AnimatedTabPanel>
+                ))}
+              </>
+            )}
+            {hasMarkdownTab && (
+              <>
+                {markdownTabs.map((tab) => (
+                  <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
+                    <Suspense
+                      fallback={
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                          …
+                        </div>
+                      }
+                    >
+                      <MarkdownEditorPanel tab={tab} />
+                    </Suspense>
                   </AnimatedTabPanel>
                 ))}
               </>

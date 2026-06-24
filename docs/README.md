@@ -16,6 +16,7 @@
 | 性能 | [功能性能.md](./功能性能.md) |
 | 文件系统 | [功能文件系统.md](./功能文件系统.md)、[功能仓库管理.md](./功能仓库管理.md) |
 | 绘图功能 | [功能绘图.md](./功能绘图.md) |
+| Markdown 编辑 | [功能Markdown.md](./功能Markdown.md) |
 | 连接设置 | [功能连接管理.md](./功能连接管理.md) |
 | 存储库 | [功能保险箱.md](./功能保险箱.md) |
 | 快捷键 | [功能快捷键.md](./功能快捷键.md) |
@@ -43,6 +44,7 @@
 | [功能文件系统.md](./功能文件系统.md) | 本地文件浏览与外部编辑器打开 |
 | [功能仓库管理.md](./功能仓库管理.md) | Git 仓库、分支、提交图 |
 | [功能绘图.md](./功能绘图.md) | Excalidraw / Draw.io Tab |
+| [功能Markdown.md](./功能Markdown.md) | Markdown 编辑与预览 Tab，拖拽 `.md` 打开 |
 | [功能预览与WebView.md](./功能预览与WebView.md) | 链接预览、WebView、Office/PDF 预览 |
 | [功能外观与布局.md](./功能外观与布局.md) | 主题、UI 风格（含 Claude 等）、布局、Tab 分组 |
 | [功能增强SHELL.md](./功能增强SHELL.md) | 链接检测、emoji、快捷换行、Oh My Posh、日志着色、命令回放 |

@@ -1207,6 +1207,28 @@
     "closeTitle": "关闭绘图",
     "closeDesc": "「{{title}}」有未保存的修改，确定要关闭吗？"
   },
+  "markdownEditor": {
+    "untitled": "未命名",
+    "loading": "正在加载…",
+    "wysiwygMode": "预览",
+    "sourceMode": "源码",
+    "menu": "菜单",
+    "new": "新建",
+    "open": "打开",
+    "save": "保存",
+    "saveAs": "另存为",
+    "exportHtml": "导出 HTML",
+    "copyMarkdown": "复制 Markdown",
+    "theme": "主题",
+    "fileTooLarge": "Markdown 文件超过 10MB，无法打开",
+    "openFailed": "无法打开文件",
+    "saveFailed": "保存失败",
+    "saveSuccess": "已保存",
+    "copySuccess": "已复制到剪贴板",
+    "copyFailed": "复制失败",
+    "closeTitle": "关闭 Markdown",
+    "closeDesc": "「{{title}}」有未保存的修改，确定要关闭吗？"
+  },
   "tab": {
     "closeAria": "关闭 {{title}}",
     "closeOther": "关闭其他",

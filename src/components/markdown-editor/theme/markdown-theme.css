@@ -1,0 +1,232 @@
+.markdown-prose-root {
+  min-height: 0;
+  color: var(--md-text-color);
+  font-family: var(--md-font-body);
+  font-size: var(--md-font-size);
+  line-height: var(--md-line-height);
+}
+
+/* 编辑/预览区域：保留竖向滚动条 */
+.markdown-editor-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.markdown-prose {
+  max-width: var(--md-max-width);
+  margin-inline: auto;
+  padding: var(--md-padding-y) var(--md-padding-x);
+  outline: none;
+}
+
+.markdown-prose :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--md-heading-color);
+  font-weight: 600;
+  line-height: 1.35;
+  margin-block: 1.25em 0.5em;
+}
+
+.markdown-prose :where(h1) { font-size: 2em; }
+.markdown-prose :where(h2) { font-size: 1.5em; border-bottom: 1px solid var(--md-hr-color); padding-bottom: 0.25em; }
+.markdown-prose :where(h3) { font-size: 1.25em; }
+.markdown-prose :where(h4) { font-size: 1.1em; }
+
+.markdown-prose :where(p) {
+  margin-block: 0.75em;
+}
+
+.markdown-prose :where(a) {
+  color: var(--md-link-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-prose :where(strong) { font-weight: 600; }
+.markdown-prose :where(em) { font-style: italic; }
+.markdown-prose :where(del) { text-decoration: line-through; opacity: 0.85; }
+
+.markdown-prose :where(code):not(pre code) {
+  font-family: var(--md-font-mono);
+  font-size: 0.9em;
+  background: var(--md-code-bg);
+  color: var(--md-code-color);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+.markdown-prose :where(pre) {
+  margin-block: 1em;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.markdown-prose :where(blockquote) {
+  margin-block: 1em;
+  padding: 0.5em 1em;
+  border-inline-start: 4px solid var(--md-blockquote-border);
+  background: var(--md-blockquote-bg);
+  color: var(--md-muted-color);
+}
+
+.markdown-prose :where(ul, ol) {
+  margin-block: 0.75em;
+  padding-inline-start: 1.5em;
+}
+
+.markdown-prose :where(li) {
+  margin-block: 0.25em;
+}
+
+.markdown-prose :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 1em;
+  font-size: 0.95em;
+}
+
+.markdown-prose :where(th, td) {
+  border: 1px solid var(--md-table-border);
+  padding: 0.5em 0.75em;
+}
+
+.markdown-prose :where(th) {
+  background: var(--md-code-bg);
+  font-weight: 600;
+}
+
+.markdown-prose :where(hr) {
+  border: none;
+  border-top: 1px solid var(--md-hr-color);
+  margin-block: 2em;
+}
+
+.markdown-prose :where(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.markdown-prose :where(.task-list-item) {
+  list-style: none;
+  margin-inline-start: -1.5em;
+}
+
+.markdown-prose :where(.katex-display) {
+  margin-block: 1em;
+  overflow-x: auto;
+}
+
+.markdown-md-block {
+  margin-block: 1em;
+  border-radius: 8px;
+  border: 1px solid var(--md-table-border);
+  overflow: hidden;
+}
+
+.markdown-md-block[data-block-kind='code'] .cm-editor {
+  font-family: var(--md-font-mono);
+  font-size: 0.875em;
+}
+
+.markdown-md-block[data-block-kind='mermaid'] {
+  padding: 1em;
+  display: flex;
+  justify-content: center;
+  background: var(--md-code-bg);
+}
+
+.markdown-md-block[data-block-kind='math'] {
+  padding: 0.75em 1em;
+  overflow-x: auto;
+}
+
+.markdown-md-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-muted-color);
+  background: var(--md-code-bg);
+  border-bottom: 1px solid var(--md-table-border);
+}
+
+.markdown-source-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.markdown-source-editor > div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.markdown-source-editor .cm-editor {
+  flex: 1;
+  height: 100% !important;
+  min-height: 0;
+  font-family: var(--md-font-mono);
+  font-size: 14px;
+}
+
+.markdown-source-editor .cm-scroller {
+  min-height: 0;
+  overflow: auto !important;
+  padding: var(--md-padding-y) var(--md-padding-x);
+}
+
+.markdown-source-editor.show-scrollbar .cm-scroller {
+  -ms-overflow-style: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 40%, transparent) transparent;
+}
+
+.markdown-source-editor.show-scrollbar .cm-scroller::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+  height: 6px;
+}
+
+.markdown-source-editor.show-scrollbar .cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.markdown-source-editor.show-scrollbar .cm-scroller::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+  border-radius: 9999px;
+}
+
+.markdown-source-editor.show-scrollbar .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+}
+
+.markdown-editor-chrome {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.markdown-editor-mode-label {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  user-select: none;
+}
+
+.markdown-editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}

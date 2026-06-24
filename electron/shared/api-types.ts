@@ -586,6 +586,13 @@ export interface ElectronAPI {
       input: import('./drawing-file-types').DrawingSaveFileInput,
     ) => Promise<import('./drawing-file-types').DrawingSaveFileResult>
   }
+  markdown: {
+    readFile: (filePath: string) => Promise<import('./markdown-file-types').MarkdownReadFileResult>
+    openFile: () => Promise<import('./markdown-file-types').MarkdownOpenFileResult>
+    saveFile: (
+      input: import('./markdown-file-types').MarkdownSaveFileInput,
+    ) => Promise<import('./markdown-file-types').MarkdownSaveFileResult>
+  }
   logging: {
     /** 在资源管理器中打开日志文件所在目录 */
     openLogDirectory: () => Promise<void>

@@ -10,7 +10,7 @@ import {
 } from 'electron'
 import { dirname, join } from 'path'
 import { existsSync } from 'fs'
-import { readFile, writeFile } from 'fs/promises'
+import { readFile, stat, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled, isWebGpuAccelerationEnabled } from '../settings-store'
@@ -98,6 +98,7 @@ import { WorkspaceService } from '../workspace-service'
 import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
 import { getWindowBackgroundColor, shouldUseGlassWindowTransparency } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
+import { MAX_MD_FILE_BYTES } from '../shared/markdown-file-limits'
 import {
   allowDevToolsForContents,
   installReleaseDevToolsGuard,
@@ -1275,6 +1276,78 @@ ipcMain.handle(
         title: input.kind === 'excalidraw' ? '保存 Excalidraw' : '保存 Draw.io',
         defaultPath: input.defaultFileName,
         filters: drawingFileFilters(input.kind),
+      }
+      const { canceled, filePath } = mainWindow
+        ? await dialog.showSaveDialog(mainWindow, saveOptions)
+        : await dialog.showSaveDialog(saveOptions)
+      if (canceled || !filePath) return { ok: false, canceled: true as const }
+      targetPath = filePath
+    }
+    try {
+      await writeFile(targetPath, input.content, 'utf8')
+      return { ok: true, path: targetPath }
+    } catch {
+      return { ok: false, error: 'WRITE_FAILED' as const }
+    }
+  },
+)
+
+function markdownFileFilters() {
+  return [{ name: 'Markdown', extensions: ['md', 'markdown'] }]
+}
+
+async function readMarkdownFileAtPath(filePath: string) {
+  try {
+    const info = await stat(filePath)
+    if (info.size > MAX_MD_FILE_BYTES) {
+      return { ok: false as const, error: 'FILE_TOO_LARGE' as const }
+    }
+    const content = await readFile(filePath, 'utf8')
+    return { ok: true as const, path: filePath, content }
+  } catch (err: unknown) {
+    const code = (err as NodeJS.ErrnoException)?.code
+    if (code === 'ENOENT') {
+      return { ok: false as const, error: 'NOT_FOUND' as const }
+    }
+    return { ok: false as const, error: 'READ_FAILED' as const }
+  }
+}
+
+ipcMain.handle('markdown:readFile', async (_, filePath: string) => {
+  return readMarkdownFileAtPath(filePath)
+})
+
+ipcMain.handle('markdown:openFile', async () => {
+  const openOptions = {
+    title: 'Open Markdown',
+    properties: ['openFile'] as ('openFile')[],
+    filters: markdownFileFilters(),
+  }
+  const { canceled, filePaths } = mainWindow
+    ? await dialog.showOpenDialog(mainWindow, openOptions)
+    : await dialog.showOpenDialog(openOptions)
+  if (canceled || !filePaths[0]) return { ok: false, canceled: true as const }
+  const result = await readMarkdownFileAtPath(filePaths[0])
+  if (!result.ok) return result
+  return result
+})
+
+ipcMain.handle(
+  'markdown:saveFile',
+  async (
+    _,
+    input: {
+      content: string
+      defaultFileName: string
+      filePath?: string
+    },
+  ) => {
+    let targetPath = input.filePath?.trim()
+    if (!targetPath) {
+      const saveOptions = {
+        title: 'Save Markdown',
+        defaultPath: input.defaultFileName,
+        filters: markdownFileFilters(),
       }
       const { canceled, filePath } = mainWindow
         ? await dialog.showSaveDialog(mainWindow, saveOptions)

@@ -1207,6 +1207,28 @@
     "closeTitle": "Close drawing",
     "closeDesc": "\"{{title}}\" has unsaved changes. Close anyway?"
   },
+  "markdownEditor": {
+    "untitled": "Untitled",
+    "loading": "Loading…",
+    "wysiwygMode": "Preview",
+    "sourceMode": "Source",
+    "menu": "Menu",
+    "new": "New",
+    "open": "Open",
+    "save": "Save",
+    "saveAs": "Save as",
+    "exportHtml": "Export HTML",
+    "copyMarkdown": "Copy Markdown",
+    "theme": "Theme",
+    "fileTooLarge": "Markdown file exceeds 10MB and cannot be opened",
+    "openFailed": "Could not open file",
+    "saveFailed": "Save failed",
+    "saveSuccess": "Saved",
+    "copySuccess": "Copied to clipboard",
+    "copyFailed": "Copy failed",
+    "closeTitle": "Close Markdown",
+    "closeDesc": "\"{{title}}\" has unsaved changes. Close anyway?"
+  },
   "tab": {
     "closeAria": "Close {{title}}",
     "closeOther": "Close others",

@@ -594,6 +594,24 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return { ok: true, path: defaultFileName }
       },
     },
+    markdown: {
+      readFile: async (filePath) => ({
+        ok: true as const,
+        path: filePath,
+        content: `# Mock\n\nBrowser preview for \`${filePath}\`.`,
+      }),
+      openFile: async () => ({ ok: false, canceled: true as const }),
+      saveFile: async ({ content, defaultFileName }) => {
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = defaultFileName
+        a.click()
+        URL.revokeObjectURL(url)
+        return { ok: true, path: defaultFileName }
+      },
+    },
     logging: {
       openLogDirectory: async () => undefined,
     },
