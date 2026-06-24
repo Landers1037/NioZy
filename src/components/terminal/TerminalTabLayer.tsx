@@ -11,6 +11,7 @@ import { InactiveTerminalPlaceholder } from '@/components/terminal/InactiveTermi
 import { SuperPowerSavingPlaceholder } from '@/components/terminal/SuperPowerSavingPlaceholder'
 import { SshDeferredConnectPane } from '@/components/terminal/SshDeferredConnectPane'
 import { TerminalBackgroundLayer } from '@/components/terminal/TerminalBackgroundLayer'
+import { MuxTerminalView } from '@/components/terminal/MuxTerminalView'
 import { cn } from '@/lib/utils'
 
 const SplitTerminalPanel = lazy(() =>
@@ -38,7 +39,7 @@ export const TerminalTabLayer = memo(function TerminalTabLayer({
   const performance = useAppStore((s) => s.settings?.performance)
   const terminalSettings = useAppStore((s) => s.settings?.terminal)
   const attachPtyRenderMode = useAppStore((s) => isAttachPtyRenderMode(s.settings))
-  const useAttachLayer = attachPtyRenderMode && getSplitPanes(tab).length <= 1
+  const useAttachLayer = attachPtyRenderMode && getSplitPanes(tab).length <= 1 && !tab.muxMode
   const ptySuspended = useSuperPowerSavingStore((s) => !!s.suspendedTabIds[tab.id])
   const ptyResuming = useSuperPowerSavingStore((s) => !!s.resumingTabIds[tab.id])
   const lastActivityAt = useInactiveTabActivityStore((s) => s.tabLastActivityAt[tab.id])
@@ -73,6 +74,10 @@ export const TerminalTabLayer = memo(function TerminalTabLayer({
         return <div className="absolute inset-0" aria-hidden />
       }
       return null
+    }
+
+    if (tab.muxMode) {
+      return <MuxTerminalView tab={tab} isFocused={isTabActive} />
     }
 
     return (

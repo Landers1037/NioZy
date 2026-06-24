@@ -8,25 +8,27 @@ import { scheduleTerminalKills } from '@/lib/schedule-terminal-kills'
 import { getActiveTerminalId, getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import type { AppTab } from '@/stores/app-store'
 
-function collectTerminalIds(tabs: AppTab[]): string[] {
-  const ids: string[] = []
+function collectTerminalIds(tabs: AppTab[]): { legacy: string[]; mux: string[] } {
+  const legacy: string[] = []
+  const mux: string[] = []
   for (const tab of tabs) {
     if (tab.type !== 'terminal') continue
     for (const terminalId of getAllTerminalIds(tab)) {
-      ids.push(terminalId)
+      if (tab.muxMode) mux.push(terminalId)
+      else legacy.push(terminalId)
     }
   }
-  return ids
+  return { legacy, mux }
 }
 
 export function closeTerminalTabs(tabIds: string[]): void {
   const { tabs, removeTabs } = useAppStore.getState()
   const idSet = new Set(tabIds)
   const toClose = tabs.filter((t) => idSet.has(t.id) && t.type === 'terminal')
-  const terminalIds = collectTerminalIds(toClose)
+  const { legacy, mux } = collectTerminalIds(toClose)
 
   removeTabs(tabIds)
-  scheduleTerminalKills(terminalIds)
+  scheduleTerminalKills(legacy, mux)
 }
 
 export function closeOtherTerminalTabs(keepTabId: string): void {

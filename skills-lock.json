@@ -1,23 +1,17 @@
 {
   "version": 1,
   "skills": {
-    "electron": {
-      "source": "teachingai/full-stack-skills",
+    "grill-me": {
+      "source": "mattpocock/skills",
       "sourceType": "github",
-      "skillPath": "skills/electron-skills/electron/SKILL.md",
-      "computedHash": "9d82126e6c46dd626fc6b1d2e259687d1b64ad61900166b8fc5a3b661c243cf4"
-    },
-    "pixijs": {
-      "source": "pixijs/pixijs-skills",
-      "sourceType": "github",
-      "skillPath": "skills/pixijs/SKILL.md",
-      "computedHash": "3841d26daab0e91119af07fced716d508f01601e3ff072dd73404992f36a94f2"
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "f321507f77702a54af1db66549ec1685fc625390d06c57d7949cdcda8eb1b5c7"
     },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
+      "computedHash": "ac9d0d69caac7de1d1e5647f3db3bcd2f13af355d6b3a78780fbf7fc80e8dca0"
     },
     "theme-factory": {
       "source": "anthropics/skills",

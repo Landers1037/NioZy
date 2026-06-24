@@ -14,7 +14,10 @@ import { canSendToRenderer, sendToRenderer } from './window-ipc'
  */
 const FLUSH_INTERVAL_MS = 16
 
-export function createTerminalOutputFlusher(getWindow: () => BrowserWindow | null) {
+export function createTerminalOutputFlusher(
+  getWindow: () => BrowserWindow | null,
+  channel: 'terminal:data' | 'mux:data' = 'terminal:data',
+) {
   const pending = new Map<string, string>()
   let timer: ReturnType<typeof setTimeout> | null = null
   let paused = false
@@ -38,7 +41,7 @@ export function createTerminalOutputFlusher(getWindow: () => BrowserWindow | nul
     for (const [id, data] of pending) {
       if (!data) continue
       forEachTerminalOutputChunk(data, TERMINAL_OUTPUT_IPC_CHUNK_CHARS, (chunk) => {
-        sendToRenderer(win, 'terminal:data', id, chunk)
+        sendToRenderer(win, channel, id, chunk)
       })
     }
     pending.clear()

@@ -23,6 +23,7 @@ import {
   type AiProvider,
 } from './ai-provider-settings'
 import { normalizeAiRuleStates, type AiRuleStates } from './ai-context-types'
+import { normalizeMuxPaneCount } from './mux-terminal-types'
 
 /** Wterm 仅支持 DOM 渲染，对应 terminal.renderer = dom */
 export const WTERM_RENDERER: TerminalRenderer = 'dom'
@@ -63,6 +64,13 @@ export interface ExperimentalSettings {
   attachPtyWebglContextPool: boolean
   /** Attach-PTY：detach 时将 scrollback 卸载到侧存储，减轻 xterm 内存占用 */
   attachPtyScrollbackOffload: boolean
+  /**
+   * Rust Mux Core：本地 PTY 合成屏（单 xterm 渲染 1/2/4 pane）。
+   * 与 Attach-PTY、Ghostty/Wterm 互斥；SSH 不支持。
+   */
+  muxCoreEnabled: boolean
+  /** Mux 合成屏默认 pane 数：1、2 或 4 */
+  muxPaneCount: 1 | 2 | 4
   /** 开启 AI 对话边栏 */
   aiSidebarEnabled: boolean
   /** AI 边栏支持附加本地图片/文件 */
@@ -100,6 +108,8 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   attachPtyTabSwitchDwellMs: DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
   attachPtyWebglContextPool: false,
   attachPtyScrollbackOffload: false,
+  muxCoreEnabled: false,
+  muxPaneCount: 4,
   aiSidebarEnabled: false,
   aiAttachmentsEnabled: false,
   aiSidebarWidth: DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
@@ -154,6 +164,8 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     attachPtyTabSwitchDwellMs: normalizeAttachPtyTabSwitchDwellMs(o.attachPtyTabSwitchDwellMs),
     attachPtyWebglContextPool: o.attachPtyWebglContextPool === true,
     attachPtyScrollbackOffload: o.attachPtyScrollbackOffload === true,
+    muxCoreEnabled: o.muxCoreEnabled === true,
+    muxPaneCount: normalizeMuxPaneCount(o.muxPaneCount),
     aiSidebarEnabled: o.aiSidebarEnabled === true,
     aiAttachmentsEnabled: o.aiAttachmentsEnabled === true,
     aiSidebarWidth: normalizeAiSidebarWidthPreset(o.aiSidebarWidth),

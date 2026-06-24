@@ -503,6 +503,23 @@ export interface ElectronAPI {
       | { ok: false; error: string }
     >
   }
+  muxTerminal: {
+    create: (options: import('./mux-terminal-types').MuxTerminalCreateOptions) => Promise<
+      import('./mux-terminal-types').MuxTerminalSession
+    >
+    write: (id: string, data: string, paneIndex?: number) => void
+    resize: (id: string, cols: number, rows: number) => void
+    setFocus: (id: string, paneIndex: number) => void
+    kill: (id: string) => void
+    isAlive: (id: string) => Promise<boolean>
+    setActiveStreams: (ids: string[]) => void
+    claimStream: (id: string) => Promise<string>
+    ackData: (id: string, length: number) => void
+    debugLog: (level: 'info' | 'debug', message: string, detail?: Record<string, unknown>) => void
+    onData: (cb: (id: string, data: string) => void) => () => void
+    onCwd: (cb: (id: string, paneIndex: number, cwd: string) => void) => () => void
+    onExit: (cb: (id: string, code: number) => void) => () => void
+  }
   resumeTerm: {
     load: () => Promise<import('./resume-term-session').ResumeTermSession | null>
     save: (session: import('./resume-term-session').ResumeTermSession) => Promise<void>

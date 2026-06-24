@@ -108,7 +108,9 @@ type StatsListener = (stats: SystemStatsData) => void
 
 let mockSettings: AppSettings = structuredClone(DEFAULT_SETTINGS)
 let mockTermCounter = 0
+let mockMuxCounter = 0
 const dataListeners = new Set<DataListener>()
+const muxDataListeners = new Set<DataListener>()
 const cwdListeners = new Set<CwdListener>()
 const statsListeners = new Set<StatsListener>()
 
@@ -752,6 +754,34 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       pickBackground: async () => ({ ok: false as const, canceled: true }),
       clearBackground: async () => ({ ok: true as const }),
       getBackgroundUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
+    },
+    muxTerminal: {
+      create: async (options) => {
+        const id = `browser-mux-${++mockMuxCounter}`
+        const name = `${options.shell ?? 'shell'} Mux (preview)`
+        return {
+          id,
+          name,
+          shell: String(options.shell ?? 'powershell'),
+          cwd: options.cwd ?? 'C:\\Users\\Developer',
+          paneCount: options.paneCount ?? 4,
+        }
+      },
+      write: () => undefined,
+      resize: () => undefined,
+      setFocus: () => undefined,
+      kill: () => undefined,
+      isAlive: async () => true,
+      setActiveStreams: () => undefined,
+      claimStream: async () => '',
+      ackData: () => undefined,
+      debugLog: () => undefined,
+      onData: (cb) => {
+        muxDataListeners.add(cb)
+        return () => muxDataListeners.delete(cb)
+      },
+      onCwd: () => () => undefined,
+      onExit: () => () => undefined,
     },
     resumeTerm: {
       load: async () => null,

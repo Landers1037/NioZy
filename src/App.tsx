@@ -15,6 +15,7 @@ import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
+import { useMuxTerminalStreamSync } from '@/hooks/useMuxTerminalStreamSync'
 import { useSuperPowerSavingPtySync } from '@/hooks/useSuperPowerSavingPtySync'
 import { useSshDeferredConnectSync } from '@/hooks/useSshDeferredConnectSync'
 import { setTerminalRenderPaused } from '@/lib/terminal-render-pause'
@@ -152,6 +153,7 @@ export default function App() {
   useMarkdownFileDrop()
   useResourceAutoDegradeMonitor()
   useTerminalStreamSync(tabs, activeTabId)
+  useMuxTerminalStreamSync(tabs, activeTabId)
   useSuperPowerSavingPtySync(tabs, activeTabId)
   useSshDeferredConnectSync(tabs, activeTabId)
   useAttachPtyTabSwitch(tabs, activeTabId)

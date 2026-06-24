@@ -8,14 +8,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useAppStore } from '@/stores/app-store'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { SettingField } from './SettingField'
-import { Braces, Cpu, Link2, Layers, ScrollText, Terminal, Monitor, Zap, MousePointer2 } from 'lucide-react'
+import { Braces, Cpu, Grid2x2, Link2, Layers, ScrollText, Terminal, Monitor, Zap, MousePointer2 } from 'lucide-react'
 import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
+import { isMuxCoreEnabled } from '@/lib/mux-terminal-render'
+import { createMuxTerminal } from '@/lib/mux-terminal-actions'
 import type { TerminalEmulator } from '../../../electron/shared/experimental-settings'
 import {
   MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS,
@@ -25,6 +28,7 @@ import {
   normalizeAttachPtyTabSwitchDwellMs,
   normalizeGhosttyScrollbackLimit,
 } from '../../../electron/shared/experimental-settings'
+import { normalizeMuxPaneCount } from '../../../electron/shared/mux-terminal-types'
 import { normalizeRendererForEmulator } from '@/lib/terminal-emulator'
 import {
   VNC_ENCODING_VALUES,
@@ -65,6 +69,8 @@ export function ExperimentalSettings() {
   const ghosttyEnabled = settings.experimental.ghosttyCoreEnabled
   const attachPtyEnabled = settings.experimental.attachPtyRenderMode
   const attachPtyActive = isAttachPtyRenderMode(settings)
+  const muxCoreEnabled = settings.experimental.muxCoreEnabled
+  const muxCoreActive = isMuxCoreEnabled(settings)
   const ghosttyScrollbackFocusRef = useRef(settings.experimental.ghosttyScrollbackLimit)
   const attachDwellFocusRef = useRef(settings.experimental.attachPtyTabSwitchDwellMs)
 
@@ -374,6 +380,73 @@ export function ExperimentalSettings() {
                   }}
                 />
               </SettingField>
+            </>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+          <div>
+            <h3 className="text-sm font-medium">{t('settings.experimental.muxCore.title')}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('settings.experimental.muxCore.description')}
+            </p>
+          </div>
+
+          <SettingField
+            icon={Grid2x2}
+            label={t('settings.experimental.muxCoreEnabled')}
+            description={t('settings.experimental.muxCoreEnabledDesc')}
+            row
+          >
+            <Switch
+              checked={muxCoreActive}
+              disabled={emulator !== 'xterm'}
+              onCheckedChange={(enabled) => {
+                if (enabled === muxCoreEnabled) return
+                void patchSettings({
+                  experimental: {
+                    ...settings.experimental,
+                    muxCoreEnabled: enabled,
+                  },
+                })
+              }}
+            />
+          </SettingField>
+
+          {muxCoreActive && (
+            <>
+              <SettingField
+                icon={Grid2x2}
+                label={t('settings.experimental.muxPaneCount')}
+                description={t('settings.experimental.muxPaneCountDesc')}
+              >
+                <Select
+                  value={String(settings.experimental.muxPaneCount)}
+                  onValueChange={(v) => {
+                    const next = normalizeMuxPaneCount(Number(v))
+                    if (next === settings.experimental.muxPaneCount) return
+                    void patchSettings({
+                      experimental: {
+                        ...settings.experimental,
+                        muxPaneCount: next,
+                      },
+                    })
+                  }}
+                >
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">{t('settings.experimental.muxPaneCount1')}</SelectItem>
+                    <SelectItem value="2">{t('settings.experimental.muxPaneCount2')}</SelectItem>
+                    <SelectItem value="4">{t('settings.experimental.muxPaneCount4')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </SettingField>
+
+              <Button type="button" variant="secondary" onClick={() => void createMuxTerminal()}>
+                {t('settings.experimental.muxCreateTerminal')}
+              </Button>
             </>
           )}
         </div>

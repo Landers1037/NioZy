@@ -38,6 +38,9 @@ const onAppOpenSettings = createIpcMultiplex<[]>(ipcRenderer, 'app:openSettings'
 const onTerminalData = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:data')
 const onTerminalCwd = createIpcMultiplex<[string, string]>(ipcRenderer, 'terminal:cwd')
 const onTerminalExit = createIpcMultiplex<[string, number]>(ipcRenderer, 'terminal:exit')
+const onMuxData = createIpcMultiplex<[string, string]>(ipcRenderer, 'mux:data')
+const onMuxCwd = createIpcMultiplex<[string, number, string]>(ipcRenderer, 'mux:cwd')
+const onMuxExit = createIpcMultiplex<[string, number]>(ipcRenderer, 'mux:exit')
 const onSshTransferProgress = createIpcMultiplex<[import('../shared/ssh-types').ScpTransferProgress]>(
   ipcRenderer,
   'ssh:transferProgress',
@@ -170,6 +173,26 @@ const api: ElectronAPI = {
     pickBackground: () => ipcRenderer.invoke('terminal:pickBackground'),
     clearBackground: () => ipcRenderer.invoke('terminal:clearBackground'),
     getBackgroundUrl: (ext) => ipcRenderer.invoke('terminal:getBackgroundUrl', ext),
+  },
+  muxTerminal: {
+    create: (options) => ipcRenderer.invoke('muxTerminal:create', options),
+    write: (id, data, paneIndex) => ipcRenderer.send('muxTerminal:write', id, data, paneIndex),
+    resize: (id, cols, rows) => ipcRenderer.send('muxTerminal:resize', id, cols, rows),
+    setFocus: (id, paneIndex) => ipcRenderer.send('muxTerminal:setFocus', id, paneIndex),
+    kill: (id) => ipcRenderer.send('muxTerminal:kill', id),
+    isAlive: (id) => ipcRenderer.invoke('muxTerminal:isAlive', id) as Promise<boolean>,
+    setActiveStreams: (ids) => ipcRenderer.send('muxTerminal:setActiveStreams', ids),
+    claimStream: (id) => ipcRenderer.invoke('muxTerminal:claimStream', id) as Promise<string>,
+    ackData: (id, length) => ipcRenderer.send('muxTerminal:ackData', id, length),
+    debugLog: (level, message, detail) =>
+      ipcRenderer.send('muxTerminal:debugLog', level, message, detail),
+    onData: (cb) =>
+      onMuxData((id, data) => {
+        if (terminalIpcPaused) return
+        cb(id, data)
+      }),
+    onCwd: (cb) => onMuxCwd(cb),
+    onExit: (cb) => onMuxExit(cb),
   },
   resumeTerm: {
     load: () => ipcRenderer.invoke('resumeTerm:load'),

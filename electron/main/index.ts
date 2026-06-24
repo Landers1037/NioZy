@@ -13,6 +13,7 @@ import { existsSync } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
 import { TerminalService } from '../terminal-service'
+import { MuxTerminalService } from '../mux-terminal-service'
 import { SettingsStore, isHardwareAccelerationEnabled, isWebGpuAccelerationEnabled } from '../settings-store'
 import { StatisticsStore } from '../statistics-store'
 import { resumeTermStore } from '../resume-term-store'
@@ -26,6 +27,8 @@ import { listSystemFonts } from '../font-store'
 import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortcuts'
 import { sendToRenderer } from './window-ipc'
 import { createTerminalOutputFlusher } from './terminal-output-flush'
+import type { MuxTerminalCreateOptions } from '../shared/mux-terminal-types'
+import { normalizeMuxPaneCount } from '../shared/mux-terminal-types'
 import { createTerminalKillQueue } from '../terminal-kill-queue'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
@@ -311,6 +314,7 @@ const isDev = isElectronDev()
 const terminalService = new TerminalService()
 const terminalKillQueue = createTerminalKillQueue((id) => terminalService.kill(id))
 const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
+const muxOutputFlusher = createTerminalOutputFlusher(() => mainWindow, 'mux:data')
 let windowDragging = false
 
 function setWindowDragging(moving: boolean): void {
@@ -318,15 +322,18 @@ function setWindowDragging(moving: boolean): void {
     if (windowDragging) return
     windowDragging = true
     terminalOutputFlusher.pause()
+    muxOutputFlusher.pause()
     sendToRenderer(mainWindow, 'window:moving', true)
     return
   }
   if (!windowDragging) return
   windowDragging = false
   terminalOutputFlusher.resume()
+  muxOutputFlusher.resume()
   sendToRenderer(mainWindow, 'window:moving', false)
 }
 const settingsStore = new SettingsStore()
+const muxTerminalService = new MuxTerminalService(() => settingsStore.get())
 const statisticsStore = new StatisticsStore(
   () => settingsStore.get().statistics.enabled === true,
 )
@@ -931,6 +938,8 @@ app.on('before-quit', () => {
   destroyTray()
   linkPreviewManager?.closeAll()
   terminalOutputFlusher.dispose()
+  muxOutputFlusher.dispose()
+  muxTerminalService.dispose()
   terminalService.disposeAll()
   void vncProxyManager?.disposeAll()
   unregisterGlobalShortcuts()
@@ -2344,6 +2353,53 @@ ipcMain.on('terminal:ackData', (_, id: string, length: number) => {
   terminalService.ackActiveOutput(id, length)
 })
 
+ipcMain.handle('muxTerminal:create', async (_, options: MuxTerminalCreateOptions) => {
+  vaultStore.load()
+  const experimental = settingsStore.get().experimental
+  const resolved: MuxTerminalCreateOptions = {
+    ...options,
+    command: options.command ? vaultStore.resolveText(options.command) : undefined,
+    args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
+    env: options.env ? await vaultStore.resolveEnv(options.env) : undefined,
+    paneCount: normalizeMuxPaneCount(options.paneCount ?? experimental.muxPaneCount),
+  }
+  try {
+    const session = await muxTerminalService.create(resolved)
+    terminalLog.info('Mux terminal created', session)
+    return session
+  } catch (err) {
+    terminalLog.error('Mux terminal create failed', logErrorPayload(err))
+    throw err
+  }
+})
+ipcMain.on('muxTerminal:write', (_, id: string, data: string, paneIndex?: number) => {
+  statisticsStore.recordCommandFromTerminalWrite(data)
+  muxTerminalService.write(id, data, paneIndex)
+})
+ipcMain.on('muxTerminal:resize', (_, id: string, cols: number, rows: number) => {
+  muxTerminalService.resize(id, cols, rows)
+})
+ipcMain.on('muxTerminal:setFocus', (_, id: string, paneIndex: number) => {
+  muxTerminalService.setFocus(id, paneIndex)
+})
+ipcMain.on('muxTerminal:kill', (_, id: string) => muxTerminalService.kill(id))
+ipcMain.handle('muxTerminal:isAlive', (_, id: string) => muxTerminalService.isAlive(id))
+ipcMain.on('muxTerminal:setActiveStreams', (_, ids: string[]) => {
+  muxTerminalService.setActiveStreams(ids)
+})
+ipcMain.handle('muxTerminal:claimStream', (_, id: string) => muxTerminalService.claimStream(id))
+ipcMain.on('muxTerminal:ackData', (_, id: string, length: number) => {
+  muxTerminalService.ackActiveOutput(id, length)
+})
+ipcMain.on('muxTerminal:debugLog', (_, level: string, message: string, detail?: Record<string, unknown>) => {
+  const payload = { message, ...(detail ?? {}) }
+  if (level === 'debug') {
+    terminalLog.debug('[MuxView]', payload)
+  } else {
+    terminalLog.info('[MuxView]', payload)
+  }
+})
+
 terminalService.on('data', (id, data) => {
   terminalOutputFlusher.queue(id, data)
 })
@@ -2353,4 +2409,14 @@ terminalService.on('exit', (id, code) => {
 })
 terminalService.on('cwd', (id, cwd) => {
   sendToRenderer(mainWindow, 'terminal:cwd', id, cwd)
+})
+muxTerminalService.on('data', (id, data) => {
+  muxOutputFlusher.queue(id, data)
+})
+muxTerminalService.on('exit', (id, code) => {
+  terminalLog.info('Mux terminal exited', { id, code })
+  sendToRenderer(mainWindow, 'mux:exit', id, code)
+})
+muxTerminalService.on('cwd', (id, paneIndex, cwd) => {
+  sendToRenderer(mainWindow, 'mux:cwd', id, paneIndex, cwd)
 })

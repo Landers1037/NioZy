@@ -979,7 +979,19 @@
       "attachPtyWebglContextPool": "WebGL Context Pool",
       "attachPtyWebglContextPoolDesc": "Attach-PTY 单例宿主共用 WebGL 槽位，切换 Tab 时不随 terminalId 释放与重建上下文。",
       "attachPtyScrollbackOffload": "Scrollback Offload",
-      "attachPtyScrollbackOffloadDesc": "detach 时将 scrollback 卸载到侧存储并清空 xterm 缓冲，切回时再恢复，降低多 Tab 内存占用。"
+      "attachPtyScrollbackOffloadDesc": "detach 时将 scrollback 卸载到侧存储并清空 xterm 缓冲，切回时再恢复，降低多 Tab 内存占用。",
+      "muxCore": {
+        "title": "Rust Mux Core",
+        "description": "本地 PTY 由 niozy-mux-core 合成单 ANSI 流，单 xterm 渲染 1/2/4 pane。与 Attach-PTY 互斥，不支持 SSH。"
+      },
+      "muxCoreEnabled": "Mux 合成屏",
+      "muxCoreEnabledDesc": "启用后可新建 Mux 终端 Tab（需先编译 niozy-mux-core）。仅支持 Xterm.js 与本地 Shell。",
+      "muxPaneCount": "默认 Pane 数",
+      "muxPaneCountDesc": "新建 Mux Tab 时的合成布局：1 全屏、2 左右、4 四宫格。",
+      "muxPaneCount1": "1（全屏）",
+      "muxPaneCount2": "2（左右）",
+      "muxPaneCount4": "4（2×2）",
+      "muxCreateTerminal": "新建 Mux 终端"
     },
     "advanced": {
       "title": "高级设置",
@@ -1483,6 +1495,7 @@
   },
   "toast": {
     "terminalStartFailed": "终端启动失败",
+    "muxTerminalStartFailed": "Mux 终端启动失败",
     "selectTerminalFirst": "请先选中终端内容",
     "exportNoTerminal": "无法导出：未找到终端",
     "exportNotReady": "无法导出：终端尚未就绪",

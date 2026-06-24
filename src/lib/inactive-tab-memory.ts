@@ -110,6 +110,20 @@ export function collectActiveTerminalStreamIds(
       continue
     }
     if (tab.type !== 'terminal') continue
+    if (tab.muxMode) {
+      if (!tab.terminalId) continue
+      const isActive = tab.id === activeTabId
+      const policy = resolveInactiveTabPolicy(
+        performance,
+        isActive,
+        tabLastActivityAt[tab.id],
+        now,
+      )
+      if (policy.streamActive) {
+        ids.push(tab.terminalId)
+      }
+      continue
+    }
     const termIds = getAllTerminalIds(tab)
     if (termIds.length === 0) continue
     const isActive = tab.id === activeTabId

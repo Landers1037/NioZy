@@ -979,7 +979,19 @@
       "attachPtyWebglContextPool": "WebGL context pool",
       "attachPtyWebglContextPoolDesc": "Share one WebGL slot for the Attach-PTY host; tab switches do not release or recreate the context per terminalId.",
       "attachPtyScrollbackOffload": "Scrollback offload",
-      "attachPtyScrollbackOffloadDesc": "On detach, move scrollback to side storage and clear the xterm buffer; restore on re-attach to reduce memory with many tabs."
+      "attachPtyScrollbackOffloadDesc": "On detach, move scrollback to side storage and clear the xterm buffer; restore on re-attach to reduce memory with many tabs.",
+      "muxCore": {
+        "title": "Rust Mux Core",
+        "description": "Local PTYs are composed into one ANSI stream by niozy-mux-core and rendered in a single xterm (1/2/4 panes). Mutually exclusive with Attach-PTY; SSH not supported."
+      },
+      "muxCoreEnabled": "Mux compositor",
+      "muxCoreEnabledDesc": "When enabled, you can open Mux terminal tabs (build niozy-mux-core first). Xterm.js and local shells only.",
+      "muxPaneCount": "Default pane count",
+      "muxPaneCountDesc": "Layout for new Mux tabs: 1 full screen, 2 side-by-side, or 4 in a 2×2 grid.",
+      "muxPaneCount1": "1 (full screen)",
+      "muxPaneCount2": "2 (split)",
+      "muxPaneCount4": "4 (2×2 grid)",
+      "muxCreateTerminal": "New Mux terminal"
     },
     "advanced": {
       "title": "Advanced",
@@ -1483,6 +1495,7 @@
   },
   "toast": {
     "terminalStartFailed": "Failed to start terminal",
+    "muxTerminalStartFailed": "Failed to start Mux terminal",
     "selectTerminalFirst": "Select terminal content first",
     "exportNoTerminal": "Export failed: terminal not found",
     "exportNotReady": "Export failed: terminal not ready",

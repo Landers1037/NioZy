@@ -15,7 +15,9 @@ const OFFLOAD_CACHE_MAX_BYTES = 64 * 1024 * 1024
 const OFFLOAD_CACHE_TTL_MS = 30 * 60 * 1000
 
 function estimateBufferSize(buf: AttachPtyOffloadedBuffer): number {
-  return (buf.scrollbackText.length + buf.screenText.length) * 2
+  const bytes = (buf.scrollbackText.length + buf.screenText.length) * 2
+  // lru-cache requires a positive integer; empty snapshots still occupy one entry.
+  return bytes > 0 ? bytes : 1
 }
 
 /**
