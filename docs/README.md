@@ -37,6 +37,7 @@
 |------|-------------|
 | [common公共功能.md](./common公共功能.md) | 应用骨架、配置、IPC、布局、标题栏、状态栏 |
 | [功能终端与会话.md](./功能终端与会话.md) | 多 Tab 终端、分屏、xterm / Wterm、Attach-PTY |
+| [功能Mux终端.md](./功能Mux终端.md) | Rust Mux 合成屏（实验特性，本地 Shell） |
 | [功能SSH连接.md](./功能SSH连接.md) | SSH 连接与认证 |
 | [功能SCP传输.md](./功能SCP传输.md) | SSH Tab 内 SCP 上传 / 下载 |
 | [功能连接管理.md](./功能连接管理.md) | RDP / PuTTY / VNC / 自定义连接 |
