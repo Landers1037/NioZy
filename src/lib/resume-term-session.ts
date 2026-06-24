@@ -1,10 +1,13 @@
 import type {
   ResumeTermSession,
+  SavedMarkdownTab,
+  SavedSessionTab,
   SavedTerminalTab,
 } from '../../electron/shared/resume-term-session'
 import { RESUME_TERM_SESSION_VERSION } from '../../electron/shared/resume-term-session'
 import type { AppTab } from '@/stores/app-store'
 import { useAppStore } from '@/stores/app-store'
+import { useMarkdownEditorStore } from '@/stores/markdown-editor-store'
 import { getElectronAPI } from '@/lib/electron-client'
 import { toastTerminalError } from '@/lib/terminal-actions'
 import {
@@ -22,6 +25,14 @@ import { resumeTermLog } from '@/lib/resume-term-log'
 let resumeTermBootComplete = false
 /** 正在执行 restoreTerminalSessionFromDisk（含加载动画时段） */
 let terminalSessionRestoreInProgress = false
+/** 当前焦点不在可恢复 Tab 时，仍用于快照的最近活动可恢复 Tab */
+let lastActiveRestorableTabId: string | null = null
+/** 本会话是否曾写入过可恢复 Tab，避免无可恢复 Tab 时反复 clear */
+let hadPersistableSessionTabs = false
+
+function isRestorableTab(tab: AppTab): tab is AppTab & { type: 'terminal' | 'markdown' } {
+  return tab.type === 'terminal' || tab.type === 'markdown'
+}
 
 export function setTerminalSessionRestoreInProgress(value: boolean): void {
   terminalSessionRestoreInProgress = value
@@ -50,50 +61,91 @@ function isRemoteTerminalTab(tab: AppTab): boolean {
   return false
 }
 
+function buildSavedTerminalTab(
+  tab: AppTab & { type: 'terminal' },
+  settings: ReturnType<typeof useAppStore.getState>['settings'],
+  terminalCwds: Record<string, string>,
+): SavedSessionTab | null {
+  const panes = getSplitPanes(tab)
+  const spawn = resolveTabTerminalSpawn(tab, settings)
+  if (!spawn) return null
+
+  const splitPaneCount = tab.sshDeferredConnect
+    ? Math.max(1, tab.deferredSplitPaneCount ?? 1)
+    : panes.length
+  if (!tab.sshDeferredConnect && panes.length === 0) return null
+
+  const isLocal = !isRemoteTerminalTab(tab)
+  const saved: SavedTerminalTab = {
+    title: tab.title,
+    ...(tab.customTitle ? { customTitle: tab.customTitle } : {}),
+    ...(tab.shell ? { shell: tab.shell } : {}),
+    ...(tab.sshConnectionId ? { sshConnectionId: tab.sshConnectionId } : {}),
+    terminalSpawn: spawn,
+    ...(tab.activeSplitIndex !== undefined ? { activeSplitIndex: tab.activeSplitIndex } : {}),
+    splitPaneCount,
+    ...(isLocal
+      ? {
+          panes: panes.map((p) => {
+            const cwd = terminalCwds[p.terminalId]
+            return cwd ? { cwd } : {}
+          }),
+        }
+      : {}),
+  }
+  return { kind: 'terminal', ...saved }
+}
+
+function buildSavedMarkdownTab(tab: AppTab & { type: 'markdown' }): SavedSessionTab | null {
+  if (!tab.markdownFilePath) return null
+
+  const session = useMarkdownEditorStore.getState().sessions[tab.id]
+  const saved: SavedMarkdownTab = {
+    title: tab.title,
+    markdownFilePath: tab.markdownFilePath,
+    ...(tab.customTitle ? { customTitle: tab.customTitle } : {}),
+    ...(session?.mode ? { mode: session.mode } : {}),
+    ...(session?.themeId ? { themeId: session.themeId } : {}),
+    ...(session?.dirty ? { dirtyContent: session.content } : {}),
+  }
+  return { kind: 'markdown', ...saved }
+}
+
 export function buildResumeTermSession(): ResumeTermSession | null {
   const { tabs, activeTabId, terminalCwds, settings } = useAppStore.getState()
-  const terminalTabs = tabs.filter((t) => t.type === 'terminal')
-  if (terminalTabs.length === 0) return null
+  const activeTab = activeTabId ? tabs.find((t) => t.id === activeTabId) : null
+  if (activeTab && isRestorableTab(activeTab)) {
+    lastActiveRestorableTabId = activeTabId
+  }
 
-  const savedTabs: SavedTerminalTab[] = []
-  for (const tab of terminalTabs) {
-    const panes = getSplitPanes(tab)
-    const spawn = resolveTabTerminalSpawn(tab, settings)
-    if (!spawn) continue
-
-    const splitPaneCount = tab.sshDeferredConnect
-      ? Math.max(1, tab.deferredSplitPaneCount ?? 1)
-      : panes.length
-    if (!tab.sshDeferredConnect && panes.length === 0) continue
-
-    const isLocal = !isRemoteTerminalTab(tab)
-    savedTabs.push({
-      title: tab.title,
-      ...(tab.customTitle ? { customTitle: tab.customTitle } : {}),
-      ...(tab.shell ? { shell: tab.shell } : {}),
-      ...(tab.sshConnectionId ? { sshConnectionId: tab.sshConnectionId } : {}),
-      terminalSpawn: spawn,
-      ...(tab.activeSplitIndex !== undefined ? { activeSplitIndex: tab.activeSplitIndex } : {}),
-      splitPaneCount,
-      ...(isLocal
-        ? {
-            panes: panes.map((p) => {
-              const cwd = terminalCwds[p.terminalId]
-              return cwd ? { cwd } : {}
-            }),
-          }
-        : {}),
-    })
+  const restorableTabIds: string[] = []
+  const savedTabs: SavedSessionTab[] = []
+  for (const tab of tabs) {
+    if (tab.type === 'terminal') {
+      const saved = buildSavedTerminalTab(tab, settings, terminalCwds)
+      if (!saved) continue
+      savedTabs.push(saved)
+      restorableTabIds.push(tab.id)
+      continue
+    }
+    if (tab.type === 'markdown') {
+      const saved = buildSavedMarkdownTab(tab)
+      if (!saved) continue
+      savedTabs.push(saved)
+      restorableTabIds.push(tab.id)
+    }
   }
 
   if (savedTabs.length === 0) return null
 
-  const activeIdx = activeTabId ? terminalTabs.findIndex((t) => t.id === activeTabId) : -1
-  const activeTerminalTabIndex = activeIdx >= 0 ? activeIdx : 0
+  const resolvedActiveId =
+    activeTab && isRestorableTab(activeTab) ? activeTabId : lastActiveRestorableTabId
+  const activeIdx = resolvedActiveId ? restorableTabIds.indexOf(resolvedActiveId) : -1
+  const activeTabIndex = activeIdx >= 0 ? activeIdx : 0
 
   return {
     version: RESUME_TERM_SESSION_VERSION,
-    activeTerminalTabIndex,
+    activeTabIndex,
     tabs: savedTabs,
   }
 }
@@ -115,16 +167,22 @@ export async function persistResumeTermSession(): Promise<void> {
   if (session) {
     resumeTermLog.info('persist save', {
       tabCount: session.tabs.length,
-      activeTerminalTabIndex: session.activeTerminalTabIndex,
+      terminalTabCount: session.tabs.filter((t) => t.kind === 'terminal').length,
+      markdownTabCount: session.tabs.filter((t) => t.kind === 'markdown').length,
+      activeTabIndex: session.activeTabIndex,
     })
+    hadPersistableSessionTabs = true
     await api.resumeTerm.save(session)
-  } else {
-    resumeTermLog.info('persist clear (no terminal tabs in store)')
+  } else if (hadPersistableSessionTabs) {
+    resumeTermLog.info('persist clear (restorable tabs removed)')
+    hadPersistableSessionTabs = false
     await api.resumeTerm.clear()
+  } else {
+    resumeTermLog.debug('persist skipped: no restorable tabs to save or clear')
   }
 }
 
-function canRestoreSavedTab(
+function canRestoreSavedTerminalTab(
   saved: SavedTerminalTab,
   settings: ReturnType<typeof useAppStore.getState>['settings'],
 ): boolean {
@@ -171,7 +229,7 @@ async function restoreSingleTerminalTab(
     resumeTermLog.warn('restore tab failed: no settings or spawn', { index, title: saved.title })
     return null
   }
-  if (!canRestoreSavedTab(saved, settings)) return null
+  if (!canRestoreSavedTerminalTab(saved, settings)) return null
 
   const spawn = saved.terminalSpawn
   const paneCount = saved.splitPaneCount
@@ -209,7 +267,7 @@ async function restoreSingleTerminalTab(
   let lastShell = saved.shell
   let lastName = saved.title
 
-  resumeTermLog.info('restore tab start', {
+  resumeTermLog.info('restore terminal tab start', {
     index,
     title: saved.title,
     shell: saved.shell,
@@ -299,8 +357,60 @@ async function restoreSingleTerminalTab(
   }
 
   const tab = normalizeTabAfterSplitChange(base, newPanes, activeIdx)
-  resumeTermLog.info('restore tab ok', { index, tabId, terminalIds: newPanes.map((p) => p.terminalId) })
+  resumeTermLog.info('restore terminal tab ok', { index, tabId, terminalIds: newPanes.map((p) => p.terminalId) })
   return tab
+}
+
+async function restoreSingleMarkdownTab(
+  saved: SavedMarkdownTab,
+  index: number,
+): Promise<AppTab | null> {
+  const tabId = `markdown-${randomUUID()}`
+  const editorStore = useMarkdownEditorStore.getState()
+  editorStore.ensureSession(tabId)
+
+  if (saved.mode) editorStore.setMode(tabId, saved.mode)
+  if (saved.themeId) editorStore.setThemeId(tabId, saved.themeId)
+
+  if (saved.dirtyContent !== undefined) {
+    editorStore.setContent(tabId, saved.dirtyContent, { dirty: true })
+    resumeTermLog.info('restore markdown tab ok (dirty snapshot)', {
+      index,
+      tabId,
+      path: saved.markdownFilePath,
+    })
+  } else {
+    const result = await getElectronAPI().markdown.readFile(saved.markdownFilePath)
+    if (!result.ok) {
+      resumeTermLog.warn('skip markdown tab: file unreadable', {
+        index,
+        path: saved.markdownFilePath,
+        error: result.error,
+      })
+      editorStore.removeSession(tabId)
+      return null
+    }
+    editorStore.setContent(tabId, result.content, { dirty: false })
+    resumeTermLog.info('restore markdown tab ok', { index, tabId, path: saved.markdownFilePath })
+  }
+
+  return {
+    id: tabId,
+    type: 'markdown',
+    title: saved.title,
+    ...(saved.customTitle ? { customTitle: saved.customTitle } : {}),
+    markdownFilePath: saved.markdownFilePath,
+  }
+}
+
+async function restoreSingleSessionTab(
+  saved: SavedSessionTab,
+  index: number,
+): Promise<AppTab | null> {
+  if (saved.kind === 'markdown') {
+    return restoreSingleMarkdownTab(saved, index)
+  }
+  return restoreSingleTerminalTab(saved, index)
 }
 
 export async function restoreTerminalSessionFromDisk(): Promise<boolean> {
@@ -326,12 +436,14 @@ export async function restoreTerminalSessionFromDisk(): Promise<boolean> {
 
   resumeTermLog.info('restore session loaded', {
     tabCount: session.tabs.length,
-    activeTerminalTabIndex: session.activeTerminalTabIndex,
+    terminalTabCount: session.tabs.filter((t) => t.kind === 'terminal').length,
+    markdownTabCount: session.tabs.filter((t) => t.kind === 'markdown').length,
+    activeTabIndex: session.activeTabIndex,
     parallel: true,
   })
 
   const restoreResults = await Promise.all(
-    session.tabs.map((saved, i) => restoreSingleTerminalTab(saved, i)),
+    session.tabs.map((saved, i) => restoreSingleSessionTab(saved, i)),
   )
   const restored = restoreResults.filter((tab): tab is AppTab => tab !== null)
 
@@ -343,7 +455,7 @@ export async function restoreTerminalSessionFromDisk(): Promise<boolean> {
   }
 
   const activeIndex = Math.min(
-    Math.max(0, session.activeTerminalTabIndex),
+    Math.max(0, session.activeTabIndex),
     restored.length - 1,
   )
   const activeTabId = restored[activeIndex]?.id ?? restored[0]!.id
@@ -352,6 +464,9 @@ export async function restoreTerminalSessionFromDisk(): Promise<boolean> {
     tabs: restored,
     activeTabId,
   })
+
+  lastActiveRestorableTabId = activeTabId
+  hadPersistableSessionTabs = true
 
   for (const tab of restored) {
     touchTabActivity(tab.id)

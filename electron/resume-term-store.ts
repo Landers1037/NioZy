@@ -14,7 +14,7 @@ export class ResumeTermStore {
     terminalLog.info('[ResumeTerm] saved', {
       path,
       tabCount: session.tabs.length,
-      activeTerminalTabIndex: session.activeTerminalTabIndex,
+      activeTabIndex: session.activeTabIndex,
     })
   }
 
@@ -38,7 +38,7 @@ export class ResumeTermStore {
       terminalLog.info('[ResumeTerm] loaded', {
         path,
         tabCount: session.tabs.length,
-        activeTerminalTabIndex: session.activeTerminalTabIndex,
+        activeTabIndex: session.activeTabIndex,
       })
       return session
     } catch (error) {

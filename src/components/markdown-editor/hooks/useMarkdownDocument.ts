@@ -23,6 +23,9 @@ export function useMarkdownDocument(tabId: string, filePath: string | undefined)
 
   useEffect(() => {
     if (!filePath) return
+    const existing = useMarkdownEditorStore.getState().sessions[tabId]
+    if (existing?.dirty) return
+    if (existing && !existing.loading && existing.content.length > 0) return
     let cancelled = false
     setLoading(tabId, true)
     setLoadError(tabId, null)

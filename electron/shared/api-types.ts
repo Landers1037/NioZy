@@ -43,6 +43,8 @@ export type {
   ResumeTermSession,
   SavedTerminalTab,
   SavedTerminalPane,
+  SavedMarkdownTab,
+  SavedSessionTab,
 } from './resume-term-session'
 export { RESUME_TERM_SESSION_VERSION, normalizeResumeTermSession } from './resume-term-session'
 export type { CommandReplayItem } from './command-replay'
