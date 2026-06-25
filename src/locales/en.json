@@ -987,9 +987,10 @@
       "muxCoreEnabled": "Mux compositor",
       "muxCoreEnabledDesc": "When enabled, you can open Mux terminal tabs (build niozy-mux-core first). Xterm.js and local shells only.",
       "muxPaneCount": "Default pane count",
-      "muxPaneCountDesc": "Layout for new Mux tabs: 1 full screen, 2 side-by-side, or 4 in a 2×2 grid.",
+      "muxPaneCountDesc": "Layout for new Mux tabs: 1 full screen, 2×1 side-by-side, 1×2 stacked, or 4 in a 2×2 grid.",
       "muxPaneCount1": "1 (full screen)",
-      "muxPaneCount2": "2 (split)",
+      "muxPaneCount2": "2×1 (side-by-side)",
+      "muxPaneCount1x2": "1×2 (stacked)",
       "muxPaneCount4": "4 (2×2 grid)",
       "muxCreateTerminal": "New Mux terminal"
     },
@@ -1493,6 +1494,15 @@
   },
   "connection": {
     "invalidPort": "Invalid port (must be 1–65535). Configured value: {{port}}"
+  },
+  "muxTerminal": {
+    "floatingIslandAria": "Mux terminal actions",
+    "floatingIslandTitle": "Mux",
+    "resizePane": "Resize",
+    "closePane": "Close pane",
+    "resizeHintHorizontal": "←→ adjust width · Esc to exit",
+    "resizeHintVertical": "↑↓ adjust height · Esc to exit",
+    "resizeHintGrid": "Arrow keys to resize · Esc to exit"
   },
   "toast": {
     "terminalStartFailed": "Failed to start terminal",

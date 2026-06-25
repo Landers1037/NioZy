@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Terminal } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
 import type { AppTab } from '@/stores/app-store'
@@ -24,8 +25,19 @@ import { waitForTerminalFonts } from '@/lib/terminal-webgl-refresh'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { notifyTerminalFocusReady } from '@/lib/terminal-focus'
 import { isLayoutResizing, registerLayoutFitOnResizeEnd } from '@/lib/layout-resize'
-import { computeMuxGridLayout, paneIndexAtCell, type MuxGridPaneCount } from '@/lib/mux-grid-layout'
+import { computeMuxGridLayout, paneIndexAtCell } from '@/lib/mux-grid-layout'
 import { getXtermCellFromMouseEvent } from '@/lib/mux-xterm-mouse'
+import { MuxTerminalFloatingIsland } from '@/components/terminal/MuxTerminalFloatingIsland'
+import {
+  muxSplitDirectionFromKey,
+  resolveMuxLayoutKind,
+} from '@/lib/mux-terminal-resize'
+import type { MuxLayoutKind } from '../../../electron/shared/mux-terminal-types'
+import {
+  activePaneCountFromLayoutKind,
+  normalizeMuxLayoutKind,
+  paneCountFromLayoutKind,
+} from '../../../electron/shared/mux-terminal-types'
 
 interface MuxTerminalViewProps {
   tab: AppTab
@@ -33,19 +45,72 @@ interface MuxTerminalViewProps {
 }
 
 export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps) {
+  const { t } = useTranslation()
   const sessionId = tab.terminalId
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
   const focusPaneRef = useRef(0)
   const isTabFocusedRef = useRef(isFocused)
-  const paneCount = tab.muxPaneCount ?? 4
+  const layoutKindRef = useRef<MuxLayoutKind>(
+    resolveMuxLayoutKind(tab.muxLayoutKind, tab.muxPaneCount),
+  )
+  const resizeModeRef = useRef(false)
+  const [layoutKind, setLayoutKind] = useState<MuxLayoutKind>(layoutKindRef.current)
+  const [resizeMode, setResizeMode] = useState(false)
   const terminalSettings = useAppStore((s) => s.settings?.terminal)
   const [termReady, setTermReady] = useState(false)
   const terminalHasBackgroundImage = hasTerminalBackgroundImage(terminalSettings)
   const chromeBackground = terminalHasBackgroundImage
     ? getTerminalCellBackgroundColor(terminalSettings)
     : getTerminalChromeBackgroundColor(terminalSettings)
+
+  const syncLayoutKind = useCallback((next: MuxLayoutKind) => {
+    layoutKindRef.current = next
+    setLayoutKind(next)
+  }, [])
+
+  const exitResizeMode = useCallback(async () => {
+    if (!sessionId || !resizeModeRef.current) return
+    const ok = await getElectronAPI().muxTerminal.setResizeMode(sessionId, false)
+    if (ok) {
+      resizeModeRef.current = false
+      setResizeMode(false)
+    }
+  }, [sessionId])
+
+  const enterResizeMode = useCallback(async () => {
+    if (!sessionId || activePaneCountFromLayoutKind(layoutKindRef.current) <= 1) return
+    const ok = await getElectronAPI().muxTerminal.setResizeMode(sessionId, true)
+    if (ok) {
+      resizeModeRef.current = true
+      setResizeMode(true)
+      termRef.current?.focus()
+    }
+  }, [sessionId])
+
+  const handleClosePane = useCallback(async () => {
+    if (!sessionId) return
+    await exitResizeMode()
+    const result = await getElectronAPI().muxTerminal.closePane(sessionId, focusPaneRef.current)
+    if (!result?.ok) return
+    const nextLayout = normalizeMuxLayoutKind(result.layoutKind)
+    syncLayoutKind(nextLayout)
+    if (focusPaneRef.current >= result.paneCount) {
+      focusPaneRef.current = Math.max(0, result.paneCount - 1)
+    }
+    useAppStore.setState((s) => ({
+      tabs: s.tabs.map((t) =>
+        t.id === tab.id
+          ? {
+              ...t,
+              muxLayoutKind: nextLayout,
+              muxPaneCount: paneCountFromLayoutKind(nextLayout),
+            }
+          : t,
+      ),
+    }))
+  }, [sessionId, tab.id, exitResizeMode, syncLayoutKind])
 
   const safeFit = useCallback(
     (force = false) => {
@@ -66,6 +131,11 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
   useEffect(() => {
     isTabFocusedRef.current = isFocused
   }, [isFocused])
+
+  useEffect(() => {
+    const next = resolveMuxLayoutKind(tab.muxLayoutKind, tab.muxPaneCount)
+    syncLayoutKind(next)
+  }, [tab.muxLayoutKind, tab.muxPaneCount, syncLayoutKind])
 
   useEffect(() => {
     if (!sessionId || termRef.current || !containerRef.current) return
@@ -171,17 +241,37 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
         getTerminalId: () => sessionId,
         term,
       })
+      const baseKeyHandler = term.options.customKeyEventHandler
+      term.attachCustomKeyEventHandler((event) => {
+        if (resizeModeRef.current && event.type === 'keydown') {
+          if (event.key === 'Escape') {
+            void exitResizeMode()
+            return false
+          }
+          const direction = muxSplitDirectionFromKey(event.key, layoutKindRef.current)
+          if (direction) {
+            void getElectronAPI().muxTerminal.adjustSplit(sessionId, direction)
+            return false
+          }
+        }
+        return baseKeyHandler ? baseKeyHandler(event) : true
+      })
 
       onMouseDown = (event: MouseEvent) => {
-        if (paneCount <= 1 || event.button !== 0) return
+        if (activePaneCountFromLayoutKind(layoutKindRef.current) <= 1 || event.button !== 0) return
         const coords = getXtermCellFromMouseEvent(term, event)
         if (!coords) return
         const layout = computeMuxGridLayout(
           term.cols,
           term.rows,
-          paneCount as MuxGridPaneCount,
+          layoutKindRef.current,
         )
-        const paneIndex = paneIndexAtCell(layout, paneCount, coords.col, coords.row)
+        const paneIndex = paneIndexAtCell(
+          layout,
+          activePaneCountFromLayoutKind(layoutKindRef.current),
+          coords.col,
+          coords.row,
+        )
         if (paneIndex !== focusPaneRef.current) {
           focusPaneRef.current = paneIndex
           getElectronAPI().muxTerminal.setFocus(sessionId, paneIndex)
@@ -204,6 +294,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       term.element?.addEventListener('wheel', onWheel, { passive: false, capture: true })
 
       term.onData((data) => {
+        if (resizeModeRef.current) return
         touchTabActivity(tab.id)
         getElectronAPI().muxTerminal.write(sessionId, data, focusPaneRef.current)
       })
@@ -213,7 +304,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
         const digit = domEvent.key
         if (digit >= '1' && digit <= '4') {
           const idx = Number.parseInt(digit, 10) - 1
-          if (idx < paneCount) {
+          if (idx < activePaneCountFromLayoutKind(layoutKindRef.current)) {
             focusPaneRef.current = idx
             getElectronAPI().muxTerminal.setFocus(sessionId, idx)
             domEvent.preventDefault()
@@ -235,6 +326,8 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
 
     return () => {
       disposed = true
+      void getElectronAPI().muxTerminal.setResizeMode(sessionId, false)
+      resizeModeRef.current = false
       if (onMouseDown) {
         termRef.current?.element?.removeEventListener('mousedown', onMouseDown)
       }
@@ -252,8 +345,9 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       termRef.current = null
       fitRef.current = null
       setTermReady(false)
+      setResizeMode(false)
     }
-  }, [sessionId, paneCount, tab.id, safeFit])
+  }, [sessionId, tab.id, safeFit, exitResizeMode])
 
   useEffect(() => {
     if (!isFocused || !termReady || !sessionId) return
@@ -261,11 +355,33 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
     notifyTerminalFocusReady(sessionId)
   }, [isFocused, termReady, sessionId])
 
+  useEffect(() => {
+    if (isFocused) return
+    void exitResizeMode()
+  }, [isFocused, exitResizeMode])
+
   return (
     <div
       className="absolute inset-0 overflow-hidden p-[10px]"
       style={{ backgroundColor: chromeBackground }}
     >
+      <MuxTerminalFloatingIsland
+        layoutKind={layoutKind}
+        resizeMode={resizeMode}
+        onEnterResizeMode={() => void enterResizeMode()}
+        onClosePane={() => void handleClosePane()}
+      />
+      {resizeMode && (
+        <div className="pointer-events-none absolute inset-x-0 top-14 z-20 flex justify-center px-4">
+          <div className="rounded-full border border-fuchsia-500/40 bg-background/90 px-3 py-1 text-xs text-fuchsia-700 shadow-sm backdrop-blur-sm dark:text-fuchsia-300">
+            {layoutKind === '1x2'
+              ? t('muxTerminal.resizeHintVertical')
+              : layoutKind === '2x1'
+                ? t('muxTerminal.resizeHintHorizontal')
+                : t('muxTerminal.resizeHintGrid')}
+          </div>
+        </div>
+      )}
       <div
         ref={containerRef}
         className={cn(

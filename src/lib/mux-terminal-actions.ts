@@ -6,27 +6,36 @@ import {
   getDefaultBuiltinShell,
 } from '@/lib/builtin-connection-options'
 import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
-import type { MuxPaneCount } from '../../electron/shared/mux-terminal-types'
-import { normalizeMuxPaneCount } from '../../electron/shared/mux-terminal-types'
+import type { MuxLayoutKind, MuxPaneCount } from '../../electron/shared/mux-terminal-types'
+import {
+  layoutKindFromPaneCount,
+  normalizeMuxLayoutKind,
+  normalizeMuxPaneCount,
+  paneCountFromLayoutKind,
+} from '../../electron/shared/mux-terminal-types'
 import { requestTerminalFocus } from '@/lib/terminal-focus'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 import { toastTerminalError } from '@/lib/terminal-actions'
 
 export async function createMuxTerminal(
   shell?: BuiltinShellType,
-  paneCount?: MuxPaneCount,
+  layoutKind?: MuxLayoutKind | MuxPaneCount,
 ): Promise<void> {
   const settings = useAppStore.getState().settings
   const resolved = shell ?? getDefaultBuiltinShell(settings)
   const spawn = getBuiltinTerminalOptions(resolved, settings)
-  const normalizedCount = paneCount ?? normalizeMuxPaneCount(settings?.experimental.muxPaneCount)
+  const normalizedLayout =
+    typeof layoutKind === 'number'
+      ? layoutKindFromPaneCount(normalizeMuxPaneCount(layoutKind))
+      : normalizeMuxLayoutKind(layoutKind ?? settings?.experimental.muxPaneCount)
 
   try {
     const result = await getElectronAPI().muxTerminal.create({
       shell: spawn.shell,
       args: spawn.args,
       env: spawn.env,
-      paneCount: normalizedCount,
+      layoutKind: normalizedLayout,
+      paneCount: paneCountFromLayoutKind(normalizedLayout),
     })
     const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
     setTerminalCwd(result.id, result.cwd)
@@ -39,6 +48,7 @@ export async function createMuxTerminal(
       shell: result.shell,
       muxMode: true,
       muxPaneCount: result.paneCount,
+      muxLayoutKind: result.layoutKind,
     })
     useTabGroupStore.getState().addTabToActiveGroupIfAny(tabId)
     requestTerminalFocus(result.id)

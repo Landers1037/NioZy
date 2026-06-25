@@ -181,6 +181,14 @@ const api: ElectronAPI = {
     resize: (id, cols, rows) => ipcRenderer.send('muxTerminal:resize', id, cols, rows),
     setFocus: (id, paneIndex) => ipcRenderer.send('muxTerminal:setFocus', id, paneIndex),
     scroll: (id, delta, paneIndex) => ipcRenderer.send('muxTerminal:scroll', id, delta, paneIndex),
+    setResizeMode: (id, enabled) =>
+      ipcRenderer.invoke('muxTerminal:setResizeMode', id, enabled) as Promise<boolean>,
+    adjustSplit: (id, direction) =>
+      ipcRenderer.invoke('muxTerminal:adjustSplit', id, direction) as Promise<boolean>,
+    closePane: (id, paneIndex) =>
+      ipcRenderer.invoke('muxTerminal:closePane', id, paneIndex) as Promise<
+        import('../shared/mux-terminal-types').MuxClosePaneResult | null
+      >,
     kill: (id) => ipcRenderer.send('muxTerminal:kill', id),
     isAlive: (id) => ipcRenderer.invoke('muxTerminal:isAlive', id) as Promise<boolean>,
     setActiveStreams: (ids) => ipcRenderer.send('muxTerminal:setActiveStreams', ids),

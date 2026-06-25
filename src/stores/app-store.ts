@@ -63,8 +63,10 @@ export interface AppTab {
   sshDeferredConnect?: true
   /** NioZy Mux Core 合成屏 Tab（单 xterm 渲染多 pane） */
   muxMode?: true
-  /** Mux 合成屏 pane 数量 */
+  /** Mux 合成屏 pane 数量（兼容旧数据） */
   muxPaneCount?: 1 | 2 | 4
+  /** Mux 合成屏布局 */
+  muxLayoutKind?: import('../../electron/shared/mux-terminal-types').MuxLayoutKind
   /** 待 xterm fit 后再 spawn PTY（无 terminalId） */
   muxDeferredCreate?: true
   /** muxDeferredCreate 时暂存的 spawn 参数 */

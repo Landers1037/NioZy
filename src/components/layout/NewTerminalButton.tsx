@@ -12,18 +12,20 @@ import { createMuxTerminal } from '@/lib/mux-terminal-actions'
 import { isMuxCoreEnabled } from '@/lib/mux-terminal-render'
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
-import type { MuxPaneCount } from '../../../electron/shared/mux-terminal-types'
+import {
+  MUX_LAYOUT_OPTIONS,
+  type MuxLayoutKind,
+} from '../../../electron/shared/mux-terminal-types'
 
 interface NewTerminalButtonProps {
   iconOnly?: boolean
   className?: string
 }
 
-const MUX_PANE_OPTIONS: MuxPaneCount[] = [1, 2, 4]
-
-function muxPaneLabel(count: MuxPaneCount, t: (key: string) => string): string {
-  if (count === 1) return t('settings.experimental.muxPaneCount1')
-  if (count === 2) return t('settings.experimental.muxPaneCount2')
+function muxLayoutLabel(kind: MuxLayoutKind, t: (key: string) => string): string {
+  if (kind === '1') return t('settings.experimental.muxPaneCount1')
+  if (kind === '2x1') return t('settings.experimental.muxPaneCount2')
+  if (kind === '1x2') return t('settings.experimental.muxPaneCount1x2')
   return t('settings.experimental.muxPaneCount4')
 }
 
@@ -59,9 +61,9 @@ export function NewTerminalButton({ iconOnly, className }: NewTerminalButtonProp
     <ContextMenu>
       <ContextMenuTrigger asChild>{button}</ContextMenuTrigger>
       <ContextMenuContent>
-        {MUX_PANE_OPTIONS.map((count) => (
-          <ContextMenuItem key={count} onSelect={() => void createMuxTerminal(undefined, count)}>
-            {muxPaneLabel(count, t)}
+        {MUX_LAYOUT_OPTIONS.map((kind) => (
+          <ContextMenuItem key={kind} onSelect={() => void createMuxTerminal(undefined, kind)}>
+            {muxLayoutLabel(kind, t)}
           </ContextMenuItem>
         ))}
       </ContextMenuContent>

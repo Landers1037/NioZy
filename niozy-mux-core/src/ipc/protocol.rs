@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Bump when adding/removing JSON-RPC methods; Electron restarts stale daemons.
-pub const MUX_CORE_API_VERSION: u32 = 2;
+pub const MUX_CORE_API_VERSION: u32 = 3;
 
 /// JSON-RPC method params / notification payloads (camelCase).
 
@@ -21,6 +21,9 @@ pub struct SpawnSessionParams {
     pub cwd: Option<String>,
     #[serde(default = "default_pane_count")]
     pub pane_count: u8,
+    /// Layout kind: "1", "2x1", "1x2", "2x2". Falls back to pane_count when omitted.
+    #[serde(default)]
+    pub layout_kind: Option<String>,
 }
 
 fn default_pane_count() -> u8 {
@@ -32,6 +35,7 @@ fn default_pane_count() -> u8 {
 pub struct SpawnSessionResult {
     pub session_id: String,
     pub pane_count: u8,
+    pub layout_kind: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -71,6 +75,36 @@ pub struct ScrollParams {
 #[serde(rename_all = "camelCase")]
 pub struct KillSessionParams {
     pub session_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetResizeModeParams {
+    pub session_id: String,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AdjustSplitParams {
+    pub session_id: String,
+    pub direction: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClosePaneParams {
+    pub session_id: String,
+    #[serde(default)]
+    pub pane_index: Option<u8>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClosePaneResult {
+    pub ok: bool,
+    pub pane_count: u8,
+    pub layout_kind: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -130,6 +164,9 @@ pub mod methods {
     pub const RESIZE: &str = "mux.resize";
     pub const SET_FOCUS: &str = "mux.setFocus";
     pub const SCROLL: &str = "mux.scroll";
+    pub const SET_RESIZE_MODE: &str = "mux.setResizeMode";
+    pub const ADJUST_SPLIT: &str = "mux.adjustSplit";
+    pub const CLOSE_PANE: &str = "mux.closePane";
     pub const KILL_SESSION: &str = "mux.killSession";
     pub const OUTPUT: &str = "mux.output";
     pub const CWD_CHANGED: &str = "mux.cwdChanged";

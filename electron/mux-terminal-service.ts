@@ -3,8 +3,18 @@ import { randomUUID } from 'crypto'
 import { terminalLog, logErrorPayload } from './app-log'
 import { resolveMuxSpawnParams } from './mux-terminal-spawn'
 import { ensureMuxDaemon, killMuxDaemon, MuxRpcClient, resolveMuxCoreRunMode } from './mux-rpc-client'
-import type { MuxTerminalCreateOptions, MuxTerminalSession } from './shared/mux-terminal-types'
-import { normalizeMuxPaneCount } from './shared/mux-terminal-types'
+import type {
+  MuxClosePaneResult,
+  MuxLayoutKind,
+  MuxSplitDirection,
+  MuxTerminalCreateOptions,
+  MuxTerminalSession,
+} from './shared/mux-terminal-types'
+import {
+  normalizeMuxLayoutKind,
+  normalizeMuxPaneCount,
+  paneCountFromLayoutKind,
+} from './shared/mux-terminal-types'
 import type { AppSettings } from './shared/api-types'
 
 const CLAIM_STREAM_WAIT_MS = 30_000
@@ -15,6 +25,7 @@ interface MuxSessionRecord {
   shell: string
   cwd: string
   paneCount: 1 | 2 | 4
+  layoutKind: MuxLayoutKind
 }
 
 export class MuxTerminalService extends EventEmitter {
@@ -42,6 +53,7 @@ export class MuxTerminalService extends EventEmitter {
     const cols = options.cols ?? 120
     const rows = options.rows ?? 40
     const paneCount = normalizeMuxPaneCount(options.paneCount)
+    const layoutKind = normalizeMuxLayoutKind(options.layoutKind ?? options.paneCount)
 
     // 须在 RPC 完成前注册，否则 core 推送的 mux.output 会被丢弃（RPC 响应晚于首帧通知）
     const pendingSession: MuxSessionRecord = {
@@ -50,6 +62,7 @@ export class MuxTerminalService extends EventEmitter {
       shell: spawn.shellType,
       cwd: spawn.cwd,
       paneCount,
+      layoutKind,
     }
     this.sessions.set(id, pendingSession)
 
@@ -60,12 +73,13 @@ export class MuxTerminalService extends EventEmitter {
       shell: spawn.shell,
       requestedShell: options.shell,
       paneCount,
+      layoutKind,
       args: spawn.args,
       envKeys: Object.keys(spawn.env),
     })
 
     try {
-      await this.requestSpawnSession(id, cols, rows, spawn, paneCount)
+      await this.requestSpawnSession(id, cols, rows, spawn, paneCount, layoutKind)
     } catch (err) {
       this.sessions.delete(id)
       const message = err instanceof Error ? err.message : String(err)
@@ -75,7 +89,7 @@ export class MuxTerminalService extends EventEmitter {
           shell: spawn.shell,
         })
         await this.restartDaemon()
-        await this.requestSpawnSession(id, cols, rows, spawn, paneCount)
+        await this.requestSpawnSession(id, cols, rows, spawn, paneCount, layoutKind)
       } else {
         terminalLog.error('Mux spawnSession failed', logErrorPayload(err))
         throw err
@@ -83,13 +97,14 @@ export class MuxTerminalService extends EventEmitter {
     }
 
     const session = pendingSession
-    terminalLog.info('Mux session created', { id, paneCount, shell: spawn.shellType })
+    terminalLog.info('Mux session created', { id, paneCount, layoutKind, shell: spawn.shellType })
     return {
       id,
       name: spawn.name,
       shell: spawn.shellType,
       cwd: spawn.cwd,
       paneCount,
+      layoutKind,
     }
   }
 
@@ -99,6 +114,7 @@ export class MuxTerminalService extends EventEmitter {
     rows: number,
     spawn: Awaited<ReturnType<typeof resolveMuxSpawnParams>>,
     paneCount: 1 | 2 | 4,
+    layoutKind: MuxLayoutKind,
   ): Promise<void> {
     await this.rpc!.request('mux.spawnSession', {
       sessionId: id,
@@ -109,6 +125,7 @@ export class MuxTerminalService extends EventEmitter {
       env: spawn.env,
       cwd: spawn.cwd,
       paneCount,
+      layoutKind,
     })
   }
 
@@ -167,6 +184,50 @@ export class MuxTerminalService extends EventEmitter {
     void this.rpc
       .request('mux.scroll', { sessionId: id, paneIndex, delta })
       .catch((err) => terminalLog.warn('Mux scroll failed', logErrorPayload(err)))
+  }
+
+  setResizeMode(id: string, enabled: boolean): Promise<boolean> {
+    if (!this.sessions.has(id) || !this.rpc) return Promise.resolve(false)
+    return this.rpc
+      .request('mux.setResizeMode', { sessionId: id, enabled })
+      .then((result) => Boolean((result as { ok?: boolean })?.ok))
+      .catch((err) => {
+        terminalLog.warn('Mux setResizeMode failed', logErrorPayload(err))
+        return false
+      })
+  }
+
+  adjustSplit(id: string, direction: MuxSplitDirection): Promise<boolean> {
+    if (!this.sessions.has(id) || !this.rpc) return Promise.resolve(false)
+    return this.rpc
+      .request('mux.adjustSplit', { sessionId: id, direction })
+      .then((result) => Boolean((result as { ok?: boolean })?.ok))
+      .catch((err) => {
+        terminalLog.warn('Mux adjustSplit failed', logErrorPayload(err))
+        return false
+      })
+  }
+
+  closePane(id: string, paneIndex?: number): Promise<MuxClosePaneResult | null> {
+    if (!this.sessions.has(id) || !this.rpc) return Promise.resolve(null)
+    return this.rpc
+      .request('mux.closePane', { sessionId: id, paneIndex })
+      .then((result) => {
+        const payload = result as MuxClosePaneResult
+        if (payload?.ok) {
+          const session = this.sessions.get(id)
+          if (session) {
+            const layoutKind = normalizeMuxLayoutKind(payload.layoutKind)
+            session.layoutKind = layoutKind
+            session.paneCount = paneCountFromLayoutKind(layoutKind)
+          }
+        }
+        return payload
+      })
+      .catch((err) => {
+        terminalLog.warn('Mux closePane failed', logErrorPayload(err))
+        return null
+      })
   }
 
   kill(id: string): void {

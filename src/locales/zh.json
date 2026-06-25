@@ -987,9 +987,10 @@
       "muxCoreEnabled": "Mux 合成屏",
       "muxCoreEnabledDesc": "启用后可新建 Mux 终端 Tab（需先编译 niozy-mux-core）。仅支持 Xterm.js 与本地 Shell。",
       "muxPaneCount": "默认 Pane 数",
-      "muxPaneCountDesc": "新建 Mux Tab 时的合成布局：1 全屏、2 左右、4 四宫格。",
+      "muxPaneCountDesc": "新建 Mux Tab 时的合成布局：1 全屏、2×1 左右、1×2 上下、4 四宫格。",
       "muxPaneCount1": "1（全屏）",
-      "muxPaneCount2": "2（左右）",
+      "muxPaneCount2": "2×1（左右）",
+      "muxPaneCount1x2": "1×2（上下）",
       "muxPaneCount4": "4（2×2）",
       "muxCreateTerminal": "新建 Mux 终端"
     },
@@ -1493,6 +1494,15 @@
   },
   "connection": {
     "invalidPort": "端口无效（须在 1–65535 之间），当前配置：{{port}}"
+  },
+  "muxTerminal": {
+    "floatingIslandAria": "Mux 终端操作",
+    "floatingIslandTitle": "Mux",
+    "resizePane": "调整大小",
+    "closePane": "关闭 Pane",
+    "resizeHintHorizontal": "←→ 调整宽度 · Esc 退出",
+    "resizeHintVertical": "↑↓ 调整高度 · Esc 退出",
+    "resizeHintGrid": "方向键调整大小 · Esc 退出"
   },
   "toast": {
     "terminalStartFailed": "终端启动失败",

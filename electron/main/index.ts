@@ -28,7 +28,7 @@ import { syncGlobalShortcuts, unregisterGlobalShortcuts } from '../global-shortc
 import { sendToRenderer } from './window-ipc'
 import { createTerminalOutputFlusher } from './terminal-output-flush'
 import type { MuxTerminalCreateOptions } from '../shared/mux-terminal-types'
-import { normalizeMuxPaneCount } from '../shared/mux-terminal-types'
+import { normalizeMuxLayoutKind, normalizeMuxPaneCount } from '../shared/mux-terminal-types'
 import { createTerminalKillQueue } from '../terminal-kill-queue'
 import { augmentWindowsPath } from '../resolve-executable'
 import { loadTrayIcon } from '../tray-icon'
@@ -2362,6 +2362,7 @@ ipcMain.handle('muxTerminal:create', async (_, options: MuxTerminalCreateOptions
     args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
     env: options.env ? await vaultStore.resolveEnv(options.env) : undefined,
     paneCount: normalizeMuxPaneCount(options.paneCount ?? experimental.muxPaneCount),
+    layoutKind: normalizeMuxLayoutKind(options.layoutKind ?? options.paneCount ?? experimental.muxPaneCount),
   }
   try {
     const session = await muxTerminalService.create(resolved)
@@ -2385,6 +2386,17 @@ ipcMain.on('muxTerminal:setFocus', (_, id: string, paneIndex: number) => {
 ipcMain.on('muxTerminal:scroll', (_, id: string, delta: number, paneIndex?: number) => {
   muxTerminalService.scroll(id, delta, paneIndex)
 })
+ipcMain.handle('muxTerminal:setResizeMode', (_, id: string, enabled: boolean) =>
+  muxTerminalService.setResizeMode(id, enabled),
+)
+ipcMain.handle(
+  'muxTerminal:adjustSplit',
+  (_, id: string, direction: import('../shared/mux-terminal-types').MuxSplitDirection) =>
+    muxTerminalService.adjustSplit(id, direction),
+)
+ipcMain.handle('muxTerminal:closePane', (_, id: string, paneIndex?: number) =>
+  muxTerminalService.closePane(id, paneIndex),
+)
 ipcMain.on('muxTerminal:kill', (_, id: string) => muxTerminalService.kill(id))
 ipcMain.handle('muxTerminal:isAlive', (_, id: string) => muxTerminalService.isAlive(id))
 ipcMain.on('muxTerminal:setActiveStreams', (_, ids: string[]) => {

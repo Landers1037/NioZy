@@ -1,7 +1,7 @@
 use alacritty_terminal::term::cell::Cell;
 use alacritty_terminal::term::{point_to_viewport, TermMode};
 use alacritty_terminal::vte::ansi::{Color, NamedColor};
-use crate::layout::GridLayout;
+use crate::layout::{GridLayout, LayoutKind};
 use crate::pane::PaneTerminal;
 
 #[derive(Debug, Clone)]
@@ -27,6 +27,7 @@ impl ComposedScreen {
         layout: &GridLayout,
         panes: &[&PaneTerminal; 4],
         focus_pane: u8,
+        resize_mode: bool,
     ) -> Self {
         let cols = layout.screen.cols;
         let rows = layout.screen.rows;
@@ -40,7 +41,7 @@ impl ComposedScreen {
         };
         let mut cells = vec![default; cols * rows];
 
-        for pane_index in 0..layout.active_count {
+        for pane_index in 0..layout.active_count() {
             let rect = layout.panes[pane_index as usize];
             let pane = panes[pane_index as usize];
             let content = pane.term.renderable_content();
@@ -64,6 +65,9 @@ impl ComposedScreen {
         }
 
         draw_pane_borders(&mut cells, layout, focus_pane);
+        if resize_mode && layout.active_count() > 1 && focus_pane < layout.active_count() {
+            draw_pane_resize_highlight(&mut cells, layout, focus_pane);
+        }
         let cursor = focus_cursor_position(layout, panes, focus_pane);
 
         Self {
@@ -88,7 +92,7 @@ fn composed_from_cell(cell: &Cell) -> ComposedCell {
 }
 
 fn draw_pane_borders(cells: &mut [ComposedCell], layout: &GridLayout, focus_pane: u8) {
-    if layout.active_count <= 1 {
+    if layout.active_count() <= 1 {
         return;
     }
 
@@ -105,14 +109,20 @@ fn draw_pane_borders(cells: &mut [ComposedCell], layout: &GridLayout, focus_pane
         }
     };
 
-    match layout.active_count {
-        2 => {
+    match layout.kind {
+        LayoutKind::Horizontal2 => {
             let div_col = layout.panes[0].cols;
             for row in 0..rows {
-                paint_border_cell(cells, cols, div_col, row, '│', divider_fg(&[0, 1]));
+                paint_border_cell(cells, cols, div_col, row, '│', divider_fg(&[0, 1]), false);
             }
         }
-        4 => {
+        LayoutKind::Vertical2 => {
+            let div_row = layout.panes[0].rows;
+            for col in 0..cols {
+                paint_border_cell(cells, cols, col, div_row, '─', divider_fg(&[0, 1]), false);
+            }
+        }
+        LayoutKind::Grid4 => {
             let div_col = layout.panes[0].cols;
             let div_row = layout.panes[0].rows;
 
@@ -122,7 +132,7 @@ fn draw_pane_borders(cells: &mut [ComposedCell], layout: &GridLayout, focus_pane
                 }
                 let left = if row < div_row { 0 } else { 2 };
                 let right = if row < div_row { 1 } else { 3 };
-                paint_border_cell(cells, cols, div_col, row, '│', divider_fg(&[left, right]));
+                paint_border_cell(cells, cols, div_col, row, '│', divider_fg(&[left, right]), false);
             }
 
             for col in 0..cols {
@@ -131,12 +141,54 @@ fn draw_pane_borders(cells: &mut [ComposedCell], layout: &GridLayout, focus_pane
                 }
                 let top = if col < div_col { 0 } else { 1 };
                 let bottom = if col < div_col { 2 } else { 3 };
-                paint_border_cell(cells, cols, col, div_row, '─', divider_fg(&[top, bottom]));
+                paint_border_cell(cells, cols, col, div_row, '─', divider_fg(&[top, bottom]), false);
             }
 
-            paint_border_cell(cells, cols, div_col, div_row, '┼', border_fg);
+            paint_border_cell(cells, cols, div_col, div_row, '┼', border_fg, false);
         }
-        _ => {}
+        LayoutKind::Grid3 => {
+            let div_col = layout.panes[0].cols;
+            let div_row = layout.panes[0].rows;
+
+            for row in 0..div_row {
+                paint_border_cell(cells, cols, div_col, row, '│', divider_fg(&[0, 1]), false);
+            }
+            paint_border_cell(cells, cols, div_col, div_row, '┬', border_fg, false);
+
+            for col in 0..cols {
+                if col == div_col {
+                    continue;
+                }
+                let top = if col < div_col { 0 } else { 1 };
+                paint_border_cell(cells, cols, col, div_row, '─', divider_fg(&[top, 2]), false);
+            }
+            paint_border_cell(cells, cols, div_col, div_row, '┴', border_fg, false);
+        }
+        LayoutKind::Single => {}
+    }
+}
+
+fn draw_pane_resize_highlight(cells: &mut [ComposedCell], layout: &GridLayout, focus_pane: u8) {
+    let rect = layout.panes[focus_pane as usize];
+    let cols = layout.screen.cols;
+    let highlight_fg = Color::Named(NamedColor::BrightMagenta);
+
+    if rect.rows == 0 || rect.cols == 0 {
+        return;
+    }
+
+    let left = rect.col;
+    let right = rect.col + rect.cols - 1;
+    let top = rect.row;
+    let bottom = rect.row + rect.rows - 1;
+
+    for col in left..=right {
+        paint_border_cell(cells, cols, col, top, '═', highlight_fg, true);
+        paint_border_cell(cells, cols, col, bottom, '═', highlight_fg, true);
+    }
+    for row in top..=bottom {
+        paint_border_cell(cells, cols, left, row, '║', highlight_fg, true);
+        paint_border_cell(cells, cols, right, row, '║', highlight_fg, true);
     }
 }
 
@@ -145,7 +197,7 @@ fn focus_cursor_position(
     panes: &[&PaneTerminal; 4],
     focus_pane: u8,
 ) -> Option<(usize, usize)> {
-    if focus_pane >= layout.active_count {
+    if focus_pane >= layout.active_count() {
         return None;
     }
 
@@ -174,6 +226,7 @@ fn paint_border_cell(
     row: usize,
     ch: char,
     fg: Color,
+    bold: bool,
 ) {
     let idx = row * cols + col;
     if idx >= cells.len() {
@@ -183,7 +236,7 @@ fn paint_border_cell(
         ch,
         fg,
         bg: Color::Named(NamedColor::Background),
-        bold: false,
+        bold,
         italic: false,
         inverse: false,
     };
@@ -192,13 +245,13 @@ fn paint_border_cell(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::layout::GridLayout;
+    use crate::layout::{GridLayout, LayoutKind};
     use crate::pane::PaneTerminal;
     use crate::util::TerminalSize;
 
     #[test]
     fn four_pane_layout_draws_cross_divider() {
-        let layout = GridLayout::compute(120, 40, 4);
+        let layout = GridLayout::compute(120, 40, LayoutKind::Grid4);
         let empty = [
             PaneTerminal::new(&TerminalSize::new(1, 1)),
             PaneTerminal::new(&TerminalSize::new(1, 1)),
@@ -206,7 +259,7 @@ mod tests {
             PaneTerminal::new(&TerminalSize::new(1, 1)),
         ];
         let refs = [&empty[0], &empty[1], &empty[2], &empty[3]];
-        let screen = ComposedScreen::compose_from_refs(&layout, &refs, 0);
+        let screen = ComposedScreen::compose_from_refs(&layout, &refs, 0, false);
         let div_col = layout.panes[0].cols;
         let div_row = layout.panes[0].rows;
         assert_eq!(screen.cells[div_row * screen.cols + div_col].ch, '┼');
@@ -216,7 +269,7 @@ mod tests {
 
     #[test]
     fn compose_clips_cells_outside_pane_rect() {
-        let layout = GridLayout::compute(80, 24, 2);
+        let layout = GridLayout::compute(80, 24, LayoutKind::Horizontal2);
         let left_rect = layout.panes[0];
         let right_start = layout.panes[1].col;
         let mut left = PaneTerminal::new(&TerminalSize::new(80, 24));
@@ -229,7 +282,7 @@ mod tests {
             &PaneTerminal::new(&TerminalSize::new(1, 1)),
             &PaneTerminal::new(&TerminalSize::new(1, 1)),
         ];
-        let screen = ComposedScreen::compose_from_refs(&layout, &refs, 0);
+        let screen = ComposedScreen::compose_from_refs(&layout, &refs, 0, false);
         assert_eq!(screen.cells[right_start].ch, 'Y');
         assert_eq!(screen.cells[left_rect.cols - 1].ch, 'X');
         assert_eq!(screen.cells[left_rect.cols].ch, '│');

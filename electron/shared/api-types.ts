@@ -514,6 +514,15 @@ export interface ElectronAPI {
     resize: (id: string, cols: number, rows: number) => void
     setFocus: (id: string, paneIndex: number) => void
     scroll: (id: string, delta: number, paneIndex?: number) => void
+    setResizeMode: (id: string, enabled: boolean) => Promise<boolean>
+    adjustSplit: (
+      id: string,
+      direction: import('./mux-terminal-types').MuxSplitDirection,
+    ) => Promise<boolean>
+    closePane: (
+      id: string,
+      paneIndex?: number,
+    ) => Promise<import('./mux-terminal-types').MuxClosePaneResult | null>
     kill: (id: string) => void
     isAlive: (id: string) => Promise<boolean>
     setActiveStreams: (ids: string[]) => void

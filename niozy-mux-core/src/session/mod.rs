@@ -1,12 +1,13 @@
 use crate::ansi::render_full_redraw;
 use crate::compositor::ComposedScreen;
 use crate::ipc::{
-    err_response, methods, notification, ok_response, ClientHub, CwdChangedParams, IncomingRequest,
-    JsonRpcError, KillSessionParams, OkResult, OutputParams, PingResult, ResizeParams, ScrollParams,
-    SessionExitParams, SetFocusParams, SpawnSessionParams, SpawnSessionResult, WriteInputParams,
+    err_response, methods, notification, ok_response, ClientHub, AdjustSplitParams, ClosePaneParams,
+    ClosePaneResult, CwdChangedParams, IncomingRequest, JsonRpcError, KillSessionParams, OkResult,
+    OutputParams, PaneExitParams, PingResult, ResizeParams, ScrollParams, SessionExitParams,
+    SetFocusParams, SetResizeModeParams, SpawnSessionParams, SpawnSessionResult, WriteInputParams,
 };
 use alacritty_terminal::grid::Scroll;
-use crate::layout::GridLayout;
+use crate::layout::{AdjustDirection, GridLayout, LayoutKind};
 use crate::pane::PaneTerminal;
 use crate::process_job::{register_pty_child, ChildProcessJob};
 use crate::pty::{kill_pty, resize_pty_master, spawn_pty, spawn_pty_reader, write_pty, PtyHandle, PtySpawnOptions};
@@ -33,6 +34,7 @@ struct MuxSession {
     panes: [Option<PaneRuntime>; 4],
     focus: u8,
     output_seq: u64,
+    resize_mode: bool,
 }
 
 impl MuxSession {
@@ -43,6 +45,7 @@ impl MuxSession {
             panes: [None, None, None, None],
             focus: 0,
             output_seq: 0,
+            resize_mode: false,
         }
     }
 
@@ -78,7 +81,7 @@ impl MuxSession {
 
     fn render_current(&self) -> Vec<u8> {
         let refs = self.pane_refs();
-        let composed = ComposedScreen::compose_from_refs(&self.layout, &refs, self.focus);
+        let composed = ComposedScreen::compose_from_refs(&self.layout, &refs, self.focus, self.resize_mode);
         render_full_redraw(&composed)
     }
 
@@ -133,6 +136,116 @@ impl MuxSession {
             }
         }
         self.panes = [None, None, None, None];
+    }
+
+    fn resize_all_panes(&mut self, hub: &ClientHub) {
+        for i in 0..self.layout.active_count() {
+            let size = self.layout.pane_size(i);
+            if let Some(pane) = self.panes[i as usize].as_mut() {
+                pane.terminal.resize(&size);
+                if let Err(err) = resize_pty_master(pane._master.as_ref(), &size) {
+                    tracing::warn!(
+                        session_id = %self.id,
+                        pane_index = i,
+                        error = %err,
+                        "resize pty failed"
+                    );
+                }
+            }
+        }
+        let output = self.emit_output();
+        broadcast_notification(hub, methods::OUTPUT, output);
+    }
+
+    fn set_resize_mode(&mut self, enabled: bool, hub: &ClientHub) -> bool {
+        if enabled && self.layout.active_count() <= 1 {
+            return false;
+        }
+        if enabled && self.panes[self.focus as usize].is_none() {
+            return false;
+        }
+        self.resize_mode = enabled;
+        let output = self.emit_output();
+        broadcast_notification(hub, methods::OUTPUT, output);
+        true
+    }
+
+    fn adjust_split(&mut self, direction: AdjustDirection, hub: &ClientHub) -> bool {
+        if !self.resize_mode || self.layout.active_count() <= 1 {
+            return false;
+        }
+        self.layout.adjust_split(direction, self.focus);
+        self.resize_all_panes(hub);
+        true
+    }
+
+    fn close_pane(&mut self, pane_index: u8, hub: &ClientHub) -> ClosePaneResult {
+        if self.layout.active_count() <= 1 {
+            return ClosePaneResult {
+                ok: false,
+                pane_count: self.layout.active_count(),
+                layout_kind: self.layout.kind.kind_str().to_string(),
+            };
+        }
+        if pane_index >= self.layout.active_count() || self.panes[pane_index as usize].is_none() {
+            return ClosePaneResult {
+                ok: false,
+                pane_count: self.layout.active_count(),
+                layout_kind: self.layout.kind.kind_str().to_string(),
+            };
+        }
+
+        if let Some(mut pane) = self.panes[pane_index as usize].take() {
+            if let Some(task) = pane._reader_task.take() {
+                task.abort();
+            }
+            if let Err(err) = kill_pty(&pane.child) {
+                tracing::warn!(session_id = %self.id, pane_index, error = %err, "kill_pty failed");
+            }
+            broadcast_notification(
+                hub,
+                methods::PANE_EXIT,
+                PaneExitParams {
+                    session_id: self.id.clone(),
+                    pane_index,
+                    code: 0,
+                },
+            );
+        }
+
+        let old_kind = self.layout.kind;
+        let mut compacted: [Option<PaneRuntime>; 4] = [None, None, None, None];
+        let mut next = 0u8;
+        for i in 0..4 {
+            if let Some(pane) = self.panes[i].take() {
+                compacted[next as usize] = Some(pane);
+                next += 1;
+            }
+        }
+        self.panes = compacted;
+
+        let remaining = next;
+        let new_kind = old_kind.layout_after_close(remaining);
+        if self.focus >= remaining {
+            self.focus = remaining.saturating_sub(1);
+        } else if self.focus > pane_index {
+            self.focus -= 1;
+        }
+
+        let screen = self.layout.screen;
+        self.layout = GridLayout::compute(
+            screen.cols as u16,
+            screen.rows as u16,
+            new_kind,
+        );
+        self.resize_mode = false;
+        self.resize_all_panes(hub);
+
+        ClosePaneResult {
+            ok: true,
+            pane_count: self.layout.active_count(),
+            layout_kind: self.layout.kind.kind_str().to_string(),
+        }
     }
 }
 
@@ -334,6 +447,7 @@ async fn handle_rpc_request(
             let env = params.env;
             let cwd = params.cwd;
             let pane_count = params.pane_count;
+            let layout_kind = params.layout_kind.clone();
 
             let blocking_started = Instant::now();
             tracing::info!(session_id = %session_id, "spawn_session blocking task begin");
@@ -354,6 +468,7 @@ async fn handle_rpc_request(
                         env,
                         cwd,
                         pane_count,
+                        layout_kind.as_deref(),
                         &child_job,
                     )
                 }
@@ -377,7 +492,8 @@ async fn handle_rpc_request(
             match build_result {
                 Ok((mut session, initial, readers)) => {
                     let session_id = session.id.clone();
-                    let pane_count = session.layout.active_count;
+                    let pane_count = session.layout.active_count();
+                    let layout_kind = session.layout.kind.kind_str().to_string();
                     start_pane_readers(
                         &mut session,
                         readers,
@@ -395,6 +511,7 @@ async fn handle_rpc_request(
                     Ok(serde_json::to_value(SpawnSessionResult {
                         session_id,
                         pane_count,
+                        layout_kind,
                     })
                     .unwrap())
                 }
@@ -429,24 +546,16 @@ async fn handle_rpc_request(
             let params: ResizeParams = serde_json::from_value(params)
                 .map_err(|e| JsonRpcError::invalid_params(e.to_string()))?;
             if let Some(session) = sessions.get_mut(&params.session_id) {
+                let kind = session.layout.kind;
+                let split_col = session.layout.split_col;
+                let split_row = session.layout.split_row;
                 session.layout =
-                    GridLayout::compute(params.cols, params.rows, session.layout.active_count);
-                for i in 0..session.layout.active_count {
-                    let size = session.layout.pane_size(i);
-                    if let Some(pane) = session.panes[i as usize].as_mut() {
-                        pane.terminal.resize(&size);
-                        if let Err(err) = resize_pty_master(pane._master.as_ref(), &size) {
-                            tracing::warn!(
-                                session_id = %params.session_id,
-                                pane_index = i,
-                                error = %err,
-                                "resize pty failed"
-                            );
-                        }
-                    }
-                }
-                let output = session.emit_output();
-                broadcast_notification(hub, methods::OUTPUT, output);
+                    GridLayout::compute(params.cols, params.rows, kind);
+                session.layout.set_splits(
+                    split_col.min(session.layout.screen.cols.saturating_sub(2) as usize).max(1),
+                    split_row.min(session.layout.screen.rows.saturating_sub(2) as usize).max(1),
+                );
+                session.resize_all_panes(hub);
             }
             Ok(serde_json::to_value(OkResult { ok: true }).unwrap())
         }
@@ -474,6 +583,52 @@ async fn handle_rpc_request(
                 }
             }
             Ok(serde_json::to_value(OkResult { ok: true }).unwrap())
+        }
+
+        methods::SET_RESIZE_MODE => {
+            let params: SetResizeModeParams = serde_json::from_value(params)
+                .map_err(|e| JsonRpcError::invalid_params(e.to_string()))?;
+            let ok = if let Some(session) = sessions.get_mut(&params.session_id) {
+                session.set_resize_mode(params.enabled, hub)
+            } else {
+                false
+            };
+            Ok(serde_json::to_value(OkResult { ok }).unwrap())
+        }
+
+        methods::ADJUST_SPLIT => {
+            let params: AdjustSplitParams = serde_json::from_value(params)
+                .map_err(|e| JsonRpcError::invalid_params(e.to_string()))?;
+            let direction = match params.direction.as_str() {
+                "left" => AdjustDirection::Left,
+                "right" => AdjustDirection::Right,
+                "up" => AdjustDirection::Up,
+                "down" => AdjustDirection::Down,
+                _ => return Err(JsonRpcError::invalid_params("invalid direction")),
+            };
+            let ok = if let Some(session) = sessions.get_mut(&params.session_id) {
+                session.adjust_split(direction, hub)
+            } else {
+                false
+            };
+            Ok(serde_json::to_value(OkResult { ok }).unwrap())
+        }
+
+        methods::CLOSE_PANE => {
+            let params: ClosePaneParams = serde_json::from_value(params)
+                .map_err(|e| JsonRpcError::invalid_params(e.to_string()))?;
+            if let Some(session) = sessions.get_mut(&params.session_id) {
+                let index = params.pane_index.unwrap_or(session.focus);
+                let result = session.close_pane(index, hub);
+                Ok(serde_json::to_value(result).unwrap())
+            } else {
+                Ok(serde_json::to_value(ClosePaneResult {
+                    ok: false,
+                    pane_count: 0,
+                    layout_kind: "1".to_string(),
+                })
+                .unwrap())
+            }
         }
 
         methods::KILL_SESSION => {
@@ -506,13 +661,16 @@ fn build_session(
     env: HashMap<String, String>,
     cwd: Option<String>,
     pane_count: u8,
+    layout_kind: Option<&str>,
     child_job: &Arc<ChildProcessJob>,
 ) -> anyhow::Result<(MuxSession, OutputParams, Vec<(u8, Box<dyn std::io::Read + Send>)>)> {
-    let pane_count = pane_count.clamp(1, 4);
-    let layout = GridLayout::compute(cols, rows, pane_count);
+    let kind = LayoutKind::from_kind_str(layout_kind.unwrap_or(""), pane_count);
+    let layout = GridLayout::compute(cols, rows, kind);
+    let active_pane_count = layout.active_count();
+    let layout_kind_str = layout.kind.kind_str();
     let mut session = MuxSession::new(session_id.clone(), layout.clone());
 
-    let pane_count = layout.active_count;
+    let pane_count = active_pane_count;
     let mut spawned: Vec<(u8, PtyHandle)> = Vec::with_capacity(pane_count as usize);
     let mut pending_readers: Vec<(u8, Box<dyn std::io::Read + Send>)> =
         Vec::with_capacity(pane_count as usize);
@@ -612,7 +770,8 @@ fn build_session(
 
     tracing::info!(
         session_id = %session_id,
-        pane_count = layout.active_count,
+        pane_count = active_pane_count,
+        layout_kind = layout_kind_str,
         cols,
         rows,
         initial_bytes = initial.data_b64.len(),

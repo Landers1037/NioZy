@@ -1304,6 +1304,15 @@
   "connection": {
     "invalidPort": "ポートが無効です（1–65535）。設定値: {{port}}"
   },
+  "muxTerminal": {
+    "floatingIslandAria": "Mux ターミナル操作",
+    "floatingIslandTitle": "Mux",
+    "resizePane": "サイズ調整",
+    "closePane": "ペインを閉じる",
+    "resizeHintHorizontal": "←→ 幅を調整 · Esc で終了",
+    "resizeHintVertical": "↑↓ 高さを調整 · Esc で終了",
+    "resizeHintGrid": "方向キーでサイズ調整 · Esc で終了"
+  },
   "terminal": {
     "processExited": "[プロセス終了]",
     "processExitedWithCode": "[プロセス終了、コード {{code}}]",
