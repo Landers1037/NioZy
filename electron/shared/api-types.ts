@@ -513,6 +513,7 @@ export interface ElectronAPI {
     write: (id: string, data: string, paneIndex?: number) => void
     resize: (id: string, cols: number, rows: number) => void
     setFocus: (id: string, paneIndex: number) => void
+    scroll: (id: string, delta: number, paneIndex?: number) => void
     kill: (id: string) => void
     isAlive: (id: string) => Promise<boolean>
     setActiveStreams: (ids: string[]) => void

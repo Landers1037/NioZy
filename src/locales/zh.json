@@ -981,7 +981,7 @@
       "attachPtyScrollbackOffload": "Scrollback Offload",
       "attachPtyScrollbackOffloadDesc": "detach 时将 scrollback 卸载到侧存储并清空 xterm 缓冲，切回时再恢复，降低多 Tab 内存占用。",
       "muxCore": {
-        "title": "Rust Mux Core",
+        "title": "NioZy Mux Core",
         "description": "本地 PTY 由 niozy-mux-core 合成单 ANSI 流，单 xterm 渲染 1/2/4 pane。与 Attach-PTY 互斥，不支持 SSH。"
       },
       "muxCoreEnabled": "Mux 合成屏",

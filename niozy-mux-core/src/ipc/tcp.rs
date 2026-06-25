@@ -95,6 +95,7 @@ async fn handle_client(
         serde_json::to_value(ReadyParams {
             version: env!("CARGO_PKG_VERSION"),
             port,
+            api_version: crate::ipc::protocol::MUX_CORE_API_VERSION,
         })?,
     );
     hub.send_to(client_id, format!("{ready}\n"));

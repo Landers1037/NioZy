@@ -2,13 +2,14 @@ use crate::ansi::render_full_redraw;
 use crate::compositor::ComposedScreen;
 use crate::ipc::{
     err_response, methods, notification, ok_response, ClientHub, CwdChangedParams, IncomingRequest,
-    JsonRpcError, KillSessionParams, OkResult, OutputParams, PingResult, ResizeParams,
+    JsonRpcError, KillSessionParams, OkResult, OutputParams, PingResult, ResizeParams, ScrollParams,
     SessionExitParams, SetFocusParams, SpawnSessionParams, SpawnSessionResult, WriteInputParams,
 };
+use alacritty_terminal::grid::Scroll;
 use crate::layout::GridLayout;
 use crate::pane::PaneTerminal;
 use crate::process_job::{register_pty_child, ChildProcessJob};
-use crate::pty::{kill_pty, spawn_pty, spawn_pty_reader, write_pty, PtyHandle, PtySpawnOptions};
+use crate::pty::{kill_pty, resize_pty_master, spawn_pty, spawn_pty_reader, write_pty, PtyHandle, PtySpawnOptions};
 use crate::util::cwd::extract_cwd_from_bytes;
 use crate::util::TerminalSize;
 use anyhow::{Context, Result};
@@ -301,7 +302,11 @@ async fn handle_rpc_request(
     child_job: &Arc<ChildProcessJob>,
 ) -> std::result::Result<serde_json::Value, JsonRpcError> {
     match method {
-        methods::PING => Ok(serde_json::to_value(PingResult { pong: true }).unwrap()),
+        methods::PING => Ok(serde_json::to_value(PingResult {
+            pong: true,
+            api_version: crate::ipc::protocol::MUX_CORE_API_VERSION,
+        })
+        .unwrap()),
 
         methods::SPAWN_SESSION => {
             let params: SpawnSessionParams = serde_json::from_value(params)
@@ -430,6 +435,14 @@ async fn handle_rpc_request(
                     let size = session.layout.pane_size(i);
                     if let Some(pane) = session.panes[i as usize].as_mut() {
                         pane.terminal.resize(&size);
+                        if let Err(err) = resize_pty_master(pane._master.as_ref(), &size) {
+                            tracing::warn!(
+                                session_id = %params.session_id,
+                                pane_index = i,
+                                error = %err,
+                                "resize pty failed"
+                            );
+                        }
                     }
                 }
                 let output = session.emit_output();
@@ -445,6 +458,20 @@ async fn handle_rpc_request(
                 session.focus = params.pane_index;
                 let output = session.emit_output();
                 broadcast_notification(hub, methods::OUTPUT, output);
+            }
+            Ok(serde_json::to_value(OkResult { ok: true }).unwrap())
+        }
+
+        methods::SCROLL => {
+            let params: ScrollParams = serde_json::from_value(params)
+                .map_err(|e| JsonRpcError::invalid_params(e.to_string()))?;
+            if let Some(session) = sessions.get_mut(&params.session_id) {
+                let index = params.pane_index.unwrap_or(session.focus);
+                if let Some(pane) = session.panes[index as usize].as_mut() {
+                    pane.terminal.scroll_display(Scroll::Delta(params.delta));
+                    let output = session.emit_output();
+                    broadcast_notification(hub, methods::OUTPUT, output);
+                }
             }
             Ok(serde_json::to_value(OkResult { ok: true }).unwrap())
         }

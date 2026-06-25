@@ -162,6 +162,13 @@ export class MuxTerminalService extends EventEmitter {
       .catch((err) => terminalLog.warn('Mux setFocus failed', logErrorPayload(err)))
   }
 
+  scroll(id: string, delta: number, paneIndex?: number): void {
+    if (!this.sessions.has(id) || !this.rpc || delta === 0) return
+    void this.rpc
+      .request('mux.scroll', { sessionId: id, paneIndex, delta })
+      .catch((err) => terminalLog.warn('Mux scroll failed', logErrorPayload(err)))
+  }
+
   kill(id: string): void {
     if (!this.sessions.has(id)) return
     void this.rpc?.request('mux.killSession', { sessionId: id }).catch(() => {})

@@ -65,7 +65,7 @@ export interface ExperimentalSettings {
   /** Attach-PTY：detach 时将 scrollback 卸载到侧存储，减轻 xterm 内存占用 */
   attachPtyScrollbackOffload: boolean
   /**
-   * Rust Mux Core：本地 PTY 合成屏（单 xterm 渲染 1/2/4 pane）。
+   * NioZy Mux Core：本地 PTY 合成屏（单 xterm 渲染 1/2/4 pane）。
    * 与 Attach-PTY、Ghostty/Wterm 互斥；SSH 不支持。
    */
   muxCoreEnabled: boolean

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Bump when adding/removing JSON-RPC methods; Electron restarts stale daemons.
+pub const MUX_CORE_API_VERSION: u32 = 2;
+
 /// JSON-RPC method params / notification payloads (camelCase).
 
 #[derive(Debug, Deserialize)]
@@ -57,6 +60,15 @@ pub struct SetFocusParams {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ScrollParams {
+    pub session_id: String,
+    #[serde(default)]
+    pub pane_index: Option<u8>,
+    pub delta: i32,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KillSessionParams {
     pub session_id: String,
 }
@@ -69,6 +81,7 @@ pub struct OkResult {
 #[derive(Debug, Serialize)]
 pub struct PingResult {
     pub pong: bool,
+    pub api_version: u32,
 }
 
 #[derive(Debug, Serialize)]
@@ -76,6 +89,7 @@ pub struct PingResult {
 pub struct ReadyParams {
     pub version: &'static str,
     pub port: u16,
+    pub api_version: u32,
 }
 
 #[derive(Debug, Serialize)]
@@ -115,6 +129,7 @@ pub mod methods {
     pub const WRITE_INPUT: &str = "mux.writeInput";
     pub const RESIZE: &str = "mux.resize";
     pub const SET_FOCUS: &str = "mux.setFocus";
+    pub const SCROLL: &str = "mux.scroll";
     pub const KILL_SESSION: &str = "mux.killSession";
     pub const OUTPUT: &str = "mux.output";
     pub const CWD_CHANGED: &str = "mux.cwdChanged";

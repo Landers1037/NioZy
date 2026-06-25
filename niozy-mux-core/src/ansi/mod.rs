@@ -25,6 +25,10 @@ pub fn render_full_redraw(screen: &ComposedScreen) -> Vec<u8> {
     }
 
     out.extend_from_slice(b"\x1b[0m");
+    if let Some((col, row)) = screen.cursor {
+        out.extend_from_slice(format!("\x1b[{};{}H", row + 1, col + 1).as_bytes());
+    }
+    out.extend_from_slice(b"\x1b[?25h");
     out
 }
 
@@ -124,6 +128,7 @@ mod tests {
         let screen = ComposedScreen {
             cols: 2,
             rows: 1,
+            cursor: None,
             cells: vec![
                 ComposedCell {
                     ch: 'A',
@@ -155,6 +160,7 @@ mod tests {
         let screen = ComposedScreen {
             cols: 1,
             rows: 1,
+            cursor: None,
             cells: vec![ComposedCell {
                 ch: 'X',
                 fg: Color::Named(NamedColor::Foreground),

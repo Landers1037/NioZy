@@ -2382,6 +2382,9 @@ ipcMain.on('muxTerminal:resize', (_, id: string, cols: number, rows: number) => 
 ipcMain.on('muxTerminal:setFocus', (_, id: string, paneIndex: number) => {
   muxTerminalService.setFocus(id, paneIndex)
 })
+ipcMain.on('muxTerminal:scroll', (_, id: string, delta: number, paneIndex?: number) => {
+  muxTerminalService.scroll(id, delta, paneIndex)
+})
 ipcMain.on('muxTerminal:kill', (_, id: string) => muxTerminalService.kill(id))
 ipcMain.handle('muxTerminal:isAlive', (_, id: string) => muxTerminalService.isAlive(id))
 ipcMain.on('muxTerminal:setActiveStreams', (_, ids: string[]) => {

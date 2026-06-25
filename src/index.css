@@ -1645,6 +1645,14 @@ html.window-dragging .niozy-terminal-host .wterm {
   padding-bottom: 10px;
 }
 
+.niozy-mux-terminal-host .xterm-viewport {
+  overflow-y: hidden !important;
+}
+
+.niozy-mux-terminal-host .xterm .xterm-scrollable-element > .xterm-scrollbar {
+  display: none !important;
+}
+
 .niozy-terminal-host .xterm-viewport {
   background-color: transparent !important;
 }

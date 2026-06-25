@@ -770,6 +770,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       write: () => undefined,
       resize: () => undefined,
       setFocus: () => undefined,
+      scroll: () => undefined,
       kill: () => undefined,
       isAlive: async () => true,
       setActiveStreams: () => undefined,

@@ -302,6 +302,20 @@ pub fn write_pty(writer: &Arc<Mutex<Box<dyn Write + Send>>>, data: &[u8]) -> Res
     Ok(())
 }
 
+pub fn resize_pty_master(
+    master: &dyn portable_pty::MasterPty,
+    size: &TerminalSize,
+) -> Result<()> {
+    master
+        .resize(PtySize {
+            rows: size.rows as u16,
+            cols: size.cols as u16,
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .context("resize pty")
+}
+
 pub fn kill_pty(child: &Arc<Mutex<Box<dyn portable_pty::Child + Send + Sync>>>) -> Result<()> {
     let mut guard = child.lock().expect("pty child mutex");
     guard.kill().context("kill pty child")?;

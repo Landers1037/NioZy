@@ -1,4 +1,5 @@
 use alacritty_terminal::term::cell::Cell;
+use alacritty_terminal::term::{point_to_viewport, TermMode};
 use alacritty_terminal::vte::ansi::{Color, NamedColor};
 use crate::layout::GridLayout;
 use crate::pane::PaneTerminal;
@@ -17,6 +18,8 @@ pub struct ComposedScreen {
     pub cols: usize,
     pub rows: usize,
     pub cells: Vec<ComposedCell>,
+    /// Global screen cursor (col, row), 0-based. Drives xterm DEC cursor after full redraw.
+    pub cursor: Option<(usize, usize)>,
 }
 
 impl ComposedScreen {
@@ -40,24 +43,35 @@ impl ComposedScreen {
         for pane_index in 0..layout.active_count {
             let rect = layout.panes[pane_index as usize];
             let pane = panes[pane_index as usize];
-            for (idx, cell) in pane.term.grid().display_iter().enumerate() {
-                let local_col = idx % rect.cols;
-                let local_row = idx / rect.cols;
-                if local_row >= rect.rows {
-                    break;
+            let content = pane.term.renderable_content();
+            let display_offset = content.display_offset;
+            for indexed in content.display_iter {
+                let Some(viewport_point) = point_to_viewport(display_offset, indexed.point) else {
+                    continue;
+                };
+                let local_row = viewport_point.line;
+                let local_col = viewport_point.column.0;
+                if local_row >= rect.rows || local_col >= rect.cols {
+                    continue;
                 }
                 let global_col = rect.col + local_col;
                 let global_row = rect.row + local_row;
                 if global_col >= cols || global_row >= rows {
                     continue;
                 }
-                cells[global_row * cols + global_col] = composed_from_cell(&cell);
+                cells[global_row * cols + global_col] = composed_from_cell(&indexed.cell);
             }
         }
 
         draw_pane_borders(&mut cells, layout, focus_pane);
+        let cursor = focus_cursor_position(layout, panes, focus_pane);
 
-        Self { cols, rows, cells }
+        Self {
+            cols,
+            rows,
+            cells,
+            cursor,
+        }
     }
 }
 
@@ -126,6 +140,33 @@ fn draw_pane_borders(cells: &mut [ComposedCell], layout: &GridLayout, focus_pane
     }
 }
 
+fn focus_cursor_position(
+    layout: &GridLayout,
+    panes: &[&PaneTerminal; 4],
+    focus_pane: u8,
+) -> Option<(usize, usize)> {
+    if focus_pane >= layout.active_count {
+        return None;
+    }
+
+    let pane = panes[focus_pane as usize];
+    if !pane.term.mode().contains(TermMode::SHOW_CURSOR) {
+        return None;
+    }
+
+    let grid = pane.term.grid();
+    let viewport_point = point_to_viewport(grid.display_offset(), grid.cursor.point)?;
+    let rect = layout.panes[focus_pane as usize];
+    if viewport_point.line >= rect.rows || viewport_point.column.0 >= rect.cols {
+        return None;
+    }
+
+    Some((
+        rect.col + viewport_point.column.0,
+        rect.row + viewport_point.line,
+    ))
+}
+
 fn paint_border_cell(
     cells: &mut [ComposedCell],
     cols: usize,
@@ -171,5 +212,26 @@ mod tests {
         assert_eq!(screen.cells[div_row * screen.cols + div_col].ch, '┼');
         assert_eq!(screen.cells[0 * screen.cols + div_col].ch, '│');
         assert_eq!(screen.cells[div_row * screen.cols + 0].ch, '─');
+    }
+
+    #[test]
+    fn compose_clips_cells_outside_pane_rect() {
+        let layout = GridLayout::compute(80, 24, 2);
+        let left_rect = layout.panes[0];
+        let right_start = layout.panes[1].col;
+        let mut left = PaneTerminal::new(&TerminalSize::new(80, 24));
+        left.write_bytes(b"X".repeat(80).as_slice());
+        let mut right = PaneTerminal::new(&TerminalSize::new(layout.panes[1].cols as u16, 24));
+        right.write_bytes(b"Y");
+        let refs = [
+            &left,
+            &right,
+            &PaneTerminal::new(&TerminalSize::new(1, 1)),
+            &PaneTerminal::new(&TerminalSize::new(1, 1)),
+        ];
+        let screen = ComposedScreen::compose_from_refs(&layout, &refs, 0);
+        assert_eq!(screen.cells[right_start].ch, 'Y');
+        assert_eq!(screen.cells[left_rect.cols - 1].ch, 'X');
+        assert_eq!(screen.cells[left_rect.cols].ch, '│');
     }
 }

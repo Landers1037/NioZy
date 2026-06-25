@@ -38,6 +38,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
   const focusPaneRef = useRef(0)
+  const isTabFocusedRef = useRef(isFocused)
   const paneCount = tab.muxPaneCount ?? 4
   const terminalSettings = useAppStore((s) => s.settings?.terminal)
   const [termReady, setTermReady] = useState(false)
@@ -63,6 +64,10 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
   )
 
   useEffect(() => {
+    isTabFocusedRef.current = isFocused
+  }, [isFocused])
+
+  useEffect(() => {
     if (!sessionId || termRef.current || !containerRef.current) return
 
     let disposed = false
@@ -71,6 +76,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
     let writeBatcher: ReturnType<typeof createMuxTerminalWriteBatcher> | undefined
     let unsubLayoutFit: (() => void) | undefined
     let onMouseDown: ((event: MouseEvent) => void) | undefined
+    let onWheel: ((event: WheelEvent) => void) | undefined
     const pendingChunks: string[] = []
 
     muxTerminalLog.info('mount effect start', { sessionId, tabId: tab.id })
@@ -98,12 +104,15 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
         s?.terminal.colorScheme ?? 'atom',
         s?.terminal,
       )
-      const termOptions = buildTerminalOptions(
-        s?.terminal,
-        theme,
-        getTerminalCursorOptions(s?.terminal),
-        s?.shell?.emojiNativeRendering,
-      )
+      const termOptions = {
+        ...buildTerminalOptions(
+          s?.terminal,
+          theme,
+          getTerminalCursorOptions(s?.terminal),
+          s?.shell?.emojiNativeRendering,
+        ),
+        scrollback: 0,
+      }
       const term = new Terminal(termOptions)
       const fit = new FitAddon()
       term.loadAddon(fit)
@@ -112,6 +121,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       fitRef.current = fit
       registerTerminal(sessionId, term)
       applyTerminalRuntimeOptions(term, s?.terminal)
+      term.options.scrollback = 0
       applyInteractiveCliTerminalOptions(
         term,
         s?.shell?.shiftEnterNewline ?? DEFAULT_SHELL_SETTINGS.shiftEnterNewline,
@@ -180,6 +190,19 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       }
       term.element?.addEventListener('mousedown', onMouseDown)
 
+      onWheel = (event: WheelEvent) => {
+        event.preventDefault()
+        event.stopPropagation()
+        event.stopImmediatePropagation()
+        if (!isTabFocusedRef.current || event.deltaY === 0) return
+        const lines = Math.max(1, Math.round(Math.abs(event.deltaY) / 40))
+        const delta = event.deltaY < 0 ? lines : -lines
+        getElectronAPI().muxTerminal.scroll(sessionId, delta, focusPaneRef.current)
+      }
+      const wheelTarget = containerRef.current
+      wheelTarget?.addEventListener('wheel', onWheel, { passive: false, capture: true })
+      term.element?.addEventListener('wheel', onWheel, { passive: false, capture: true })
+
       term.onData((data) => {
         touchTabActivity(tab.id)
         getElectronAPI().muxTerminal.write(sessionId, data, focusPaneRef.current)
@@ -215,6 +238,10 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       if (onMouseDown) {
         termRef.current?.element?.removeEventListener('mousedown', onMouseDown)
       }
+      if (onWheel) {
+        containerRef.current?.removeEventListener('wheel', onWheel, { capture: true })
+        termRef.current?.element?.removeEventListener('wheel', onWheel, { capture: true })
+      }
       ro?.disconnect()
       unsubLayoutFit?.()
       unsubData()
@@ -242,7 +269,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       <div
         ref={containerRef}
         className={cn(
-          'niozy-terminal-host h-full w-full min-h-0 min-w-0 overflow-hidden',
+          'niozy-terminal-host niozy-mux-terminal-host h-full w-full min-h-0 min-w-0 overflow-hidden',
           terminalHasBackgroundImage && 'niozy-terminal-has-bg-image',
         )}
       />

@@ -180,6 +180,7 @@ const api: ElectronAPI = {
     write: (id, data, paneIndex) => ipcRenderer.send('muxTerminal:write', id, data, paneIndex),
     resize: (id, cols, rows) => ipcRenderer.send('muxTerminal:resize', id, cols, rows),
     setFocus: (id, paneIndex) => ipcRenderer.send('muxTerminal:setFocus', id, paneIndex),
+    scroll: (id, delta, paneIndex) => ipcRenderer.send('muxTerminal:scroll', id, delta, paneIndex),
     kill: (id) => ipcRenderer.send('muxTerminal:kill', id),
     isAlive: (id) => ipcRenderer.invoke('muxTerminal:isAlive', id) as Promise<boolean>,
     setActiveStreams: (ids) => ipcRenderer.send('muxTerminal:setActiveStreams', ids),

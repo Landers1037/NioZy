@@ -1,4 +1,5 @@
 use alacritty_terminal::event::{Event, EventListener};
+use alacritty_terminal::grid::Scroll;
 use alacritty_terminal::term::Config as TermConfig;
 use alacritty_terminal::term::Term;
 use crate::util::TerminalSize;
@@ -34,5 +35,9 @@ impl PaneTerminal {
 
     pub fn write_bytes(&mut self, bytes: &[u8]) {
         self.processor.advance(&mut self.term, bytes);
+    }
+
+    pub fn scroll_display(&mut self, scroll: Scroll) {
+        self.term.scroll_display(scroll);
     }
 }

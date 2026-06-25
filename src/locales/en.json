@@ -981,7 +981,7 @@
       "attachPtyScrollbackOffload": "Scrollback offload",
       "attachPtyScrollbackOffloadDesc": "On detach, move scrollback to side storage and clear the xterm buffer; restore on re-attach to reduce memory with many tabs.",
       "muxCore": {
-        "title": "Rust Mux Core",
+        "title": "NioZy Mux Core",
         "description": "Local PTYs are composed into one ANSI stream by niozy-mux-core and rendered in a single xterm (1/2/4 panes). Mutually exclusive with Attach-PTY; SSH not supported."
       },
       "muxCoreEnabled": "Mux compositor",

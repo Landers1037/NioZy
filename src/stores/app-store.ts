@@ -61,7 +61,7 @@ export interface AppTab {
   activeSplitIndex?: number
   /** SSH 动态密码：已恢复 Tab 元数据，切换到此 Tab 时再连接 */
   sshDeferredConnect?: true
-  /** Rust Mux Core 合成屏 Tab（单 xterm 渲染多 pane） */
+  /** NioZy Mux Core 合成屏 Tab（单 xterm 渲染多 pane） */
   muxMode?: true
   /** Mux 合成屏 pane 数量 */
   muxPaneCount?: 1 | 2 | 4

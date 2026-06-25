@@ -1,7 +1,7 @@
 import { createConnection, type Socket } from 'net'
 import { spawn, spawnSync, type ChildProcess } from 'child_process'
 import { getMuxCoreBinaryPath } from './mux-binary-path'
-import { MUX_CORE_HOST, MUX_CORE_PORT } from './mux-core-config'
+import { MUX_CORE_HOST, MUX_CORE_PORT, MUX_CORE_API_VERSION } from './mux-core-config'
 import { augmentWindowsPath } from './resolve-executable'
 import { isElectronDev } from './shared/is-dev'
 import { terminalLog, logErrorPayload } from './app-log'
@@ -292,6 +292,31 @@ function attachDevLogPipes(child: ChildProcess): void {
   })
 }
 
+async function verifyDaemonApi(host: string, port: number): Promise<boolean> {
+  const client = new MuxRpcClient(host, port)
+  try {
+    await client.connect()
+    const result = (await client.request('mux.ping')) as { apiVersion?: number }
+    return result?.apiVersion === MUX_CORE_API_VERSION
+  } catch {
+    return false
+  } finally {
+    client.close()
+  }
+}
+
+async function restartStaleDaemon(host: string, port: number): Promise<void> {
+  const pid = findListeningPid(host, port)
+  if (pid) {
+    terminalLog.warn('Mux daemon API mismatch, restarting stale process', { pid, port })
+    killProcessByPid(pid)
+  } else {
+    terminalLog.warn('Mux daemon API mismatch, force clearing port', { port })
+    killMuxDaemon({ force: true })
+  }
+  await new Promise((resolve) => setTimeout(resolve, 400))
+}
+
 export async function ensureMuxDaemon(options?: {
   host?: string
   port?: number
@@ -302,8 +327,11 @@ export async function ensureMuxDaemon(options?: {
   const mode = options?.mode ?? resolveMuxCoreRunMode()
 
   if (await tryConnect(host, port, 300)) {
-    terminalLog.info('Mux daemon already listening', { host, port })
-    return { spawned: false, daemonProcess: null, owned: false }
+    if (await verifyDaemonApi(host, port)) {
+      terminalLog.info('Mux daemon already listening', { host, port })
+      return { spawned: false, daemonProcess: null, owned: false }
+    }
+    await restartStaleDaemon(host, port)
   }
 
   const binary = getMuxCoreBinaryPath()
