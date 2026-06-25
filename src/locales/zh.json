@@ -498,7 +498,9 @@
       "enableGlassTransparency": "透明效果",
       "enableGlassTransparencyDesc": "仅在「玻璃」界面风格下生效：增强弹框、按钮与整体界面的 macOS 风格半透明毛玻璃质感",
       "enableSmoothFonts": "开启平滑字体",
-      "enableSmoothFontsDesc": "启用高 DPI 支持与 DirectWrite 平滑渲染，界面文字更接近 macOS 观感（需重启应用后生效）"
+      "enableSmoothFontsDesc": "启用高 DPI 支持与 DirectWrite 平滑渲染，界面文字更接近 macOS 观感（需重启应用后生效）",
+      "enableStatusPanel": "开启状态面板",
+      "enableStatusPanelDesc": "在窗口右侧中间显示滑块，向左拖动可展开系统信息、资源占用、终端与 AI 配置等卡片面板"
     },
     "terminal": {
       "title": "终端设置",
@@ -1427,6 +1429,50 @@
       "Zygote": "Zygote",
       "Sandbox_helper": "沙箱辅助",
       "Unknown": "未知"
+    }
+  },
+  "statusPanel": {
+    "title": "状态面板",
+    "subtitle": "系统与运行态概览",
+    "ariaLabel": "状态面板",
+    "handleAria": "拖动展开或收起状态面板",
+    "platform": {
+      "win32": "Windows",
+      "darwin": "macOS",
+      "linux": "Linux"
+    },
+    "system": {
+      "title": "系统信息",
+      "online": "在线",
+      "platform": "平台",
+      "version": "版本",
+      "runtime": "运行时",
+      "locale": "语言"
+    },
+    "resources": {
+      "title": "系统资源",
+      "memory": "内存"
+    },
+    "terminals": {
+      "title": "终端",
+      "count": "{{count}} 个 Tab",
+      "count_one": "{{count}} 个 Tab",
+      "active": "当前活跃",
+      "none": "无"
+    },
+    "repos": {
+      "title": "仓库"
+    },
+    "ai": {
+      "title": "AI 配置",
+      "enabled": "已启用",
+      "disabled": "未启用"
+    },
+    "processes": {
+      "title": "子进程",
+      "count": "{{count}} 个进程",
+      "count_one": "{{count}} 个进程",
+      "loading": "正在读取进程指标…"
     }
   },
   "chat": {

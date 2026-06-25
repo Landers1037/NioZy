@@ -126,6 +126,7 @@ export interface AppSettings {
   enableDialogAnimations: boolean
   enableGlassTransparency: boolean
   enableSmoothFonts: boolean
+  enableStatusPanel: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string
@@ -241,6 +242,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   enableDialogAnimations: true,
   enableGlassTransparency: false,
   enableSmoothFonts: false,
+  enableStatusPanel: false,
   terminal: {
     colorScheme: 'atom',
     fontFamily: 'Consolas',
@@ -325,6 +327,10 @@ function buildAppSettingsFromStored(
       typeof stored.enableSmoothFonts === 'boolean'
         ? stored.enableSmoothFonts
         : DEFAULT_SETTINGS.enableSmoothFonts,
+    enableStatusPanel:
+      typeof stored.enableStatusPanel === 'boolean'
+        ? stored.enableStatusPanel
+        : DEFAULT_SETTINGS.enableStatusPanel,
     connections,
     terminal: {
       ...DEFAULT_SETTINGS.terminal,

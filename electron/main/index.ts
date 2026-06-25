@@ -423,6 +423,10 @@ function isStatusBarLiveStatsEnabled(): boolean {
   return settingsStore.get().advanced.statusBarLiveStats !== false
 }
 
+function isStatusPanelEnabled(): boolean {
+  return settingsStore.get().enableStatusPanel === true
+}
+
 function isStatusBarBatteryEnabled(): boolean {
   return settingsStore.get().advanced.statusBarBattery === true
 }
@@ -434,7 +438,7 @@ function getStatusBarPollIntervalMs(): number {
 
 function syncSystemStatsPolling(): void {
   systemStats.stop()
-  const liveStats = isStatusBarLiveStatsEnabled()
+  const liveStats = isStatusBarLiveStatsEnabled() || isStatusPanelEnabled()
   const battery = isStatusBarBatteryEnabled()
   if (!liveStats && !battery) return
   systemStats.start(
@@ -1488,6 +1492,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   const settingsBefore = settingsStore.get()
   const liveBefore = isStatusBarLiveStatsEnabled()
   const batteryBefore = isStatusBarBatteryEnabled()
+  const statusPanelBefore = isStatusPanelEnabled()
   const pollPriorityBefore = settingsBefore.advanced.statusBarPollPriority
   const shortcutsBefore = settingsBefore.shortcuts.global
   const screenshotEnabledBefore = settingsBefore.assistive.screenshotEnabled
@@ -1535,6 +1540,8 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (
     (partial.advanced?.statusBarLiveStats !== undefined &&
       liveBefore !== isStatusBarLiveStatsEnabled()) ||
+    (partial.enableStatusPanel !== undefined &&
+      statusPanelBefore !== isStatusPanelEnabled()) ||
     (partial.advanced?.statusBarBattery !== undefined &&
       batteryBefore !== isStatusBarBatteryEnabled()) ||
     (partial.advanced?.statusBarPollPriority !== undefined &&

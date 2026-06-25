@@ -334,7 +334,9 @@
       "enableGlassTransparency": "透明効果",
       "enableGlassTransparencyDesc": "「ガラス」インターフェーススタイル時のみ：ダイアログ・ボタン・全体 UI に macOS 風の半透明すりガラス質感を強化",
       "enableSmoothFonts": "スムーズフォント",
-      "enableSmoothFontsDesc": "HiDPI サポートと DirectWrite による macOS 風の文字描画を有効化（再起動が必要）"
+      "enableSmoothFontsDesc": "HiDPI サポートと DirectWrite による macOS 風の文字描画を有効化（再起動が必要）",
+      "enableStatusPanel": "ステータスパネル",
+      "enableStatusPanelDesc": "ウィンドウ右端にハンドルを表示し、左へドラッグしてシステム情報・リソース・ターミナル・AI 設定などのカードを表示"
     },
     "terminal": {
       "title": "ターミナル",
@@ -1182,6 +1184,50 @@
       "Zygote": "Zygote",
       "Sandbox_helper": "サンドボックスヘルパー",
       "Unknown": "不明"
+    }
+  },
+  "statusPanel": {
+    "title": "ステータスパネル",
+    "subtitle": "システムと実行状態の概要",
+    "ariaLabel": "ステータスパネル",
+    "handleAria": "ドラッグしてステータスパネルを展開または折りたたむ",
+    "platform": {
+      "win32": "Windows",
+      "darwin": "macOS",
+      "linux": "Linux"
+    },
+    "system": {
+      "title": "システム",
+      "online": "オンライン",
+      "platform": "プラットフォーム",
+      "version": "バージョン",
+      "runtime": "ランタイム",
+      "locale": "言語"
+    },
+    "resources": {
+      "title": "リソース",
+      "memory": "メモリ"
+    },
+    "terminals": {
+      "title": "ターミナル",
+      "count": "{{count}} タブ",
+      "count_one": "{{count}} タブ",
+      "active": "アクティブ",
+      "none": "なし"
+    },
+    "repos": {
+      "title": "リポジトリ"
+    },
+    "ai": {
+      "title": "AI",
+      "enabled": "有効",
+      "disabled": "無効"
+    },
+    "processes": {
+      "title": "子プロセス",
+      "count": "{{count}} プロセス",
+      "count_one": "{{count}} プロセス",
+      "loading": "プロセス指標を読み込み中…"
     }
   },
   "chat": {

@@ -26,6 +26,7 @@ import {
   Bold,
   Layers2,
   ALargeSmall,
+  PanelRight,
 } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
@@ -207,6 +208,18 @@ export function AppearanceSettings() {
                 }),
               )
             }}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={PanelRight}
+          label={t('settings.appearance.enableStatusPanel')}
+          description={t('settings.appearance.enableStatusPanelDesc')}
+          row
+        >
+          <Switch
+            checked={settings.enableStatusPanel === true}
+            onCheckedChange={(enableStatusPanel) => patchSettings({ enableStatusPanel })}
           />
         </SettingField>
 

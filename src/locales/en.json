@@ -498,7 +498,9 @@
       "enableGlassTransparency": "Transparency",
       "enableGlassTransparencyDesc": "Only applies to the Glass interface style: enhances dialogs, buttons, and the overall UI with macOS-like frosted glass",
       "enableSmoothFonts": "Smooth fonts",
-      "enableSmoothFontsDesc": "Enables HiDPI support and DirectWrite smoothing for macOS-like text rendering (restart required)"
+      "enableSmoothFontsDesc": "Enables HiDPI support and DirectWrite smoothing for macOS-like text rendering (restart required)",
+      "enableStatusPanel": "Status panel",
+      "enableStatusPanelDesc": "Shows a handle on the right edge; drag left to reveal cards with system info, resource usage, terminals, and AI settings"
     },
     "terminal": {
       "title": "Terminal",
@@ -1427,6 +1429,50 @@
       "Zygote": "Zygote",
       "Sandbox_helper": "Sandbox helper",
       "Unknown": "Unknown"
+    }
+  },
+  "statusPanel": {
+    "title": "Status panel",
+    "subtitle": "System and runtime overview",
+    "ariaLabel": "Status panel",
+    "handleAria": "Drag to expand or collapse the status panel",
+    "platform": {
+      "win32": "Windows",
+      "darwin": "macOS",
+      "linux": "Linux"
+    },
+    "system": {
+      "title": "System",
+      "online": "online",
+      "platform": "Platform",
+      "version": "Version",
+      "runtime": "Runtime",
+      "locale": "Locale"
+    },
+    "resources": {
+      "title": "Resources",
+      "memory": "Memory"
+    },
+    "terminals": {
+      "title": "Terminals",
+      "count": "{{count}} tabs",
+      "count_one": "{{count}} tab",
+      "active": "Active",
+      "none": "None"
+    },
+    "repos": {
+      "title": "Repositories"
+    },
+    "ai": {
+      "title": "AI",
+      "enabled": "enabled",
+      "disabled": "disabled"
+    },
+    "processes": {
+      "title": "Processes",
+      "count": "{{count}} processes",
+      "count_one": "{{count}} process",
+      "loading": "Loading process metrics…"
     }
   },
   "chat": {

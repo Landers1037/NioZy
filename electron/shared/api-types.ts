@@ -219,6 +219,8 @@ export interface AppSettings {
   enableGlassTransparency: boolean
   /** 启用类似 macOS 的平滑字体渲染（需重启；Windows 下配合 DirectWrite / 高 DPI 清单） */
   enableSmoothFonts: boolean
+  /** 右侧滑出状态面板（系统信息、资源占用、终端与 AI 配置等） */
+  enableStatusPanel: boolean
   terminal: {
     colorScheme: TerminalColorScheme
     fontFamily: string

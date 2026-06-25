@@ -13,6 +13,7 @@ import { TitleBar } from '@/components/layout/TitleBar'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MinimalTabBar } from '@/components/layout/MinimalTabBar'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { StatusPanelSlider } from '@/components/layout/status-panel/StatusPanelSlider'
 import { isMinimalLayout } from '@/lib/layout-mode'
 import { useTerminalStreamSync } from '@/hooks/useTerminalStreamSync'
 import { useMuxTerminalStreamSync } from '@/hooks/useMuxTerminalStreamSync'
@@ -138,6 +139,7 @@ export default function App() {
   const ui = useUiClasses()
   const statusBarLiveStats = settings?.advanced.statusBarLiveStats !== false
   const statusBarBattery = settings?.advanced.statusBarBattery === true
+  const statusPanelEnabled = settings?.enableStatusPanel === true
   const minimalLayout = isMinimalLayout(settings)
 
   const booted = useRef(false)
@@ -288,7 +290,7 @@ export default function App() {
     let cancelled = false
     let unsubStats: (() => void) | undefined
 
-    if (statusBarLiveStats || statusBarBattery) {
+    if (statusBarLiveStats || statusBarBattery || statusPanelEnabled) {
       api.system.getStats().then((stats) => {
         if (!cancelled) setSystemStats(stats)
       })
@@ -299,7 +301,7 @@ export default function App() {
       cancelled = true
       unsubStats?.()
     }
-  }, [statusBarLiveStats, statusBarBattery, setSystemStats])
+  }, [statusBarLiveStats, statusBarBattery, statusPanelEnabled, setSystemStats])
 
   useEffect(() => {
     if (!isElectron()) return
@@ -506,11 +508,11 @@ export default function App() {
       <AnimatedMinimalTabBar show={minimalLayout}>
         <MinimalTabBar />
       </AnimatedMinimalTabBar>
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
         <AnimatedSidebarSlot show={!minimalLayout}>
           <Sidebar />
         </AnimatedSidebarSlot>
-        <main className="flex min-w-0 flex-1 flex-col bg-background p-2">
+        <main className="relative flex min-w-0 flex-1 flex-col bg-background p-2">
           <div
             className={cn(
               'relative min-h-0 flex-1 overflow-hidden',
@@ -636,6 +638,7 @@ export default function App() {
               ) : (
                 <EmptyWorkspaceHint />
               ))}
+            {statusPanelEnabled ? <StatusPanelSlider /> : null}
           </div>
         </main>
       </div>
