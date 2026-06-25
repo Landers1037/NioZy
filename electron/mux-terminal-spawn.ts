@@ -1,15 +1,65 @@
 import type { ShellType } from './terminal-service'
 import type { MuxTerminalCreateOptions } from './shared/mux-terminal-types'
 import type { AppSettings } from './shared/api-types'
-import { mergeShellIntegrationArgs, getShellIntegrationEnv, prependNiozyBinToPath } from './shell-integration'
+import {
+  DEFAULT_BUILTIN_CONNECTIONS,
+  type BuiltinShellType,
+} from './shared/builtin-shells'
+import { existsSync } from 'fs'
+import { join } from 'path'
 import { resolveExecutable } from './resolve-executable'
-import { resolveTerminalImageProtocolFromSettings } from './shared/shell-settings'
-import { normalizeTerminalEmulator } from './shared/experimental-settings'
+
+function resolveMuxShell(file: string, lookupEnv: NodeJS.ProcessEnv): string {
+  const resolved = resolveExecutable(file, lookupEnv)
+  if (resolved) return resolved
+
+  if (process.platform !== 'win32') return file
+
+  const fallbacks: string[] = []
+  if (file.toLowerCase() === 'pwsh.exe') {
+    const programFiles = process.env.ProgramFiles ?? 'C:\\Program Files'
+    fallbacks.push(join(programFiles, 'PowerShell', '7', 'pwsh.exe'))
+    if (process.env.LOCALAPPDATA) {
+      fallbacks.push(join(process.env.LOCALAPPDATA, 'Microsoft', 'WindowsApps', 'pwsh.exe'))
+    }
+  }
+  if (file.toLowerCase() === 'powershell.exe') {
+    const systemRoot = process.env.SystemRoot ?? 'C:\\Windows'
+    fallbacks.push(join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'))
+  }
+  if (file.toLowerCase() === 'cmd.exe') {
+    const systemRoot = process.env.SystemRoot ?? 'C:\\Windows'
+    fallbacks.push(join(systemRoot, 'System32', 'cmd.exe'))
+  }
+
+  for (const candidate of fallbacks) {
+    if (existsSync(candidate)) return candidate
+  }
+  return file
+}
 
 const SHELL_MAP: Record<Exclude<ShellType, 'custom' | 'ssh'>, string> = {
   powershell: 'powershell.exe',
   cmd: 'cmd.exe',
   pwsh: 'pwsh.exe',
+}
+
+function isBuiltinShell(shell: ShellType): shell is BuiltinShellType {
+  return shell === 'powershell' || shell === 'cmd' || shell === 'pwsh'
+}
+
+/** Mux 不走 shell-integration.ps1 / Oh My Posh；无 args 时用与普通终端一致的默认启动参数 */
+function resolveMuxShellArgs(shell: ShellType, args: string[]): string[] {
+  if (args.length > 0) return args
+  switch (shell) {
+    case 'cmd':
+      return process.platform === 'win32' ? ['/K'] : args
+    case 'powershell':
+    case 'pwsh':
+      return ['-NoLogo', '-NoExit']
+    default:
+      return args
+  }
 }
 
 export interface MuxSpawnParams {
@@ -33,55 +83,49 @@ export function resolveMuxSpawnParams(
   }
 
   const initialCwd = options.cwd ?? process.env.USERPROFILE ?? process.cwd()
-  const shellSettings = settings.shell
-  const appSettings = settings
-  const terminalImageProtocol = resolveTerminalImageProtocolFromSettings(
-    shellSettings,
-    appSettings.experimental,
-  )
-  const terminalEmulator = normalizeTerminalEmulator(appSettings.experimental.terminalEmulator)
-  const integrationEnv = getShellIntegrationEnv(options.shell, {
-    ohMyPoshEnabled: shellSettings.ohMyPoshEnabled === true,
-    ohMyPoshTheme: shellSettings.ohMyPoshTheme,
-    terminalImageProtocol,
-    terminalEmulator,
-  })
-  const env = {
-    ...process.env,
-    ...integrationEnv,
-    ...options.env,
-  } as Record<string, string>
-  if (integrationEnv.NIOZY_BIN) {
-    prependNiozyBinToPath(env, integrationEnv.NIOZY_BIN)
-  }
+  const lookupEnv = { ...process.env, ...options.env } as NodeJS.ProcessEnv
+  const muxEnv: Record<string, string> = { ...(options.env ?? {}) }
+  delete muxEnv.Path
+  delete muxEnv.PATH
 
   let file: string
-  let args: string[] = options.args ?? []
+  let args: string[]
+  let shellType: ShellType
 
   if (options.shell === 'custom' && options.command) {
     file = options.command
     args = options.args ?? []
+    shellType = 'custom'
   } else {
-    file = SHELL_MAP[options.shell as keyof typeof SHELL_MAP] ?? 'powershell.exe'
-    args = mergeShellIntegrationArgs(options.shell, args, {
-      ohMyPoshEnabled: shellSettings.ohMyPoshEnabled === true,
-      ohMyPoshTheme: shellSettings.ohMyPoshTheme,
-      terminalImageProtocol,
-      terminalEmulator,
-    })
+    shellType = options.shell
+    file = SHELL_MAP[shellType as keyof typeof SHELL_MAP] ?? 'powershell.exe'
+
+    const builtinConfig = isBuiltinShell(shellType)
+      ? (settings?.builtinConnections?.[shellType] ?? DEFAULT_BUILTIN_CONNECTIONS[shellType])
+      : DEFAULT_BUILTIN_CONNECTIONS.powershell
+    const configuredArgs = options.args ?? builtinConfig.args
+    args = resolveMuxShellArgs(shellType, configuredArgs)
+
+    if (isBuiltinShell(shellType)) {
+      for (const [key, value] of Object.entries(builtinConfig.env)) {
+        if (!(key in muxEnv)) muxEnv[key] = value
+      }
+    }
   }
 
-  const spawnFile = resolveExecutable(file, env as NodeJS.ProcessEnv) ?? file
+  const spawnFile = resolveMuxShell(file, lookupEnv)
   const baseName =
     options.name ??
-    (options.shell === 'custom' ? spawnFile : options.shell.charAt(0).toUpperCase() + options.shell.slice(1))
+    (options.shell === 'custom'
+      ? spawnFile
+      : options.shell.charAt(0).toUpperCase() + options.shell.slice(1))
 
   return {
     shell: spawnFile,
     args,
-    env,
+    env: muxEnv,
     cwd: initialCwd,
     name: baseName,
-    shellType: options.shell,
+    shellType,
   }
 }

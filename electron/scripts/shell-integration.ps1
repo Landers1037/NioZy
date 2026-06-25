@@ -1,4 +1,11 @@
 # NioZy shell integration: report cwd via OSC 7 and VS Code 633
+if ($env:NIOZY_BIN -and -not [string]::IsNullOrWhiteSpace($env:NIOZY_BIN)) {
+  $bin = $env:NIOZY_BIN.TrimEnd('\')
+  if ($env:Path -notlike "$bin*") {
+    $env:Path = "$bin;$env:Path"
+  }
+}
+
 if ($null -eq $Global:NioZyShellIntegration) {
   $Global:NioZyShellIntegration = $true
   $Global:NioZyOriginalPrompt = $function:Prompt

@@ -184,7 +184,6 @@ const api: ElectronAPI = {
     isAlive: (id) => ipcRenderer.invoke('muxTerminal:isAlive', id) as Promise<boolean>,
     setActiveStreams: (ids) => ipcRenderer.send('muxTerminal:setActiveStreams', ids),
     claimStream: (id) => ipcRenderer.invoke('muxTerminal:claimStream', id) as Promise<string>,
-    ackData: (id, length) => ipcRenderer.send('muxTerminal:ackData', id, length),
     debugLog: (level, message, detail) =>
       ipcRenderer.send('muxTerminal:debugLog', level, message, detail),
     onData: (cb) =>

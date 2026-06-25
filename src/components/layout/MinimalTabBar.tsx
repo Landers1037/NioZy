@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History } from 'lucide-react'
+import { Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -7,8 +7,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { NewConnectionMenuContent } from '@/components/layout/NewConnectionMenuContent'
+import { NewTerminalButton } from '@/components/layout/NewTerminalButton'
 import { useAppStore } from '@/stores/app-store'
-import { createTerminal } from '@/lib/terminal-actions'
 import { TerminalTabItem } from '@/components/layout/TerminalTabItem'
 import { SpecialTabItem } from '@/components/layout/SpecialTabItem'
 import { TabGroupItem } from '@/components/layout/TabGroupItem'
@@ -86,16 +86,7 @@ export function MinimalTabBar() {
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1 border-l border-border pl-2">
-        <Button
-          variant="secondary"
-          size="icon"
-          className="size-6"
-          title={t('sidebar.newPowerShell')}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => void createTerminal()}
-        >
-          <Plus className="size-3" />
-        </Button>
+        <NewTerminalButton iconOnly />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

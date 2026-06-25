@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, TextSearch } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, TextSearch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,9 +9,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { NewConnectionMenuContent } from '@/components/layout/NewConnectionMenuContent'
+import { NewTerminalButton } from '@/components/layout/NewTerminalButton'
 import { useAppStore } from '@/stores/app-store'
 import { cn } from '@/lib/utils'
-import { createTerminal } from '@/lib/terminal-actions'
 import { SidebarTabList } from '@/components/layout/SidebarTabList'
 import { SidebarTerminalFilter } from '@/components/layout/SidebarTerminalFilter'
 import { useSidebarResize } from '@/hooks/useSidebarResize'
@@ -148,21 +148,7 @@ export function Sidebar() {
               collapsed ? 'flex-col items-center' : 'w-full',
             )}
           >
-            <Button
-              variant="secondary"
-              size={collapsed ? 'icon' : 'default'}
-              className={cn(
-                !collapsed && 'min-w-0 flex-1 basis-0 overflow-hidden px-2',
-              )}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => void createTerminal()}
-              title={t('sidebar.newPowerShell')}
-            >
-              <Plus className="size-4 shrink-0" />
-              {!collapsed && (
-                <span className="min-w-0 truncate">{t('sidebar.newTerminal')}</span>
-              )}
-            </Button>
+            <NewTerminalButton iconOnly={collapsed} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

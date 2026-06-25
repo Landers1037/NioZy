@@ -1,10 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { AppTab } from '@/stores/app-store'
 import { collectActiveTerminalStreamIds } from '@/lib/inactive-tab-memory'
 import { useInactiveTabOptimizationTick } from '@/hooks/useInactiveTabOptimizationTick'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
 import { useAppStore } from '@/stores/app-store'
-import { isAttachPtyRenderMode } from '@/lib/attach-pty-render'
 import { getElectronAPI, isElectron } from '@/lib/electron-client'
 
 function collectActiveMuxStreamIds(
@@ -40,13 +39,13 @@ function collectActiveMuxStreamIds(
 export function useMuxTerminalStreamSync(tabs: AppTab[], activeTabId: string | null): void {
   const settings = useAppStore((s) => s.settings)
   const performance = settings?.performance
-  const attachPtyMode = isAttachPtyRenderMode(settings)
   const optimizationTick = useInactiveTabOptimizationTick()
 
   const muxTabsKey = tabs
     .filter((t) => t.type === 'terminal' && t.muxMode)
     .map((t) => `${t.id}:${t.terminalId ?? ''}`)
     .join(',')
+  const prevStreamIdsRef = useRef('')
 
   useEffect(() => {
     if (!isElectron()) return
@@ -58,6 +57,9 @@ export function useMuxTerminalStreamSync(tabs: AppTab[], activeTabId: string | n
       tabLastActivityAt,
       Date.now(),
     )
+    const key = ids.join(',')
+    if (key === prevStreamIdsRef.current) return
+    prevStreamIdsRef.current = key
     getElectronAPI().muxTerminal.setActiveStreams(ids)
-  }, [tabs, activeTabId, performance, muxTabsKey, optimizationTick, attachPtyMode])
+  }, [tabs, activeTabId, performance, muxTabsKey, optimizationTick])
 }

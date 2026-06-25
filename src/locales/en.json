@@ -1204,6 +1204,7 @@
     "excalidraw": "Excalidraw",
     "drawio": "Draw.io",
     "newPowerShell": "New PowerShell",
+    "newMuxTerminalRightClick": "right-click for Mux layout",
     "terminalFilter": "Filter terminal tabs",
     "terminalFilterPlaceholder": "Search by title or command…",
     "terminalFilterClose": "Close filter",

@@ -13,7 +13,7 @@ export function AttachPtyTerminalHost() {
     [committed, tabs],
   )
 
-  if (!committed || !tab || tab.type !== 'terminal') return null
+  if (!committed || !tab || tab.type !== 'terminal' || tab.muxMode) return null
 
   const sessionTab: AppTab = { ...tab, terminalId: committed.terminalId }
 

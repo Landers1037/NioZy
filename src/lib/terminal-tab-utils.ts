@@ -40,9 +40,14 @@ export function getAllTerminalIds(tab: AppTab): string[] {
   return getSplitPanes(tab).map((p) => p.terminalId)
 }
 
-/** 终端 Tab 是否需要在主区域挂载视图（含已连接 PTY 或待连接的 SSH 动态密码 Tab） */
+/** 终端 Tab 是否需要在主区域挂载视图（含已连接 PTY、待连接 SSH、待 spawn 的 Mux） */
 export function hasTerminalView(tab: AppTab): boolean {
-  return tab.type === 'terminal' && (getAllTerminalIds(tab).length > 0 || tab.sshDeferredConnect === true)
+  if (tab.type !== 'terminal') return false
+  if (getAllTerminalIds(tab).length > 0) return true
+  if (tab.sshDeferredConnect === true) return true
+  // Mux 延迟 create：尚无 terminalId，但需挂载 MuxTerminalView 以 fit 后 spawn
+  if (tab.muxMode && tab.muxDeferredCreate) return true
+  return false
 }
 
 export function tabHasTerminalId(tab: AppTab, terminalId: string): boolean {

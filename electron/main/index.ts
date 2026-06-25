@@ -2388,9 +2388,6 @@ ipcMain.on('muxTerminal:setActiveStreams', (_, ids: string[]) => {
   muxTerminalService.setActiveStreams(ids)
 })
 ipcMain.handle('muxTerminal:claimStream', (_, id: string) => muxTerminalService.claimStream(id))
-ipcMain.on('muxTerminal:ackData', (_, id: string, length: number) => {
-  muxTerminalService.ackActiveOutput(id, length)
-})
 ipcMain.on('muxTerminal:debugLog', (_, level: string, message: string, detail?: Record<string, unknown>) => {
   const payload = { message, ...(detail ?? {}) }
   if (level === 'debug') {

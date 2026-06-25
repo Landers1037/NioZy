@@ -65,6 +65,15 @@ export interface AppTab {
   muxMode?: true
   /** Mux 合成屏 pane 数量 */
   muxPaneCount?: 1 | 2 | 4
+  /** 待 xterm fit 后再 spawn PTY（无 terminalId） */
+  muxDeferredCreate?: true
+  /** muxDeferredCreate 时暂存的 spawn 参数 */
+  muxSpawn?: {
+    shell: string
+    args?: string[]
+    env?: Record<string, string>
+    paneCount: 1 | 2 | 4
+  }
   /** 待连接的分屏 pane 数量（sshDeferredConnect 时无 terminalId） */
   deferredSplitPaneCount?: number
   /** VNC Tab 关联的连接 id */

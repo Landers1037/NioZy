@@ -24,5 +24,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 unicode-width = "0.2"
 vte = { version = "0.15", default-features = false, features = ["ansi"] }
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_System_Console", "Win32_System_JobObjects", "Win32_System_Threading"] }
+
 [dev-dependencies]
 tokio-test = "0.4"

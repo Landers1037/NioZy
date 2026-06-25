@@ -6,23 +6,27 @@ import {
   getDefaultBuiltinShell,
 } from '@/lib/builtin-connection-options'
 import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
+import type { MuxPaneCount } from '../../electron/shared/mux-terminal-types'
+import { normalizeMuxPaneCount } from '../../electron/shared/mux-terminal-types'
 import { requestTerminalFocus } from '@/lib/terminal-focus'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 import { toastTerminalError } from '@/lib/terminal-actions'
-import { getMuxPaneCount } from '@/lib/mux-terminal-render'
 
-export async function createMuxTerminal(shell?: BuiltinShellType): Promise<void> {
+export async function createMuxTerminal(
+  shell?: BuiltinShellType,
+  paneCount?: MuxPaneCount,
+): Promise<void> {
   const settings = useAppStore.getState().settings
   const resolved = shell ?? getDefaultBuiltinShell(settings)
-  const paneCount = getMuxPaneCount(settings)
   const spawn = getBuiltinTerminalOptions(resolved, settings)
+  const normalizedCount = paneCount ?? normalizeMuxPaneCount(settings?.experimental.muxPaneCount)
 
   try {
     const result = await getElectronAPI().muxTerminal.create({
       shell: spawn.shell,
       args: spawn.args,
       env: spawn.env,
-      paneCount,
+      paneCount: normalizedCount,
     })
     const { addTerminalTab, setTerminalCwd } = useAppStore.getState()
     setTerminalCwd(result.id, result.cwd)

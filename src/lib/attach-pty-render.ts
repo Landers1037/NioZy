@@ -42,6 +42,7 @@ export function tabUsesAttachPtyRender(
   settings: AppSettings | null | undefined,
 ): boolean {
   if (!isAttachPtyRenderMode(settings)) return false
+  if (tab.muxMode) return false
   return getSplitPanes(tab).length <= 1
 }
 
@@ -61,6 +62,7 @@ export function resolveAttachPtyTargetTab(
   if (!activeTabId) return null
   const tab = tabs.find((t) => t.id === activeTabId)
   if (!tab || tab.type !== 'terminal') return null
+  if (tab.muxMode) return null
   if (getSplitPanes(tab).length > 1) return null
   const terminalId = getActiveTerminalId(tab)
   if (!terminalId) return null

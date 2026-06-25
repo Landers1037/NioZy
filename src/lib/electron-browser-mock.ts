@@ -774,7 +774,6 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       isAlive: async () => true,
       setActiveStreams: () => undefined,
       claimStream: async () => '',
-      ackData: () => undefined,
       debugLog: () => undefined,
       onData: (cb) => {
         muxDataListeners.add(cb)

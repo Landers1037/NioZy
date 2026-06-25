@@ -109,7 +109,8 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   attachPtyWebglContextPool: false,
   attachPtyScrollbackOffload: false,
   muxCoreEnabled: false,
-  muxPaneCount: 4,
+  muxPaneCount:
+    typeof process !== 'undefined' && process.platform === 'win32' ? 1 : 4,
   aiSidebarEnabled: false,
   aiAttachmentsEnabled: false,
   aiSidebarWidth: DEFAULT_AI_SIDEBAR_WIDTH_PRESET,

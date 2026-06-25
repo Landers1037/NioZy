@@ -517,7 +517,6 @@ export interface ElectronAPI {
     isAlive: (id: string) => Promise<boolean>
     setActiveStreams: (ids: string[]) => void
     claimStream: (id: string) => Promise<string>
-    ackData: (id: string, length: number) => void
     debugLog: (level: 'info' | 'debug', message: string, detail?: Record<string, unknown>) => void
     onData: (cb: (id: string, data: string) => void) => () => void
     onCwd: (cb: (id: string, paneIndex: number, cwd: string) => void) => () => void

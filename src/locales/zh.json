@@ -1204,6 +1204,7 @@
     "excalidraw": "Excalidraw",
     "drawio": "Draw.io",
     "newPowerShell": "新建 PowerShell",
+    "newMuxTerminalRightClick": "右键 Mux 布局",
     "terminalFilter": "过滤终端 Tab",
     "terminalFilterPlaceholder": "按标题或命令搜索…",
     "terminalFilterClose": "关闭过滤",

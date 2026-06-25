@@ -16,44 +16,38 @@ export interface MuxTerminalWriteBatcher {
 export function createMuxTerminalWriteBatcher(
   getTerm: () => { write: (data: string, callback?: () => void) => void } | null,
   getSettings: () => AppSettings | null | undefined,
-  getSessionId: () => string | null,
-  ackOutput: (sessionId: string, length: number) => void,
 ): MuxTerminalWriteBatcher {
   let pending = ''
-  let pumping = false
 
-  const pump = (): void => {
+  const flush = (): void => {
     const term = getTerm()
-    if (pumping || !term || !pending) return
-    pumping = true
-    const chunkEnd = findSafeTerminalOutputChunkEnd(
-      pending,
-      0,
-      TERMINAL_WRITE_FLUSH_CHUNK_CHARS,
-    )
-    const chunk = pending.slice(0, chunkEnd)
-    pending = pending.slice(chunkEnd)
-    const sessionId = getSessionId()
-    writeXtermOutput(term, chunk, getSettings(), () => {
-      if (sessionId) ackOutput(sessionId, chunk.length)
-      pumping = false
-      if (pending) pump()
-    })
+    if (!term || !pending) return
+    const settings = getSettings()
+    while (pending.length > 0) {
+      const chunkEnd = findSafeTerminalOutputChunkEnd(
+        pending,
+        0,
+        TERMINAL_WRITE_FLUSH_CHUNK_CHARS,
+      )
+      if (chunkEnd <= 0) break
+      const chunk = pending.slice(0, chunkEnd)
+      pending = pending.slice(chunkEnd)
+      writeXtermOutput(term, chunk, settings)
+    }
   }
 
   return {
-    queue(data: string) {
+    queue(data) {
       if (!data) return
       pending = appendTerminalOutputCapped(
         pending,
         data,
         TERMINAL_OUTPUT_PENDING_MAX_CHARS,
       )
-      pump()
+      flush()
     },
     dispose() {
       pending = ''
-      pumping = false
     },
   }
 }
