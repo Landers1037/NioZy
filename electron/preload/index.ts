@@ -160,7 +160,8 @@ const api: ElectronAPI = {
     kill: (id) => ipcRenderer.send('terminal:kill', id),
     isAlive: (id) => ipcRenderer.invoke('terminal:isAlive', id) as Promise<boolean>,
     setActiveStream: (id) => ipcRenderer.send('terminal:setActiveStream', id),
-    setActiveStreams: (ids) => ipcRenderer.send('terminal:setActiveStreams', ids),
+    setActiveStreams: (ids, options) =>
+      ipcRenderer.send('terminal:setActiveStreams', ids, options),
     claimStream: (id) => ipcRenderer.invoke('terminal:claimStream', id) as Promise<string>,
     ackData: (id, length) => ipcRenderer.send('terminal:ackData', id, length),
     onData: (cb) =>

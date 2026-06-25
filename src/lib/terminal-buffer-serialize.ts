@@ -16,20 +16,6 @@ export function serializeAttachPtyBuffer(term: Terminal, addon: SerializeAddon):
   return addon.serialize({ range: { start: 0, end: endLine } })
 }
 
-export function serializeAttachPtyOffload(
-  term: Terminal,
-  addon: SerializeAddon,
-): { scrollbackText: string; screenText: string } {
-  const buffer = term.buffer.active
-  const baseY = buffer.baseY
-  const endLine = getTerminalContentEndLine(term)
-  const scrollbackText =
-    baseY > 0 ? addon.serialize({ range: { start: 0, end: baseY - 1 } }) : ''
-  const screenText =
-    endLine >= baseY ? addon.serialize({ range: { start: baseY, end: endLine } }) : ''
-  return { scrollbackText, screenText }
-}
-
 export function serializeAttachPtyOffloadPlain(term: Terminal): {
   scrollbackText: string
   screenText: string
@@ -40,17 +26,23 @@ export function serializeAttachPtyOffloadPlain(term: Terminal): {
   }
 }
 
-export function restoreAttachPtyBuffer(
+/** VT 快照须等 write 回调后再续流，避免与 claimStream 在 xterm 队列中交错 */
+export function restoreAttachPtyBufferAsync(
   term: Terminal,
   bufferText: string,
-  format: AttachPtySnapshotFormat = 'plain',
+  format: AttachPtySnapshotFormat,
+  onComplete: () => void,
 ): void {
-  if (!bufferText) return
+  if (!bufferText) {
+    onComplete()
+    return
+  }
   if (format === 'vt') {
-    term.write(bufferText)
+    term.write(bufferText, onComplete)
     return
   }
   restoreTerminalBufferText(term, bufferText)
+  onComplete()
 }
 
 export function restoreAttachPtyOffload(
@@ -64,5 +56,32 @@ export function restoreAttachPtyOffload(
     if (screenText) term.write(screenText)
     return
   }
-  restoreTerminalFromOffload(term, scrollbackText, screenText)
+  if (scrollbackText && screenText) {
+    restoreTerminalFromOffload(term, scrollbackText, screenText)
+    return
+  }
+  const merged = scrollbackText
+    ? scrollbackText + (screenText ? `\n${screenText}` : '')
+    : screenText
+  restoreTerminalBufferText(term, merged)
+}
+
+export function restoreAttachPtyOffloadAsync(
+  term: Terminal,
+  scrollbackText: string,
+  screenText: string,
+  format: AttachPtySnapshotFormat,
+  onComplete: () => void,
+): void {
+  if (format === 'vt') {
+    const payload = [scrollbackText, screenText].filter(Boolean).join('')
+    if (!payload) {
+      onComplete()
+      return
+    }
+    term.write(payload, onComplete)
+    return
+  }
+  restoreAttachPtyOffload(term, scrollbackText, screenText)
+  onComplete()
 }

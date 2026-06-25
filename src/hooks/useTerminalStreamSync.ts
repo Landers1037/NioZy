@@ -46,7 +46,10 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
       Date.now(),
       attachPtyMode ? { attachPtyMode: true, committedTerminalId: attachStreamTerminalId } : undefined,
     )
-    getElectronAPI().terminal.setActiveStreams(ids)
+    getElectronAPI().terminal.setActiveStreams(
+      ids,
+      attachPtyMode ? { deferRendererClaim: true } : undefined,
+    )
   }, [
     tabs,
     activeTabId,

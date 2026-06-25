@@ -2345,8 +2345,8 @@ ipcMain.handle('terminal:isAlive', (_, id: string) => terminalService.isAlive(id
 ipcMain.on('terminal:setActiveStream', (_, id: string | null) => {
   terminalService.setActiveStream(id)
 })
-ipcMain.on('terminal:setActiveStreams', (_, ids: string[]) => {
-  terminalService.setActiveStreams(ids)
+ipcMain.on('terminal:setActiveStreams', (_, ids: string[], options?: { deferRendererClaim?: boolean }) => {
+  terminalService.setActiveStreams(ids, options)
 })
 ipcMain.handle('terminal:claimStream', (_, id: string) => terminalService.claimStream(id))
 ipcMain.on('terminal:ackData', (_, id: string, length: number) => {

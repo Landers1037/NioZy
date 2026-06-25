@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useCallback, useState } from 'react'
 import type { Terminal, IDisposable, ITerminalOptions } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
 import type { SerializeAddon } from '@xterm/addon-serialize'
@@ -64,10 +64,9 @@ import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
 import { getAttachPtySnapshotText, restoreTerminalBufferText } from '@/lib/terminal-buffer'
 import {
-  restoreAttachPtyBuffer,
-  restoreAttachPtyOffload,
+  restoreAttachPtyBufferAsync,
+  restoreAttachPtyOffloadAsync,
   serializeAttachPtyBuffer,
-  serializeAttachPtyOffload,
   serializeAttachPtyOffloadPlain,
   type AttachPtySnapshotFormat,
 } from '@/lib/terminal-buffer-serialize'
@@ -83,8 +82,8 @@ import {
   takeOffloadedAttachPtyBuffer,
   type AttachPtyOffloadedBuffer,
 } from '@/lib/attach-pty-scrollback-offload'
-import { writeXtermOutput } from '@/lib/terminal-sync-output'
 import { createTerminalWriteBatcher, type TerminalWriteBatcher } from '@/lib/terminal-write-batcher'
+import { writeXtermOutput } from '@/lib/terminal-sync-output'
 import { isTerminalRenderPaused } from '@/lib/terminal-render-pause'
 import {
   refreshWebglTextureAtlas,
@@ -173,13 +172,27 @@ export function TerminalView({
     tabRef.current = tab
   }, [tab])
 
-  useEffect(() => {
-    if (isAttachHost) {
-      boundTerminalIdRef.current = attachSession?.terminalId ?? null
-    } else {
-      boundTerminalIdRef.current = tab.terminalId ?? null
+  /**
+   * Attach 宿主：committed 变化时立即解除绑定，避免 batcher 里上一 Tab 的积压
+   * 在新 terminalId 下写入 xterm（切到 SSH 时尤甚：pwsh 提示符会横排到 MOTD 顶部）。
+   * 新会话须在 applyAttachSession 完成快照恢复后再绑定。
+   */
+  useLayoutEffect(() => {
+    if (!isAttachHost) return
+    const prev = prevAttachSessionRef.current
+    const next = attachSession ?? null
+    if (
+      next?.terminalId !== prev?.terminalId ||
+      next?.tabId !== prev?.tabId
+    ) {
+      boundTerminalIdRef.current = null
     }
-  }, [isAttachHost, attachSession?.terminalId, tab.terminalId])
+  }, [isAttachHost, attachSession?.tabId, attachSession?.terminalId])
+
+  useEffect(() => {
+    if (isAttachHost) return
+    boundTerminalIdRef.current = tab.terminalId ?? null
+  }, [isAttachHost, tab.terminalId])
 
   const effectiveTerminalId = isAttachHost
     ? (attachSession?.terminalId ?? null)
@@ -392,7 +405,8 @@ export function TerminalView({
       if (attachPtyScrollbackOffload) {
         if (serializeAddon) {
           offloadAttachPtyBuffer(prev.tabId, {
-            ...serializeAttachPtyOffload(term, serializeAddon),
+            scrollbackText: '',
+            screenText: serializeAttachPtyBuffer(term, serializeAddon),
             format: 'vt',
           })
         } else {
@@ -422,6 +436,7 @@ export function TerminalView({
       const term = termRef.current
       if (!term) return
 
+      boundTerminalIdRef.current = null
       writeBatcherRef.current?.dropPending()
 
       let offloadedRestore: AttachPtyOffloadedBuffer | undefined
@@ -443,27 +458,47 @@ export function TerminalView({
       detachAttachSession()
 
       if (!session) {
-        term.clear()
+        // clear() 会保留提示符行；Attach 切换须 reset() (RIS)
+        term.reset()
         return
       }
 
       prevAttachSessionRef.current = session
-      term.clear()
+      term.reset()
       safeFit(true)
+
+      const finishAttach = (): void => {
+        boundTerminalIdRef.current = session.terminalId
+        registerTerminal(session.terminalId, term)
+        scheduleFit(true)
+        term.focus()
+
+        const claimId = session.terminalId
+        void getElectronAPI()
+          .terminal.claimStream(claimId)
+          .then((replay) => {
+            if (!replay || boundTerminalIdRef.current !== claimId) return
+            trackTerminalOutputBracketedPaste(claimId, replay)
+            writeBatcherRef.current?.queue(replay, claimId)
+          })
+          .catch(() => {
+            /* 忽略 claim 失败 */
+          })
+      }
+
       if (offloadedRestore) {
-        restoreAttachPtyOffload(
+        restoreAttachPtyOffloadAsync(
           term,
           offloadedRestore.scrollbackText,
           offloadedRestore.screenText,
           offloadedRestore.format ?? 'plain',
+          finishAttach,
         )
       } else if (snapshotText) {
-        restoreAttachPtyBuffer(term, snapshotText, snapshotFormat)
+        restoreAttachPtyBufferAsync(term, snapshotText, snapshotFormat, finishAttach)
+      } else {
+        finishAttach()
       }
-      boundTerminalIdRef.current = session.terminalId
-      registerTerminal(session.terminalId, term)
-      scheduleFit(true)
-      term.focus()
     },
     [detachAttachSession, safeFit, scheduleFit, attachPtyScrollbackOffload],
   )
@@ -636,7 +671,7 @@ export function TerminalView({
       unsubData = api.terminal.onData((id, data) => {
         if (id !== boundTerminalIdRef.current || isTerminalRenderPaused()) return
         trackTerminalOutputBracketedPaste(id, data)
-        writeBatcher?.queue(data)
+        writeBatcher?.queue(data, id)
       })
 
       const claimId = boundTerminalIdRef.current
@@ -644,7 +679,7 @@ export function TerminalView({
         const replay = await api.terminal.claimStream(claimId)
         if (replay) {
           trackTerminalOutputBracketedPaste(claimId, replay)
-          writeBatcher?.queue(replay)
+          writeBatcher?.queue(replay, claimId)
         }
       }
 
@@ -865,17 +900,8 @@ export function TerminalView({
       unsubData = api.terminal.onData((id, data) => {
         if (id !== boundTerminalIdRef.current || isTerminalRenderPaused()) return
         trackTerminalOutputBracketedPaste(id, data)
-        writeBatcher?.queue(data)
+        writeBatcher?.queue(data, id)
       })
-
-      const claimId = boundTerminalIdRef.current
-      if (claimId) {
-        const replay = await api.terminal.claimStream(claimId)
-        if (replay) {
-          trackTerminalOutputBracketedPaste(claimId, replay)
-          writeBatcher?.queue(replay)
-        }
-      }
 
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
@@ -892,8 +918,6 @@ export function TerminalView({
 
       scheduleFit(true)
       setTermReady(true)
-      const focusId = boundTerminalIdRef.current
-      if (focusId) notifyTerminalFocusReady(focusId)
     })()
 
     return () => {

@@ -351,7 +351,10 @@ export class TerminalService extends EventEmitter {
   }
 
   /** 拆分终端：所有可见 pane 同时实时推流 */
-  setActiveStreams(ids: string[]): void {
+  setActiveStreams(
+    ids: string[],
+    options?: { deferRendererClaim?: boolean },
+  ): void {
     const newActive = new Set(ids)
     for (const id of this.activeStreamIds) {
       if (!newActive.has(id)) this.pauseSessionStream(id)
@@ -360,6 +363,7 @@ export class TerminalService extends EventEmitter {
       if (!this.activeStreamIds.has(id)) this.resumeSessionStream(id)
     }
     this.activeStreamIds = newActive
+    if (options?.deferRendererClaim) return
     for (const id of ids) {
       this.flushBufferedOutput(id)
     }

@@ -488,7 +488,10 @@ export interface ElectronAPI {
     /** 声明当前向渲染进程推流的终端；非活跃会话输出在主进程有限缓冲 */
     setActiveStream: (id: string | null) => void
     /** 拆分终端：多个 pane 同时推流 */
-    setActiveStreams: (ids: string[]) => void
+    setActiveStreams: (
+      ids: string[],
+      options?: { deferRendererClaim?: boolean },
+    ) => void
     /** xterm 订阅 data 后领取推流并取回主进程缓冲 */
     claimStream: (id: string) => Promise<string>
     /** xterm 处理完一批输出后 ack，驱动主进程闭环反压 */
