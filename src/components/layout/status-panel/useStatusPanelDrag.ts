@@ -1,15 +1,15 @@
 import { useCallback, useRef } from 'react'
 import { animate, useMotionValue, type MotionValue } from 'motion/react'
 
-export const STATUS_PANEL_HANDLE = 56
+export const STATUS_PANEL_HANDLE = 48
 const SNAP_THRESHOLD = 0.38
 
-export function useStatusPanelDrag(panelWidth: number): {
+export function useStatusPanelDrag(panelWidth: number, initialProgress = 0): {
   progress: MotionValue<number>
   onHandlePointerDown: (e: React.PointerEvent<HTMLButtonElement>) => void
   toggle: () => void
 } {
-  const progress = useMotionValue(0)
+  const progress = useMotionValue(initialProgress)
   const dragStartX = useRef(0)
   const dragStartProgress = useRef(0)
   const didDrag = useRef(false)
@@ -56,7 +56,7 @@ export function useStatusPanelDrag(panelWidth: number): {
           toggle()
           return
         }
-        snapTo(progress.get() >= SNAP_THRESHOLD ? 1 : 0)
+        // keep wherever the drag stopped — no snap animation
       }
 
       handle.addEventListener('pointermove', onMove)

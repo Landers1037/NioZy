@@ -7,7 +7,7 @@ import {
   MemoryStick,
   Monitor,
   SquareTerminal,
-  Workflow,
+  BadgePercent,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -227,16 +227,16 @@ export const StatusPanelCards = memo(function StatusPanelCards({
           <div className="flex items-start justify-between gap-3">
             <dt className="flex items-center gap-1.5 text-muted-foreground">
               <Bot className="size-3.5" />
-              {t('settings.experimental.provider')}
+              {t('statusPanel.ai.providerLabel')}
             </dt>
             <dd className="text-right font-medium">{providerDisplay}</dd>
           </div>
           <div className="flex items-start justify-between gap-3">
-            <dt className="text-muted-foreground">{t('settings.experimental.model')}</dt>
+            <dt className="text-muted-foreground">{t('statusPanel.ai.modelLabel')}</dt>
             <dd className="max-w-[180px] truncate text-right font-mono text-xs">{exp.aiModel}</dd>
           </div>
           <div className="flex flex-col gap-1">
-            <dt className="text-muted-foreground">{t('settings.experimental.baseUrl')}</dt>
+            <dt className="text-muted-foreground">{t('statusPanel.ai.baseUrlLabel')}</dt>
             <dd className="truncate rounded-md bg-muted/40 px-2 py-1 font-mono text-[11px]">
               {exp.aiBaseUrl || '—'}
             </dd>
@@ -277,7 +277,7 @@ export const StatusPanelCards = memo(function StatusPanelCards({
                   className="flex items-center justify-between gap-2 font-mono text-[11px] tabular-nums"
                 >
                   <span className="flex min-w-0 items-center gap-1.5 truncate">
-                    <Workflow className="size-3 shrink-0 text-muted-foreground" />
+                    <BadgePercent className="size-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">{p.type}</span>
                   </span>
                   <span className="shrink-0 text-muted-foreground">

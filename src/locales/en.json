@@ -1466,7 +1466,10 @@
     "ai": {
       "title": "AI",
       "enabled": "enabled",
-      "disabled": "disabled"
+      "disabled": "disabled",
+      "providerLabel": "Provider",
+      "modelLabel": "Model",
+      "baseUrlLabel": "Base URL"
     },
     "processes": {
       "title": "Processes",
