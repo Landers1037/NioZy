@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, TextSearch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -116,7 +116,7 @@ export function Sidebar() {
                 title={t('sidebar.terminalFilter')}
                 onClick={toggleTerminalFilter}
               >
-                <Search className="size-4" />
+                <TextSearch className="size-4" />
               </Button>
             )}
             <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)}>
