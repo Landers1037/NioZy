@@ -30,7 +30,14 @@ function copyMainAssets(): Plugin {
       writeFileSync(resolve(scriptsOut, 'ssh-askpass.cmd'), readFileSync(askpassCmdSrc))
       writeFileSync(resolve(scriptsOut, 'ssh-askpass.sh'), readFileSync(askpassShSrc))
       mkdirSync(binOut, { recursive: true })
-      for (const name of ['niozy-cat.mjs', 'niozy-cat.cmd', 'niozy-cat']) {
+      for (const name of [
+        'niozy-cat.mjs',
+        'niozy-cat.cmd',
+        'niozy-cat',
+        'niozy-fetch.mjs',
+        'niozy-fetch.cmd',
+        'niozy-fetch',
+      ]) {
         const src = resolve(niozyBinSrc, name)
         writeFileSync(resolve(binOut, name), readFileSync(src))
       }

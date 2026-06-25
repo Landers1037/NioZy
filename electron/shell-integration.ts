@@ -44,7 +44,7 @@ export function prependNiozyBinToPath(env: Record<string, string>, dir: string):
   else delete env.Path
 }
 
-/** NioZy 内置 CLI（niozy-cat 等）所在目录 */
+/** NioZy 内置 CLI（niozy-cat、niozy-fetch 等）所在目录 */
 export function getNiozyBinDir(): string | null {
   if (app.isPackaged) {
     const packaged = join(process.resourcesPath, NIOZY_BIN_DIR_NAME)

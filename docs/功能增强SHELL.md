@@ -10,6 +10,7 @@
 |------|------|
 | 终端交互 | Emoji Unicode 11 宽度表；高亮 / 单击打开 http(s) 链接；Shift+Enter / Ctrl+Enter 快捷换行（交互式 CLI）；侧栏 Tab 编号；长按 2s 拖拽排序 |
 | 内联图片 | `@xterm/addon-image` 解析 SIXEL 与 iTerm IIP；内置 `niozy-cat` 命令；Ctrl+K / clear 清除 |
+| 系统信息 | 内置 `niozy-fetch` 命令：ASCII Logo、系统信息、256 色测试色卡 |
 | 提示符美化 | 离线内置 Oh My Posh + posh-git（仅 pwsh） |
 | 输出增强 | 日志级别关键词着色（MobaXterm 风格） |
 | 命令回放 | 录制终端输入序列、命名保存、标题栏一键播放 |
@@ -699,6 +700,48 @@ IIP 序列含大量 base64，经主进程 IPC 以 **64 KB** 分块传输。`find
 ### 实验特性
 
 否（依赖稳定版 `@xterm/addon-image@0.9.0` + `@xterm/xterm@6.0.0`）。
+
+---
+
+## 六、系统信息（niozy-fetch）
+
+内置 **fastfetch 风格** CLI，在终端输出 NioZy ASCII Logo、系统信息与 **256 色测试色卡**，用于验证终端配色与展示主机概况。无需额外设置开关，在 NioZy 终端中直接可用。
+
+### 功能列表
+
+- **ASCII Logo**：左侧渐变蓝色 `NioZy` 大字
+- **系统信息**：OS、Host、Kernel、Uptime、Shell、Terminal、CPU、Memory 等（fastfetch 双栏布局）
+- **256 色色卡**：标准 16 色 + 216 色立方 + 24 级灰阶
+- **NioZy 环境感知**：读取 `TERM_PROGRAM`、`NIOZY_TERMINAL_EMULATOR`、`NIOZY_BIN` 等注入变量
+
+### 使用示例
+
+```powershell
+# 在 NioZy 终端中：
+niozy-fetch
+niozy-fetch --no-logo
+niozy-fetch --colors-only
+```
+
+`niozy-fetch` 与 `niozy-cat` 共用 Shell 集成 PATH（`NIOZY_BIN`），开发态位于 `electron/scripts/bin/`，打包后位于 `resources/niozy-bin/`。
+
+### 进程归属
+
+| 层级 | 文件 |
+|------|------|
+| **内置 CLI** | `electron/scripts/bin/niozy-fetch.mjs`（及 `.cmd` / 无扩展名 shim） |
+| **PATH 注入** | `electron/shell-integration.ts` — 与 `niozy-cat` 共用 `NIOZY_BIN` |
+| **pwsh 函数** | `electron/scripts/shell-integration.ps1` — `Global:niozy-fetch` |
+| **打包** | `electron.vite.config.ts` 复制 bin；`electron-builder.yml` → `resources/niozy-bin` |
+
+### 选项
+
+| 选项 | 说明 |
+|------|------|
+| `--no-logo` | 跳过 ASCII Logo，仅输出信息行 |
+| `--no-colors` | 跳过 256 色色卡 |
+| `--colors-only` | 仅输出色卡 |
+| `--help`, `-h` | 帮助 |
 
 ---
 

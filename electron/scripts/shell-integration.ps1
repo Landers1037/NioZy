@@ -105,6 +105,22 @@ if ($null -eq $Global:NioZyShellIntegration) {
     }
   } catch {}
 
+  # 内置 niozy-fetch（系统信息 / 256 色卡）
+  try {
+    function Global:niozy-fetch {
+      param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
+      $bin = $env:NIOZY_BIN
+      if ([string]::IsNullOrWhiteSpace($bin)) {
+        throw 'NIOZY_BIN is not set. Open a new NioZy terminal tab.'
+      }
+      $script = Join-Path $bin 'niozy-fetch.mjs'
+      if (-not (Test-Path -LiteralPath $script)) {
+        throw "niozy-fetch not found: $script"
+      }
+      & node $script @Args
+    }
+  } catch {}
+
   # niozy-cat：图片路径 Tab 补全
   try {
     $imagePattern = '*.{png,jpg,jpeg,gif,webp,bmp}'
