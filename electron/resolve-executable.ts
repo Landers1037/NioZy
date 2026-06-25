@@ -1,3 +1,4 @@
+import { spawnSync } from 'child_process'
 import { existsSync } from 'fs'
 import { join } from 'path'
 
@@ -66,6 +67,45 @@ function fileExists(filePath: string): boolean {
   } catch {
     return false
   }
+}
+
+function parseWhereOutput(stdout: string): string[] {
+  return stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
+/**
+ * 通过 where.exe（Windows）将命令名解析为可执行文件绝对路径。
+ * 多个匹配时取 PATH 优先级最高者（where 输出的首条）。
+ */
+export function resolveExecutableWhere(
+  command: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string | null {
+  const trimmed = command.trim()
+  if (!trimmed) return null
+
+  if (/[\\/]/.test(trimmed) || /\.(exe|cmd|bat|com)$/i.test(trimmed)) {
+    return fileExists(trimmed) ? trimmed : null
+  }
+
+  if (process.platform !== 'win32') {
+    return resolveExecutable(trimmed, env)
+  }
+
+  const result = spawnSync('where.exe', [trimmed], {
+    encoding: 'utf8',
+    windowsHide: true,
+    env,
+  })
+  if (result.status !== 0 || !result.stdout) return null
+
+  for (const candidate of parseWhereOutput(result.stdout)) {
+    if (fileExists(candidate)) return candidate
+  }
+  return null
 }
 
 /** 将命令名解析为可执行文件绝对路径（仅当 file 为裸命令名时） */

@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { basename, join, resolve } from 'path'
 import type { BrowserWindow } from 'electron'
 import { dialog } from 'electron'
-import { resolveExecutable } from './resolve-executable'
+import { resolveExecutableWhere } from './resolve-executable'
 import { isValidGitCloneUrl } from './shared/git-url'
 import { gitGraphDebug, summarizeGraphRows } from './shared/git-graph-debug'
 import type {
@@ -155,10 +155,10 @@ export class GitService {
     const configured = this.customGitPath.trim()
     if (configured) {
       if (existsSync(configured)) return configured
-      const resolved = resolveExecutable(configured)
+      const resolved = resolveExecutableWhere(configured)
       if (resolved) return resolved
     }
-    return resolveExecutable('git')
+    return resolveExecutableWhere('git')
   }
 
   async detectGit(): Promise<GitDetectResult> {
