@@ -10,6 +10,11 @@ import {
 /** 移动超过该像素才视为拖选（非单击） */
 const SHIFT_SELECT_DRAG_THRESHOLD_PX = 4
 
+/** PTY 已通过 DECSET 开启 mouse reporting（Zellij / vim / less 等 TUI） */
+export function isXtermMouseReportingActive(term: Terminal): boolean {
+  return term.modes.mouseTrackingMode !== 'none'
+}
+
 /**
  * 备用屏（less / vim）非左键：阻止 xterm 向 PTY 转发 SGR 鼠标序列，
  * 以及 mousedown 触发的 focus 报告（`ESC [I` / `ESC [O`）。
@@ -58,7 +63,10 @@ export function handleInteractiveCliMouseDown(
   if (event.altKey && !forceModifier) return false
 
   if (shiftEnterNewline) {
-    // 交互式 CLI：单击不拦截 PTY，拖选后复制
+    // TUI 已开启 mouse reporting：普通单击交给 xterm 转发 SGR（与 Tabby 一致）
+    if (isXtermMouseReportingActive(term) && !forceModifier) return false
+
+    // 交互式 CLI（通常无 mouse mode）：拦截单击，避免 xterm 默认行为；拖选后复制
     event.preventDefault()
     event.stopImmediatePropagation()
     term.focus()
