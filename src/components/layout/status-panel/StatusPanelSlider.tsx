@@ -104,7 +104,7 @@ export function StatusPanelSlider() {
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           className={cn(
-            'pointer-events-auto absolute inset-y-0 right-0 w-full transform-gpu',
+            'pointer-events-auto absolute inset-0 right-0 w-full transform-gpu',
             'will-change-transform',
           )}
           style={{ x: panelX }}

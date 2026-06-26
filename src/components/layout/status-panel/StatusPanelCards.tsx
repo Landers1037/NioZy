@@ -200,7 +200,7 @@ export const StatusPanelCards = memo(function StatusPanelCards({
 
       {repos.length > 0 ? (
         <StatusCard dot="purple" label={t('statusPanel.repos.title')} status={String(repos.length)}>
-          <ul className="flex max-h-32 flex-col gap-2 overflow-y-auto">
+          <ul className="flex max-h-40 flex-col gap-2 overflow-y-auto">
             {repos.map((repo) => (
               <li key={repo.id} className="rounded-md border border-border/60 bg-muted/30 px-2.5 py-2">
                 <p className="truncate font-medium">{repo.name}</p>
@@ -252,7 +252,6 @@ export const StatusPanelCards = memo(function StatusPanelCards({
             ? t('statusPanel.processes.count', { count: metrics.processes.length })
             : undefined
         }
-        className="sm:col-span-2"
       >
         {metrics ? (
           <div className="flex flex-col gap-3">
@@ -270,7 +269,7 @@ export const StatusPanelCards = memo(function StatusPanelCards({
                 <dd className="font-mono font-medium tabular-nums">{metrics.processes.length}</dd>
               </div>
             </dl>
-            <ul className="flex max-h-28 flex-col gap-1 overflow-y-auto rounded-md border border-border/60 bg-muted/20 p-2">
+            <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-md border border-border/60 bg-muted/20 p-2">
               {metrics.processes.slice(0, 6).map((p) => (
                 <li
                   key={p.pid}
