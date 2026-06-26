@@ -73,7 +73,7 @@ win:
   icon: build/icon.ico
   artifactName: '${productName}-${version}-${arch}.${ext}'
   # 本地打包无需签名；避免下载 winCodeSign（解压含 symlink，无管理员/开发者模式会失败）
-  signAndEditExecutable: false
+  signExecutable: false
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
