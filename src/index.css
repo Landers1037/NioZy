@@ -1712,6 +1712,31 @@ html.window-dragging .niozy-terminal-host .wterm {
   pointer-events: none;
 }
 
+/* IME 输入法 Composition：防止组合框和隐藏 textarea 溢出挤压终端布局 */
+.niozy-terminal-host .xterm .xterm-helpers {
+  position: absolute;
+  contain: strict;
+}
+
+.niozy-terminal-host .xterm .xterm-helper-textarea {
+  /* 保持 focus 能力（IME 需要）；overflow:hidden 防止文本展开撑大容器 */
+  overflow: hidden !important;
+  opacity: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: none !important;
+  pointer-events: none !important;
+  /* 限制最大宽度，防止超长 IME 文本撑大容器导致布局偏移 */
+  max-width: 1px !important;
+  height: 1px !important;
+}
+
+.niozy-terminal-host .xterm .composition-view {
+  /* 组合框不触发布局重排 */
+  contain: strict;
+}
+
 /* 弹框开关动画（设置 → 外观 → 动画效果） */
 @keyframes dialog-overlay-in {
   from {
