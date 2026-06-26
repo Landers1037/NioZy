@@ -1,3 +1,4 @@
+import { app } from 'electron'
 import { createWriteStream, mkdirSync, type WriteStream } from 'fs'
 import { dirname, join } from 'path'
 import { format } from 'node:util'
@@ -120,7 +121,7 @@ export function createAppLogger(scope: string): AppLogger {
 export const appLog: AppLogger = createAppLogger('App')
 
 export function getDefaultLogFilePath(): string {
-  return join(process.cwd(), DEFAULT_LOG_FILE_NAME)
+  return join(app.getPath('userData'), DEFAULT_LOG_FILE_NAME)
 }
 
 export function resolveLogFilePath(filePath: string): string {
