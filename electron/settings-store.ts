@@ -13,8 +13,8 @@ import { normalizeStatusBarPollPriority, type StatusBarPollPriority } from './sh
 
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
-export type { UiStyle } from './shared/ui-style'
-import { normalizeUiStyle } from './shared/ui-style'
+export type { UiStyle, WindowsNativeEffect } from './shared/ui-style'
+import { normalizeUiStyle, normalizeWindowsNativeEffect } from './shared/ui-style'
 export type { TerminalRenderer } from './shared/terminal-renderer'
 import { normalizeTerminalRenderer, type TerminalRenderer } from './shared/terminal-renderer'
 import {
@@ -125,6 +125,8 @@ export interface AppSettings {
   showAppTitle: boolean
   enableDialogAnimations: boolean
   enableGlassTransparency: boolean
+  enableWindowsNativeEffect: boolean
+  windowsNativeEffect: import('./shared/ui-style').WindowsNativeEffect
   enableSmoothFonts: boolean
   enableStatusPanel: boolean
   terminal: {
@@ -241,6 +243,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showAppTitle: true,
   enableDialogAnimations: true,
   enableGlassTransparency: false,
+  enableWindowsNativeEffect: false,
+  windowsNativeEffect: 'acrylic',
   enableSmoothFonts: false,
   enableStatusPanel: false,
   terminal: {
@@ -323,6 +327,11 @@ function buildAppSettingsFromStored(
       typeof stored.enableGlassTransparency === 'boolean'
         ? stored.enableGlassTransparency
         : DEFAULT_SETTINGS.enableGlassTransparency,
+    enableWindowsNativeEffect:
+      typeof stored.enableWindowsNativeEffect === 'boolean'
+        ? stored.enableWindowsNativeEffect
+        : DEFAULT_SETTINGS.enableWindowsNativeEffect,
+    windowsNativeEffect: normalizeWindowsNativeEffect(stored.windowsNativeEffect),
     enableSmoothFonts:
       typeof stored.enableSmoothFonts === 'boolean'
         ? stored.enableSmoothFonts

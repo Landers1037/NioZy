@@ -526,7 +526,7 @@ export function StatusBar() {
     <>
       <footer
         className={cn(
-          'flex cursor-pointer select-none items-center justify-between',
+          'app-native-chrome flex cursor-pointer select-none items-center justify-between',
           ui.statusBar,
         )}
       >

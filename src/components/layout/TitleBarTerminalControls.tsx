@@ -119,7 +119,9 @@ export function TitleBarTerminalControls() {
   const showScreenshot = assistive.screenshotEnabled !== false
   const showNotes = assistive.notesEnabled !== false
   const glassSnapVibrancy =
-    settings.uiStyle === 'glass' && settings.enableGlassTransparency === true
+    settings.uiStyle === 'glass' &&
+    (settings.enableGlassTransparency === true ||
+      settings.enableWindowsNativeEffect === true)
 
   const snapPanelClass = cn(
     'fixed z-[100] w-[320px] overflow-hidden rounded-xl border border-border p-2 no-drag',

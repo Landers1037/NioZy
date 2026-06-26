@@ -36,6 +36,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   showAppTitle: true,
   enableDialogAnimations: true,
   enableGlassTransparency: false,
+  enableWindowsNativeEffect: false,
+  windowsNativeEffect: 'acrylic',
   enableSmoothFonts: false,
   enableStatusPanel: false,
   terminal: {

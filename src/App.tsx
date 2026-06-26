@@ -441,7 +441,9 @@ export default function App() {
 
   const browserDevPreview = isBrowserDevPreview()
   const glassChromeVibrancy =
-    settings?.uiStyle === 'glass' && settings?.enableGlassTransparency === true
+    settings?.uiStyle === 'glass' &&
+    (settings?.enableGlassTransparency === true ||
+      settings?.enableWindowsNativeEffect === true)
 
   const handleScpTransferOpenChange = useCallback(
     (open: boolean) => {
@@ -484,7 +486,9 @@ export default function App() {
     <div
       className={cn(
         'flex h-full flex-col',
-        glassChromeVibrancy ? 'bg-transparent' : 'bg-background',
+        glassChromeVibrancy || settings?.enableWindowsNativeEffect === true
+          ? 'bg-transparent'
+          : 'bg-background',
         aiSidebarEnabled &&
           aiSidebarOpen &&
           'transition-[padding-inline-end] duration-300 ease-out',

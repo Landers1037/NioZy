@@ -1284,6 +1284,38 @@ html[data-ui-style='glass'][data-glass-vibrancy='true'] .ui-slider-thumb {
   background: color-mix(in srgb, var(--card) 95%, transparent);
 }
 
+/*
+ * Windows 原生 Acrylic/Mica（所有界面风格）：系统材质负责背景，
+ * html/body/#root 改为透明，让桌面壁纸透过侧栏 / 顶栏透出。
+ * Acrylic（模糊磨砂）→ chrome 30% 通透；Mica（取壁纸主色、不模糊）→ chrome 98% 近不透明。
+ */
+html[data-windows-native-effect='acrylic'],
+html[data-windows-native-effect='mica'] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html[data-windows-native-effect='acrylic'] body,
+html[data-windows-native-effect='acrylic'] #root,
+html[data-windows-native-effect='mica'] body,
+html[data-windows-native-effect='mica'] #root {
+  background: transparent !important;
+}
+
+html[data-windows-native-effect='acrylic'] .app-native-chrome {
+  background: color-mix(in srgb, var(--card) 48%, transparent) !important;
+}
+
+html[data-windows-native-effect='mica'] .app-native-chrome {
+  background: color-mix(in srgb, var(--card) 98%, transparent) !important;
+}
+
+/* glass 终端面板保持较高不透明度以保证文字可读 */
+html[data-ui-style='glass'][data-windows-native-effect='acrylic'] .ui-glass-panel,
+html[data-ui-style='glass'][data-windows-native-effect='mica'] .ui-glass-panel {
+  background: color-mix(in srgb, var(--card) 82%, transparent) !important;
+}
+
 /* Claude：12px 圆角、白卡片、黑色主按钮、衬线标题 */
 html[data-ui-style='claude'] .ui-claude-display {
   font-family: var(--font-sans);

@@ -44,7 +44,7 @@ export function MinimalTabBar() {
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center gap-0.5 border-b border-border px-2 py-1.5 no-drag',
+        'app-native-chrome flex shrink-0 items-center gap-0.5 border-b border-border px-2 py-1.5 no-drag',
         ui.tabBarBg,
       )}
     >

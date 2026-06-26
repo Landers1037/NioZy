@@ -33,6 +33,13 @@ export function normalizeUiStyle(value: unknown): UiStyle {
   return 'minimal'
 }
 
+/** Windows 原生背景材质：acrylic（Win10 1809+）/ mica（Win11） */
+export type WindowsNativeEffect = 'acrylic' | 'mica'
+
+export function normalizeWindowsNativeEffect(value: unknown): WindowsNativeEffect {
+  return value === 'mica' ? 'mica' : 'acrylic'
+}
+
 /** 写入 document.documentElement.dataset.uiStyle */
 export function uiStyleToDataAttribute(style: UiStyle): string {
   if (style === 'niozy') return 'niozy'
@@ -68,8 +75,13 @@ export function getWindowBackgroundColor(
   theme: ThemeMode,
   uiStyle: UiStyle,
   enableGlassTransparency?: boolean,
+  enableWindowsNativeEffect?: boolean,
 ): string {
   if (shouldUseGlassWindowTransparency(uiStyle, enableGlassTransparency)) {
+    return '#00000000'
+  }
+  // Windows 原生 Acrylic/Mica 需要透明底色；不透明 backgroundColor 会整面遮住系统材质
+  if (enableWindowsNativeEffect === true) {
     return '#00000000'
   }
   return WINDOW_BG[uiStyle][theme]

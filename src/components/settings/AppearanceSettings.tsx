@@ -13,6 +13,7 @@ import { useAppStore } from '@/stores/app-store'
 import { FontSizeInput } from '@/components/settings/FontSizeInput'
 import { relaunchApp } from '@/lib/app-relaunch'
 import { toast } from 'sonner'
+import { getElectronAPI } from '@/lib/electron-client'
 import { SettingField } from './SettingField'
 import {
   Languages,
@@ -27,12 +28,18 @@ import {
   Layers2,
   ALargeSmall,
   PanelRight,
+  MonitorSmartphone,
 } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
 import { cn } from '@/lib/utils'
 import { getAccentPresets, getUiStyle, useUiClasses } from '@/lib/ui-style'
-import type { AppLocale, LayoutMode, UiStyle } from '../../../electron/shared/api-types'
+import type {
+  AppLocale,
+  LayoutMode,
+  UiStyle,
+  WindowsNativeEffect,
+} from '../../../electron/shared/api-types'
 import { APP_LOCALES } from '../../../electron/shared/locale'
 import { FontWeightFields } from '@/components/settings/FontWeightInput'
 
@@ -41,11 +48,16 @@ export function AppearanceSettings() {
   const settings = useAppStore((s) => s.settings)
   const patchSettings = useAppStore((s) => s.patchSettings)
   const ui = useUiClasses()
+  const isWindows = getElectronAPI().system.platform === 'win32'
   if (!settings) return null
 
   const layoutOptions = getLayoutModeOptions(t)
   const uiStyleOptions = getUiStyleOptions(t)
   const accentPresets = getAccentPresets(getUiStyle(settings))
+  const nativeEffectOptions: { value: WindowsNativeEffect; label: string }[] = [
+    { value: 'acrylic', label: t('settings.appearance.windowsNativeEffectAcrylic') },
+    { value: 'mica', label: t('settings.appearance.windowsNativeEffectMica') },
+  ]
 
   return (
     <Card>
@@ -183,10 +195,67 @@ export function AppearanceSettings() {
             checked={settings.enableGlassTransparency}
             disabled={settings.uiStyle !== 'glass'}
             onCheckedChange={(enableGlassTransparency) =>
-              patchSettings({ enableGlassTransparency })
+              patchSettings(
+                enableGlassTransparency
+                  ? { enableGlassTransparency: true, enableWindowsNativeEffect: false }
+                  : { enableGlassTransparency: false },
+              )
             }
           />
         </SettingField>
+
+        <SettingField
+          icon={MonitorSmartphone}
+          label={t('settings.appearance.enableWindowsNativeEffect')}
+          description={t('settings.appearance.enableWindowsNativeEffectDesc')}
+          row
+        >
+          <Switch
+            checked={settings.enableWindowsNativeEffect}
+            disabled={!isWindows}
+            onCheckedChange={(enableWindowsNativeEffect) =>
+              patchSettings(
+                enableWindowsNativeEffect
+                  ? { enableWindowsNativeEffect: true, enableGlassTransparency: false }
+                  : { enableWindowsNativeEffect: false },
+              )
+            }
+          />
+        </SettingField>
+
+        {settings.enableWindowsNativeEffect === true && (
+          <SettingField
+            icon={Layers2}
+            label={t('settings.appearance.windowsNativeEffect')}
+          >
+            <div
+              className={cn(
+                'inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border p-1',
+                ui.segmentGroupBg,
+              )}
+              role="tablist"
+              aria-label={t('settings.appearance.windowsNativeEffectAria')}
+            >
+              {nativeEffectOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={settings.windowsNativeEffect === opt.value}
+                  className={cn(
+                    'rounded-md px-3 py-1.5 text-sm transition-colors',
+                    settings.windowsNativeEffect === opt.value
+                      ? cn(ui.segmentActive, 'font-app-bold')
+                      : cn(ui.segmentInactive, 'font-app-regular'),
+                  )}
+                  onClick={() => patchSettings({ windowsNativeEffect: opt.value })}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </SettingField>
+        )}
 
         <SettingField
           icon={ALargeSmall}

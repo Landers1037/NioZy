@@ -93,7 +93,7 @@ export function Sidebar() {
     >
       <aside
         className={cn(
-          'flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-border',
+          'app-native-chrome flex h-full w-full min-w-0 select-none flex-col overflow-hidden border-r border-border',
           ui.sidebarBg,
         )}
       >

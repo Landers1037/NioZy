@@ -11,7 +11,7 @@ export {
 } from './sidebar-width'
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
-export type { UiStyle } from './ui-style'
+export type { UiStyle, WindowsNativeEffect } from './ui-style'
 export {
   UI_STYLE_VALUES,
   normalizeUiStyle,
@@ -217,6 +217,10 @@ export interface AppSettings {
   enableDialogAnimations: boolean
   /** 玻璃界面风格下启用 macOS 风格增强毛玻璃透明效果 */
   enableGlassTransparency: boolean
+  /** 玻璃风格下启用 Windows 原生背景材质（Acrylic/Mica）；与 enableGlassTransparency 互斥 */
+  enableWindowsNativeEffect: boolean
+  /** 原生材质类型：acrylic（Win10 1809+）/ mica（Win11，低版本自动降级为 acrylic） */
+  windowsNativeEffect: import('./ui-style').WindowsNativeEffect
   /** 启用类似 macOS 的平滑字体渲染（需重启；Windows 下配合 DirectWrite / 高 DPI 清单） */
   enableSmoothFonts: boolean
   /** 右侧滑出状态面板（系统信息、资源占用、终端与 AI 配置等） */

@@ -17,7 +17,7 @@ export function TitleBar() {
   return (
     <header
       className={cn(
-        'drag-region relative z-50 flex shrink-0 select-none items-center',
+        'drag-region app-native-chrome relative z-50 flex shrink-0 select-none items-center',
         ui.titleBar,
       )}
       onPointerDownCapture={onTitleBarPointerDownCapture}

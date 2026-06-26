@@ -584,10 +584,18 @@ export function applyThemeToDocument(settings: AppSettings): void {
   const root = document.documentElement
   root.classList.toggle('dark', settings.theme === 'dark')
   root.dataset.uiStyle = uiStyleToDataAttribute(settings.uiStyle)
+  // data-glass-vibrancy 仅用于旧的 CSS-only 玻璃透明路径（全透明窗口 + backdrop-filter）；
+  // 原生 Acrylic/Mica 走独立的 data-windows-native-effect（适用于所有风格），二者不叠加
   if (settings.uiStyle === 'glass' && settings.enableGlassTransparency) {
     root.dataset.glassVibrancy = 'true'
   } else {
     delete root.dataset.glassVibrancy
+  }
+  // 原生 Acrylic/Mica：所有界面风格均生效；属性值即材质类型，供 CSS 区分通透度
+  if (settings.enableWindowsNativeEffect) {
+    root.dataset.windowsNativeEffect = settings.windowsNativeEffect
+  } else {
+    delete root.dataset.windowsNativeEffect
   }
   if (settings.enableSmoothFonts) {
     root.dataset.smoothFonts = 'true'

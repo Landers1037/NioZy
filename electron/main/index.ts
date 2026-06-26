@@ -12,9 +12,10 @@ import { dirname, join } from 'path'
 import { existsSync } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
+import { release } from 'node:os'
 import { TerminalService } from '../terminal-service'
 import { MuxTerminalService } from '../mux-terminal-service'
-import { SettingsStore, isHardwareAccelerationEnabled, isWebGpuAccelerationEnabled } from '../settings-store'
+import { SettingsStore, isHardwareAccelerationEnabled, isWebGpuAccelerationEnabled, type AppSettings } from '../settings-store'
 import { StatisticsStore } from '../statistics-store'
 import { resumeTermStore } from '../resume-term-store'
 import { ReminderStore } from '../reminder-store'
@@ -201,6 +202,8 @@ let isQuitting = false
 let isRecreatingMainWindow = false
 /** 当前主窗口是否以 transparent 创建（与 shouldUseGlassWindowTransparency 同步） */
 let mainWindowHasGlassTransparency = false
+/** 当前主窗口已生效的 Windows 原生材质（createWindow 构造期设置；mica 需重建才能切换，故追踪） */
+let mainWindowNativeMaterial: 'none' | 'acrylic' | 'mica' = 'none'
 let linkPreviewManager: LinkPreviewManager | null = null
 let vncProxyManager: import('../vnc-proxy').VncWsProxyManager | null = null
 
@@ -285,6 +288,60 @@ function syncGlassWindowTransparencyIfNeeded(): void {
   }
 }
 
+/** Windows 11 及以上（build >= 22000）；Mica 仅 Win11 支持 */
+function isWindows11(): boolean {
+  if (process.platform !== 'win32') return false
+  const build = Number(release().split('.')[2] ?? 0)
+  return build >= 22000
+}
+
+/**
+ * 计算当前应生效的 Windows 原生背景材质。
+ * 非 Windows / 未启用 → 'none'；Mica 在 Win10 自动降级为 Acrylic。
+ * 适用于所有 UI 风格（由 CSS 负责把 chrome 改为半透明透出材质）。
+ * 与 enableGlassTransparency 互斥：原生开启时玻璃透明为 false，窗口为非透明。
+ */
+function getEffectiveNativeMaterial(
+  settings: AppSettings,
+): 'none' | 'acrylic' | 'mica' {
+  if (process.platform !== 'win32') return 'none'
+  if (!settings.enableWindowsNativeEffect) return 'none'
+  if (settings.windowsNativeEffect === 'mica') return isWindows11() ? 'mica' : 'acrylic'
+  return 'acrylic'
+}
+
+/** 运行时切换原生背景材质；mica 运行时切换常失效，故需重建窗口（与构造期设置一致） */
+function syncNativeBackdropIfNeeded(): void {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  const s = settingsStore.get()
+  const material = getEffectiveNativeMaterial(s)
+  // mica 对运行时 setBackgroundMaterial 不稳定（Electron #38454）；mica↔其它 必须重建窗口在构造期设置
+  if (material === 'mica' || mainWindowNativeMaterial === 'mica') {
+    if (material !== mainWindowNativeMaterial) {
+      recreateMainWindowForGlassTransparency()
+      return
+    }
+  }
+  mainWindowNativeMaterial = material
+  try {
+    mainWindow.setBackgroundMaterial(material)
+    // 原生材质需配合透明底色：开启时透出系统材质，关闭时回落到不透明风格底色
+    mainWindow.setBackgroundColor(
+      getWindowBackgroundColor(
+        s.theme,
+        s.uiStyle,
+        s.enableGlassTransparency,
+        s.enableWindowsNativeEffect,
+      ),
+    )
+  } catch (err) {
+    mainLog.warn('Failed to set background material', {
+      material,
+      error: logErrorPayload(err),
+    })
+  }
+}
+
 async function syncAllSettingsSideEffects(): Promise<void> {
   const updated = settingsStore.get()
   syncGitPathFromSettings()
@@ -300,6 +357,7 @@ async function syncAllSettingsSideEffects(): Promise<void> {
         updated.theme,
         updated.uiStyle,
         updated.enableGlassTransparency,
+        updated.enableWindowsNativeEffect,
       ),
     )
   }
@@ -711,6 +769,8 @@ function createWindow(): void {
     settings.enableGlassTransparency,
   )
   mainWindowHasGlassTransparency = glassTransparent
+  const nativeMaterial = getEffectiveNativeMaterial(settings)
+  mainWindowNativeMaterial = nativeMaterial
 
   mainLog.debug('Creating main window', {
     preloadPath,
@@ -736,7 +796,9 @@ function createWindow(): void {
       settings.theme,
       settings.uiStyle,
       settings.enableGlassTransparency,
+      settings.enableWindowsNativeEffect,
     ),
+    ...(nativeMaterial !== 'none' ? { backgroundMaterial: nativeMaterial } : {}),
     opacity: transparencyToOpacity(settings.advanced.transparency),
     webPreferences: {
       ...getOptimizedWebPreferences(preloadPath, {
@@ -1503,6 +1565,8 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   const themeBefore = settingsBefore.theme
   const uiStyleBefore = settingsBefore.uiStyle
   const enableGlassTransparencyBefore = settingsBefore.enableGlassTransparency
+  const enableWindowsNativeEffectBefore = settingsBefore.enableWindowsNativeEffect
+  const windowsNativeEffectBefore = settingsBefore.windowsNativeEffect
   const localeBefore = settingsBefore.locale
   const proxyBefore = settingsBefore.system.proxy
   const loggingBefore = settingsBefore.logging
@@ -1618,8 +1682,25 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
         updated.theme,
         updated.uiStyle,
         updated.enableGlassTransparency,
+        updated.enableWindowsNativeEffect,
       ),
     )
+  }
+  if (
+    settingsPatchValueChanged(
+      partial.enableWindowsNativeEffect,
+      enableWindowsNativeEffectBefore,
+      updated.enableWindowsNativeEffect,
+    ) ||
+    settingsPatchValueChanged(
+      partial.windowsNativeEffect,
+      windowsNativeEffectBefore,
+      updated.windowsNativeEffect,
+    ) ||
+    settingsPatchValueChanged(partial.uiStyle, uiStyleBefore, updated.uiStyle)
+  ) {
+    // 原生材质运行时切换（acrylic↔mica、开关、切走 glass）；透明↔非透明的翻转已由上方重建路径 + createWindow 覆盖
+    syncNativeBackdropIfNeeded()
   }
   if (
     settingsPatchValueChanged(
