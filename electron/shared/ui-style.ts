@@ -40,6 +40,33 @@ export function normalizeWindowsNativeEffect(value: unknown): WindowsNativeEffec
   return value === 'mica' ? 'mica' : 'acrylic'
 }
 
+/** 原生材质强度档位（1–5） */
+export const WINDOWS_NATIVE_EFFECT_INTENSITY_MIN = 1
+export const WINDOWS_NATIVE_EFFECT_INTENSITY_MAX = 5
+
+const ACRYLIC_OPACITY_BY_INTENSITY = [10, 32, 48, 64, 86]
+const MICA_OPACITY_BY_INTENSITY = [24, 36, 64, 72, 98]
+
+export function normalizeWindowsNativeEffectIntensity(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return 3
+  const rounded = Math.round(n)
+  if (rounded < WINDOWS_NATIVE_EFFECT_INTENSITY_MIN) return WINDOWS_NATIVE_EFFECT_INTENSITY_MIN
+  if (rounded > WINDOWS_NATIVE_EFFECT_INTENSITY_MAX) return WINDOWS_NATIVE_EFFECT_INTENSITY_MAX
+  return rounded
+}
+
+/** chrome 层卡片不透明度百分比（0–100），档位越高越不透明 */
+export function getWindowsNativeEffectCardOpacity(
+  effect: WindowsNativeEffect,
+  intensity: number,
+): number {
+  const idx = normalizeWindowsNativeEffectIntensity(intensity) - 1
+  return effect === 'mica'
+    ? MICA_OPACITY_BY_INTENSITY[idx]
+    : ACRYLIC_OPACITY_BY_INTENSITY[idx]
+}
+
 /** 写入 document.documentElement.dataset.uiStyle */
 export function uiStyleToDataAttribute(style: UiStyle): string {
   if (style === 'niozy') return 'niozy'

@@ -38,6 +38,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   enableGlassTransparency: false,
   enableWindowsNativeEffect: false,
   windowsNativeEffect: 'acrylic',
+  windowsNativeEffectIntensity: 3,
   enableSmoothFonts: false,
   enableStatusPanel: false,
   terminal: {

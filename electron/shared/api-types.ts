@@ -17,6 +17,10 @@ export {
   normalizeUiStyle,
   uiStyleToDataAttribute,
   getWindowBackgroundColor,
+  normalizeWindowsNativeEffectIntensity,
+  getWindowsNativeEffectCardOpacity,
+  WINDOWS_NATIVE_EFFECT_INTENSITY_MIN,
+  WINDOWS_NATIVE_EFFECT_INTENSITY_MAX,
 } from './ui-style'
 export type { TerminalRenderer } from './terminal-renderer'
 export { normalizeTerminalRenderer, TERMINAL_RENDERER_VALUES } from './terminal-renderer'
@@ -221,6 +225,8 @@ export interface AppSettings {
   enableWindowsNativeEffect: boolean
   /** 原生材质类型：acrylic（Win10 1809+）/ mica（Win11，低版本自动降级为 acrylic） */
   windowsNativeEffect: import('./ui-style').WindowsNativeEffect
+  /** 原生材质强度档位（1–5），档位越高 chrome 卡片越不透明 */
+  windowsNativeEffectIntensity: number
   /** 启用类似 macOS 的平滑字体渲染（需重启；Windows 下配合 DirectWrite / 高 DPI 清单） */
   enableSmoothFonts: boolean
   /** 右侧滑出状态面板（系统信息、资源占用、终端与 AI 配置等） */

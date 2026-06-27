@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
+import { getWindowsNativeEffectCardOpacity } from '../../electron/shared/api-types'
 import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { scheduleTabRemovalSideEffects } from '@/lib/schedule-tab-removal-side-effects'
@@ -594,8 +595,14 @@ export function applyThemeToDocument(settings: AppSettings): void {
   // 原生 Acrylic/Mica：所有界面风格均生效；属性值即材质类型，供 CSS 区分通透度
   if (settings.enableWindowsNativeEffect) {
     root.dataset.windowsNativeEffect = settings.windowsNativeEffect
+    const opacity = getWindowsNativeEffectCardOpacity(
+      settings.windowsNativeEffect,
+      settings.windowsNativeEffectIntensity,
+    )
+    root.style.setProperty('--native-card-opacity', `${opacity}%`)
   } else {
     delete root.dataset.windowsNativeEffect
+    root.style.removeProperty('--native-card-opacity')
   }
   if (settings.enableSmoothFonts) {
     root.dataset.smoothFonts = 'true'

@@ -40,6 +40,10 @@ import type {
   UiStyle,
   WindowsNativeEffect,
 } from '../../../electron/shared/api-types'
+import {
+  WINDOWS_NATIVE_EFFECT_INTENSITY_MIN,
+  WINDOWS_NATIVE_EFFECT_INTENSITY_MAX,
+} from '../../../electron/shared/api-types'
 import { APP_LOCALES } from '../../../electron/shared/locale'
 import { FontWeightFields } from '@/components/settings/FontWeightInput'
 
@@ -251,6 +255,44 @@ export function AppearanceSettings() {
                   onClick={() => patchSettings({ windowsNativeEffect: opt.value })}
                 >
                   {opt.label}
+                </button>
+              ))}
+            </div>
+          </SettingField>
+        )}
+
+        {settings.enableWindowsNativeEffect === true && (
+          <SettingField
+            icon={Layers2}
+            label={t('settings.appearance.windowsNativeEffectIntensity')}
+            description={t('settings.appearance.windowsNativeEffectIntensityDesc')}
+          >
+            <div
+              className={cn(
+                'inline-flex w-fit max-w-full flex-wrap rounded-lg border border-border p-1',
+                ui.segmentGroupBg,
+              )}
+              role="tablist"
+              aria-label={t('settings.appearance.windowsNativeEffectIntensityAria')}
+            >
+              {Array.from(
+                { length: WINDOWS_NATIVE_EFFECT_INTENSITY_MAX - WINDOWS_NATIVE_EFFECT_INTENSITY_MIN + 1 },
+                (_, i) => WINDOWS_NATIVE_EFFECT_INTENSITY_MIN + i,
+              ).map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  role="tab"
+                  aria-selected={settings.windowsNativeEffectIntensity === level}
+                  className={cn(
+                    'rounded-md px-3 py-1.5 text-sm transition-colors',
+                    settings.windowsNativeEffectIntensity === level
+                      ? cn(ui.segmentActive, 'font-app-bold')
+                      : cn(ui.segmentInactive, 'font-app-regular'),
+                  )}
+                  onClick={() => patchSettings({ windowsNativeEffectIntensity: level })}
+                >
+                  {t(`settings.appearance.windowsNativeEffectIntensityLevel${level}`)}
                 </button>
               ))}
             </div>

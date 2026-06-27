@@ -14,7 +14,11 @@ import { normalizeStatusBarPollPriority, type StatusBarPollPriority } from './sh
 export type ThemeMode = 'light' | 'dark'
 export type LayoutMode = 'default' | 'focus' | 'minimal'
 export type { UiStyle, WindowsNativeEffect } from './shared/ui-style'
-import { normalizeUiStyle, normalizeWindowsNativeEffect } from './shared/ui-style'
+import {
+  normalizeUiStyle,
+  normalizeWindowsNativeEffect,
+  normalizeWindowsNativeEffectIntensity,
+} from './shared/ui-style'
 export type { TerminalRenderer } from './shared/terminal-renderer'
 import { normalizeTerminalRenderer, type TerminalRenderer } from './shared/terminal-renderer'
 import {
@@ -127,6 +131,7 @@ export interface AppSettings {
   enableGlassTransparency: boolean
   enableWindowsNativeEffect: boolean
   windowsNativeEffect: import('./shared/ui-style').WindowsNativeEffect
+  windowsNativeEffectIntensity: number
   enableSmoothFonts: boolean
   enableStatusPanel: boolean
   terminal: {
@@ -245,6 +250,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   enableGlassTransparency: false,
   enableWindowsNativeEffect: false,
   windowsNativeEffect: 'acrylic',
+  windowsNativeEffectIntensity: 3,
   enableSmoothFonts: false,
   enableStatusPanel: false,
   terminal: {
@@ -332,6 +338,9 @@ function buildAppSettingsFromStored(
         ? stored.enableWindowsNativeEffect
         : DEFAULT_SETTINGS.enableWindowsNativeEffect,
     windowsNativeEffect: normalizeWindowsNativeEffect(stored.windowsNativeEffect),
+    windowsNativeEffectIntensity: normalizeWindowsNativeEffectIntensity(
+      stored.windowsNativeEffectIntensity,
+    ),
     enableSmoothFonts:
       typeof stored.enableSmoothFonts === 'boolean'
         ? stored.enableSmoothFonts

@@ -1302,12 +1302,9 @@ html[data-windows-native-effect='mica'] #root {
   background: transparent !important;
 }
 
-html[data-windows-native-effect='acrylic'] .app-native-chrome {
-  background: color-mix(in srgb, var(--card) 48%, transparent) !important;
-}
-
+html[data-windows-native-effect='acrylic'] .app-native-chrome,
 html[data-windows-native-effect='mica'] .app-native-chrome {
-  background: color-mix(in srgb, var(--card) 98%, transparent) !important;
+  background: color-mix(in srgb, var(--card) var(--native-card-opacity, 48%), transparent) !important;
 }
 
 /* glass 终端面板保持较高不透明度以保证文字可读 */
