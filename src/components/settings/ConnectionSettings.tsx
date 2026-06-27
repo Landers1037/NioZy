@@ -52,6 +52,7 @@ import { TextareaWithVaultPicker } from './TextareaWithVaultPicker'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
 import {
   Cable,
+  Copy,
   FileCode,
   Key,
   List,
@@ -660,6 +661,20 @@ export function ConnectionSettings() {
     })
   }
 
+  const duplicateConnection = (c: CustomConnection) => {
+    const existingNames = new Set(settings.connections.map((conn) => conn.name))
+    let index = 1
+    let name = `${c.name}-Copy${index}`
+    while (existingNames.has(name)) {
+      index += 1
+      name = `${c.name}-Copy${index}`
+    }
+    const copy: CustomConnection = { ...c, id: randomUUID(), name }
+    patchSettings({
+      connections: [...settings.connections, copy],
+    })
+  }
+
   const browseNewPrivateKey = async () => {
     const path = await getElectronAPI().files.pickPrivateKey()
     if (path) setNewDraft((d) => ({ ...d, sshKeyPath: path }))
@@ -871,6 +886,10 @@ export function ConnectionSettings() {
                   <Button variant="outline" size="sm" onClick={() => startEditConnection(c)}>
                     <Pencil className="size-3.5" />
                     {t('settings.connections.editSaved')}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => duplicateConnection(c)}>
+                    <Copy className="size-3.5" />
+                    {t('settings.connections.duplicate')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => removeConnection(c.id)}>
                     {t('settings.connections.delete')}

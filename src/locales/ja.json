@@ -905,6 +905,7 @@
       "editCustomTitle": "接続を編集",
       "editCustomDesc": "ダイアログ内で接続設定を変更して保存",
       "editSaved": "編集",
+      "duplicate": "複製",
       "savedConnections": "保存済み接続",
       "noCustomConnections": "カスタム接続はまだありません",
       "defaultLaunch": "デフォルト起動",

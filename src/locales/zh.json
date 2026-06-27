@@ -1127,6 +1127,7 @@
       "editCustomTitle": "编辑连接",
       "editCustomDesc": "在弹窗中修改连接配置后保存",
       "editSaved": "编辑",
+      "duplicate": "复制",
       "savedConnections": "已保存连接",
       "noCustomConnections": "暂无自定义连接",
       "defaultLaunch": "默认启动",
