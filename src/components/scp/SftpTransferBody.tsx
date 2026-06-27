@@ -41,6 +41,67 @@ function formatTransferBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`
 }
 
+/**
+ * 可编辑远程地址栏：展示当前路径，回车跳转到输入目录。
+ * 切换失败（目录不存在 / 无权限等）时由 onNavigate 返回 false，
+ * 地址栏回退到当前路径；成功时通过 [path] 副作用同步为解析后的新路径。
+ */
+function EditablePathInput({
+  path,
+  ariaLabel,
+  onNavigate,
+}: {
+  path: string
+  ariaLabel: string
+  onNavigate: (path: string) => Promise<boolean> | boolean
+}) {
+  const [draft, setDraft] = useState(path)
+
+  useEffect(() => {
+    setDraft(path)
+  }, [path])
+
+  const commit = async () => {
+    const trimmed = draft.trim()
+    if (!trimmed || trimmed === path) {
+      setDraft(path)
+      return
+    }
+    const ok = await Promise.resolve(onNavigate(trimmed))
+    if (!ok) {
+      // 失败：onNavigate 已 toast 报错且未切换目录，回退到当前路径
+      setDraft(path)
+    }
+    // 成功：path 已更新为解析后的路径，上面的 [path] 副作用会同步 draft
+  }
+
+  return (
+    <input
+      type="text"
+      value={draft}
+      aria-label={ariaLabel}
+      title={path}
+      spellCheck={false}
+      className={cn(
+        'min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 py-0.5 font-mono text-xs text-foreground outline-none transition-colors',
+        'hover:bg-muted/60 focus-visible:border-border focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-ring/40',
+      )}
+      onChange={(e) => setDraft(e.currentTarget.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          void commit()
+        } else if (e.key === 'Escape') {
+          e.preventDefault()
+          setDraft(path)
+          e.currentTarget.blur()
+        }
+      }}
+      onBlur={() => setDraft(path)}
+    />
+  )
+}
+
 export function FileListPanel({
   title,
   path,
@@ -56,6 +117,8 @@ export function FileListPanel({
   fileDropActive = false,
   onFileDropActiveChange,
   onFilesDrop,
+  editablePath = false,
+  onNavigatePath,
 }: {
   title: string
   path: string
@@ -71,6 +134,10 @@ export function FileListPanel({
   fileDropActive?: boolean
   onFileDropActiveChange?: (active: boolean) => void
   onFilesDrop?: (paths: string[]) => void
+  /** 启用后顶部路径变为可编辑输入框（回车跳转）；仅远程面板使用 */
+  editablePath?: boolean
+  /** 配合 editablePath：回车时以输入路径发起跳转，返回是否切换成功 */
+  onNavigatePath?: (path: string) => Promise<boolean> | boolean
 }) {
   const { t } = useTranslation()
 
@@ -118,9 +185,13 @@ export function FileListPanel({
     >
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">{title}</span>
-        <span className="min-w-0 flex-1 truncate font-mono text-xs" title={path}>
-          {path}
-        </span>
+        {editablePath && onNavigatePath ? (
+          <EditablePathInput path={path} ariaLabel={title} onNavigate={onNavigatePath} />
+        ) : (
+          <span className="min-w-0 flex-1 truncate font-mono text-xs" title={path}>
+            {path}
+          </span>
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -216,7 +287,7 @@ export function SftpTransferBody({
   const [transferProgress, setTransferProgress] = useState<ScpTransferProgress | null>(null)
   const [remoteDropActive, setRemoteDropActive] = useState(false)
   const [profileError, setProfileError] = useState(false)
-  const remoteListQueue = useRef(Promise.resolve())
+  const remoteListQueue = useRef<Promise<unknown>>(Promise.resolve())
 
   const loadLocal = useCallback(async (dir: string) => {
     setLocalLoading(true)
@@ -246,15 +317,16 @@ export function SftpTransferBody({
 
   const loadRemote = useCallback(
     (dir: string, options?: ScpListRemoteOptions) => {
-      if (!connectionId) return Promise.resolve()
+      if (!connectionId) return Promise.resolve(false)
 
-      const run = async () => {
+      const run = async (): Promise<boolean> => {
         setRemoteLoading(true)
         devLog('[NioZy][SCP] renderer listRemote start', {
           connectionId,
           dir,
           afterTransfer: Boolean(options?.afterTransfer),
         })
+        let ok = false
         try {
           const result = await getElectronAPI().ssh.listRemote(connectionId, dir, options)
           devLog('[NioZy][SCP] renderer listRemote done', {
@@ -266,6 +338,7 @@ export function SftpTransferBody({
           if (result.ok && result.entries) {
             setRemoteEntries(result.entries)
             setRemotePath(result.resolvedPath ?? dir)
+            ok = true
           } else if (!options?.afterTransfer) {
             toast.error(result.error ?? t('scp.listFailed'))
           } else {
@@ -280,6 +353,7 @@ export function SftpTransferBody({
         } finally {
           setRemoteLoading(false)
         }
+        return ok
       }
 
       const next = remoteListQueue.current.then(run, run)
@@ -468,6 +542,8 @@ export function SftpTransferBody({
           onEnterDir={(e) => void loadRemote(e.path)}
           onGoUp={() => void loadRemote(parentRemotePath())}
           onRefresh={() => void loadRemote(remotePath)}
+          editablePath
+          onNavigatePath={loadRemote}
           acceptFileDrop={Boolean(connectionId) && !transferring}
           fileDropActive={remoteDropActive}
           onFileDropActiveChange={setRemoteDropActive}
