@@ -155,6 +155,25 @@ export function TerminalSettings() {
           }
         />
 
+        <SettingField
+          icon={Type}
+          label={t('settings.terminal.ligatures')}
+          description={
+            domOnlyEmulator
+              ? t('settings.terminal.ligaturesWtermDesc')
+              : t('settings.terminal.ligaturesDesc')
+          }
+          row
+        >
+          <Switch
+            checked={settings.terminal.ligaturesEnabled}
+            disabled={domOnlyEmulator}
+            onCheckedChange={(ligaturesEnabled) =>
+              patchSettings({ terminal: { ...settings.terminal, ligaturesEnabled } })
+            }
+          />
+        </SettingField>
+
         <SettingField icon={TextCursor} label={t('settings.terminal.cursorStyle')}>
           <div
             className={cn(

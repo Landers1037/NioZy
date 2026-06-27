@@ -58,6 +58,7 @@ import {
   normalizeDrawBoldTextInBrightColors,
   normalizeAdvancedRightClickMenu,
   normalizeRightClickCopyPaste,
+  normalizeTerminalLigaturesEnabled,
   normalizeTerminalRightClickSettings,
   normalizeSynchronizedOutputEnabled,
   normalizeTerminalScrollback,
@@ -147,6 +148,7 @@ export interface AppSettings {
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean
     scrollback: number
+    ligaturesEnabled: boolean
     drawBoldTextInBrightColors: boolean
     rightClickCopyPaste: boolean
     advancedRightClickMenu: boolean
@@ -265,6 +267,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     cursorStyle: 'block',
     cursorBlink: true,
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
+    ligaturesEnabled: false,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
     advancedRightClickMenu: false,
@@ -374,6 +377,7 @@ function buildAppSettingsFromStored(
           ? stored.terminal.cursorBlink
           : DEFAULT_SETTINGS.terminal.cursorBlink,
       scrollback: normalizeTerminalScrollback(stored.terminal?.scrollback),
+      ligaturesEnabled: normalizeTerminalLigaturesEnabled(stored.terminal?.ligaturesEnabled),
       drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(
         stored.terminal?.drawBoldTextInBrightColors,
       ),

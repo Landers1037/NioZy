@@ -2,6 +2,7 @@ export const TERMINAL_BUILTIN_FONT_IDS = [
   '0xProtoNerd',
   'comicShannsNerd',
   'departureNerd',
+  'firaCodeNerd',
   'ubuntuMonoNerd',
 ] as const
 
@@ -33,6 +34,11 @@ export const TERMINAL_BUILTIN_FONTS: Record<TerminalBuiltinFontId, TerminalBuilt
     id: 'departureNerd',
     label: 'Departure Mono Nerd',
     cssFamily: 'NioZyDepartureNerdMono',
+  },
+  firaCodeNerd: {
+    id: 'firaCodeNerd',
+    label: 'Fira Code Nerd',
+    cssFamily: 'NioZyFiraCodeNerdMono',
   },
   ubuntuMonoNerd: {
     id: 'ubuntuMonoNerd',

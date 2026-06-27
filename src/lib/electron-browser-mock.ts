@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     cursorStyle: 'block',
     cursorBlink: true,
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
+    ligaturesEnabled: false,
     drawBoldTextInBrightColors: true,
     rightClickCopyPaste: true,
     advancedRightClickMenu: false,

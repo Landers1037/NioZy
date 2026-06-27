@@ -8,6 +8,11 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { registerTerminal, unregisterTerminal } from '@/lib/terminal-registry'
 import { buildTerminalOptions, applyTerminalRuntimeOptions } from '@/lib/terminal-xterm-options'
 import {
+  createTerminalLigaturesAddonState,
+  disposeTerminalLigaturesAddon,
+  syncTerminalLigaturesAddon,
+} from '@/lib/terminal-ligatures-addon'
+import {
   getTerminalCellBackgroundColor,
   getTerminalChromeBackgroundColor,
   hasTerminalBackgroundImage,
@@ -50,6 +55,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
   const fitRef = useRef<FitAddon | null>(null)
+  const ligaturesAddonRef = useRef(createTerminalLigaturesAddonState())
   const focusPaneRef = useRef(0)
   const isTabFocusedRef = useRef(isFocused)
   const layoutKindRef = useRef<MuxLayoutKind>(
@@ -190,8 +196,11 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       termRef.current = term
       fitRef.current = fit
       registerTerminal(sessionId, term)
-      applyTerminalRuntimeOptions(term, s?.terminal)
+      if (s?.terminal) {
+        applyTerminalRuntimeOptions(term, s.terminal)
+      }
       term.options.scrollback = 0
+      await syncTerminalLigaturesAddon(term, ligaturesAddonRef.current, s?.terminal, true)
       applyInteractiveCliTerminalOptions(
         term,
         s?.shell?.shiftEnterNewline ?? DEFAULT_SHELL_SETTINGS.shiftEnterNewline,
@@ -341,6 +350,7 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       unsubExit?.()
       writeBatcher?.dispose()
       unregisterTerminal(sessionId)
+      disposeTerminalLigaturesAddon(ligaturesAddonRef.current)
       termRef.current?.dispose()
       termRef.current = null
       fitRef.current = null
@@ -348,6 +358,16 @@ export function MuxTerminalView({ tab, isFocused = false }: MuxTerminalViewProps
       setResizeMode(false)
     }
   }, [sessionId, tab.id, safeFit, exitResizeMode])
+
+  useEffect(() => {
+    if (!termRef.current || !terminalSettings) return
+    void syncTerminalLigaturesAddon(
+      termRef.current,
+      ligaturesAddonRef.current,
+      terminalSettings,
+      true,
+    )
+  }, [terminalSettings])
 
   useEffect(() => {
     if (!isFocused || !termReady || !sessionId) return

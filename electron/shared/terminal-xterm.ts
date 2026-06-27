@@ -16,6 +16,10 @@ export function normalizeDrawBoldTextInBrightColors(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }
 
+export function normalizeTerminalLigaturesEnabled(value: unknown): boolean {
+  return value === true
+}
+
 export function normalizeRightClickCopyPaste(value: unknown): boolean {
   return typeof value === 'boolean' ? value : true
 }

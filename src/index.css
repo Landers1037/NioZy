@@ -55,6 +55,14 @@
 }
 
 @font-face {
+  font-family: 'NioZyFiraCodeNerdMono';
+  src: url('./fonts/FiraCodeNerdFontMono-Regular.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'NioZyUbuntuMonoNerdMono';
   src: url('./fonts/UbuntuMonoNerdFontMono-Regular.ttf') format('truetype');
   font-weight: 100 900;

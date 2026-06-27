@@ -250,6 +250,8 @@ export interface AppSettings {
     cursorBlink: boolean
     /** xterm scrollback 行数 */
     scrollback: number
+    /** xterm 编程连字（ligatures），仅 xterm.js 生效 */
+    ligaturesEnabled: boolean
     /** 以亮色显示粗体 */
     drawBoldTextInBrightColors: boolean
     /** 右键：有选区则复制，无选区则粘贴（与 advancedRightClickMenu 互斥） */

@@ -24,6 +24,11 @@ import {
   buildTerminalOptions,
 } from '@/lib/terminal-xterm-options'
 import {
+  createTerminalLigaturesAddonState,
+  disposeTerminalLigaturesAddon,
+  syncTerminalLigaturesAddon,
+} from '@/lib/terminal-ligatures-addon'
+import {
   applyTerminalShellAddons,
   createTerminalShellAddonState,
 } from '@/lib/terminal-shell-addons'
@@ -146,6 +151,7 @@ export function TerminalView({
   const fitRef = useRef<FitAddon | null>(null)
   const serializeAddonRef = useRef<SerializeAddon | null>(null)
   const webglRef = useRef<WebglAddon | null>(null)
+  const ligaturesAddonsRef = useRef(createTerminalLigaturesAddonState())
   const shellAddonsRef = useRef(createTerminalShellAddonState())
   const previewMouseRef = useRef<IDisposable[]>([])
   /** WebGL 上下文丢失或加载失败后，本会话内不再尝试 WebGL */
@@ -211,6 +217,7 @@ export function TerminalView({
     return () => unregisterTerminalHost(terminalId)
   }, [effectiveTerminalId])
 
+  const terminalEmulator = getTerminalEmulator(settings)
   const rendererPreference = settings?.terminal.renderer ?? 'webgl'
   const domOnlyEmulator = isDomOnlyTerminalEmulator(settings)
   const superPowerSavingDom =
@@ -579,6 +586,12 @@ export function TerminalView({
         previewSettings,
         emulator,
       )
+      await syncTerminalLigaturesAddon(
+        term,
+        ligaturesAddonsRef.current,
+        s?.terminal,
+        emulator === 'xterm',
+      )
 
       writeBatcher = createTerminalWriteBatcher(
         () => termRef.current,
@@ -726,6 +739,7 @@ export function TerminalView({
         unregisterTerminal(tab.terminalId)
       }
       shellAddonsRef.current = createTerminalShellAddonState()
+      disposeTerminalLigaturesAddon(ligaturesAddonsRef.current)
       termRef.current?.dispose()
       termRef.current = null
       fitRef.current = null
@@ -807,6 +821,12 @@ export function TerminalView({
         shellSettings,
         previewSettings,
         emulator,
+      )
+      await syncTerminalLigaturesAddon(
+        term,
+        ligaturesAddonsRef.current,
+        s?.terminal,
+        emulator === 'xterm',
       )
 
       writeBatcher = createTerminalWriteBatcher(
@@ -943,6 +963,7 @@ export function TerminalView({
       const clearedTerminalId = boundTerminalIdRef.current
       if (clearedTerminalId) clearTerminalBracketedPasteState(clearedTerminalId)
       shellAddonsRef.current = createTerminalShellAddonState()
+      disposeTerminalLigaturesAddon(ligaturesAddonsRef.current)
       serializeAddonRef.current?.dispose()
       serializeAddonRef.current = null
       termRef.current?.dispose()
@@ -1025,22 +1046,35 @@ export function TerminalView({
   }, [termReady, settings?.shell, settings?.preview, syncPreviewMouse])
 
   useEffect(() => {
-    if (!termRef.current || !settings) return
-    const cursor = getTerminalCursorOptions(settings.terminal)
+    const terminalSettings = settings?.terminal
+    if (!termRef.current || !terminalSettings) return
+    const cursor = getTerminalCursorOptions(terminalSettings)
     termRef.current.options.theme = resolveTerminalThemeWithBackground(
-      settings.terminal.colorScheme,
-      settings.terminal,
+      terminalSettings.colorScheme,
+      terminalSettings,
     )
-    termRef.current.options.fontFamily = resolveTerminalFontFamilyCSSValue(settings.terminal)
-    termRef.current.options.fontSize = settings.terminal.fontSize
-    termRef.current.options.fontWeight = settings.terminal.fontWeight
-    termRef.current.options.fontWeightBold = settings.terminal.fontWeightBold
+    termRef.current.options.fontFamily = resolveTerminalFontFamilyCSSValue(terminalSettings)
+    termRef.current.options.fontSize = terminalSettings.fontSize
+    termRef.current.options.fontWeight = terminalSettings.fontWeight
+    termRef.current.options.fontWeightBold = terminalSettings.fontWeightBold
     termRef.current.options.cursorBlink = cursor.cursorBlink
     termRef.current.options.cursorStyle = cursor.cursorStyle
-    applyTerminalRuntimeOptions(termRef.current, settings.terminal)
+    applyTerminalRuntimeOptions(termRef.current, terminalSettings)
     scheduleFit()
     refreshWebglTextureAtlas(termRef.current, webglRef.current)
-  }, [settings?.terminal, scheduleFit])
+    void syncTerminalLigaturesAddon(
+      termRef.current,
+      ligaturesAddonsRef.current,
+      terminalSettings,
+      terminalEmulator === 'xterm',
+    ).then((changed) => {
+      if (!changed || terminalEmulator !== 'xterm' || activeRenderer !== 'webgl') return
+      disposeWebgl()
+      if (!webglBlockedRef.current) {
+        void loadWebgl()
+      }
+    })
+  }, [settings?.terminal, terminalEmulator, scheduleFit, activeRenderer, disposeWebgl, loadWebgl])
 
   useEffect(() => {
     if (!termReady) return
