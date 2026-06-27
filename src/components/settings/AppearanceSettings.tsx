@@ -29,6 +29,7 @@ import {
   ALargeSmall,
   PanelRight,
   MonitorSmartphone,
+  ScrollText,
 } from 'lucide-react'
 import { getLayoutModeOptions } from '@/lib/layout-mode'
 import { getUiStyleOptions } from '@/lib/ui-style-options'
@@ -311,6 +312,29 @@ export function AppearanceSettings() {
               if (enableSmoothFonts === settings.enableSmoothFonts) return
               void patchSettings({ enableSmoothFonts }).then(() =>
                 toast.info(t('toast.smoothFontsRestart'), {
+                  duration: 10_000,
+                  action: {
+                    label: t('toast.restartApp'),
+                    onClick: () => relaunchApp(),
+                  },
+                }),
+              )
+            }}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={ScrollText}
+          label={t('settings.appearance.enableSmoothScrolling')}
+          description={t('settings.appearance.enableSmoothScrollingDesc')}
+          row
+        >
+          <Switch
+            checked={settings.enableSmoothScrolling}
+            onCheckedChange={(enableSmoothScrolling) => {
+              if (enableSmoothScrolling === settings.enableSmoothScrolling) return
+              void patchSettings({ enableSmoothScrolling }).then(() =>
+                toast.info(t('toast.smoothScrollingRestart'), {
                   duration: 10_000,
                   action: {
                     label: t('toast.restartApp'),

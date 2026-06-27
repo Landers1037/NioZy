@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   windowsNativeEffect: 'acrylic',
   windowsNativeEffectIntensity: 3,
   enableSmoothFonts: false,
+  enableSmoothScrolling: false,
   enableStatusPanel: false,
   terminal: {
     colorScheme: 'atom',

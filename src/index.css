@@ -1618,6 +1618,11 @@ html[data-smooth-fonts='true'] body {
   text-rendering: optimizeLegibility;
 }
 
+/* 平滑滚动：xterm 视口滚轮 / 程序化滚动平滑过渡（Chromium 原生平滑滚动由启动开关控制） */
+html[data-smooth-scroll='true'] .xterm-viewport {
+  scroll-behavior: smooth;
+}
+
 .drag-region {
   -webkit-app-region: drag;
   touch-action: none;

@@ -349,6 +349,8 @@
       "windowsNativeEffectIntensityLevel5": "5",
       "enableSmoothFonts": "スムーズフォント",
       "enableSmoothFontsDesc": "HiDPI サポートと DirectWrite による macOS 風の文字描画を有効化（再起動が必要）",
+      "enableSmoothScrolling": "スムーズスクロール",
+      "enableSmoothScrollingDesc": "Chromium ネイティブのスムーズスクロールと xterm ビューポートの滑らかなスクロール推移を有効化（再起動が必要）",
       "enableStatusPanel": "ステータスパネル",
       "enableStatusPanelDesc": "ウィンドウ右端にハンドルを表示し、左へドラッグしてシステム情報・リソース・ターミナル・AI 設定などのカードを表示"
     },
@@ -1323,6 +1325,7 @@
     "p2pSendFailed": "送信に失敗しました",
     "hardwareAccelerationRestart": "ハードウェアアクセラレーションを保存しました。完全に終了して再起動してください。",
     "smoothFontsRestart": "スムーズフォントを保存しました。完全に終了して再起動してください。",
+    "smoothScrollingRestart": "スムーズスクロールを保存しました。完全に終了して再起動してください。",
     "webGpuAccelerationRestart": "WebGPU アクセラレーションを保存しました。完全に終了して再起動してください。",
     "disableSandboxRestart": "サンドボックス設定を保存しました。完全に終了して再起動してください。",
     "shellContextMenuFailed": "エクスプローラーのコンテキストメニューを更新できませんでした。レジストリ書き込み権限を確認してください。",

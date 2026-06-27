@@ -51,6 +51,7 @@ import {
   syncInactiveTabSleepThrottling,
 } from '../chromium-tuning'
 import { applySmoothFontFlags } from '../font-smoothing'
+import { applySmoothScrollingFlags } from '../smooth-scrolling'
 import { readPerformanceSettingsFromDisk } from '../performance-settings-disk'
 import { configureSessionPrivacy, disableCrashReporting } from '../session-privacy'
 import {
@@ -194,6 +195,7 @@ applyChromiumPerformanceFlags({
   inactiveTabSleep: performanceSettingsAtLaunch.inactiveTabSleep,
 })
 applySmoothFontFlags()
+applySmoothScrollingFlags()
 installReleaseDevToolsGuard()
 
 let mainWindow: BrowserWindow | null = null

@@ -513,6 +513,8 @@
       "windowsNativeEffectIntensityLevel5": "5",
       "enableSmoothFonts": "Smooth fonts",
       "enableSmoothFontsDesc": "Enables HiDPI support and DirectWrite smoothing for macOS-like text rendering (restart required)",
+      "enableSmoothScrolling": "Smooth scrolling",
+      "enableSmoothScrollingDesc": "Enables native Chromium smooth scrolling and animates the xterm viewport scroll (restart required)",
       "enableStatusPanel": "Status panel",
       "enableStatusPanelDesc": "Shows a handle on the right edge; drag left to reveal cards with system info, resource usage, terminals, and AI settings"
     },
@@ -1584,6 +1586,7 @@
     "p2pSendFailed": "Send failed",
     "hardwareAccelerationRestart": "Hardware acceleration saved. Quit and restart the app for it to take effect.",
     "smoothFontsRestart": "Smooth fonts saved. Quit and restart the app for it to take effect.",
+    "smoothScrollingRestart": "Smooth scrolling saved. Quit and restart the app for it to take effect.",
     "webGpuAccelerationRestart": "WebGPU acceleration saved. Quit and restart the app for it to take effect.",
     "disableSandboxRestart": "Sandbox setting saved. Quit and restart the app for it to apply.",
     "shellContextMenuFailed": "Could not update Explorer context menu. Check that your user can write to the registry.",

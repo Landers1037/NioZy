@@ -133,6 +133,7 @@ export interface AppSettings {
   windowsNativeEffect: import('./shared/ui-style').WindowsNativeEffect
   windowsNativeEffectIntensity: number
   enableSmoothFonts: boolean
+  enableSmoothScrolling: boolean
   enableStatusPanel: boolean
   terminal: {
     colorScheme: TerminalColorScheme
@@ -252,6 +253,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   windowsNativeEffect: 'acrylic',
   windowsNativeEffectIntensity: 3,
   enableSmoothFonts: false,
+  enableSmoothScrolling: false,
   enableStatusPanel: false,
   terminal: {
     colorScheme: 'atom',
@@ -345,6 +347,10 @@ function buildAppSettingsFromStored(
       typeof stored.enableSmoothFonts === 'boolean'
         ? stored.enableSmoothFonts
         : DEFAULT_SETTINGS.enableSmoothFonts,
+    enableSmoothScrolling:
+      typeof stored.enableSmoothScrolling === 'boolean'
+        ? stored.enableSmoothScrolling
+        : DEFAULT_SETTINGS.enableSmoothScrolling,
     enableStatusPanel:
       typeof stored.enableStatusPanel === 'boolean'
         ? stored.enableStatusPanel

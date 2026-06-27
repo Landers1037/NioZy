@@ -609,6 +609,11 @@ export function applyThemeToDocument(settings: AppSettings): void {
   } else {
     delete root.dataset.smoothFonts
   }
+  if (settings.enableSmoothScrolling) {
+    root.dataset.smoothScroll = 'true'
+  } else {
+    delete root.dataset.smoothScroll
+  }
   root.style.setProperty('--primary', settings.accentColor)
   root.style.setProperty('--ring', settings.accentColor)
   root.style.setProperty('--app-font-size', `${settings.fontSize}px`)

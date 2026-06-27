@@ -229,6 +229,8 @@ export interface AppSettings {
   windowsNativeEffectIntensity: number
   /** 启用类似 macOS 的平滑字体渲染（需重启；Windows 下配合 DirectWrite / 高 DPI 清单） */
   enableSmoothFonts: boolean
+  /** 开启平滑滚动：Chromium 原生平滑滚动 + xterm 视口 scroll-behavior 平滑（需重启） */
+  enableSmoothScrolling: boolean
   /** 右侧滑出状态面板（系统信息、资源占用、终端与 AI 配置等） */
   enableStatusPanel: boolean
   terminal: {
