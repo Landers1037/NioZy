@@ -138,11 +138,13 @@ export {
 } from './builtin-shells'
 
 export type PuttyProtocol = 'ssh' | 'telnet'
+export type FtpSecurityMode = 'plain' | 'explicit' | 'implicit'
+export type FtpTransferMode = 'passive' | 'active'
 
 export interface CustomConnection {
   id: string
   name: string
-  type: 'command' | 'ssh' | 'sftp' | 'rdp' | 'wsl' | 'telnet' | 'putty' | 'vnc'
+  type: 'command' | 'ssh' | 'sftp' | 'ftp' | 'rdp' | 'wsl' | 'telnet' | 'putty' | 'vnc'
   command: string
   args: string[]
   env: Record<string, string>
@@ -170,6 +172,16 @@ export interface CustomConnection {
   /** Telnet 主机 */
   telnetHost?: string
   telnetPort?: number
+  /** FTP 主机 */
+  ftpHost?: string
+  ftpPort?: number
+  ftpUser?: string
+  /** FTP/FTPS 密码；支持 ${vaultKey} 引用存储库 */
+  ftpPassword?: string
+  ftpSecurity?: FtpSecurityMode
+  ftpTransferMode?: FtpTransferMode
+  /** FTP/FTPS 连接超时（秒） */
+  ftpTimeoutSeconds?: number
   /** PuTTY 主机 */
   puttyHost?: string
   puttyPort?: number
@@ -410,6 +422,16 @@ export interface SaveImageInput {
   encoding: 'utf8' | 'base64'
   defaultFileName: string
   mimeType?: string
+}
+
+export interface FtpConnectionProfile {
+  host: string
+  user: string
+  port: number
+  password?: string
+  security: FtpSecurityMode
+  transferMode: FtpTransferMode
+  timeoutSeconds: number
 }
 
 export interface AppRuntimeVersions {
@@ -706,6 +728,32 @@ export interface ElectronAPI {
       onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
     ) => Promise<import('./ssh-types').ScpTransferResult>
     download: (
+      connectionId: string,
+      remotePath: string,
+      localPath: string,
+      onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
+    ) => Promise<import('./ssh-types').ScpTransferResult>
+  }
+  ftp: {
+    getProfile: (connectionId: string) => Promise<FtpConnectionProfile | null>
+    listRemote: (
+      connectionId: string,
+      remotePath: string,
+      options?: import('./ssh-types').ScpListRemoteOptions,
+    ) => Promise<import('./ssh-types').ScpListResult>
+    upload: (
+      connectionId: string,
+      localPath: string,
+      remotePath: string,
+      onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
+    ) => Promise<import('./ssh-types').ScpTransferResult>
+    download: (
+      connectionId: string,
+      remotePath: string,
+      localPath: string,
+      onProgress?: (progress: import('./ssh-types').ScpTransferProgress) => void,
+    ) => Promise<import('./ssh-types').ScpTransferResult>
+    downloadDirectory: (
       connectionId: string,
       remotePath: string,
       localPath: string,

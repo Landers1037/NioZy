@@ -487,6 +487,43 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return { ok: false, error: 'Browser preview' }
       },
     },
+    ftp: {
+      getProfile: async () => null,
+      listRemote: async () => ({
+        ok: true,
+        entries: [
+          { name: 'pub', path: '/pub', isDirectory: true },
+          { name: 'readme.txt', path: '/readme.txt', isDirectory: false, size: 512 },
+        ],
+      }),
+      upload: async (_id, _local, _remote, onProgress) => {
+        onProgress?.({
+          direction: 'upload',
+          fileName: 'sample.bin',
+          transferred: 512,
+          total: 1024,
+        })
+        return { ok: false, error: 'Browser preview' }
+      },
+      download: async (_id, _remote, _local, onProgress) => {
+        onProgress?.({
+          direction: 'download',
+          fileName: 'sample.bin',
+          transferred: 256,
+          total: 1024,
+        })
+        return { ok: false, error: 'Browser preview' }
+      },
+      downloadDirectory: async (_id, _remote, _local, onProgress) => {
+        onProgress?.({
+          direction: 'download',
+          fileName: 'sample-dir/file.bin',
+          transferred: 256,
+          total: 1024,
+        })
+        return { ok: false, error: 'Browser preview' }
+      },
+    },
     files: {
       saveText: async (content, defaultFileName) => {
         const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
@@ -684,11 +721,14 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
     repo: {
       detectGit: async () => ({ found: false }),
       pickDirectory: async () => null,
+      pickParentDirectory: async () => null,
       validateRepo: async () => ({ ok: false, error: 'NOT_GIT_REPO' as const }),
       listManaged: async () => [],
       add: async () => ({ ok: false, error: 'NOT_GIT_REPO' as const }),
       remove: async () => false,
       pull: async () => ({ ok: false, error: 'Browser preview' }),
+      clone: async () => ({ ok: false as const, error: 'Browser preview' }),
+      onCloneOutput: () => () => undefined,
       listBranches: async () => ({ error: 'Browser preview' }),
       checkout: async () => ({ ok: false, error: 'Browser preview' }),
       getGraphCommits: async () => ({ error: 'Browser preview' }),

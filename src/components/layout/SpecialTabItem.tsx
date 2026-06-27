@@ -9,6 +9,8 @@ import { SandboxTabItem } from '@/components/layout/SandboxTabItem'
 import { SettingsTabItem } from '@/components/layout/SettingsTabItem'
 import { WebviewTabItem } from '@/components/layout/WebviewTabItem'
 import { VncTabItem } from '@/components/layout/VncTabItem'
+import { SftpTabItem } from '@/components/layout/SftpTabItem'
+import { FtpTabItem } from '@/components/layout/FtpTabItem'
 import { ExcalidrawTabItem } from '@/components/layout/ExcalidrawTabItem'
 import { DrawioTabItem } from '@/components/layout/DrawioTabItem'
 import { MarkdownTabItem } from '@/components/layout/MarkdownTabItem'
@@ -55,6 +57,12 @@ export const SpecialTabItem = memo(function SpecialTabItem(props: SpecialTabItem
   }
   if (props.tab.type === 'vnc') {
     return <VncTabItem {...props} />
+  }
+  if (props.tab.type === 'sftp') {
+    return <SftpTabItem {...props} />
+  }
+  if (props.tab.type === 'ftp') {
+    return <FtpTabItem {...props} />
   }
   if (props.tab.type === 'excalidraw') {
     return <ExcalidrawTabItem {...props} />

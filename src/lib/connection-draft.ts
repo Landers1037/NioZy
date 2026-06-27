@@ -1,4 +1,9 @@
-import type { CustomConnection, PuttyProtocol } from '../../electron/shared/api-types'
+import type {
+  CustomConnection,
+  FtpSecurityMode,
+  FtpTransferMode,
+  PuttyProtocol,
+} from '../../electron/shared/api-types'
 import {
   formatPortReceived,
   parseConnectionPort,
@@ -30,6 +35,13 @@ export type ConnectionDraft = {
   wslDistro: string
   telnetHost: string
   telnetPort: number
+  ftpHost: string
+  ftpPort: number
+  ftpUser: string
+  ftpPassword: string
+  ftpSecurity: FtpSecurityMode
+  ftpTransferMode: FtpTransferMode
+  ftpTimeoutSeconds: number
   puttyHost: string
   puttyPort: number
   puttyUser: string
@@ -64,6 +76,13 @@ export const EMPTY_CONNECTION_DRAFT: ConnectionDraft = {
   wslDistro: '',
   telnetHost: '',
   telnetPort: 23,
+  ftpHost: '',
+  ftpPort: 21,
+  ftpUser: 'anonymous',
+  ftpPassword: '',
+  ftpSecurity: 'plain',
+  ftpTransferMode: 'passive',
+  ftpTimeoutSeconds: 10,
   puttyHost: '',
   puttyPort: 22,
   puttyUser: '',
@@ -138,6 +157,18 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
         sshKeyPath: c.sshKeyPath ?? '',
         sshGroup: c.sshGroup ?? '',
       }
+    case 'ftp':
+      return {
+        ...base,
+        type: 'ftp',
+        ftpHost: c.ftpHost ?? c.command,
+        ftpPort: c.ftpPort ?? 21,
+        ftpUser: c.ftpUser ?? 'anonymous',
+        ftpPassword: c.ftpPassword ?? '',
+        ftpSecurity: c.ftpSecurity ?? 'plain',
+        ftpTransferMode: c.ftpTransferMode ?? 'passive',
+        ftpTimeoutSeconds: c.ftpTimeoutSeconds ?? 10,
+      }
     case 'rdp':
       return {
         ...base,
@@ -204,6 +235,8 @@ function connectionDraftPort(
       return { value: draft.rdpPort, defaultPort: 3389 }
     case 'telnet':
       return { value: draft.telnetPort, defaultPort: 23 }
+    case 'ftp':
+      return { value: draft.ftpPort, defaultPort: 21 }
     case 'putty':
       return { value: draft.puttyPort, defaultPort: defaultPuttyPort(draft.puttyProtocol) }
     case 'vnc':
@@ -286,6 +319,26 @@ export function draftToConnection(
             ? draft.sshKeyPath.trim()
             : undefined,
         sshGroup: draft.sshGroup.trim() || undefined,
+      }
+    }
+    case 'ftp': {
+      if (!draft.ftpHost.trim() || !draft.ftpUser.trim()) return null
+      if (getConnectionDraftPortError(draft)) return null
+      const ftpPort = parseConnectionPort(draft.ftpPort, 21)!
+      return {
+        id,
+        name: draft.name.trim(),
+        type: 'ftp',
+        command: draft.ftpHost.trim(),
+        args: [],
+        env: {},
+        ftpHost: draft.ftpHost.trim(),
+        ftpPort,
+        ftpUser: draft.ftpUser.trim(),
+        ftpPassword: draft.ftpPassword.trim() || undefined,
+        ftpSecurity: draft.ftpSecurity,
+        ftpTransferMode: draft.ftpTransferMode,
+        ftpTimeoutSeconds: Math.max(1, Math.trunc(draft.ftpTimeoutSeconds) || 10),
       }
     }
     case 'rdp': {

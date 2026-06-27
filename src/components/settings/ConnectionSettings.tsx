@@ -131,6 +131,7 @@ function ConnectionDraftFields({
             <SelectItem value="command">{t('settings.connections.typeCommandCustom')}</SelectItem>
             <SelectItem value="ssh">{t('settings.connections.typeSsh')}</SelectItem>
             <SelectItem value="sftp">{t('settings.connections.typeSftp')}</SelectItem>
+            <SelectItem value="ftp">{t('settings.connections.typeFtp')}</SelectItem>
             {isWindows && (
               <>
                 <SelectItem value="rdp">{t('settings.connections.typeRdp')}</SelectItem>
@@ -343,6 +344,99 @@ function ConnectionDraftFields({
             </SettingField>
           </div>
           <p className="text-xs text-muted-foreground">{t('settings.connections.telnetLaunchHint')}</p>
+        </>
+      ) : draft.type === 'ftp' ? (
+        <>
+          <SettingField icon={Cable} label={t('settings.connections.ftpSecurity')}>
+            <div className="flex flex-wrap items-center gap-4">
+              <Select
+                value={draft.ftpSecurity}
+                onValueChange={(v) =>
+                  setDraft({
+                    ...draft,
+                    ftpSecurity: v as ConnectionDraft['ftpSecurity'],
+                    ftpPort:
+                      v === 'implicit'
+                        ? 990
+                        : draft.ftpSecurity === 'implicit' && draft.ftpPort === 990
+                          ? 21
+                          : draft.ftpPort,
+                  })
+                }
+              >
+                <SelectTrigger className="max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="plain">{t('settings.connections.ftpSecurityPlain')}</SelectItem>
+                  <SelectItem value="explicit">{t('settings.connections.ftpSecurityExplicit')}</SelectItem>
+                  <SelectItem value="implicit">{t('settings.connections.ftpSecurityImplicit')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={draft.ftpTransferMode}
+                onValueChange={(v) =>
+                  setDraft({ ...draft, ftpTransferMode: v as ConnectionDraft['ftpTransferMode'] })
+                }
+              >
+                <SelectTrigger className="max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="passive">{t('settings.connections.ftpModePassive')}</SelectItem>
+                  <SelectItem value="active">{t('settings.connections.ftpModeActive')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </SettingField>
+          <div className="grid grid-cols-2 gap-4">
+            <SettingField icon={Server} label={t('settings.connections.host')}>
+              <Input
+                value={draft.ftpHost}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, ftpHost: e.currentTarget.value })}
+                placeholder="192.168.1.1"
+              />
+            </SettingField>
+            <SettingField icon={Network} label={t('settings.connections.port')}>
+              <Input
+                type="number"
+                min={1}
+                max={65535}
+                value={draft.ftpPort}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, ftpPort: Number(e.currentTarget.value) || 21 })}
+              />
+            </SettingField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <SettingField icon={User} label={t('settings.connections.username')}>
+              <Input
+                value={draft.ftpUser}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDraft({ ...draft, ftpUser: e.currentTarget.value })}
+              />
+            </SettingField>
+            <SettingField icon={Lock} label={t('settings.connections.password')}>
+              <InputWithVaultPicker
+                type="password"
+                wrapperClassName="w-full max-w-none"
+                className="min-w-0 flex-1"
+                value={draft.ftpPassword}
+                onChange={(ftpPassword) => setDraft({ ...draft, ftpPassword })}
+                placeholder={t('settings.connections.passwordPlaceholder')}
+              />
+            </SettingField>
+          </div>
+          <SettingField icon={Network} label={t('settings.connections.timeoutSeconds')}>
+            <Input
+              type="number"
+              min={1}
+              max={600}
+              value={draft.ftpTimeoutSeconds}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setDraft({ ...draft, ftpTimeoutSeconds: Number(e.currentTarget.value) || 10 })
+              }
+            />
+          </SettingField>
+          <p className="text-xs text-muted-foreground">{t('settings.connections.ftpLaunchHint')}</p>
         </>
       ) : draft.type === 'putty' ? (
         <>
@@ -867,10 +961,9 @@ export function ConnectionSettings() {
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
-                  {isWindows &&
-                    (isExternalConnectionType(c.type) ||
-                      c.type === 'wsl' ||
-                      c.type === 'telnet') && (
+                  {(((isWindows &&
+                    (isExternalConnectionType(c.type) || c.type === 'wsl')) ||
+                    c.type === 'telnet')) && (
                       <Button
                         variant="default"
                         size="sm"

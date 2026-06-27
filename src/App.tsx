@@ -91,6 +91,11 @@ const SftpPanel = lazy(() =>
     default: m.SftpPanel,
   })),
 )
+const FtpPanel = lazy(() =>
+  import('@/components/scp/FtpPanel').then((m) => ({
+    default: m.FtpPanel,
+  })),
+)
 const VncPanel = lazy(() =>
   import('@/components/vnc/VncPanel').then((m) => ({
     default: m.VncPanel,
@@ -357,6 +362,10 @@ export default function App() {
     () => tabs.filter((t) => t.type === 'sftp'),
     [tabs],
   )
+  const ftpTabs = useMemo(
+    () => tabs.filter((t) => t.type === 'ftp'),
+    [tabs],
+  )
 
   const tabLayout = useMemo(() => {
     const activeTab = tabs.find((t) => t.id === activeTabId)
@@ -393,6 +402,7 @@ export default function App() {
       markdownTabActive: activeType === 'markdown',
       hasSftpTab: sftpTabs.length > 0,
       sftpTabActive: activeType === 'sftp',
+      hasFtpTab: ftpTabs.length > 0,
       excalidrawEnabled: settings?.drawing?.excalidrawEnabled === true,
       drawioEnabled: settings?.drawing?.drawioEnabled === true,
       p2pChatEnabled: settings?.p2p.enabled === true,
@@ -416,6 +426,7 @@ export default function App() {
     workspaceTabs,
     markdownTabs,
     sftpTabs,
+    ftpTabs,
   ])
 
   const {
@@ -443,6 +454,7 @@ export default function App() {
     drawioTabActive,
     hasMarkdownTab,
     hasSftpTab,
+    hasFtpTab,
     excalidrawEnabled,
     drawioEnabled,
     p2pChatEnabled,
@@ -613,6 +625,23 @@ export default function App() {
                       }
                     >
                       <SftpPanel tab={tab} />
+                    </Suspense>
+                  </AnimatedTabPanel>
+                ))}
+              </>
+            )}
+            {hasFtpTab && (
+              <>
+                {ftpTabs.map((tab) => (
+                  <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
+                    <Suspense
+                      fallback={
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                          …
+                        </div>
+                      }
+                    >
+                      <FtpPanel tab={tab} />
                     </Suspense>
                   </AnimatedTabPanel>
                 ))}

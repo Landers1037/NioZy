@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next'
 import { useAppStore, type AppTab } from '@/stores/app-store'
-import { SftpTransferBody } from './SftpTransferBody'
+import { FtpTransferBody } from './FtpTransferBody'
 
-interface SftpPanelProps {
+interface FtpPanelProps {
   tab: AppTab
 }
 
-export function SftpPanel({ tab }: SftpPanelProps) {
+export function FtpPanel({ tab }: FtpPanelProps) {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
-  const connectionId = tab.sftpConnectionId
+  const connectionId = tab.ftpConnectionId
 
   const connection = settings?.connections.find(
-    (c) => c.id === connectionId && (c.type === 'ssh' || c.type === 'sftp'),
+    (c) => c.id === connectionId && c.type === 'ftp',
   )
 
   return (
@@ -21,15 +21,15 @@ export function SftpPanel({ tab }: SftpPanelProps) {
         <p className="truncate text-sm font-semibold">{tab.title}</p>
         <p className="truncate text-xs text-muted-foreground">
           {connection
-            ? t('scp.desc', { user: connection.sshUser, host: connection.sshHost })
-            : t('scp.descGeneric')}
+            ? t('ftp.desc', { user: connection.ftpUser, host: connection.ftpHost })
+            : t('ftp.descGeneric')}
         </p>
       </div>
       {connectionId ? (
-        <SftpTransferBody connectionId={connectionId} protocol="sftp" className="min-h-0 flex-1" />
+        <FtpTransferBody connectionId={connectionId} className="min-h-0 flex-1" />
       ) : (
         <div className="flex min-h-[200px] flex-1 items-center justify-center text-sm text-muted-foreground">
-          {t('scp.profileFailed')}
+          {t('ftp.profileFailed')}
         </div>
       )}
     </div>

@@ -124,14 +124,14 @@ export function buildResumeTermSession(): ResumeTermSession | null {
   for (const tab of tabs) {
     if (tab.type === 'terminal') {
       if (tab.muxMode) continue
-      const saved = buildSavedTerminalTab(tab, settings, terminalCwds)
+      const saved = buildSavedTerminalTab(tab as AppTab & { type: 'terminal' }, settings, terminalCwds)
       if (!saved) continue
       savedTabs.push(saved)
       restorableTabIds.push(tab.id)
       continue
     }
     if (tab.type === 'markdown') {
-      const saved = buildSavedMarkdownTab(tab)
+      const saved = buildSavedMarkdownTab(tab as AppTab & { type: 'markdown' })
       if (!saved) continue
       savedTabs.push(saved)
       restorableTabIds.push(tab.id)

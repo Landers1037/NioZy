@@ -48,7 +48,7 @@ export function useTerminalStreamSync(tabs: AppTab[], activeTabId: string | null
     )
     getElectronAPI().terminal.setActiveStreams(
       ids,
-      attachPtyMode ? { deferRendererClaim: true } : undefined,
+      { deferRendererClaim: true },
     )
   }, [
     tabs,

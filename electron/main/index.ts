@@ -76,11 +76,13 @@ import { resolveTerminalImageProtocolFromSettings } from '../shared/shell-settin
 import { normalizeTerminalEmulator } from '../shared/experimental-settings'
 import type {
   CustomConnection,
+  FtpConnectionProfile,
   SshConnectionProfile,
   TerminalCreateOptions,
 } from '../shared/api-types'
 import type { ScpTransferProgress } from '../shared/ssh-types'
 import * as sshService from '../ssh-service'
+import * as ftpService from '../ftp-service'
 import * as fsService from '../fs-service'
 import {
   applyWindowBounds,
@@ -376,6 +378,12 @@ const terminalKillQueue = createTerminalKillQueue((id) => terminalService.kill(i
 const terminalOutputFlusher = createTerminalOutputFlusher(() => mainWindow)
 const muxOutputFlusher = createTerminalOutputFlusher(() => mainWindow, 'mux:data')
 let windowDragging = false
+const TELNET_BRIDGE_SENTINEL = '__NIOZY_TELNET_BRIDGE__'
+const TELNET_BRIDGE_SCRIPT = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'scripts',
+  'telnet-bridge.mjs',
+)
 
 function setWindowDragging(moving: boolean): void {
   if (moving) {
@@ -2130,6 +2138,26 @@ function resolveSshProfile(
   return profile
 }
 
+function resolveFtpProfile(connectionId: string): FtpConnectionProfile | null {
+  const conn = settingsStore.get().connections.find((c) => c.id === connectionId)
+  if (!conn || conn.type !== 'ftp' || !conn.ftpHost?.trim() || !conn.ftpUser?.trim()) {
+    scpLog('getProfile: ftp connection not found or invalid', { connectionId })
+    return null
+  }
+  vaultStore.load()
+  return {
+    host: vaultStore.resolveText(conn.ftpHost.trim()),
+    user: vaultStore.resolveText(conn.ftpUser.trim()),
+    port: conn.ftpPort ?? 21,
+    password: conn.ftpPassword?.trim()
+      ? vaultStore.resolveText(conn.ftpPassword.trim())
+      : undefined,
+    security: conn.ftpSecurity ?? 'plain',
+    transferMode: conn.ftpTransferMode ?? 'passive',
+    timeoutSeconds: Math.max(1, conn.ftpTimeoutSeconds ?? 10),
+  }
+}
+
 function runSshConnectionStartupScript(terminalId: string, conn: CustomConnection): void {
   const raw = conn.sshStartupScript?.trim()
   if (!raw) return
@@ -2238,6 +2266,7 @@ ipcMain.handle('fs:resolveTerminalDropDirectory', (_, filePath: string) =>
   fsService.resolveTerminalDropDirectory(filePath),
 )
 const SSH_PROFILE_NOT_FOUND = { ok: false as const, error: '无法解析 SSH 连接配置' }
+const FTP_PROFILE_NOT_FOUND = { ok: false as const, error: '无法解析 FTP 连接配置' }
 
 ipcMain.handle(
   'ssh:listRemote',
@@ -2308,6 +2337,54 @@ ipcMain.handle(
   },
 )
 
+ipcMain.handle('ftp:getProfile', (_, connectionId: string) => resolveFtpProfile(connectionId))
+ipcMain.handle(
+  'ftp:listRemote',
+  (
+    _,
+    connectionId: string,
+    remotePath: string,
+    options?: import('../shared/ssh-types').ScpListRemoteOptions,
+  ) => {
+    const profile = resolveFtpProfile(connectionId)
+    if (!profile) return FTP_PROFILE_NOT_FOUND
+    return ftpService.listRemoteDirectoryWithRetry(profile, remotePath, options)
+  },
+)
+ipcMain.handle(
+  'ftp:upload',
+  async (event, connectionId: string, localPath: string, remotePath: string) => {
+    const profile = resolveFtpProfile(connectionId)
+    if (!profile) return FTP_PROFILE_NOT_FOUND
+    const sendProgress = (progress: ScpTransferProgress) => {
+      event.sender.send('ftp:transferProgress', progress)
+    }
+    return ftpService.upload(profile, localPath, remotePath, sendProgress)
+  },
+)
+ipcMain.handle(
+  'ftp:download',
+  async (event, connectionId: string, remotePath: string, localPath: string) => {
+    const profile = resolveFtpProfile(connectionId)
+    if (!profile) return FTP_PROFILE_NOT_FOUND
+    const sendProgress = (progress: ScpTransferProgress) => {
+      event.sender.send('ftp:transferProgress', progress)
+    }
+    return ftpService.download(profile, remotePath, localPath, sendProgress)
+  },
+)
+ipcMain.handle(
+  'ftp:downloadDirectory',
+  async (event, connectionId: string, remotePath: string, localPath: string) => {
+    const profile = resolveFtpProfile(connectionId)
+    if (!profile) return FTP_PROFILE_NOT_FOUND
+    const sendProgress = (progress: ScpTransferProgress) => {
+      event.sender.send('ftp:transferProgress', progress)
+    }
+    return ftpService.downloadDirectory(profile, remotePath, localPath, sendProgress)
+  },
+)
+
 ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
   vaultStore.load()
   terminalLog.info('Create terminal requested', {
@@ -2321,6 +2398,17 @@ ipcMain.handle('terminal:create', async (_, options: TerminalCreateOptions) => {
     command: options.command ? vaultStore.resolveText(options.command) : undefined,
     args: options.args?.map((arg: string) => vaultStore.resolveText(arg)),
     env: options.env ? await vaultStore.resolveEnv(options.env) : undefined,
+  }
+  if (resolved.command === TELNET_BRIDGE_SENTINEL) {
+    resolved = {
+      ...resolved,
+      command: process.execPath,
+      args: [TELNET_BRIDGE_SCRIPT, ...(resolved.args ?? [])],
+      env: {
+        ...(resolved.env ?? {}),
+        ELECTRON_RUN_AS_NODE: '1',
+      },
+    }
   }
   let sshConn: CustomConnection | undefined
   if (options.sshConnectionId) {

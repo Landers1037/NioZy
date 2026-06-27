@@ -1,6 +1,8 @@
 import type { CustomConnection } from '@/stores/app-store'
 import type { TerminalCreateOptions } from '../../electron/shared/api-types'
 
+export const TELNET_BRIDGE_SENTINEL = '__NIOZY_TELNET_BRIDGE__'
+
 /** 将 WSL / Telnet 连接转为 PTY 启动参数 */
 export function customConnectionToTerminalCreate(
   custom: CustomConnection,
@@ -26,7 +28,7 @@ export function customConnectionToTerminalCreate(
     return {
       shell: 'custom',
       name: custom.name,
-      command: 'telnet.exe',
+      command: TELNET_BRIDGE_SENTINEL,
       args,
       env: custom.env,
     }

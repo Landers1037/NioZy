@@ -699,7 +699,6 @@ export function TerminalView({
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
           clearTerminalBracketedPasteState(id)
-          writeBatcher?.dropPending()
           writeXtermOutput(
             term,
             formatTerminalExitMessage(code),
@@ -926,7 +925,6 @@ export function TerminalView({
       unsubExit = api.terminal.onExit((id, code) => {
         if (id === boundTerminalIdRef.current) {
           clearTerminalBracketedPasteState(id)
-          writeBatcher?.dropPending()
           writeXtermOutput(
             term,
             formatTerminalExitMessage(code),

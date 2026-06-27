@@ -36,6 +36,7 @@ export type TabType =
   | 'chat'
   | 'vnc'
   | 'sftp'
+  | 'ftp'
   | 'repo'
   | 'session'
   | 'workspace'
@@ -84,6 +85,8 @@ export interface AppTab {
   vncConnectionId?: string
   /** SFTP Tab 关联的连接 id（用于整页传输面板） */
   sftpConnectionId?: string
+  /** FTP Tab 关联的连接 id（用于整页传输面板） */
+  ftpConnectionId?: string
   /** Markdown Tab 关联的文件绝对路径 */
   markdownFilePath?: string
   /** 工作区目录（Start 后） */
@@ -148,6 +151,7 @@ interface AppState {
   closeVncTabsIfPresent: () => void
   addVncTab: (connectionId: string) => void
   addSftpTab: (connectionId: string) => void
+  addFtpTab: (connectionId: string) => void
   addWebviewTab: (url: string, title?: string) => void
   addMarkdownTab: (filePath: string, title?: string) => string
   patchMarkdownTab: (
@@ -437,6 +441,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
     const tab: AppTab = { id, type: 'sftp', title, sftpConnectionId: connectionId }
+    useTabGroupStore.getState().addTabToActiveGroupIfAny(id)
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
+  addFtpTab: (connectionId) => {
+    const settings = get().settings
+    const conn = settings?.connections.find((c) => c.id === connectionId)
+    const title = conn?.name?.trim() || 'FTP'
+    const id = `ftp-${connectionId}`
+    const existing = get().tabs.find((t) => t.id === id)
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = { id, type: 'ftp', title, ftpConnectionId: connectionId }
     useTabGroupStore.getState().addTabToActiveGroupIfAny(id)
     set((s) => ({
       tabs: [...s.tabs, tab],

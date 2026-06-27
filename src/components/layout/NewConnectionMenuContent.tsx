@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppWindow, Boxes, Computer, Waypoints, Link2, Monitor, Network, Server } from 'lucide-react'
+import { AppWindow, Boxes, Computer, Waypoints, Forklift, Link2, Monitor, Network, Server } from 'lucide-react'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -54,6 +54,8 @@ function connectionMenuIcon(connection: CustomConnection) {
       return Server
     case 'sftp':
       return Waypoints
+    case 'ftp':
+      return Forklift
     case 'rdp':
       return Monitor
     case 'wsl':

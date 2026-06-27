@@ -12,6 +12,7 @@ import {
   getSplitPanes,
   resolveTabTerminalSpawn,
 } from '@/lib/terminal-tab-utils'
+import { TELNET_BRIDGE_SENTINEL } from '@/lib/connection-terminal-spawn'
 
 export interface TerminalTabPropertyRow {
   labelKey: string
@@ -64,6 +65,11 @@ function pushRowOrNone(
   })
 }
 
+function displayCommand(command: string | null | undefined): string | null | undefined {
+  if (command === TELNET_BRIDGE_SENTINEL) return 'telnet-client bridge'
+  return command
+}
+
 export function buildTerminalTabPropertyRows(
   tab: AppTab,
   settings: AppSettings | null,
@@ -101,13 +107,13 @@ export function buildTerminalTabPropertyRows(
     if (connection?.sshDynamicPassword) {
       pushRow(rows, 'tab.terminalPropertiesDynamicPassword', 'tab.terminalPropertiesYes')
     }
-    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', create?.command ?? 'ssh', true)
+    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', displayCommand(create?.command ?? 'ssh'), true)
     pushRowOrNone(rows, 'tab.terminalPropertiesArgs', formatArgs(create?.args), true)
   } else if (connection?.type === 'wsl') {
     pushRow(rows, 'tab.terminalPropertiesType', 'settings.connections.typeWsl')
     pushRow(rows, 'tab.terminalPropertiesConnectionName', connection.name)
     pushRow(rows, 'tab.terminalPropertiesWslDistro', connection.wslDistro?.trim() || 'settings.connections.wslDefaultDistro')
-    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', create?.command ?? 'wsl.exe', true)
+    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', displayCommand(create?.command ?? 'wsl.exe'), true)
     pushRowOrNone(rows, 'tab.terminalPropertiesArgs', formatArgs(create?.args), true)
   } else if (connection?.type === 'telnet') {
     pushRow(rows, 'tab.terminalPropertiesType', 'settings.connections.typeTelnet')
@@ -116,7 +122,7 @@ export function buildTerminalTabPropertyRows(
     if (connection.telnetPort != null) {
       pushRow(rows, 'tab.terminalPropertiesPort', String(connection.telnetPort))
     }
-    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', create?.command ?? 'telnet.exe', true)
+    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', displayCommand(create?.command), true)
     pushRowOrNone(rows, 'tab.terminalPropertiesArgs', formatArgs(create?.args), true)
   } else if (shell === 'custom' || connection?.type === 'command') {
     pushRow(rows, 'tab.terminalPropertiesType', 'settings.connections.typeCommand')
@@ -124,7 +130,7 @@ export function buildTerminalTabPropertyRows(
     pushRowOrNone(
       rows,
       'tab.terminalPropertiesCommand',
-      create?.command ?? connection?.command,
+      displayCommand(create?.command ?? connection?.command),
       true,
     )
     pushRowOrNone(
@@ -136,7 +142,7 @@ export function buildTerminalTabPropertyRows(
   } else if (shell && shell !== 'ssh' && shell !== 'custom') {
     const builtin = shell as BuiltinShellType
     pushRow(rows, 'tab.terminalPropertiesType', BUILTIN_SHELL_LABELS[builtin] ?? shell)
-    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', resolveBuiltinCommand(builtin), true)
+    pushRowOrNone(rows, 'tab.terminalPropertiesCommand', displayCommand(resolveBuiltinCommand(builtin)), true)
     pushRowOrNone(rows, 'tab.terminalPropertiesArgs', formatArgs(create?.args), true)
     if (create?.elevated) {
       pushRow(rows, 'tab.terminalPropertiesElevated', 'tab.terminalPropertiesYes')

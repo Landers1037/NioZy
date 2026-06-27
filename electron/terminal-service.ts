@@ -205,7 +205,6 @@ export class TerminalService extends EventEmitter {
       if (!this.sessions.has(id)) return
       terminalLog.debug('PTY process exit', { id, exitCode, name })
       this.sessions.delete(id)
-      this.pausedOutput.delete(id)
       this.activeStreamIds.delete(id)
       this.pausedStreamIds.delete(id)
       this.disposeActiveGate(id)
@@ -374,7 +373,11 @@ export class TerminalService extends EventEmitter {
    * 清除过早激活导致的 flow 反压，并返回主进程侧尚未推送的缓冲。
    */
   claimStream(id: string): string {
-    if (!this.sessions.has(id)) return ''
+    if (!this.sessions.has(id)) {
+      const replay = this.pausedOutput.get(id) ?? ''
+      this.pausedOutput.delete(id)
+      return replay
+    }
 
     this.removeStreamPause(id, 'flow')
     this.disposeActiveGate(id)

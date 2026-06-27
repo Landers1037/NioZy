@@ -45,6 +45,10 @@ const onSshTransferProgress = createIpcMultiplex<[import('../shared/ssh-types').
   ipcRenderer,
   'ssh:transferProgress',
 )
+const onFtpTransferProgress = createIpcMultiplex<[import('../shared/ssh-types').ScpTransferProgress]>(
+  ipcRenderer,
+  'ftp:transferProgress',
+)
 const onP2pSessionRequest = createIpcMultiplex<[import('../shared/p2p-types').P2pIncomingRequest]>(
   ipcRenderer,
   'p2p:sessionRequest',
@@ -327,6 +331,46 @@ const api: ElectronAPI = {
         : undefined
       try {
         return await ipcRenderer.invoke('ssh:download', connectionId, remotePath, localPath)
+      } finally {
+        unsubscribe?.()
+      }
+    },
+  },
+  ftp: {
+    getProfile: (connectionId) => ipcRenderer.invoke('ftp:getProfile', connectionId),
+    listRemote: (connectionId, remotePath, options) =>
+      ipcRenderer.invoke('ftp:listRemote', connectionId, remotePath, options),
+    upload: async (connectionId, localPath, remotePath, onProgress) => {
+      const unsubscribe = onProgress
+        ? onFtpTransferProgress((progress) => onProgress(progress))
+        : undefined
+      try {
+        return await ipcRenderer.invoke('ftp:upload', connectionId, localPath, remotePath)
+      } finally {
+        unsubscribe?.()
+      }
+    },
+    download: async (connectionId, remotePath, localPath, onProgress) => {
+      const unsubscribe = onProgress
+        ? onFtpTransferProgress((progress) => onProgress(progress))
+        : undefined
+      try {
+        return await ipcRenderer.invoke('ftp:download', connectionId, remotePath, localPath)
+      } finally {
+        unsubscribe?.()
+      }
+    },
+    downloadDirectory: async (connectionId, remotePath, localPath, onProgress) => {
+      const unsubscribe = onProgress
+        ? onFtpTransferProgress((progress) => onProgress(progress))
+        : undefined
+      try {
+        return await ipcRenderer.invoke(
+          'ftp:downloadDirectory',
+          connectionId,
+          remotePath,
+          localPath,
+        )
       } finally {
         unsubscribe?.()
       }

@@ -55,6 +55,20 @@ function summarizeConnection(c: CustomConnection): Record<string, unknown> {
   if (c.type === 'telnet') {
     return { id: c.id, name: c.name, type: 'telnet', host: c.telnetHost, port: c.telnetPort }
   }
+  if (c.type === 'ftp') {
+    return {
+      id: c.id,
+      name: c.name,
+      type: 'ftp',
+      host: c.ftpHost,
+      user: c.ftpUser,
+      port: c.ftpPort,
+      security: c.ftpSecurity,
+      transferMode: c.ftpTransferMode,
+      timeoutSeconds: c.ftpTimeoutSeconds,
+      hasPassword: Boolean(c.ftpPassword?.trim()),
+    }
+  }
   if (c.type === 'putty') {
     return {
       id: c.id,

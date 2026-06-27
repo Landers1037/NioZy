@@ -81,7 +81,7 @@ function EditablePathInput({
       value={draft}
       aria-label={ariaLabel}
       title={path}
-      spellCheck={false}
+      spellcheck={false}
       className={cn(
         'min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 py-0.5 font-mono text-xs text-foreground outline-none transition-colors',
         'hover:bg-muted/60 focus-visible:border-border focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-ring/40',
@@ -225,7 +225,7 @@ export function FileListPanel({
                     selectedPath === entry.path && 'bg-muted',
                   )}
                   onClick={() => onSelect(entry)}
-                  onDoubleClick={() => {
+                  onDblClick={() => {
                     if (entry.isDirectory) onEnterDir(entry)
                   }}
                 >
@@ -261,6 +261,7 @@ export function FileListPanel({
 
 interface SftpTransferBodyProps {
   connectionId: string
+  protocol?: 'sftp' | 'ftp'
   /** getProfile 失败时回调（Dialog 用于自动关闭）；未提供则展示内联错误态 */
   onProfileFailed?: () => void
   /** 容器额外类名（Panel 用整页高度） */
@@ -269,6 +270,7 @@ interface SftpTransferBodyProps {
 
 export function SftpTransferBody({
   connectionId,
+  protocol = 'sftp',
   onProfileFailed,
   className,
 }: SftpTransferBodyProps) {
@@ -288,6 +290,9 @@ export function SftpTransferBody({
   const [remoteDropActive, setRemoteDropActive] = useState(false)
   const [profileError, setProfileError] = useState(false)
   const remoteListQueue = useRef<Promise<unknown>>(Promise.resolve())
+  const remoteApi = protocol === 'ftp' ? getElectronAPI().ftp : getElectronAPI().ssh
+  const profileFailedText =
+    protocol === 'ftp' ? t('ftp.profileFailed') : t('scp.profileFailed')
 
   const loadLocal = useCallback(async (dir: string) => {
     setLocalLoading(true)
@@ -328,7 +333,7 @@ export function SftpTransferBody({
         })
         let ok = false
         try {
-          const result = await getElectronAPI().ssh.listRemote(connectionId, dir, options)
+          const result = await remoteApi.listRemote(connectionId, dir, options)
           devLog('[NioZy][SCP] renderer listRemote done', {
             ok: result.ok,
             entryCount: result.entries?.length,
@@ -360,7 +365,7 @@ export function SftpTransferBody({
       remoteListQueue.current = next
       return next
     },
-    [connectionId, t],
+    [connectionId, remoteApi, t],
   )
 
   useEffect(() => {
@@ -369,11 +374,11 @@ export function SftpTransferBody({
 
     void (async () => {
       devLog('[NioZy][SCP] renderer open panel', { connectionId })
-      const prof = await getElectronAPI().ssh.getProfile(connectionId)
+      const prof = await remoteApi.getProfile(connectionId)
       if (cancelled) return
       if (!prof) {
         devError('[NioZy][SCP] renderer getProfile failed')
-        toast.error(t('scp.profileFailed'))
+        toast.error(profileFailedText)
         setProfileError(true)
         onProfileFailed?.()
         return
@@ -382,7 +387,7 @@ export function SftpTransferBody({
         host: prof.host,
         user: prof.user,
         hasPassword: Boolean(prof.password),
-        hasKey: Boolean(prof.keyPath),
+        hasKey: 'keyPath' in prof ? Boolean(prof.keyPath) : false,
       })
       setProfileError(false)
       const initialLocal = initialScpLocalPath(undefined, terminalCwds, true)
@@ -398,7 +403,8 @@ export function SftpTransferBody({
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connectionId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionId, protocol])
 
   const parentRemotePath = () => {
     if (remotePath === '/' || remotePath === '~') return remotePath
@@ -412,7 +418,7 @@ export function SftpTransferBody({
       const fileName = basenameFromPath(localFilePath)
       const remoteTarget = buildRemoteUploadTarget(fileName, remotePath, selectedRemote)
 
-      const result = await getElectronAPI().ssh.upload(
+      const result = await remoteApi.upload(
         connectionId,
         localFilePath,
         remoteTarget,
@@ -423,7 +429,7 @@ export function SftpTransferBody({
       }
       return result.ok
     },
-    [connectionId, remotePath, selectedRemote, t],
+    [connectionId, remoteApi, remotePath, selectedRemote, t],
   )
 
   const upload = async () => {
@@ -493,7 +499,7 @@ export function SftpTransferBody({
 
     setTransferring(true)
     setTransferProgress(null)
-    const result = await getElectronAPI().ssh.download(
+    const result = await remoteApi.download(
       connectionId,
       selectedRemote.path,
       localTarget,
@@ -512,7 +518,7 @@ export function SftpTransferBody({
   if (profileError) {
     return (
       <div className={cn('flex min-h-[200px] items-center justify-center p-6 text-center text-sm text-muted-foreground', className)}>
-        {t('scp.profileFailed')}
+        {profileFailedText}
       </div>
     )
   }

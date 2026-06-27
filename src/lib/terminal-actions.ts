@@ -193,6 +193,10 @@ export async function createConnection(
         useAppStore.getState().addSftpTab(custom.id)
         return
       }
+      if (custom.type === 'ftp') {
+        useAppStore.getState().addFtpTab(custom.id)
+        return
+      }
       if (isExternalConnectionType(custom.type)) {
         await launchExternalConnection(custom)
         return
