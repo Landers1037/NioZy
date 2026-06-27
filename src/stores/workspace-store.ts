@@ -294,19 +294,7 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
       }),
     }))
 
-    const startResult = await get().startWorkspace(tabId)
-    if (!startResult.ok) return startResult
-
-    const termResult = await get().ensureWorkspaceTerminal(tabId)
-    if (!termResult.ok) {
-      get().resetWorkspaceSession(tabId)
-      useAppStore.getState().patchWorkspaceTab(tabId, {
-        workspaceDir: undefined,
-        terminalId: undefined,
-        title: getWorkspaceTabTitle(),
-      })
-    }
-    return termResult
+    return get().startWorkspace(tabId)
   },
 
   recordWorkspaceHistory: async (tabId) => {
