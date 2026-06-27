@@ -189,6 +189,10 @@ export async function createConnection(
         useAppStore.getState().addVncTab(custom.id)
         return
       }
+      if (custom.type === 'sftp') {
+        useAppStore.getState().addSftpTab(custom.id)
+        return
+      }
       if (isExternalConnectionType(custom.type)) {
         await launchExternalConnection(custom)
         return

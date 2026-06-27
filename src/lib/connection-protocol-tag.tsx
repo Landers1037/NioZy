@@ -7,6 +7,7 @@ export type ConnectionProtocolType = CustomConnection['type']
 
 const TAG_STYLES: Record<ConnectionProtocolType, string> = {
   ssh: 'border-sky-600/25 bg-sky-600/14 text-sky-950 dark:border-sky-400/30 dark:bg-sky-400/20 dark:text-sky-50',
+  sftp: 'border-teal-600/25 bg-teal-600/14 text-teal-950 dark:border-teal-400/30 dark:bg-teal-400/20 dark:text-teal-50',
   rdp: 'border-violet-600/25 bg-violet-600/14 text-violet-950 dark:border-violet-400/30 dark:bg-violet-400/20 dark:text-violet-50',
   wsl: 'border-emerald-600/25 bg-emerald-600/14 text-emerald-950 dark:border-emerald-400/30 dark:bg-emerald-400/20 dark:text-emerald-50',
   telnet:
@@ -22,6 +23,8 @@ export function connectionProtocolTagLabel(type: ConnectionProtocolType, t: TFun
   switch (type) {
     case 'ssh':
       return t('settings.connections.typeSsh')
+    case 'sftp':
+      return t('settings.connections.protocolTagSftp')
     case 'rdp':
       return t('settings.connections.protocolTagRdp')
     case 'wsl':
@@ -40,6 +43,7 @@ export function connectionProtocolTagLabel(type: ConnectionProtocolType, t: TFun
 export function connectionSavedSummary(c: CustomConnection, t: TFunction): string {
   switch (c.type) {
     case 'ssh':
+    case 'sftp':
       return [
         `${c.sshUser}@${c.sshHost}`,
         c.sshGroup?.trim() ? c.sshGroup.trim() : null,

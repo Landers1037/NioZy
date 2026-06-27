@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppWindow, Boxes, Computer, Link2, Monitor, Network, Server } from 'lucide-react'
+import { AppWindow, Boxes, Computer, Waypoints, Link2, Monitor, Network, Server } from 'lucide-react'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -52,6 +52,8 @@ function connectionMenuIcon(connection: CustomConnection) {
   switch (connection.type) {
     case 'ssh':
       return Server
+    case 'sftp':
+      return Waypoints
     case 'rdp':
       return Monitor
     case 'wsl':

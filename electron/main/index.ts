@@ -2099,7 +2099,12 @@ function resolveSshProfile(
   dynamicPasswordSuffix?: string,
 ): SshConnectionProfile | null {
   const conn = settingsStore.get().connections.find((c) => c.id === connectionId)
-  if (!conn || conn.type !== 'ssh' || !conn.sshHost?.trim() || !conn.sshUser?.trim()) {
+  if (
+    !conn ||
+    (conn.type !== 'ssh' && conn.type !== 'sftp') ||
+    !conn.sshHost?.trim() ||
+    !conn.sshUser?.trim()
+  ) {
     scpLog('getProfile: connection not found or invalid', { connectionId })
     return null
   }

@@ -100,7 +100,7 @@ export function hasDuplicateShellContextMenuName(
 export function collectSshGroups(connections: CustomConnection[]): string[] {
   const names = new Set<string>()
   for (const c of connections) {
-    if (c.type === 'ssh') {
+    if (c.type === 'ssh' || c.type === 'sftp') {
       const g = c.sshGroup?.trim()
       if (g) names.add(g)
     }
@@ -125,6 +125,18 @@ export function connectionToDraft(c: CustomConnection): ConnectionDraft {
         sshKeyPath: c.sshKeyPath ?? '',
         sshGroup: c.sshGroup ?? '',
         sshStartupScript: c.sshStartupScript ?? '',
+      }
+    case 'sftp':
+      return {
+        ...base,
+        type: 'sftp',
+        sshUser: c.sshUser ?? '',
+        sshHost: c.sshHost ?? c.command,
+        sshPort: c.sshPort ?? 22,
+        sshAuth: c.sshAuth ?? (c.sshKeyPath?.trim() ? 'publickey' : 'password'),
+        sshPassword: c.sshPassword ?? '',
+        sshKeyPath: c.sshKeyPath ?? '',
+        sshGroup: c.sshGroup ?? '',
       }
     case 'rdp':
       return {
@@ -186,6 +198,7 @@ function connectionDraftPort(
 ): { value: unknown; defaultPort: number } | null {
   switch (draft.type) {
     case 'ssh':
+    case 'sftp':
       return { value: draft.sshPort, defaultPort: 22 }
     case 'rdp':
       return { value: draft.rdpPort, defaultPort: 3389 }
@@ -247,6 +260,32 @@ export function draftToConnection(
             : undefined,
         sshGroup: draft.sshGroup.trim() || undefined,
         sshStartupScript: draft.sshStartupScript.trim() || undefined,
+      }
+    }
+    case 'sftp': {
+      if (!draft.sshHost.trim() || !draft.sshUser.trim()) return null
+      if (getConnectionDraftPortError(draft)) return null
+      const sshPort = parseConnectionPort(draft.sshPort, 22)!
+      return {
+        id,
+        name: draft.name.trim(),
+        type: 'sftp',
+        command: draft.sshHost.trim(),
+        args: [],
+        env: {},
+        sshAuth: draft.sshAuth,
+        sshUser: draft.sshUser.trim(),
+        sshHost: draft.sshHost.trim(),
+        sshPort,
+        sshPassword:
+          draft.sshAuth === 'password' && draft.sshPassword.trim()
+            ? draft.sshPassword.trim()
+            : undefined,
+        sshKeyPath:
+          draft.sshAuth === 'publickey' && draft.sshKeyPath.trim()
+            ? draft.sshKeyPath.trim()
+            : undefined,
+        sshGroup: draft.sshGroup.trim() || undefined,
       }
     }
     case 'rdp': {

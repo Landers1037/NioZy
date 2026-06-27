@@ -142,7 +142,7 @@ export type PuttyProtocol = 'ssh' | 'telnet'
 export interface CustomConnection {
   id: string
   name: string
-  type: 'command' | 'ssh' | 'rdp' | 'wsl' | 'telnet' | 'putty' | 'vnc'
+  type: 'command' | 'ssh' | 'sftp' | 'rdp' | 'wsl' | 'telnet' | 'putty' | 'vnc'
   command: string
   args: string[]
   env: Record<string, string>

@@ -86,6 +86,11 @@ const ScpTransferDialog = lazy(() =>
     default: m.ScpTransferDialog,
   })),
 )
+const SftpPanel = lazy(() =>
+  import('@/components/scp/SftpPanel').then((m) => ({
+    default: m.SftpPanel,
+  })),
+)
 const VncPanel = lazy(() =>
   import('@/components/vnc/VncPanel').then((m) => ({
     default: m.VncPanel,
@@ -348,6 +353,11 @@ export default function App() {
     [tabs],
   )
 
+  const sftpTabs = useMemo(
+    () => tabs.filter((t) => t.type === 'sftp'),
+    [tabs],
+  )
+
   const tabLayout = useMemo(() => {
     const activeTab = tabs.find((t) => t.id === activeTabId)
     const activeType = activeTab?.type
@@ -381,6 +391,8 @@ export default function App() {
       drawioTabActive: activeType === 'drawio',
       hasMarkdownTab: markdownTabs.length > 0,
       markdownTabActive: activeType === 'markdown',
+      hasSftpTab: sftpTabs.length > 0,
+      sftpTabActive: activeType === 'sftp',
       excalidrawEnabled: settings?.drawing?.excalidrawEnabled === true,
       drawioEnabled: settings?.drawing?.drawioEnabled === true,
       p2pChatEnabled: settings?.p2p.enabled === true,
@@ -403,6 +415,7 @@ export default function App() {
     attachCommitted,
     workspaceTabs,
     markdownTabs,
+    sftpTabs,
   ])
 
   const {
@@ -429,6 +442,7 @@ export default function App() {
     hasDrawioTab,
     drawioTabActive,
     hasMarkdownTab,
+    hasSftpTab,
     excalidrawEnabled,
     drawioEnabled,
     p2pChatEnabled,
@@ -582,6 +596,23 @@ export default function App() {
                       }
                     >
                       <MarkdownEditorPanel tab={tab} />
+                    </Suspense>
+                  </AnimatedTabPanel>
+                ))}
+              </>
+            )}
+            {hasSftpTab && (
+              <>
+                {sftpTabs.map((tab) => (
+                  <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
+                    <Suspense
+                      fallback={
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                          …
+                        </div>
+                      }
+                    >
+                      <SftpPanel tab={tab} />
                     </Suspense>
                   </AnimatedTabPanel>
                 ))}

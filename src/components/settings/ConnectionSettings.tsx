@@ -129,6 +129,7 @@ function ConnectionDraftFields({
           <SelectContent>
             <SelectItem value="command">{t('settings.connections.typeCommandCustom')}</SelectItem>
             <SelectItem value="ssh">{t('settings.connections.typeSsh')}</SelectItem>
+            <SelectItem value="sftp">{t('settings.connections.typeSftp')}</SelectItem>
             {isWindows && (
               <>
                 <SelectItem value="rdp">{t('settings.connections.typeRdp')}</SelectItem>
@@ -142,7 +143,7 @@ function ConnectionDraftFields({
         </Select>
       </SettingField>
 
-      {draft.type === 'ssh' ? (
+      {draft.type === 'ssh' || draft.type === 'sftp' ? (
         <div className="grid grid-cols-2 gap-4">
           <SettingField icon={Tag} label={t('settings.connections.name')}>
             <Input
@@ -409,7 +410,7 @@ function ConnectionDraftFields({
           </div>
           <p className="text-xs text-muted-foreground">{t('settings.connections.puttyLaunchHint')}</p>
         </>
-      ) : draft.type === 'ssh' ? (
+      ) : draft.type === 'ssh' || draft.type === 'sftp' ? (
         <>
           <SettingField icon={Key} label={t('settings.connections.authMethod')}>
             <div className="flex flex-wrap items-center gap-4">
@@ -432,23 +433,25 @@ function ConnectionDraftFields({
                   <SelectItem value="publickey">{t('settings.connections.sshPublicKeyLogin')}</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor={`${fieldIdPrefix}ssh-dynamic-password`}
-                  className="whitespace-nowrap text-sm font-normal text-muted-foreground"
-                >
-                  {t('settings.connections.sshDynamicPassword')}
-                </Label>
-                <Switch
-                  id={`${fieldIdPrefix}ssh-dynamic-password`}
-                  checked={draft.sshDynamicPassword}
-                  disabled={draft.sshAuth !== 'password'}
-                  onCheckedChange={(sshDynamicPassword) => setDraft({ ...draft, sshDynamicPassword })}
-                />
-              </div>
+              {draft.type === 'ssh' && (
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor={`${fieldIdPrefix}ssh-dynamic-password`}
+                    className="whitespace-nowrap text-sm font-normal text-muted-foreground"
+                  >
+                    {t('settings.connections.sshDynamicPassword')}
+                  </Label>
+                  <Switch
+                    id={`${fieldIdPrefix}ssh-dynamic-password`}
+                    checked={draft.sshDynamicPassword}
+                    disabled={draft.sshAuth !== 'password'}
+                    onCheckedChange={(sshDynamicPassword) => setDraft({ ...draft, sshDynamicPassword })}
+                  />
+                </div>
+              )}
             </div>
           </SettingField>
-          {draft.sshDynamicPassword && draft.sshAuth === 'password' ? (
+          {draft.type === 'ssh' && draft.sshDynamicPassword && draft.sshAuth === 'password' ? (
             <p className="text-xs text-muted-foreground">{t('settings.connections.sshDynamicPasswordHint')}</p>
           ) : null}
 
@@ -505,14 +508,18 @@ function ConnectionDraftFields({
             )}
           </div>
 
-          <SettingField icon={FileCode} label={t('settings.connections.sshStartupScript')}>
-            <TextareaWithVaultPicker
-              value={draft.sshStartupScript}
-              onChange={(sshStartupScript) => setDraft({ ...draft, sshStartupScript })}
-              placeholder={t('settings.connections.sshStartupScriptPlaceholder')}
-            />
-          </SettingField>
-          <p className="text-xs text-muted-foreground">{t('settings.connections.sshStartupScriptHint')}</p>
+          {draft.type === 'ssh' && (
+            <>
+              <SettingField icon={FileCode} label={t('settings.connections.sshStartupScript')}>
+                <TextareaWithVaultPicker
+                  value={draft.sshStartupScript}
+                  onChange={(sshStartupScript) => setDraft({ ...draft, sshStartupScript })}
+                  placeholder={t('settings.connections.sshStartupScriptPlaceholder')}
+                />
+              </SettingField>
+              <p className="text-xs text-muted-foreground">{t('settings.connections.sshStartupScriptHint')}</p>
+            </>
+          )}
         </>
       ) : (
         <>
