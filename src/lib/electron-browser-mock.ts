@@ -795,6 +795,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       deletePet: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
       listPetAnimationStates: async () => [],
       getPetPreviewUrl: async () => ({ ok: false as const, error: 'NOT_FOUND' }),
+      isBuiltinPet: async () => false,
       onDue: () => () => undefined,
     },
     repo: {

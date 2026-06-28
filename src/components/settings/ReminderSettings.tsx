@@ -64,8 +64,13 @@ export function ReminderSettings() {
   const [importingPet, setImportingPet] = useState(false)
   const [deletingPet, setDeletingPet] = useState(false)
   const [petStates, setPetStates] = useState<PetAnimationStateDto[]>([])
+  const [selectedPetBuiltin, setSelectedPetBuiltin] = useState(false)
   const savedPetScale = settings?.reminder.desktopPetScale ?? PET_DISPLAY_SCALE_DEFAULT
   const [draftPetScale, setDraftPetScale] = useState(savedPetScale)
+  const selectedPetId =
+    settings?.reminder.desktopPetId && petIds.includes(settings.reminder.desktopPetId)
+      ? settings.reminder.desktopPetId
+      : (petIds[0] ?? null)
 
   useEffect(() => {
     setDraftPetScale(savedPetScale)
@@ -126,15 +131,21 @@ export function ReminderSettings() {
       .then(setPetStates)
   }, [settings?.reminder.desktopPetId, petIds])
 
+  useEffect(() => {
+    if (!selectedPetId) {
+      setSelectedPetBuiltin(false)
+      return
+    }
+    void getElectronAPI()
+      .reminder.isBuiltinPet(selectedPetId)
+      .then(setSelectedPetBuiltin)
+  }, [selectedPetId])
+
   if (!settings) return null
 
   const reminder = settings.reminder
   const enabled = reminder.enabled
   const isToastMode = reminder.notifyMode === 'toast'
-  const selectedPetId =
-    reminder.desktopPetId && petIds.includes(reminder.desktopPetId)
-      ? reminder.desktopPetId
-      : (petIds[0] ?? null)
 
   const patchReminder = (partial: Partial<typeof reminder>) =>
     patchSettings({ reminder: { ...reminder, ...partial } })
@@ -226,6 +237,10 @@ export function ReminderSettings() {
     try {
       const res = await getElectronAPI().reminder.deletePet(selectedPetId)
       if (!res.ok) {
+        if (res.error === 'BUILTIN_READONLY') {
+          toast.error(t('settings.reminder.petDeleteBuiltin'))
+          return
+        }
         toast.error(t('settings.reminder.petDeleteFailed'))
         return
       }
@@ -366,7 +381,7 @@ export function ReminderSettings() {
                     <Button
                       variant="outline"
                       className="w-fit text-destructive hover:text-destructive"
-                      disabled={!selectedPetId || deletingPet}
+                      disabled={!selectedPetId || deletingPet || selectedPetBuiltin}
                       onClick={() => void handleDeletePet()}
                     >
                       <Trash2 className="size-4" />
@@ -374,6 +389,12 @@ export function ReminderSettings() {
                     </Button>
                   </div>
                 </div>
+
+                {selectedPetBuiltin ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t('settings.reminder.petBuiltinReadonly')}
+                  </p>
+                ) : null}
 
                 <div className="flex flex-col gap-1.5">
                   <span className="text-xs text-muted-foreground">

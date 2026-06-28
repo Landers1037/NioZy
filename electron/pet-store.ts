@@ -1,10 +1,11 @@
 import { copyFile, mkdir, readdir, rm, stat } from 'fs/promises'
 import { existsSync } from 'fs'
 import { basename, join } from 'path'
-import { dialog } from 'electron'
+import { app, dialog } from 'electron'
 import type { BrowserWindow } from 'electron'
 import { ensureConfigDir, getPetDir, getPetsDir, getPetSpritesheetPath } from './config-paths'
 import { buildLocalPreviewUrl } from './shared/local-file-url'
+import { DEFAULT_BUILTIN_PET_ID, isBuiltinPetId } from './shared/builtin-pets'
 import {
   findPetAnimationState,
   normalizePetAnimationStateId,
@@ -36,6 +37,26 @@ export function sanitizePetId(raw: string): string | null {
   return trimmed
 }
 
+function getBuiltinPetsRootDir(): string {
+  if (app.isPackaged) {
+    return join(process.resourcesPath, 'pets')
+  }
+  return join(process.cwd(), 'build', 'pets')
+}
+
+function getBuiltinPetDir(petId: string): string {
+  return join(getBuiltinPetsRootDir(), petId)
+}
+
+function getBuiltinPetSpritesheetPath(petId: string): string {
+  return join(getBuiltinPetDir(petId), PET_SPRITESHEET_FILENAME)
+}
+
+function builtinPetSpritesheetExists(petId: string): boolean {
+  if (!isBuiltinPetId(petId)) return false
+  return existsSync(getBuiltinPetSpritesheetPath(petId))
+}
+
 export async function ensurePetsDir(): Promise<string> {
   ensureConfigDir()
   const dir = getPetsDir()
@@ -47,22 +68,28 @@ export async function ensurePetsDir(): Promise<string> {
 
 export async function listPetIds(): Promise<string[]> {
   await ensurePetsDir()
+  const ids = new Set<string>()
+  if (builtinPetSpritesheetExists(DEFAULT_BUILTIN_PET_ID)) {
+    ids.add(DEFAULT_BUILTIN_PET_ID)
+  }
   const entries = await readdir(getPetsDir(), { withFileTypes: true })
-  const ids: string[] = []
   for (const entry of entries) {
     if (!entry.isDirectory()) continue
     const sheetPath = getPetSpritesheetPath(entry.name)
-    if (existsSync(sheetPath)) ids.push(entry.name)
+    if (existsSync(sheetPath)) ids.add(entry.name)
   }
-  return ids.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  return Array.from(ids).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
 export function petSpritesheetExists(petId: string): boolean {
-  return existsSync(getPetSpritesheetPath(petId))
+  return builtinPetSpritesheetExists(petId) || existsSync(getPetSpritesheetPath(petId))
 }
 
 export function buildPetSpritesheetPreviewUrl(petId: string): string | null {
-  if (!petSpritesheetExists(petId)) return null
+  if (builtinPetSpritesheetExists(petId)) {
+    return buildLocalPreviewUrl(getBuiltinPetSpritesheetPath(petId))
+  }
+  if (!existsSync(getPetSpritesheetPath(petId))) return null
   return buildLocalPreviewUrl(getPetSpritesheetPath(petId))
 }
 
@@ -147,7 +174,8 @@ export function toPetAnimationStateDto(state: PetAnimationStateDef): PetAnimatio
 
 export async function listPetAnimationStates(petId: string): Promise<PetAnimationStateDto[]> {
   if (!petSpritesheetExists(petId)) return []
-  const states = await resolvePetAnimationStates(getPetDir(petId))
+  const petDir = builtinPetSpritesheetExists(petId) ? getBuiltinPetDir(petId) : getPetDir(petId)
+  const states = await resolvePetAnimationStates(petDir)
   return states.map(toPetAnimationStateDto)
 }
 
@@ -155,6 +183,9 @@ export async function deletePet(petId: string): Promise<PetDeleteResult> {
   const sanitized = sanitizePetId(petId)
   if (!sanitized || !petSpritesheetExists(sanitized)) {
     return { ok: false, error: 'NOT_FOUND' }
+  }
+  if (builtinPetSpritesheetExists(sanitized)) {
+    return { ok: false, error: 'BUILTIN_READONLY' }
   }
   try {
     await rm(getPetDir(sanitized), { recursive: true, force: true })
@@ -200,7 +231,8 @@ export async function getDesktopPetSpriteConfig(
   const url = buildPetSpritesheetPreviewUrl(activeId)
   if (!url) return { mode: 'placeholder', displayScale: desktopPetScale }
 
-  const states = await resolvePetAnimationStates(getPetDir(activeId))
+  const petDir = builtinPetSpritesheetExists(activeId) ? getBuiltinPetDir(activeId) : getPetDir(activeId)
+  const states = await resolvePetAnimationStates(petDir)
   const stateIds = states.map((s) => s.id)
   const animationStateId = normalizePetAnimationStateId(desktopPetAnimationState, stateIds)
   findPetAnimationState(states, animationStateId)

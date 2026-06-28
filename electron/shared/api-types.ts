@@ -708,6 +708,7 @@ export interface ElectronAPI {
     getPetPreviewUrl: (
       petId: string,
     ) => Promise<{ ok: true; url: string } | { ok: false; error: string }>
+    isBuiltinPet: (petId: string) => Promise<boolean>
     onDue: (cb: (payload: import('./reminder-data').ReminderDuePayload) => void) => () => void
   }
   rdp: {

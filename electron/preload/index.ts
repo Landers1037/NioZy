@@ -303,6 +303,7 @@ const api: ElectronAPI = {
     deletePet: (petId) => ipcRenderer.invoke('reminder:deletePet', petId),
     listPetAnimationStates: (petId) => ipcRenderer.invoke('reminder:listPetAnimationStates', petId),
     getPetPreviewUrl: (petId) => ipcRenderer.invoke('reminder:getPetPreviewUrl', petId),
+    isBuiltinPet: (petId) => ipcRenderer.invoke('reminder:isBuiltinPet', petId),
     onDue: (cb) => onReminderDue(cb),
   },
   rdp: {

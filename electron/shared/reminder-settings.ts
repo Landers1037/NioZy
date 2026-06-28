@@ -1,5 +1,6 @@
 import { normalizePetAnimationStateId } from './pet-animation-states'
 import { normalizePetDisplayScale } from './pet-atlas'
+import { DEFAULT_BUILTIN_PET_ID } from './builtin-pets'
 
 export type ReminderNotifyMode = 'toast' | 'dialog'
 
@@ -43,7 +44,7 @@ export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
   toastDurationSec: 3,
   customImageExt: null,
   desktopPetEnabled: false,
-  desktopPetId: null,
+  desktopPetId: DEFAULT_BUILTIN_PET_ID,
   desktopPetAnimationState: 'idle',
   desktopPetRandomState: false,
   desktopPetPosition: null,

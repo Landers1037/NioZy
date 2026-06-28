@@ -1918,6 +1918,12 @@ ipcMain.handle('reminder:getPetPreviewUrl', async (_, petId: unknown) => {
   return { ok: true as const, url }
 })
 
+ipcMain.handle('reminder:isBuiltinPet', async (_, petId: unknown) => {
+  const { isBuiltinPetId } = await import('../shared/builtin-pets')
+  if (typeof petId !== 'string' || !petId.trim()) return false
+  return isBuiltinPetId(petId.trim())
+})
+
 ipcMain.handle('reminder:listPetAnimationStates', async (_, petId: unknown) => {
   const { listPetAnimationStates } = await import('../pet-store')
   if (typeof petId !== 'string' || !petId.trim()) return []

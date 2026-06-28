@@ -67,6 +67,10 @@ extraResources:
     to: posh-git
     filter:
       - '**/*'
+  - from: build/pets
+    to: pets
+    filter:
+      - '**/*'
 win:
   target:
     - nsis
