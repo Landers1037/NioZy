@@ -25,6 +25,8 @@
     "sandboxTabTitle": "JS サンドボックス",
     "repoTabTitle": "リポジトリ管理",
     "sessionTabTitle": "セッション管理",
+    "workspaceTabTitle": "ワークスペース",
+    "agentTabTitle": "NioZy Agent",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -65,6 +67,40 @@
     "en": "English",
     "ja": "日本語"
   },
+  "agent": {
+    "title": "NioZy Agent",
+    "description": "Codex レイアウトを参考にした対話型 Agent ワークスペース。",
+    "pickDirectory": "プロジェクトディレクトリを選択",
+    "modelPlaceholder": "モデルを選択",
+    "emptyTitle": "NioZy で何を作りましょうか？",
+    "emptyDescription": "プロジェクトディレクトリ、モデル、モードを確認してから会話を始めます。",
+      "inputPlaceholder": "タスクを入力。Enter 送信、Shift+Enter 改行",
+      "send": "送信",
+      "thinking": "思考中…",
+      "reset": "セッションをリセット",
+    "noDirectory": "ディレクトリ未選択",
+    "contextSummary": "モード: {{mode}} · モデル: {{model}} · ディレクトリ: {{dir}}",
+    "modes": {
+      "plan": "Plan",
+      "build": "Build"
+    },
+    "roles": {
+      "user": "あなた",
+      "assistant": "Agent",
+      "system": "システム",
+      "status": "状態",
+      "error": "エラー"
+    },
+      "connection": {
+        "idle": "未開始",
+        "starting": "接続中",
+        "ready": "接続済み",
+        "error": "エラー"
+      },
+      "errors": {
+        "workspaceRequired": "メッセージ送信前にプロジェクトディレクトリを選択してください"
+      }
+    },
   "titleBar": {
     "renderEngine": "レンダリングエンジン",
     "renderMode": "レンダリングモード",
@@ -679,7 +715,20 @@
       "sidebarEnabledDesc": "右側に AI チャットサイドバーを表示。メッセージ送信には選択したプロバイダーの API キーが必要（ローカル Ollama は任意）。",
       "attachmentsEnabled": "添付ファイルを有効化",
       "attachmentsEnabledDesc": "オンにすると、AI サイドバーの「+」からローカルの画像やファイルを追加できます（ドラッグ＆ドロップ・貼り付けも可）。ビジョン／マルチモーダル対応モデルが必要です。",
-      "sidebarWidth": "サイドバー幅",
+        "agentEnabled": "NioZy Agent を有効化",
+        "agentEnabledDesc": "有効にするとサイドバーと新規接続メニューに Agent 入口を表示します。",
+        "agentGroupTitle": "NioZy Agent",
+        "agentGroupDesc": "NioZy Agent の入口とログ動作を設定します。",
+        "agentLogLevel": "ログレベル",
+        "agentLogLevelDesc": "niozy-agent プロセスが出力するログレベルを制御します。",
+        "agentLogToFile": "ログ保存を有効化",
+        "agentLogToFileDesc": "有効時はログファイルに書き込み、無効時は端末出力のみです。",
+        "agentLogFile": "ログファイル",
+        "agentLogFileDesc": "既定では TMP ディレクトリの niozy-agent.log を使用し、絶対パスも指定できます。",
+        "agentLogFilePlaceholder": "空欄なら TMP/niozy-agent.log を使用",
+        "agentLogFileBrowse": "参照",
+        "agentLogFilePickFailed": "Agent ログファイルの選択に失敗しました",
+        "sidebarWidth": "サイドバー幅",
       "sidebarWidthDesc": "AI チャットサイドバーの幅。変更後すぐに反映されます。",
       "sidebarWidths": {
         "narrow": "狭い（{{px}}px）",
@@ -1110,6 +1159,8 @@
     "filesystem": "ファイルシステム",
     "repoManagement": "リポジトリ管理",
     "sessionManagement": "セッション管理",
+    "workspace": "ワークスペース",
+    "agent": "Agent",
     "openChat": "暗号化通信",
     "openJsSandbox": "サンドボックスを開く",
     "excalidraw": "Excalidraw",

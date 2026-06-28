@@ -102,6 +102,7 @@ import { launchPuttyFromConnection } from '../putty-launch'
 import { runConnectivityCheck } from '../connectivity-check-service'
 import { GitService } from '../git-service'
 import { WorkspaceService } from '../workspace-service'
+import { AgentService } from '../agent-service'
 import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
 import { getWindowBackgroundColor, shouldUseGlassWindowTransparency } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
@@ -420,6 +421,11 @@ const reminderScheduler = new ReminderScheduler(
 const vaultStore = new VaultStore()
 const gitService = new GitService()
 const workspaceService = new WorkspaceService(gitService)
+const agentService = new AgentService(
+  workspaceService,
+  () => mainWindow,
+  () => settingsStore.get().experimental,
+)
 const systemStats = new SystemStats()
 const noteStore = new NoteStore()
 const filesystemFavoritesStore = new FilesystemFavoritesStore()
@@ -484,9 +490,28 @@ function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update
     'aiModel',
     'aiBaseUrl',
     'aiApiKey',
+    'niozyAgentEnabled',
+    'niozyAgentLogLevel',
+    'niozyAgentLogToFile',
+    'niozyAgentLogFile',
     'openAiApiKey',
   ] as const
   return keys.some((key) => partial.experimental![key] !== undefined)
+}
+
+function resolveAgentRuntimeConfigFromSettings(): import('../shared/agent-types').AgentRuntimeConfig {
+  vaultStore.load()
+  const built = buildAiRuntimeConfig(settingsStore.get().experimental)
+  const resolved = sanitizeResolvedAiRuntimeConfig(
+    built.apiKey,
+    resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text)),
+  )
+  return {
+    provider: resolved.provider,
+    model: resolved.model,
+    baseUrl: resolved.baseUrl,
+    apiKey: resolved.apiKey,
+  }
 }
 
 function isStatusBarLiveStatsEnabled(): boolean {
@@ -1216,6 +1241,22 @@ ipcMain.handle('files:pickPrivateKey', async (): Promise<string | null> => {
   return filePaths[0]
 })
 
+ipcMain.handle('files:pickAgentLogFile', async (): Promise<string | null> => {
+  const saveOptions = {
+    title: '选择 NioZy Agent 日志文件',
+    defaultPath: 'niozy-agent.log',
+    filters: [
+      { name: '日志文件', extensions: ['log', 'txt'] },
+      { name: '所有文件', extensions: ['*'] },
+    ],
+  }
+  const { canceled, filePath } = mainWindow
+    ? await dialog.showSaveDialog(mainWindow, saveOptions)
+    : await dialog.showSaveDialog(saveOptions)
+  if (canceled || !filePath) return null
+  return filePath
+})
+
 ipcMain.handle(
   'files:pickAiAttachments',
   async (_, dialogTitle?: string): Promise<import('../shared/ai-attachment-types').AiAttachmentPickFile[]> => {
@@ -1459,6 +1500,23 @@ ipcMain.handle('providers:save', (_, input: import('../shared/provider-types').S
 )
 ipcMain.handle('providers:delete', (_, id: string) => providerStore.deleteProvider(id))
 ipcMain.handle('providers:activate', (_, id: string) => providerStore.activateProvider(id))
+ipcMain.handle('agent:getState', () => agentService.getState())
+ipcMain.handle('agent:ensureRuntime', () =>
+  agentService.ensureRuntime(resolveAgentRuntimeConfigFromSettings()),
+)
+ipcMain.handle('agent:pickDirectory', () => workspaceService.pickDirectory(mainWindow))
+ipcMain.handle('agent:setWorkspaceDir', (_, dir: string) => agentService.setWorkspaceDir(dir))
+ipcMain.handle('agent:setModel', (_, model: string) => agentService.setModel(model))
+ipcMain.handle(
+  'agent:setMode',
+  (_, mode: import('../shared/agent-types').AgentMode) => agentService.setMode(mode),
+)
+ipcMain.handle(
+  'agent:sendMessage',
+  (_, input: import('../shared/agent-types').AgentSendMessageInput) =>
+    agentService.sendMessage(input.text, resolveAgentRuntimeConfigFromSettings()),
+)
+ipcMain.handle('agent:resetSession', () => agentService.resetSession())
 ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 
 ipcMain.handle('aiContext:listRules', async () => {
@@ -1616,6 +1674,7 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
   if (experimentalAiSettingsChanged(partial)) {
     try {
       await syncCopilotRuntimeFromSettings(updated.experimental)
+      await agentService.updateConfig(resolveAgentRuntimeConfigFromSettings())
     } catch (err) {
       copilotLog.error('Failed to sync runtime after settings save', logErrorPayload(err))
     }
@@ -2069,6 +2128,10 @@ ipcMain.handle('workspace:pickDirectory', () => workspaceService.pickDirectory(m
 ipcMain.handle('workspace:detectGit', (_, workDir: string) => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
   return workspaceService.detectGit(workDir)
+})
+ipcMain.handle('workspace:gitBranch', (_, workDir: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return workspaceService.getGitBranch(workDir)
 })
 ipcMain.handle('workspace:gitStatus', (_, workDir: string) => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)

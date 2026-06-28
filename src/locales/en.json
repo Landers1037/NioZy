@@ -26,6 +26,7 @@
     "repoTabTitle": "Repositories",
     "sessionTabTitle": "Sessions",
     "workspaceTabTitle": "Workspace",
+    "agentTabTitle": "NioZy Agent",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -216,6 +217,40 @@
       "restore": "Restore"
     }
   },
+  "agent": {
+    "title": "NioZy Agent",
+    "description": "A conversational agent workspace inspired by the Codex layout.",
+    "pickDirectory": "Choose project directory",
+    "modelPlaceholder": "Select model",
+    "emptyTitle": "What should we build in NioZy?",
+    "emptyDescription": "Choose a project directory, confirm the model and mode, then start chatting.",
+      "inputPlaceholder": "Describe your task. Enter to send, Shift+Enter for a newline",
+      "send": "Send",
+      "thinking": "Thinking…",
+      "reset": "Reset session",
+    "noDirectory": "No directory selected",
+    "contextSummary": "Mode: {{mode}} · Model: {{model}} · Directory: {{dir}}",
+    "modes": {
+      "plan": "Plan",
+      "build": "Build"
+    },
+    "roles": {
+      "user": "You",
+      "assistant": "Agent",
+      "system": "System",
+      "status": "Status",
+      "error": "Error"
+    },
+      "connection": {
+        "idle": "Not started",
+        "starting": "Connecting",
+        "ready": "Connected",
+        "error": "Error"
+      },
+      "errors": {
+        "workspaceRequired": "Choose a project directory before sending a message"
+      }
+    },
   "locale": {
     "zh": "中文",
     "en": "English",
@@ -854,7 +889,20 @@
       "sidebarEnabledDesc": "Show the AI chat sidebar on the right. Sending messages requires an API key for the selected provider (optional for local Ollama).",
       "attachmentsEnabled": "Enable attachments",
       "attachmentsEnabledDesc": "When on, the + button in the AI sidebar lets you add local images or files (drag-and-drop and paste also work). Requires a vision or multimodal model.",
-      "sidebarWidth": "Sidebar width",
+        "agentEnabled": "Enable NioZy Agent",
+        "agentEnabledDesc": "Show the Agent entry in the sidebar and new-connection menu when enabled.",
+        "agentGroupTitle": "NioZy Agent",
+        "agentGroupDesc": "Configure the NioZy Agent entry and logging behavior.",
+        "agentLogLevel": "Log level",
+        "agentLogLevelDesc": "Controls the log level emitted by the niozy-agent process.",
+        "agentLogToFile": "Store logs",
+        "agentLogToFileDesc": "When enabled, logs are written to a file; otherwise they only go to the terminal.",
+        "agentLogFile": "Log file",
+        "agentLogFileDesc": "Defaults to niozy-agent.log under the TMP directory, or set a custom absolute path.",
+        "agentLogFilePlaceholder": "Leave empty to use TMP/niozy-agent.log",
+        "agentLogFileBrowse": "Browse",
+        "agentLogFilePickFailed": "Failed to choose the Agent log file",
+        "sidebarWidth": "Sidebar width",
       "sidebarWidthDesc": "Width of the AI chat sidebar. Takes effect immediately.",
       "sidebarWidths": {
         "narrow": "Narrow ({{px}}px)",
@@ -1304,6 +1352,7 @@
     "repoManagement": "Repositories",
     "sessionManagement": "Sessions",
     "workspace": "Workspace",
+    "agent": "Agent",
     "openChat": "Encrypted communication",
     "openJsSandbox": "Open sandbox",
     "excalidraw": "Excalidraw",

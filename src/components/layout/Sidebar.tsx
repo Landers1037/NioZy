@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, TextSearch } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, TextSearch, Bot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -27,6 +27,7 @@ export function Sidebar() {
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const addRepoTab = useAppStore((s) => s.addRepoTab)
   const addSessionTab = useAppStore((s) => s.addSessionTab)
+  const addAgentTab = useAppStore((s) => s.addAgentTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const addExcalidrawTab = useAppStore((s) => s.addExcalidrawTab)
@@ -39,6 +40,7 @@ export function Sidebar() {
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const agentSessionEnabled = settings?.session.agentSessionEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
+  const niozyAgentEnabled = settings?.experimental.niozyAgentEnabled === true
   const patchSettings = useAppStore((s) => s.patchSettings)
 
   const storedWidth = settings?.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH
@@ -213,6 +215,17 @@ export function Sidebar() {
                 {!collapsed && (
                   <span className="min-w-0 truncate">{t('sidebar.sessionManagement')}</span>
                 )}
+              </Button>
+            )}
+            {niozyAgentEnabled && (
+              <Button
+                variant="ghost"
+                size={collapsed ? 'icon' : 'default'}
+                className={cn(!collapsed && 'w-full min-w-0 justify-start overflow-hidden px-2')}
+                onClick={() => addAgentTab()}
+              >
+                <Bot className="size-4 shrink-0" />
+                {!collapsed && <span className="min-w-0 truncate">{t('sidebar.agent')}</span>}
               </Button>
             )}
             {p2pChatEnabled && (

@@ -10,6 +10,7 @@ import { recordTerminalTabOpened } from '@/lib/usage-statistics'
 import { applyLayoutFromSettings } from '@/lib/layout-mode'
 import {
   applyAppLocale,
+  getAgentTabTitle,
   getFilesystemTabTitle,
   getChatTabTitle,
   getSandboxTabTitle,
@@ -40,6 +41,7 @@ export type TabType =
   | 'repo'
   | 'session'
   | 'workspace'
+  | 'agent'
   | 'excalidraw'
   | 'drawio'
   | 'markdown'
@@ -136,7 +138,9 @@ interface AppState {
   addSessionTab: () => void
   closeSessionTabIfPresent: () => void
   addWorkspaceTab: () => void
+  addAgentTab: () => void
   closeWorkspaceTabIfPresent: () => void
+  closeAgentTabIfPresent: () => void
   patchWorkspaceTab: (
     tabId: string,
     patch: {
@@ -347,10 +351,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     }))
     useTabGroupStore.getState().addTabToActiveGroupIfAny(tabId)
   },
+  addAgentTab: () => {
+    const existing = get().tabs.find((t) => t.type === 'agent')
+    if (existing) {
+      set({ activeTabId: existing.id })
+      return
+    }
+    const tab: AppTab = {
+      id: 'agent',
+      type: 'agent',
+      title: getAgentTabTitle(),
+    }
+    set((s) => ({
+      tabs: [...s.tabs, tab],
+      activeTabId: tab.id,
+    }))
+  },
   closeWorkspaceTabIfPresent: () => {
     const workspaceTabs = get().tabs.filter((t) => t.type === 'workspace')
     if (workspaceTabs.length === 0) return
     get().removeTabs(workspaceTabs.map((t) => t.id))
+  },
+  closeAgentTabIfPresent: () => {
+    const existing = get().tabs.find((t) => t.type === 'agent')
+    if (!existing) return
+    get().removeTab(existing.id)
   },
   patchWorkspaceTab: (tabId, patch) => {
     set((s) => ({
@@ -586,6 +611,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (t.type === 'workspace' && !t.workspaceDir) {
           return { ...t, title: getWorkspaceTabTitle() }
         }
+        if (t.type === 'agent') return { ...t, title: getAgentTabTitle() }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         if (t.type === 'excalidraw') return { ...t, title: getExcalidrawTabTitle() }
@@ -609,6 +635,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (t.type === 'workspace' && !t.workspaceDir) {
           return { ...t, title: getWorkspaceTabTitle() }
         }
+        if (t.type === 'agent') return { ...t, title: getAgentTabTitle() }
         if (t.type === 'chat') return { ...t, title: getChatTabTitle() }
         if (t.type === 'sandbox') return { ...t, title: getSandboxTabTitle() }
         if (t.type === 'excalidraw') return { ...t, title: getExcalidrawTabTitle() }

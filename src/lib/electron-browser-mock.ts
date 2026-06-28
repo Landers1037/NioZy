@@ -1,4 +1,5 @@
 import type {
+  AgentStateSnapshot,
   AppMetricsData,
   AppSettings,
   ElectronAPI,
@@ -8,6 +9,7 @@ import type {
   SystemStatsData,
   VaultVariablePublic,
 } from '../../electron/shared/api-types'
+import type { AgentEvent } from '../../electron/shared/agent-types'
 import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
@@ -131,6 +133,18 @@ const dataListeners = new Set<DataListener>()
 const muxDataListeners = new Set<DataListener>()
 const cwdListeners = new Set<CwdListener>()
 const statsListeners = new Set<StatsListener>()
+const agentEventListeners = new Set<(event: AgentEvent) => void>()
+let mockAgentState: AgentStateSnapshot = {
+  runtime: { state: 'idle' },
+  session: {
+    sessionId: 'niozy-agent',
+    workspaceDir: '',
+    gitBranch: null,
+    model: DEFAULT_EXPERIMENTAL_SETTINGS.aiModel,
+    mode: 'plan',
+    messages: [],
+  },
+}
 
 function mockSystemStats(): SystemStatsData {
   return {
@@ -288,6 +302,14 @@ function saveMockProvider(input: SaveProviderInput): ProviderState {
   return structuredClone(mockProviderState)
 }
 
+function emitAgentEvent(event: AgentEvent): void {
+  for (const cb of agentEventListeners) cb(event)
+}
+
+function emitAgentSession(): void {
+  emitAgentEvent({ type: 'session', session: structuredClone(mockAgentState.session) })
+}
+
 export type BrowserDevElectronAPI = ElectronAPI & { __browserDevMock: true }
 
 export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
@@ -382,6 +404,72 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           mockProviderState.activeProviderIds[provider.tool] = provider.id
         }
         return structuredClone(mockProviderState)
+      },
+    },
+    agent: {
+      ensureRuntime: async () => {
+        mockAgentState.runtime = { state: 'ready', pid: 4242 }
+        emitAgentEvent({ type: 'runtime', runtime: structuredClone(mockAgentState.runtime) })
+        return structuredClone(mockAgentState)
+      },
+      getState: async () => structuredClone(mockAgentState),
+      pickDirectory: async () => 'C:\\Users\\User\\Projects\\NioZy',
+      setWorkspaceDir: async (dir) => {
+        mockAgentState.session.workspaceDir = dir
+        mockAgentState.session.gitBranch = dir ? 'main' : null
+        emitAgentSession()
+        return structuredClone(mockAgentState)
+      },
+      setModel: async (model) => {
+        mockAgentState.session.model = model
+        emitAgentSession()
+        return structuredClone(mockAgentState)
+      },
+      setMode: async (mode) => {
+        mockAgentState.session.mode = mode
+        emitAgentSession()
+        return structuredClone(mockAgentState)
+      },
+      sendMessage: async (input) => {
+        const userId = `user-${Date.now()}`
+        const assistantId = `assistant-${Date.now()}`
+        mockAgentState.session.messages.push({
+          id: userId,
+          role: 'user',
+          content: input.text,
+          createdAt: new Date().toISOString(),
+        })
+        mockAgentState.session.messages.push({
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          createdAt: new Date().toISOString(),
+          streaming: true,
+        })
+        emitAgentSession()
+        emitAgentEvent({
+          type: 'messageDelta',
+          messageId: assistantId,
+          delta: 'Browser dev mock: NioZy Agent UI is connected.',
+        })
+        const assistant = mockAgentState.session.messages.find((item) => item.id === assistantId)
+        if (assistant) {
+          assistant.content = 'Browser dev mock: NioZy Agent UI is connected.'
+          assistant.streaming = false
+        }
+        emitAgentEvent({ type: 'messageDone', messageId: assistantId })
+        return structuredClone(mockAgentState)
+      },
+      resetSession: async () => {
+        mockAgentState.session.messages = []
+        emitAgentSession()
+        return structuredClone(mockAgentState)
+      },
+      onEvent: (cb) => {
+        agentEventListeners.add(cb)
+        return () => {
+          agentEventListeners.delete(cb)
+        }
       },
     },
     copilot: {
@@ -703,6 +791,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return { ok: true, directory: trimmed.slice(0, idx) }
       },
       pickPrivateKey: async () => null,
+      pickAgentLogFile: async () => 'C:\\Users\\User\\AppData\\Local\\Temp\\niozy-agent.log',
       pickAiAttachments: async () => [],
     },
     drawing: {
@@ -825,6 +914,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       listDir: async () => ({ ok: true as const, entries: [] }),
       pickDirectory: async () => null,
       detectGit: async () => ({ ok: true as const, isRepo: false }),
+      gitBranch: async () => ({ ok: true as const, branch: null }),
       gitStatus: async () => ({ ok: false as const, error: 'GIT_NOT_FOUND' }),
       gitDiff: async () => ({ ok: false as const, error: 'Browser preview' }),
       listHistory: async () => [],

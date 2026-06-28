@@ -55,6 +55,10 @@ export function getWorkspaceTabTitle(): string {
   return i18n.t('app.workspaceTabTitle')
 }
 
+export function getAgentTabTitle(): string {
+  return i18n.t('app.agentTabTitle')
+}
+
 export function getExcalidrawTabTitle(): string {
   return i18n.t('app.excalidrawTabTitle')
 }

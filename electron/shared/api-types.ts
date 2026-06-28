@@ -93,7 +93,17 @@ export type {
   ClaudeCodeSessionEntry,
   ProjectSessionGroup,
   ListClaudeCodeSessionsResult,
+  ListOpenCodeSessionsResult,
 } from './session-types'
+export type {
+  AgentMode,
+  AgentMessage,
+  AgentRuntimeStatus,
+  AgentSessionState,
+  AgentStateSnapshot,
+  AgentEvent,
+  AgentSendMessageInput,
+} from './agent-types'
 export type { NoteItem } from './note-types'
 export type {
   P2pPeerInfo,
@@ -492,6 +502,21 @@ export interface ElectronAPI {
     delete: (id: string) => Promise<import('./provider-types').ProviderState>
     activate: (id: string) => Promise<import('./provider-types').ProviderState>
   }
+  agent: {
+    ensureRuntime: () => Promise<import('./agent-types').AgentStateSnapshot>
+    getState: () => Promise<import('./agent-types').AgentStateSnapshot>
+    pickDirectory: () => Promise<string | null>
+    setWorkspaceDir: (dir: string) => Promise<import('./agent-types').AgentStateSnapshot>
+    setModel: (model: string) => Promise<import('./agent-types').AgentStateSnapshot>
+    setMode: (
+      mode: import('./agent-types').AgentMode,
+    ) => Promise<import('./agent-types').AgentStateSnapshot>
+    sendMessage: (
+      input: import('./agent-types').AgentSendMessageInput,
+    ) => Promise<import('./agent-types').AgentStateSnapshot>
+    resetSession: () => Promise<import('./agent-types').AgentStateSnapshot>
+    onEvent: (cb: (event: import('./agent-types').AgentEvent) => void) => () => void
+  }
   copilot: {
     getRuntimeUrl: () => Promise<string | null>
   }
@@ -660,6 +685,8 @@ export interface ElectronAPI {
     ) => Promise<import('../fs-service').TerminalDropDirectoryResult>
     /** 选择 SSH 私钥文件；取消时返回 null */
     pickPrivateKey: () => Promise<string | null>
+    /** 选择 NioZy Agent 日志文件路径；取消时返回 null */
+    pickAgentLogFile: () => Promise<string | null>
     /** 选择 AI 边栏附件（多选）；取消时返回空数组 */
     pickAiAttachments: (dialogTitle?: string) => Promise<import('./ai-attachment-types').AiAttachmentPickFile[]>
   }
@@ -880,6 +907,7 @@ export interface ElectronAPI {
     listDir: (dirPath: string) => Promise<import('./workspace-types').WorkspaceListDirResponse>
     pickDirectory: () => Promise<string | null>
     detectGit: (workDir: string) => Promise<import('./workspace-types').WorkspaceDetectGitResponse>
+    gitBranch: (workDir: string) => Promise<import('./workspace-types').WorkspaceGitBranchResponse>
     gitStatus: (workDir: string) => Promise<import('./workspace-types').WorkspaceGitStatusResponse>
     gitDiff: (
       workDir: string,

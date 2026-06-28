@@ -116,6 +116,11 @@ const WorkspacePanel = lazy(() =>
     default: m.WorkspacePanel,
   })),
 )
+const AgentPanel = lazy(() =>
+  import('@/components/agent/AgentPanel').then((m) => ({
+    default: m.AgentPanel,
+  })),
+)
 const ExcalidrawPanel = lazy(() =>
   import('@/components/drawing/ExcalidrawPanel').then((m) => ({
     default: m.ExcalidrawPanel,
@@ -352,6 +357,7 @@ export default function App() {
     () => tabs.filter((t) => t.type === 'workspace'),
     [tabs],
   )
+  const agentTabs = useMemo(() => tabs.filter((t) => t.type === 'agent'), [tabs])
 
   const markdownTabs = useMemo(
     () => tabs.filter((t) => t.type === 'markdown'),
@@ -392,7 +398,9 @@ export default function App() {
       hasSessionTab: tabs.some((t) => t.type === 'session'),
       sessionTabActive: activeType === 'session',
       hasWorkspaceTab: workspaceTabs.length > 0,
+      hasAgentTab: agentTabs.length > 0,
       workspaceEnabled: settings?.workspace.workspaceEnabled === true,
+      niozyAgentEnabled: settings?.experimental.niozyAgentEnabled === true,
       agentSessionEnabled: settings?.session.agentSessionEnabled === true,
       hasExcalidrawTab: tabs.some((t) => t.type === 'excalidraw'),
       excalidrawTabActive: activeType === 'excalidraw',
@@ -424,6 +432,7 @@ export default function App() {
     settings,
     attachCommitted,
     workspaceTabs,
+    agentTabs,
     markdownTabs,
     sftpTabs,
     ftpTabs,
@@ -446,7 +455,9 @@ export default function App() {
     hasSessionTab,
     sessionTabActive,
     hasWorkspaceTab,
+    hasAgentTab,
     workspaceEnabled,
+    niozyAgentEnabled,
     agentSessionEnabled,
     hasExcalidrawTab,
     excalidrawTabActive,
@@ -592,6 +603,23 @@ export default function App() {
                 {workspaceTabs.map((tab) => (
                   <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
                     <WorkspacePanel tab={tab} />
+                  </AnimatedTabPanel>
+                ))}
+              </>
+            )}
+            {hasAgentTab && niozyAgentEnabled && (
+              <>
+                {agentTabs.map((tab) => (
+                  <AnimatedTabPanel key={tab.id} active={activeTabId === tab.id}>
+                    <Suspense
+                      fallback={
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                          …
+                        </div>
+                      }
+                    >
+                      <AgentPanel tab={tab} />
+                    </Suspense>
                   </AnimatedTabPanel>
                 ))}
               </>

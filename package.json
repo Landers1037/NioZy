@@ -15,7 +15,7 @@
   "type": "module",
   "workspaces": [],
   "scripts": {
-    "prestart": "npm run generate:icon && npm run vendor:drawing && npm run vendor:oh-my-posh",
+    "prestart": "npm run generate:icon && npm run vendor:drawing && npm run vendor:oh-my-posh && npm run build:agent && npm run copy:agent",
     "start": "electron-vite dev",
     "dev": "electron-vite dev",
     "generate:icon": "node scripts/generate-icon.mjs",
@@ -23,6 +23,8 @@
     "vendor:drawio": "node scripts/vendor-drawio.mjs",
     "vendor:drawing": "npm run vendor:excalidraw-fonts && npm run vendor:drawio",
     "vendor:oh-my-posh": "node scripts/vendor-oh-my-posh.mjs",
+    "build:agent": "cd agent-runtime && go build -o build/agent/niozy-agent.exe ./cmd/niozy-agent",
+    "copy:agent": "node scripts/copy-agent-runtime.mjs",
     "prebuild": "npm run generate:icon && npm run vendor:drawing && npm run vendor:oh-my-posh",
     "postinstall": "install-electron",
     "build": "electron-vite build",

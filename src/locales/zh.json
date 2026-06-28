@@ -26,6 +26,7 @@
     "repoTabTitle": "仓库管理",
     "sessionTabTitle": "会话管理",
     "workspaceTabTitle": "工作区",
+    "agentTabTitle": "NioZy Agent",
     "excalidrawTabTitle": "Excalidraw",
     "drawioTabTitle": "Draw.io"
   },
@@ -216,6 +217,40 @@
       "restore": "恢复"
     }
   },
+  "agent": {
+    "title": "NioZy Agent",
+    "description": "参考 Codex 布局的对话式 Agent 工作台。",
+    "pickDirectory": "选择项目目录",
+    "modelPlaceholder": "选择模型",
+    "emptyTitle": "我们应该在 NioZy 中构建什么？",
+    "emptyDescription": "选择项目目录、确认模型与模式，然后开始对话。",
+      "inputPlaceholder": "输入你的任务，Enter 发送，Shift+Enter 换行",
+      "send": "发送",
+      "thinking": "思考中…",
+      "reset": "重置会话",
+    "noDirectory": "未选择目录",
+    "contextSummary": "模式：{{mode}} · 模型：{{model}} · 目录：{{dir}}",
+    "modes": {
+      "plan": "计划",
+      "build": "构建"
+    },
+    "roles": {
+      "user": "你",
+      "assistant": "Agent",
+      "system": "系统",
+      "status": "状态",
+      "error": "错误"
+    },
+      "connection": {
+        "idle": "未启动",
+        "starting": "连接中",
+        "ready": "已连接",
+        "error": "错误"
+      },
+      "errors": {
+        "workspaceRequired": "请先选择项目目录，再发送消息"
+      }
+    },
   "locale": {
     "zh": "中文",
     "en": "English",
@@ -854,7 +889,20 @@
       "sidebarEnabledDesc": "在右侧显示 AI 对话边栏。发送消息需配置对应提供商的 API Key（Ollama 本地可留空）。",
       "attachmentsEnabled": "支持附件",
       "attachmentsEnabledDesc": "开启后，AI 边栏输入框旁的「+」可添加本地图片或文件（拖拽、粘贴同样可用）。需使用支持视觉/多模态的模型。",
-      "sidebarWidth": "边栏宽度",
+        "agentEnabled": "启用 NioZy Agent",
+        "agentEnabledDesc": "开启后在左侧边栏和新建连接菜单显示 Agent 入口。",
+        "agentGroupTitle": "NioZy Agent",
+        "agentGroupDesc": "配置 NioZy Agent 的入口与日志行为。",
+        "agentLogLevel": "日志级别",
+        "agentLogLevelDesc": "控制 niozy-agent 程序输出的日志级别。",
+        "agentLogToFile": "开启日志存储",
+        "agentLogToFileDesc": "开启后写入日志文件；关闭时仅输出到终端。",
+        "agentLogFile": "日志文件",
+        "agentLogFileDesc": "默认使用 TMP 目录下的 niozy-agent.log，也可自定义绝对路径。",
+        "agentLogFilePlaceholder": "留空时使用 TMP/niozy-agent.log",
+        "agentLogFileBrowse": "浏览",
+        "agentLogFilePickFailed": "选择 Agent 日志文件失败",
+        "sidebarWidth": "边栏宽度",
       "sidebarWidthDesc": "AI 对话边栏宽度，修改后立即生效。",
       "sidebarWidths": {
         "narrow": "更窄（{{px}}px）",
@@ -1304,6 +1352,7 @@
     "repoManagement": "仓库管理",
     "sessionManagement": "会话管理",
     "workspace": "工作区",
+    "agent": "Agent",
     "openChat": "加密通信",
     "openJsSandbox": "打开沙箱",
     "excalidraw": "Excalidraw",

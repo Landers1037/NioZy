@@ -87,6 +87,14 @@ export interface ExperimentalSettings {
   aiBaseUrl: string
   /** AI API Key；可为明文或存储库引用如 ${OPENAI_API_KEY} */
   aiApiKey: string
+  /** 开启后在新建连接中显示 NioZy Agent */
+  niozyAgentEnabled: boolean
+  /** NioZy Agent 日志级别 */
+  niozyAgentLogLevel: 'INFO' | 'ERROR' | 'DEBUG'
+  /** 开启后写入日志文件 */
+  niozyAgentLogToFile: boolean
+  /** NioZy Agent 日志文件路径 */
+  niozyAgentLogFile: string
   /** 已启用规则 id → true；未列入或 false 表示不注入对话上下文 */
   aiRuleStates: AiRuleStates
   /** @deprecated 迁移至 aiApiKey */
@@ -119,8 +127,28 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   aiModel: DEFAULT_AI_MODEL,
   aiBaseUrl: normalizeAiBaseUrl(DEFAULT_AI_PROVIDER, undefined),
   aiApiKey: '',
+  niozyAgentEnabled: false,
+  niozyAgentLogLevel: 'INFO',
+  niozyAgentLogToFile: false,
+  niozyAgentLogFile: '',
   aiRuleStates: {},
   jsSandboxEnabled: false,
+}
+
+export const NIOZY_AGENT_LOG_LEVELS = ['INFO', 'ERROR', 'DEBUG'] as const
+
+export function normalizeNiozyAgentLogLevel(
+  value: unknown,
+): ExperimentalSettings['niozyAgentLogLevel'] {
+  return NIOZY_AGENT_LOG_LEVELS.includes(
+    value as ExperimentalSettings['niozyAgentLogLevel'],
+  )
+    ? (value as ExperimentalSettings['niozyAgentLogLevel'])
+    : 'INFO'
+}
+
+export function normalizeNiozyAgentLogFile(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 export function normalizeTerminalEmulator(value: unknown): TerminalEmulator {
@@ -175,6 +203,10 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     aiModel: normalizeAiModel(provider, o.aiModel),
     aiBaseUrl: normalizeAiBaseUrl(provider, o.aiBaseUrl),
     aiApiKey,
+    niozyAgentEnabled: o.niozyAgentEnabled === true,
+    niozyAgentLogLevel: normalizeNiozyAgentLogLevel(o.niozyAgentLogLevel),
+    niozyAgentLogToFile: o.niozyAgentLogToFile === true,
+    niozyAgentLogFile: normalizeNiozyAgentLogFile(o.niozyAgentLogFile),
     aiRuleStates: normalizeAiRuleStates(o.aiRuleStates),
     jsSandboxEnabled: o.jsSandboxEnabled === true,
   }

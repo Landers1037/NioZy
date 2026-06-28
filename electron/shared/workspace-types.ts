@@ -63,6 +63,18 @@ export interface WorkspaceDetectGitError {
 
 export type WorkspaceDetectGitResponse = WorkspaceDetectGitResult | WorkspaceDetectGitError
 
+export interface WorkspaceGitBranchResult {
+  ok: true
+  branch: string | null
+}
+
+export interface WorkspaceGitBranchError {
+  ok: false
+  error: 'GIT_NOT_FOUND' | 'NOT_GIT_REPO' | string
+}
+
+export type WorkspaceGitBranchResponse = WorkspaceGitBranchResult | WorkspaceGitBranchError
+
 export const WORKSPACE_TOOL_IDS = ['claude', 'opencode', 'pi', 'agent'] as const
 export type WorkspaceToolId = (typeof WORKSPACE_TOOL_IDS)[number]
 

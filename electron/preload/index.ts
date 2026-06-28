@@ -82,6 +82,10 @@ const onReminderDue = createIpcMultiplex<[import('../shared/reminder-data').Remi
   ipcRenderer,
   'reminder:due',
 )
+const onAgentEvent = createIpcMultiplex<[import('../shared/agent-types').AgentEvent]>(
+  ipcRenderer,
+  'agent:event',
+)
 const onSettingsChanged = createIpcMultiplex<[AppSettings]>(ipcRenderer, 'settings:changed')
 
 const api: ElectronAPI = {
@@ -116,6 +120,17 @@ const api: ElectronAPI = {
     save: (input) => ipcRenderer.invoke('providers:save', input),
     delete: (id) => ipcRenderer.invoke('providers:delete', id),
     activate: (id) => ipcRenderer.invoke('providers:activate', id),
+  },
+  agent: {
+    ensureRuntime: () => ipcRenderer.invoke('agent:ensureRuntime'),
+    getState: () => ipcRenderer.invoke('agent:getState'),
+    pickDirectory: () => ipcRenderer.invoke('agent:pickDirectory') as Promise<string | null>,
+    setWorkspaceDir: (dir) => ipcRenderer.invoke('agent:setWorkspaceDir', dir),
+    setModel: (model) => ipcRenderer.invoke('agent:setModel', model),
+    setMode: (mode) => ipcRenderer.invoke('agent:setMode', mode),
+    sendMessage: (input) => ipcRenderer.invoke('agent:sendMessage', input),
+    resetSession: () => ipcRenderer.invoke('agent:resetSession'),
+    onEvent: (cb) => onAgentEvent(cb),
   },
   copilot: {
     getRuntimeUrl: () => ipcRenderer.invoke('copilot:getRuntimeUrl') as Promise<string | null>,
@@ -265,6 +280,8 @@ const api: ElectronAPI = {
     resolveTerminalDropDirectory: (filePath) =>
       ipcRenderer.invoke('fs:resolveTerminalDropDirectory', filePath),
     pickPrivateKey: () => ipcRenderer.invoke('files:pickPrivateKey') as Promise<string | null>,
+    pickAgentLogFile: () =>
+      ipcRenderer.invoke('files:pickAgentLogFile') as Promise<string | null>,
     pickAiAttachments: (dialogTitle?: string) =>
       ipcRenderer.invoke('files:pickAiAttachments', dialogTitle) as Promise<
         import('../shared/ai-attachment-types').AiAttachmentPickFile[]
@@ -454,6 +471,7 @@ const api: ElectronAPI = {
     listDir: (dirPath) => ipcRenderer.invoke('workspace:listDir', dirPath),
     pickDirectory: () => ipcRenderer.invoke('workspace:pickDirectory'),
     detectGit: (workDir) => ipcRenderer.invoke('workspace:detectGit', workDir),
+    gitBranch: (workDir) => ipcRenderer.invoke('workspace:gitBranch', workDir),
     gitStatus: (workDir) => ipcRenderer.invoke('workspace:gitStatus', workDir),
     gitDiff: (workDir, filePath) => ipcRenderer.invoke('workspace:gitDiff', workDir, filePath),
     listHistory: () => ipcRenderer.invoke('workspace:listHistory'),

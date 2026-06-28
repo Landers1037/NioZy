@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History } from 'lucide-react'
+import { Settings, Link2, FolderCode, Braces, MessageSquare, GitBranch, PenTool, LineSquiggle, History, Bot, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -24,6 +24,7 @@ export function MinimalTabBar() {
   const addFilesystemTab = useAppStore((s) => s.addFilesystemTab)
   const addRepoTab = useAppStore((s) => s.addRepoTab)
   const addSessionTab = useAppStore((s) => s.addSessionTab)
+  const addAgentTab = useAppStore((s) => s.addAgentTab)
   const addChatTab = useAppStore((s) => s.addChatTab)
   const addSandboxTab = useAppStore((s) => s.addSandboxTab)
   const addExcalidrawTab = useAppStore((s) => s.addExcalidrawTab)
@@ -36,6 +37,7 @@ export function MinimalTabBar() {
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const agentSessionEnabled = settings?.session.agentSessionEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
+  const niozyAgentEnabled = settings?.experimental.niozyAgentEnabled === true
   const ui = useUiClasses()
 
   const { sidebarItems, inGroupView } = useSidebarTabItems()
@@ -133,6 +135,17 @@ export function MinimalTabBar() {
             onClick={() => addSessionTab()}
           >
             <History className="size-3" />
+          </Button>
+        )}
+        {niozyAgentEnabled && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title={t('sidebar.agent')}
+            onClick={() => addAgentTab()}
+          >
+            <Bot className="size-3" />
           </Button>
         )}
         {p2pChatEnabled && (

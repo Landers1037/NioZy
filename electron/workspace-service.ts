@@ -6,6 +6,7 @@ import type { BrowserWindow } from 'electron'
 import { dialog } from 'electron'
 import type { GitService } from './git-service'
 import type {
+  WorkspaceGitBranchResponse,
   WorkspaceDetectGitResponse,
   WorkspaceDirEntry,
   WorkspaceGitDiffResponse,
@@ -268,6 +269,40 @@ export class WorkspaceService {
     }
 
     return { ok: true, files }
+  }
+
+  async gitBranch(workDir: string): Promise<string | null> {
+    const result = await this.getGitBranch(workDir)
+    return result.ok ? result.branch : null
+  }
+
+  async getGitBranch(workDir: string): Promise<WorkspaceGitBranchResponse> {
+    const gitPath = this.gitService.resolveGitPath()
+    if (!gitPath) return { ok: false, error: 'GIT_NOT_FOUND' }
+    const normalized = resolve(workDir)
+    if (!existsSync(join(normalized, '.git'))) {
+      return { ok: false, error: 'NOT_GIT_REPO' }
+    }
+
+    for (const args of [
+      ['branch', '--show-current'],
+      ['rev-parse', '--abbrev-ref', 'HEAD'],
+      ['symbolic-ref', '--short', 'HEAD'],
+      ['describe', '--all', '--exact-match', 'HEAD'],
+    ]) {
+      const result = await runGit(gitPath, args, normalized)
+      if (!result.ok) continue
+      const raw = result.stdout.trim()
+      if (!raw || raw === 'HEAD') continue
+      const branch = raw.startsWith('heads/')
+        ? raw.slice('heads/'.length)
+        : raw.startsWith('remotes/')
+          ? raw.slice('remotes/'.length)
+          : raw
+      if (branch) return { ok: true, branch }
+    }
+
+    return { ok: true, branch: null }
   }
 
   async gitDiff(workDir: string, filePath: string): Promise<WorkspaceGitDiffResponse> {

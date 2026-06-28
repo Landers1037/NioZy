@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { getElectronAPI } from '@/lib/electron-client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -11,11 +12,12 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
 import { AiContextSettings } from './AiContextSettings'
-import { Brain, Network, Paperclip } from 'lucide-react'
+import { Bot, Brain, FileText, FolderOpen, Network, Paperclip } from 'lucide-react'
 import type { AiProvider } from '../../../electron/shared/ai-provider-settings'
 import type { AiSidebarWidthPreset } from '@/lib/ai-sidebar-width'
 import { AI_SIDEBAR_WIDTH_PRESETS, AI_SIDEBAR_WIDTH_PX } from '@/lib/ai-sidebar-width'
@@ -31,6 +33,7 @@ import {
   normalizeAiModel,
   normalizeAiRuntimePort,
 } from '@/lib/ai-provider-options'
+import { NIOZY_AGENT_LOG_LEVELS } from '../../../electron/shared/experimental-settings'
 
 export function AiSettings() {
   const { t } = useTranslation()
@@ -47,6 +50,7 @@ export function AiSettings() {
   const [baseUrlDraft, setBaseUrlDraft] = useState(ai.aiBaseUrl)
   const [modelDraft, setModelDraft] = useState(ai.aiModel)
   const [runtimePortDraft, setRuntimePortDraft] = useState(String(ai.aiRuntimePort))
+  const [agentLogFileDraft, setAgentLogFileDraft] = useState(ai.niozyAgentLogFile)
   const presetModels = AI_PROVIDER_MODELS[ai.aiProvider]
   const modelSelectValue = isAiPresetModel(ai.aiProvider, ai.aiModel) ? ai.aiModel : ''
 
@@ -65,6 +69,10 @@ export function AiSettings() {
   useEffect(() => {
     setModelDraft(ai.aiModel)
   }, [ai.aiModel])
+
+  useEffect(() => {
+    setAgentLogFileDraft(ai.niozyAgentLogFile)
+  }, [ai.niozyAgentLogFile])
 
   const patchAi = (partial: Partial<typeof ai>) =>
     patchSettings({
@@ -115,6 +123,114 @@ export function AiSettings() {
               patchAi({ aiSidebarEnabled: enabled })
             }}
           />
+        </SettingField>
+
+        <SettingField
+          icon={Bot}
+          label={t('settings.ai.agentGroupTitle')}
+          description={t('settings.ai.agentGroupDesc')}
+        >
+          <div className="flex flex-col gap-4 rounded-xl border border-border/70 p-4">
+            <SettingField
+              icon={Bot}
+              label={t('settings.ai.agentEnabled')}
+              description={t('settings.ai.agentEnabledDesc')}
+              row
+              className="max-w-none"
+            >
+              <Switch
+                checked={ai.niozyAgentEnabled === true}
+                onCheckedChange={(enabled) => {
+                  if (enabled === ai.niozyAgentEnabled) return
+                  patchAi({ niozyAgentEnabled: enabled })
+                }}
+              />
+            </SettingField>
+
+            <SettingField
+              icon={FileText}
+              label={t('settings.ai.agentLogLevel')}
+              description={t('settings.ai.agentLogLevelDesc')}
+            >
+              <Select
+                value={ai.niozyAgentLogLevel}
+                onValueChange={(value) => {
+                  if (value === ai.niozyAgentLogLevel) return
+                  patchAi({
+                    niozyAgentLogLevel: value as typeof ai.niozyAgentLogLevel,
+                  })
+                }}
+              >
+                <SelectTrigger className="max-w-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {NIOZY_AGENT_LOG_LEVELS.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </SettingField>
+
+            <SettingField
+              icon={FileText}
+              label={t('settings.ai.agentLogToFile')}
+              description={t('settings.ai.agentLogToFileDesc')}
+              row
+              className="max-w-none"
+            >
+              <Switch
+                checked={ai.niozyAgentLogToFile === true}
+                onCheckedChange={(enabled) => {
+                  if (enabled === ai.niozyAgentLogToFile) return
+                  patchAi({ niozyAgentLogToFile: enabled })
+                }}
+              />
+            </SettingField>
+
+            <SettingField
+              icon={FileText}
+              label={t('settings.ai.agentLogFile')}
+              description={t('settings.ai.agentLogFileDesc')}
+            >
+              <div className="flex max-w-xl gap-2">
+                <Input
+                  value={agentLogFileDraft}
+                  disabled={ai.niozyAgentLogToFile !== true}
+                  placeholder={t('settings.ai.agentLogFilePlaceholder')}
+                  className="min-w-0 flex-1 font-mono text-sm"
+                  onChange={(e) => setAgentLogFileDraft(e.target.value)}
+                  onBlur={(e) => {
+                    const next = e.target.value.trim()
+                    if (next === ai.niozyAgentLogFile) return
+                    patchAi({ niozyAgentLogFile: next }).catch(() =>
+                      toast.error(t('settings.vault.saveFailed')),
+                    )
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={ai.niozyAgentLogToFile !== true}
+                  onClick={() =>
+                    void getElectronAPI()
+                      .files.pickAgentLogFile()
+                      .then((filePath) => {
+                        if (!filePath) return
+                        setAgentLogFileDraft(filePath)
+                        return patchAi({ niozyAgentLogFile: filePath })
+                      })
+                      .catch(() => toast.error(t('settings.ai.agentLogFilePickFailed')))
+                  }
+                >
+                  <FolderOpen className="size-4" />
+                  {t('settings.ai.agentLogFileBrowse')}
+                </Button>
+              </div>
+            </SettingField>
+          </div>
         </SettingField>
 
         {ai.aiSidebarEnabled === true && (

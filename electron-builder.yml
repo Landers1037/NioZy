@@ -71,6 +71,10 @@ extraResources:
     to: pets
     filter:
       - '**/*'
+  - from: build/agent
+    to: agent
+    filter:
+      - '**/*'
 win:
   target:
     - nsis

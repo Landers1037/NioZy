@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { AppWindow, Boxes, Computer, Waypoints, Forklift, Link2, Monitor, Network, Server } from 'lucide-react'
+import { AppWindow, Bot, Boxes, Computer, Waypoints, Forklift, Link2, Monitor, Network, Server } from 'lucide-react'
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -14,6 +14,7 @@ import type { CustomConnection } from '../../../electron/shared/api-types'
 export function NewConnectionMenuContent() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
+  const addAgentTab = useAppStore((s) => s.addAgentTab)
   const vncEnabled = settings?.experimental.vncWebEnabled === true
 
   return (
@@ -30,6 +31,15 @@ export function NewConnectionMenuContent() {
           <DropdownMenuItem onClick={() => openWorkspaceTab()}>
             <Computer className="size-4 shrink-0 text-muted-foreground" />
             {t('sidebar.workspace')}
+          </DropdownMenuItem>
+        </>
+      )}
+      {settings?.experimental.niozyAgentEnabled === true && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => addAgentTab()}>
+            <Bot className="size-4 shrink-0 text-muted-foreground" />
+            {t('sidebar.agent')}
           </DropdownMenuItem>
         </>
       )}

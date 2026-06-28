@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 import type { Plugin } from 'vite'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
@@ -13,9 +13,12 @@ function copyMainAssets(): Plugin {
   const telnetBridgeSrc = resolve('electron/scripts/telnet-bridge.mjs')
   const niozyBinSrc = resolve('electron/scripts/bin')
   const traySrc = resolve('electron/assets/tray.png')
+  const agentExeName = process.platform === 'win32' ? 'niozy-agent.exe' : 'niozy-agent'
+  const agentRuntimeSrc = resolve('build', 'agent', agentExeName)
   const mainOut = resolve('out/main')
   const scriptsOut = resolve(mainOut, 'scripts')
   const binOut = resolve(scriptsOut, 'bin')
+  const agentOut = resolve(mainOut, 'agent')
   return {
     name: 'copy-main-assets',
     writeBundle() {
@@ -44,6 +47,10 @@ function copyMainAssets(): Plugin {
         writeFileSync(resolve(binOut, name), readFileSync(src))
       }
       writeFileSync(resolve(mainOut, 'tray.png'), readFileSync(traySrc))
+      if (existsSync(agentRuntimeSrc)) {
+        mkdirSync(agentOut, { recursive: true })
+        writeFileSync(resolve(agentOut, agentExeName), readFileSync(agentRuntimeSrc))
+      }
     },
   }
 }
