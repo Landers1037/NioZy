@@ -456,6 +456,7 @@
       "ai": "AI 特性",
       "session": "管理会话",
       "workspace": "工作区",
+      "provider": "供应商配置",
       "logging": "日志设置",
       "advanced": "高级设置",
       "experimental": "实验特性"
@@ -950,6 +951,73 @@
       "workspaceEnabledDesc": "开启后在「新建连接」菜单的默认终端下方显示「工作区」入口，可创建多个工作区",
       "gitWorkspaceEnabled": "支持 Git 工作区",
       "gitWorkspaceEnabledDesc": "开启后工作区右侧可切换查看未提交的 Git 变更"
+    },
+    "provider": {
+      "title": "供应商配置",
+      "description": "按工具管理 Claude Code 与 Codex 的供应商配置，点击启用后会覆盖对应工具的本地配置文件。",
+      "configPath": "持久化文件：{{path}}",
+      "backupPath": "备份目录：{{path}}",
+      "tools": {
+        "claudeCode": "Claude Code",
+        "codex": "Codex"
+      },
+      "targetPaths": {
+        "claudeCode": {
+          "title": "应用目标文件",
+          "paths": "%USERPROFILE%/.claude/settings.json"
+        },
+        "codex": {
+          "title": "应用目标文件",
+          "paths": "%USERPROFILE%/.codex/auth.json\n%USERPROFILE%/.codex/config.toml"
+        }
+      },
+      "add": "新增",
+      "empty": "当前工具下还没有供应商，点击上方“新增”创建。",
+      "name": "供应商名称",
+      "namePlaceholder": "例如：官方 / 备份 / 公司代理",
+      "nameRequired": "请输入供应商名称",
+      "createTitle": "新增供应商",
+      "editTitle": "编辑供应商",
+      "created": "供应商已创建",
+      "updated": "供应商已保存",
+      "deleted": "供应商已删除",
+      "saveFailed": "保存供应商失败",
+      "loadFailed": "加载供应商失败",
+      "activateFailed": "启用供应商失败",
+      "deleteFailed": "删除供应商失败",
+      "activated": "供应商已启用并应用配置",
+      "enable": "启用",
+      "enabled": "已启用",
+      "active": "当前启用",
+      "imported": "初始导入",
+      "updatedAt": "更新时间：{{time}}",
+      "providerBackupDir": "备份来源：{{path}}",
+      "deleteConfirm": "确定删除供应商“{{name}}”吗？",
+      "claude": {
+        "authField": "认证字段",
+        "authFieldDesc": "选择写入配置时使用的认证环境变量名。",
+        "authFields": {
+          "authToken": "ANTHROPIC_AUTH_TOKEN（默认）",
+          "apiKey": "ANTHROPIC_API_KEY"
+        },
+        "authToken": "API Key",
+        "authTokenDesc": "对应 ANTHROPIC_AUTH_TOKEN。",
+        "baseUrl": "请求地址",
+        "baseUrlDesc": "对应 ANTHROPIC_BASE_URL。",
+        "defaultModel": "默认模型",
+        "defaultModelDesc": "对应 ANTHROPIC_MODEL。",
+        "modelMapping": "模型映射",
+        "modelMappingDesc": "显示名称影响 Claude Code 菜单展示，实际请求模型为真正发送给服务端的模型名。",
+        "roles": {
+          "sonnet": "Sonnet",
+          "opus": "Opus",
+          "haiku": "Haiku",
+          "fable": "Fable"
+        },
+        "rawTitle": "settings.json 原始数据",
+        "rawDesc": "可直接编辑原始 JSON；格式正确时会自动同步到上方表单。",
+        "rawInvalid": "原始 JSON 格式无效，修正后才会同步到表单。"
+      }
     },
     "experimental": {
       "title": "实验特性",

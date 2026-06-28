@@ -111,6 +111,12 @@ const api: ElectronAPI = {
     importFromFile: () =>
       ipcRenderer.invoke('settings:importFromFile') as Promise<SettingsFileResult>,
   },
+  providers: {
+    getState: () => ipcRenderer.invoke('providers:getState'),
+    save: (input) => ipcRenderer.invoke('providers:save', input),
+    delete: (id) => ipcRenderer.invoke('providers:delete', id),
+    activate: (id) => ipcRenderer.invoke('providers:activate', id),
+  },
   copilot: {
     getRuntimeUrl: () => ipcRenderer.invoke('copilot:getRuntimeUrl') as Promise<string | null>,
   },

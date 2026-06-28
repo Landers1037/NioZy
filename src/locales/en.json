@@ -456,6 +456,7 @@
       "ai": "AI features",
       "session": "Manage sessions",
       "workspace": "Workspace",
+      "provider": "Provider",
       "logging": "Logging",
       "advanced": "Advanced",
       "experimental": "Experimental"
@@ -950,6 +951,73 @@
       "workspaceEnabledDesc": "Show the Workspace entry below default shells in the new-connection menu; you can open multiple workspaces",
       "gitWorkspaceEnabled": "Git workspace",
       "gitWorkspaceEnabledDesc": "Allow switching the right panel to uncommitted Git changes"
+    },
+    "provider": {
+      "title": "Provider",
+      "description": "Manage Claude Code and Codex provider profiles. Enabling a provider overwrites that tool's local config files.",
+      "configPath": "Persistent file: {{path}}",
+      "backupPath": "Backup directory: {{path}}",
+      "tools": {
+        "claudeCode": "Claude Code",
+        "codex": "Codex"
+      },
+      "targetPaths": {
+        "claudeCode": {
+          "title": "Apply target",
+          "paths": "%USERPROFILE%/.claude/settings.json"
+        },
+        "codex": {
+          "title": "Apply target",
+          "paths": "%USERPROFILE%/.codex/auth.json\n%USERPROFILE%/.codex/config.toml"
+        }
+      },
+      "add": "Add",
+      "empty": "No providers for this tool yet. Click Add above to create one.",
+      "name": "Provider name",
+      "namePlaceholder": "For example: Official / Backup / Company Proxy",
+      "nameRequired": "Provider name is required",
+      "createTitle": "Add provider",
+      "editTitle": "Edit provider",
+      "created": "Provider created",
+      "updated": "Provider saved",
+      "deleted": "Provider deleted",
+      "saveFailed": "Failed to save provider",
+      "loadFailed": "Failed to load providers",
+      "activateFailed": "Failed to enable provider",
+      "deleteFailed": "Failed to delete provider",
+      "activated": "Provider enabled and applied",
+      "enable": "Enable",
+      "enabled": "Enabled",
+      "active": "Active",
+      "imported": "Imported",
+      "updatedAt": "Updated: {{time}}",
+      "providerBackupDir": "Backup source: {{path}}",
+      "deleteConfirm": "Delete provider \"{{name}}\"?",
+      "claude": {
+        "authField": "Auth field",
+        "authFieldDesc": "Choose which auth environment variable name to write into config.",
+        "authFields": {
+          "authToken": "ANTHROPIC_AUTH_TOKEN (Default)",
+          "apiKey": "ANTHROPIC_API_KEY"
+        },
+        "authToken": "API Key",
+        "authTokenDesc": "Maps to ANTHROPIC_AUTH_TOKEN.",
+        "baseUrl": "Base URL",
+        "baseUrlDesc": "Maps to ANTHROPIC_BASE_URL.",
+        "defaultModel": "Default model",
+        "defaultModelDesc": "Maps to ANTHROPIC_MODEL.",
+        "modelMapping": "Model mapping",
+        "modelMappingDesc": "Display name affects Claude Code menus; request model is the actual server-side model.",
+        "roles": {
+          "sonnet": "Sonnet",
+          "opus": "Opus",
+          "haiku": "Haiku",
+          "fable": "Fable"
+        },
+        "rawTitle": "Raw settings.json",
+        "rawDesc": "You can edit the raw JSON directly. When valid, it syncs back to the form above.",
+        "rawInvalid": "Raw JSON is invalid. Fix it before it can sync back to the form."
+      }
     },
     "experimental": {
       "title": "Experimental",

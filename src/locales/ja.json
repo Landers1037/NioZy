@@ -294,6 +294,8 @@
       "p2p": "暗号化通信",
       "ai": "AI 機能",
       "session": "セッション管理",
+      "workspace": "ワークスペース",
+      "provider": "Provider",
       "logging": "ログ",
       "advanced": "詳細",
       "experimental": "実験的"
@@ -766,6 +768,81 @@
       "clineSessionEnabledDesc": "未実装",
       "codexSessionEnabled": "Codex セッション管理を有効化",
       "codexSessionEnabledDesc": "未実装"
+    },
+    "workspace": {
+      "title": "ワークスペース",
+      "description": "ディレクトリ内で AI 開発ツールを起動し、ファイルツリーや Git 変更を確認する作業領域です。",
+      "workspaceEnabled": "ワークスペースを有効化",
+      "workspaceEnabledDesc": "「新規接続」メニューの既定シェルの下にワークスペース入口を表示します。",
+      "gitWorkspaceEnabled": "Git ワークスペース",
+      "gitWorkspaceEnabledDesc": "右ペインで未コミットの Git 変更を表示できます。"
+    },
+    "provider": {
+      "title": "Provider",
+      "description": "Claude Code と Codex の Provider 設定を管理します。有効化すると各ツールのローカル設定ファイルを上書きします。",
+      "configPath": "保存ファイル: {{path}}",
+      "backupPath": "バックアップ先: {{path}}",
+      "tools": {
+        "claudeCode": "Claude Code",
+        "codex": "Codex"
+      },
+      "targetPaths": {
+        "claudeCode": {
+          "title": "適用先",
+          "paths": "%USERPROFILE%/.claude/settings.json"
+        },
+        "codex": {
+          "title": "適用先",
+          "paths": "%USERPROFILE%/.codex/auth.json\n%USERPROFILE%/.codex/config.toml"
+        }
+      },
+      "add": "追加",
+      "empty": "このツールにはまだ Provider がありません。上の追加から作成できます。",
+      "name": "Provider 名",
+      "namePlaceholder": "例: Official / Backup / Company Proxy",
+      "nameRequired": "Provider 名を入力してください",
+      "createTitle": "Provider を追加",
+      "editTitle": "Provider を編集",
+      "created": "Provider を作成しました",
+      "updated": "Provider を保存しました",
+      "deleted": "Provider を削除しました",
+      "saveFailed": "Provider の保存に失敗しました",
+      "loadFailed": "Provider の読み込みに失敗しました",
+      "activateFailed": "Provider の有効化に失敗しました",
+      "deleteFailed": "Provider の削除に失敗しました",
+      "activated": "Provider を有効化して設定を適用しました",
+      "enable": "有効化",
+      "enabled": "有効",
+      "active": "現在有効",
+      "imported": "初期取込",
+      "updatedAt": "更新日時: {{time}}",
+      "providerBackupDir": "バックアップ元: {{path}}",
+      "deleteConfirm": "Provider「{{name}}」を削除しますか？",
+      "claude": {
+        "authField": "認証フィールド",
+        "authFieldDesc": "設定へ書き込む認証用の環境変数名を選択します。",
+        "authFields": {
+          "authToken": "ANTHROPIC_AUTH_TOKEN（既定）",
+          "apiKey": "ANTHROPIC_API_KEY"
+        },
+        "authToken": "API Key",
+        "authTokenDesc": "ANTHROPIC_AUTH_TOKEN に対応します。",
+        "baseUrl": "Base URL",
+        "baseUrlDesc": "ANTHROPIC_BASE_URL に対応します。",
+        "defaultModel": "既定モデル",
+        "defaultModelDesc": "ANTHROPIC_MODEL に対応します。",
+        "modelMapping": "モデルマッピング",
+        "modelMappingDesc": "表示名は Claude Code のメニュー表示、実際のリクエストモデルはサーバーへ送るモデル名です。",
+        "roles": {
+          "sonnet": "Sonnet",
+          "opus": "Opus",
+          "haiku": "Haiku",
+          "fable": "Fable"
+        },
+        "rawTitle": "settings.json の生データ",
+        "rawDesc": "生の JSON を直接編集できます。正しい形式なら上のフォームへ自動反映されます。",
+        "rawInvalid": "JSON の形式が不正です。修正後にフォームへ同期されます。"
+      }
     },
     "experimental": {
       "title": "実験的",

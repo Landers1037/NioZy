@@ -81,6 +81,14 @@ export {
   normalizeSessionSettings,
 } from './session-settings'
 export type {
+  ProviderTool,
+  ProviderFileKey,
+  ProviderFileEntry,
+  ProviderProfile,
+  ProviderState,
+  SaveProviderInput,
+} from './provider-types'
+export type {
   SessionTool,
   ClaudeCodeSessionEntry,
   ProjectSessionGroup,
@@ -475,6 +483,14 @@ export interface ElectronAPI {
     onChanged: (cb: (settings: AppSettings) => void) => () => void
     exportToFile: () => Promise<SettingsFileResult>
     importFromFile: () => Promise<SettingsFileResult>
+  }
+  providers: {
+    getState: () => Promise<import('./provider-types').ProviderState>
+    save: (
+      input: import('./provider-types').SaveProviderInput,
+    ) => Promise<import('./provider-types').ProviderState>
+    delete: (id: string) => Promise<import('./provider-types').ProviderState>
+    activate: (id: string) => Promise<import('./provider-types').ProviderState>
   }
   copilot: {
     getRuntimeUrl: () => Promise<string | null>

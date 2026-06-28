@@ -113,6 +113,7 @@ import {
 import { NoteStore } from '../note-store'
 import { FilesystemFavoritesStore } from '../filesystem-favorites-store'
 import { WorkspaceHistoryStore } from '../workspace-history-store'
+import { ProviderStore } from '../provider-store'
 import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
@@ -406,6 +407,7 @@ const statisticsStore = new StatisticsStore(
   () => settingsStore.get().statistics.enabled === true,
 )
 const reminderStore = new ReminderStore()
+const providerStore = new ProviderStore()
 const reminderScheduler = new ReminderScheduler(
   reminderStore,
   settingsStore,
@@ -949,6 +951,7 @@ app.whenReady().then(async () => {
     loggingEnabled: logging.enabled,
     loggingLevel: logging.level,
   })
+  providerStore.load()
   syncCopilotRuntimeFromSettingsSafe()
   await syncSessionProxyFromSettings()
   initWebviewPreviewSession()
@@ -1450,6 +1453,12 @@ ipcMain.handle(
 )
 
 ipcMain.handle('settings:get', () => settingsStore.get())
+ipcMain.handle('providers:getState', () => providerStore.getState())
+ipcMain.handle('providers:save', (_, input: import('../shared/provider-types').SaveProviderInput) =>
+  providerStore.saveProvider(input),
+)
+ipcMain.handle('providers:delete', (_, id: string) => providerStore.deleteProvider(id))
+ipcMain.handle('providers:activate', (_, id: string) => providerStore.activateProvider(id))
 ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 
 ipcMain.handle('aiContext:listRules', async () => {

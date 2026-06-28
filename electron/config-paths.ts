@@ -36,6 +36,14 @@ export function getWorkspaceHistoryFilePath(): string {
   return join(getConfigDir(), 'workspace-history.json')
 }
 
+export function getProviderFilePath(): string {
+  return join(getConfigDir(), 'provider.json')
+}
+
+export function getProviderBackupsDir(): string {
+  return join(getConfigDir(), 'provider-backups')
+}
+
 export function getFilesystemFavoritesFilePath(): string {
   return join(getConfigDir(), 'filesystem-favorites.json')
 }
@@ -84,6 +92,12 @@ export function ensureReminderDir(): void {
 
 export function ensureConfigDir(): void {
   const dir = getConfigDir()
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+}
+
+export function ensureProviderBackupsDir(): void {
+  ensureConfigDir()
+  const dir = getProviderBackupsDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
 }
 

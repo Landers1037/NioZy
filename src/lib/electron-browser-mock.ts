@@ -2,6 +2,8 @@ import type {
   AppMetricsData,
   AppSettings,
   ElectronAPI,
+  ProviderState,
+  SaveProviderInput,
   SettingsFileResult,
   SystemStatsData,
   VaultVariablePublic,
@@ -107,6 +109,16 @@ const DEFAULT_SETTINGS: AppSettings = {
 }
 
 let mockVault: VaultVariablePublic[] = []
+let mockProviderState: ProviderState = {
+  configDir: 'C:\\Users\\User\\.config\\NioZy',
+  providerFilePath: 'C:\\Users\\User\\.config\\NioZy\\provider.json',
+  backupDir: 'C:\\Users\\User\\.config\\NioZy\\provider-backups',
+  activeProviderIds: {
+    claudeCode: null,
+    codex: null,
+  },
+  providers: [],
+}
 
 type DataListener = (id: string, data: string) => void
 type CwdListener = (id: string, cwd: string) => void
@@ -228,6 +240,54 @@ function welcomeMessage(shell: string): string {
   )
 }
 
+function saveMockProvider(input: SaveProviderInput): ProviderState {
+  const now = new Date().toISOString()
+  const files =
+    input.tool === 'claudeCode'
+      ? [
+          {
+            key: 'claudeSettings' as const,
+            fileName: 'settings.json',
+            content: input.files.claudeSettings ?? '',
+          },
+        ]
+      : [
+          {
+            key: 'codexAuth' as const,
+            fileName: 'auth.json',
+            content: input.files.codexAuth ?? '',
+          },
+          {
+            key: 'codexConfig' as const,
+            fileName: 'config.toml',
+            content: input.files.codexConfig ?? '',
+          },
+        ]
+  const existingIndex = input.id
+    ? mockProviderState.providers.findIndex((provider) => provider.id === input.id)
+    : -1
+  if (existingIndex >= 0) {
+    const existing = mockProviderState.providers[existingIndex]
+    mockProviderState.providers[existingIndex] = {
+      ...existing,
+      name: input.name,
+      tool: input.tool,
+      files,
+      updatedAt: now,
+    }
+  } else {
+    mockProviderState.providers.push({
+      id: input.id ?? `${input.tool}-${Date.now()}`,
+      tool: input.tool,
+      name: input.name,
+      files,
+      createdAt: now,
+      updatedAt: now,
+    })
+  }
+  return structuredClone(mockProviderState)
+}
+
 export type BrowserDevElectronAPI = ElectronAPI & { __browserDevMock: true }
 
 export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
@@ -303,6 +363,25 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           }
           input.click()
         })
+      },
+    },
+    providers: {
+      getState: async () => structuredClone(mockProviderState),
+      save: async (input) => saveMockProvider(input),
+      delete: async (id) => {
+        const target = mockProviderState.providers.find((provider) => provider.id === id)
+        mockProviderState.providers = mockProviderState.providers.filter((provider) => provider.id !== id)
+        if (target && mockProviderState.activeProviderIds[target.tool] === id) {
+          mockProviderState.activeProviderIds[target.tool] = null
+        }
+        return structuredClone(mockProviderState)
+      },
+      activate: async (id) => {
+        const provider = mockProviderState.providers.find((item) => item.id === id)
+        if (provider) {
+          mockProviderState.activeProviderIds[provider.tool] = provider.id
+        }
+        return structuredClone(mockProviderState)
       },
     },
     copilot: {
