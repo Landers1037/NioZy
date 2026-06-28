@@ -71,6 +71,8 @@ export class TerminalService extends EventEmitter {
   private sessions = new Map<string, TerminalSession>()
   /** 向渲染进程实时推流的终端 id（拆分视图可同时包含多个） */
   private activeStreamIds = new Set<string>()
+  /** 渲染层已完成订阅并领取过推流的终端 id */
+  private claimedStreamIds = new Set<string>()
   private pausedOutput = new Map<string, string>()
   /** 已暂停数据源的终端 id（backpressure：远端 yes 会自然阻塞） */
   private pausedStreamIds = new Set<string>()
@@ -205,6 +207,7 @@ export class TerminalService extends EventEmitter {
       if (!this.sessions.has(id)) return
       terminalLog.debug('PTY process exit', { id, exitCode, name })
       this.sessions.delete(id)
+      this.claimedStreamIds.delete(id)
       this.activeStreamIds.delete(id)
       this.pausedStreamIds.delete(id)
       this.disposeActiveGate(id)
@@ -306,6 +309,7 @@ export class TerminalService extends EventEmitter {
               exited = true
               terminalLog.debug('ssh2 terminal session end', { id, name, reason })
               this.sessions.delete(id)
+              this.claimedStreamIds.delete(id)
               this.pausedOutput.delete(id)
               this.activeStreamIds.delete(id)
               this.pausedStreamIds.delete(id)
@@ -354,7 +358,10 @@ export class TerminalService extends EventEmitter {
     ids: string[],
     options?: { deferRendererClaim?: boolean },
   ): void {
-    const newActive = new Set(ids)
+    const deferRendererClaim = options?.deferRendererClaim === true
+    const newActive = new Set(
+      ids.filter((id) => !deferRendererClaim || this.claimedStreamIds.has(id)),
+    )
     for (const id of this.activeStreamIds) {
       if (!newActive.has(id)) this.pauseSessionStream(id)
     }
@@ -362,8 +369,10 @@ export class TerminalService extends EventEmitter {
       if (!this.activeStreamIds.has(id)) this.resumeSessionStream(id)
     }
     this.activeStreamIds = newActive
-    if (options?.deferRendererClaim) return
-    for (const id of ids) {
+    const flushIds = deferRendererClaim
+      ? ids.filter((id) => this.claimedStreamIds.has(id))
+      : ids
+    for (const id of flushIds) {
       this.flushBufferedOutput(id)
     }
   }
@@ -379,6 +388,7 @@ export class TerminalService extends EventEmitter {
       return replay
     }
 
+    this.claimedStreamIds.add(id)
     this.removeStreamPause(id, 'flow')
     this.disposeActiveGate(id)
 
@@ -539,6 +549,7 @@ export class TerminalService extends EventEmitter {
     const session = this.sessions.get(id)
     if (!session) return
     this.sessions.delete(id)
+    this.claimedStreamIds.delete(id)
     this.pausedOutput.delete(id)
     this.activeStreamIds.delete(id)
     this.pausedStreamIds.delete(id)
