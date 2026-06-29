@@ -407,6 +407,8 @@
       "cursorStyleAria": "カーソルスタイル",
       "cursorBlink": "カーソル点滅",
       "cursorBlinkDesc": "オフの場合、カーソルは静止",
+      "hideCursor": "カーソルを隠す",
+      "hideCursorDesc": "ホスト端末のカーソルを描画せず、Claude Code などが独自に描画するカーソルを使います",
       "renderer": "レンダラー",
       "rendererDesc": "xterm はデフォルトで DOM。addon-webgl で WebGL を有効化します。",
       "rendererDom": "DOM（安定、デフォルト）",

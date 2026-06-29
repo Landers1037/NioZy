@@ -571,6 +571,8 @@
       "cursorStyleAria": "Cursor style",
       "cursorBlink": "Cursor blink",
       "cursorBlinkDesc": "When off, the cursor stays still",
+      "hideCursor": "Hide cursor",
+      "hideCursorDesc": "Do not draw the host terminal cursor; useful when tools like Claude Code render their own cursor",
       "renderer": "Renderer",
       "rendererDesc": "xterm uses DOM by default; addon-webgl enables WebGL rendering.",
       "rendererDom": "DOM (stable, default)",

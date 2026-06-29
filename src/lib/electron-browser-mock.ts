@@ -56,6 +56,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     synchronizedOutputEnabled: true,
     cursorStyle: 'block',
     cursorBlink: true,
+    hideCursor: false,
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     ligaturesEnabled: false,
     drawBoldTextInBrightColors: true,

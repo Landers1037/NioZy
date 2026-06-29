@@ -147,6 +147,7 @@ export interface AppSettings {
     renderer: TerminalRenderer
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean
+    hideCursor: boolean
     scrollback: number
     ligaturesEnabled: boolean
     drawBoldTextInBrightColors: boolean
@@ -266,6 +267,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     renderer: 'webgl',
     cursorStyle: 'block',
     cursorBlink: true,
+    hideCursor: false,
     scrollback: DEFAULT_TERMINAL_SCROLLBACK,
     ligaturesEnabled: false,
     drawBoldTextInBrightColors: true,
@@ -376,6 +378,10 @@ function buildAppSettingsFromStored(
         typeof stored.terminal?.cursorBlink === 'boolean'
           ? stored.terminal.cursorBlink
           : DEFAULT_SETTINGS.terminal.cursorBlink,
+      hideCursor:
+        typeof stored.terminal?.hideCursor === 'boolean'
+          ? stored.terminal.hideCursor
+          : DEFAULT_SETTINGS.terminal.hideCursor,
       scrollback: normalizeTerminalScrollback(stored.terminal?.scrollback),
       ligaturesEnabled: normalizeTerminalLigaturesEnabled(stored.terminal?.ligaturesEnabled),
       drawBoldTextInBrightColors: normalizeDrawBoldTextInBrightColors(

@@ -329,6 +329,7 @@ export function WterminalView({ tab, isFocused = false }: TerminalViewProps) {
       <div
         ref={hostRef}
         className="niozy-terminal-host h-full w-full overflow-hidden [&_.wterm]:!h-full [&_.wterm]:!w-full [&_.wterm]:!rounded-none [&_.wterm]:!p-0 [&_.wterm]:!shadow-none"
+        data-niozy-hide-cursor={settings?.terminal?.hideCursor === true ? 'true' : undefined}
       >
         {ghosttyCoreEnabled && ghosttyCoreLoading ? null : (
           <Terminal

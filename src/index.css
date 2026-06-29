@@ -1687,6 +1687,13 @@ html.window-dragging .niozy-terminal-host .wterm {
   padding-bottom: 10px;
 }
 
+.niozy-terminal-host[data-niozy-hide-cursor='true'] .xterm .xterm-cursor,
+.niozy-terminal-host[data-niozy-hide-cursor='true'] .xterm .xterm-cursor-layer,
+.niozy-terminal-host[data-niozy-hide-cursor='true'] .wterm .term-cursor {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 .niozy-mux-terminal-host .xterm-viewport {
   overflow-y: hidden !important;
 }

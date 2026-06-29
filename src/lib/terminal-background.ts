@@ -69,10 +69,17 @@ export function resolveTerminalThemeWithBackground(
   terminal: AppSettings['terminal'] | undefined,
 ): ITheme {
   const theme = resolveTerminalTheme(schemeId)
-  if (!hasTerminalBackgroundImage(terminal)) return theme
+  const themed = hasTerminalBackgroundImage(terminal)
+    ? {
+        ...theme,
+        background: getTerminalCellBackgroundColor(terminal),
+      }
+    : theme
+  if (terminal?.hideCursor !== true) return themed
   return {
-    ...theme,
-    background: getTerminalCellBackgroundColor(terminal),
+    ...themed,
+    cursor: 'transparent',
+    cursorAccent: 'transparent',
   }
 }
 

@@ -278,6 +278,8 @@ export interface AppSettings {
     renderer: TerminalRenderer
     cursorStyle: TerminalCursorStyle
     cursorBlink: boolean
+    /** 隐藏宿主终端光标，供交互式 CLI 自绘光标使用 */
+    hideCursor: boolean
     /** xterm scrollback 行数 */
     scrollback: number
     /** xterm 编程连字（ligatures），仅 xterm.js 生效 */

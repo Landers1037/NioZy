@@ -1140,6 +1140,7 @@ export function TerminalView({
               ? 'niozy-terminal-host niozy-terminal-has-bg-image h-full w-full overflow-hidden'
               : 'niozy-terminal-host h-full w-full overflow-hidden'
           }
+          data-niozy-hide-cursor={settings?.terminal?.hideCursor === true ? 'true' : undefined}
           data-niozy-renderer={runtimeRenderer}
           data-niozy-renderer-fallback={runtimeFallback ?? undefined}
           data-niozy-renderer-preference={rendererPreference}

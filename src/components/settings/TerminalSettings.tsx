@@ -225,6 +225,20 @@ export function TerminalSettings() {
         </SettingField>
 
         <SettingField
+          icon={TextCursor}
+          label={t('settings.terminal.hideCursor')}
+          description={t('settings.terminal.hideCursorDesc')}
+          row
+        >
+          <Switch
+            checked={settings.terminal.hideCursor}
+            onCheckedChange={(hideCursor) =>
+              patchSettings({ terminal: { ...settings.terminal, hideCursor } })
+            }
+          />
+        </SettingField>
+
+        <SettingField
           icon={ScrollText}
           label={t('settings.terminal.scrollback')}
           description={t('settings.terminal.scrollbackDesc')}

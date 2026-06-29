@@ -571,6 +571,8 @@
       "cursorStyleAria": "光标样式",
       "cursorBlink": "光标闪烁",
       "cursorBlinkDesc": "关闭后光标保持静止显示",
+      "hideCursor": "隐藏光标",
+      "hideCursorDesc": "不绘制宿主终端光标，适合使用 Claude Code 等工具自行渲染光标",
       "renderer": "渲染方式",
       "rendererDesc": "xterm 默认使用 DOM；addon-webgl 启用 WebGL 渲染。",
       "rendererDom": "DOM（稳定，默认）",
