@@ -1,7 +1,14 @@
 import type { TerminalCreateOptions } from './api-types'
 
-export const RESUME_TERM_SESSION_VERSION = 2
+export const RESUME_TERM_SESSION_VERSION = 3
 export const LEGACY_RESUME_TERM_SESSION_VERSION = 1
+export const LEGACY_RESUME_TERM_SESSION_VERSION_V2 = 2
+
+export interface SavedTerminalSplitLayout {
+  xRatio?: number
+  yRatio?: number
+  bottomXRatio?: number
+}
 
 export interface SavedTerminalPane {
   /** 本地终端 pane 的工作目录 */
@@ -19,6 +26,7 @@ export interface SavedTerminalTab {
   }
   activeSplitIndex?: number
   splitPaneCount: number
+  splitLayout?: SavedTerminalSplitLayout
   panes?: SavedTerminalPane[]
 }
 
@@ -51,7 +59,7 @@ function normalizeSavedTerminalTab(raw: unknown): SavedTerminalTab | null {
   if (typeof t.title !== 'string' || !t.title.trim()) return null
   const splitPaneCount =
     typeof t.splitPaneCount === 'number' && t.splitPaneCount >= 1
-      ? Math.min(Math.floor(t.splitPaneCount), 3)
+      ? Math.min(Math.floor(t.splitPaneCount), 4)
       : 1
 
   let terminalSpawn: SavedTerminalTab['terminalSpawn']
@@ -76,6 +84,18 @@ function normalizeSavedTerminalTab(raw: unknown): SavedTerminalTab | null {
     })
   }
 
+  let splitLayout: SavedTerminalSplitLayout | undefined
+  if (t.splitLayout && typeof t.splitLayout === 'object') {
+    const rawLayout = t.splitLayout as SavedTerminalSplitLayout
+    splitLayout = {
+      ...(typeof rawLayout.xRatio === 'number' ? { xRatio: rawLayout.xRatio } : {}),
+      ...(typeof rawLayout.yRatio === 'number' ? { yRatio: rawLayout.yRatio } : {}),
+      ...(typeof rawLayout.bottomXRatio === 'number'
+        ? { bottomXRatio: rawLayout.bottomXRatio }
+        : {}),
+    }
+  }
+
   return {
     title: t.title.trim(),
     ...(typeof t.customTitle === 'string' && t.customTitle.trim()
@@ -86,6 +106,7 @@ function normalizeSavedTerminalTab(raw: unknown): SavedTerminalTab | null {
     ...(terminalSpawn ? { terminalSpawn } : {}),
     ...(typeof t.activeSplitIndex === 'number' ? { activeSplitIndex: t.activeSplitIndex } : {}),
     splitPaneCount,
+    ...(splitLayout ? { splitLayout } : {}),
     ...(panes ? { panes } : {}),
   }
 }
@@ -157,6 +178,35 @@ function normalizeLegacyResumeTermSession(value: unknown): ResumeTermSession | n
   }
 }
 
+function normalizeV2ResumeTermSession(value: unknown): ResumeTermSession | null {
+  if (!value || typeof value !== 'object') return null
+  const v = value as {
+    version?: unknown
+    activeTabIndex?: unknown
+    tabs?: unknown
+  }
+  if (v.version !== LEGACY_RESUME_TERM_SESSION_VERSION_V2) return null
+  if (!Array.isArray(v.tabs)) return null
+
+  const tabs: SavedSessionTab[] = []
+  for (const raw of v.tabs) {
+    const tab = normalizeSavedSessionTab(raw)
+    if (tab) tabs.push(tab)
+  }
+  if (tabs.length === 0) return null
+
+  const activeTabIndex =
+    typeof v.activeTabIndex === 'number' && v.activeTabIndex >= 0
+      ? Math.min(Math.floor(v.activeTabIndex), tabs.length - 1)
+      : 0
+
+  return {
+    version: RESUME_TERM_SESSION_VERSION,
+    activeTabIndex,
+    tabs,
+  }
+}
+
 export function normalizeResumeTermSession(value: unknown): ResumeTermSession | null {
   if (!value || typeof value !== 'object') return null
   const v = value as {
@@ -168,6 +218,9 @@ export function normalizeResumeTermSession(value: unknown): ResumeTermSession | 
 
   if (v.version === LEGACY_RESUME_TERM_SESSION_VERSION) {
     return normalizeLegacyResumeTermSession(value)
+  }
+  if (v.version === LEGACY_RESUME_TERM_SESSION_VERSION_V2) {
+    return normalizeV2ResumeTermSession(value)
   }
   if (v.version !== RESUME_TERM_SESSION_VERSION) return null
   if (!Array.isArray(v.tabs)) return null

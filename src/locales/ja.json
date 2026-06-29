@@ -1518,7 +1518,7 @@
     "pomodoroCompleteDurationLabel": "達成時間",
     "sshDisconnected": "SSH 切断: {{title}}",
     "scpTransferDisabled": "先に 設定 → SSH で SCP 転送を有効にしてください",
-    "splitTerminalMax": "各ターミナルタブは最大 3 ペインまで",
+    "splitTerminalMax": "各ターミナルタブは最大 4 ペインまで",
     "splitTerminalUnknown": "分割できません: 再利用する起動オプションがありません",
     "cloneTerminalUnknown": "複製できません: 再利用する起動オプションがありません",
     "restartAsAdminUnsupported": "管理者として再起動はローカルの PowerShell、CMD、pwsh タブのみ",

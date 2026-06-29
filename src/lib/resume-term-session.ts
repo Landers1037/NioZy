@@ -12,6 +12,7 @@ import { getElectronAPI } from '@/lib/electron-client'
 import { toastTerminalError } from '@/lib/terminal-actions'
 import {
   getSplitPanes,
+  normalizeTerminalSplitLayout,
   normalizeTabAfterSplitChange,
   resolveTabTerminalSpawn,
 } from '@/lib/terminal-tab-utils'
@@ -85,6 +86,7 @@ function buildSavedTerminalTab(
     terminalSpawn: spawn,
     ...(tab.activeSplitIndex !== undefined ? { activeSplitIndex: tab.activeSplitIndex } : {}),
     splitPaneCount,
+    ...(tab.splitLayout ? { splitLayout: tab.splitLayout } : {}),
     ...(isLocal
       ? {
           panes: panes.map((p) => {
@@ -258,6 +260,9 @@ async function restoreSingleTerminalTab(
       terminalSpawn: spawn,
       sshDeferredConnect: true,
       deferredSplitPaneCount: paneCount,
+      ...(saved.splitLayout
+        ? { splitLayout: normalizeTerminalSplitLayout(saved.splitLayout, paneCount) }
+        : {}),
       ...(saved.activeSplitIndex !== undefined && paneCount > 1
         ? { activeSplitIndex: saved.activeSplitIndex }
         : {}),
@@ -356,6 +361,9 @@ async function restoreSingleTerminalTab(
       ? { sshConnectionId: saved.sshConnectionId ?? spawn.sshConnectionId }
       : {}),
     terminalSpawn: spawn,
+    ...(saved.splitLayout
+      ? { splitLayout: normalizeTerminalSplitLayout(saved.splitLayout, newPanes.length) }
+      : {}),
   }
 
   const tab = normalizeTabAfterSplitChange(base, newPanes, activeIdx)

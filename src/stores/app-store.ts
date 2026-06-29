@@ -1,7 +1,11 @@
 import { create } from 'zustand'
 import type { AppSettings, CustomConnection } from '../../electron/shared/api-types'
 import { getWindowsNativeEffectCardOpacity } from '../../electron/shared/api-types'
-import type { TabTerminalSpawn, TerminalSplitPane } from '@/lib/terminal-tab-utils'
+import type {
+  TabTerminalSpawn,
+  TerminalSplitLayout,
+  TerminalSplitPane,
+} from '@/lib/terminal-tab-utils'
 import { getAllTerminalIds } from '@/lib/terminal-tab-utils'
 import { scheduleTabRemovalSideEffects } from '@/lib/schedule-tab-removal-side-effects'
 import { scheduleTerminalKills } from '@/lib/schedule-terminal-kills'
@@ -58,8 +62,10 @@ export interface AppTab {
   shell?: string
   /** 由自定义 SSH 连接打开时关联的连接 id，用于 SCP 与断开告警 */
   sshConnectionId?: string
-  /** 横向拆分的子终端（含主 pane），最多 3 个 */
+  /** 拆分的子终端（含主 pane），最多 4 个 */
   splitPanes?: TerminalSplitPane[]
+  /** 拆分 pane 的布局与尺寸状态 */
+  splitLayout?: TerminalSplitLayout
   /** 拆分终端时复用的启动参数 */
   terminalSpawn?: TabTerminalSpawn
   /** 当前获得输入与输出流的拆分 pane 索引 */

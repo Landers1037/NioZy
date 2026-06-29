@@ -1768,7 +1768,7 @@
     "pomodoroCompleteDurationLabel": "达成目标",
     "sshDisconnected": "SSH 连接已断开：{{title}}",
     "scpTransferDisabled": "请先在设置 → SSH 中开启 SCP 传输",
-    "splitTerminalMax": "每个终端 Tab 最多拆分 3 个",
+    "splitTerminalMax": "每个终端 Tab 最多拆分 4 个",
     "splitTerminalUnknown": "无法拆分：缺少可复用的启动参数",
     "cloneTerminalUnknown": "无法复制：缺少可复用的启动参数",
     "restartAsAdminUnsupported": "仅支持在本机 PowerShell、CMD 或 pwsh 终端上以管理员身份重启",

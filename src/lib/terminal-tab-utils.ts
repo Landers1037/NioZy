@@ -6,15 +6,85 @@ import { getSshConnection } from '@/lib/ssh-connection'
 import { customConnectionToTerminalCreate } from '@/lib/connection-terminal-spawn'
 import type { BuiltinShellType } from '../../electron/shared/builtin-shells'
 
-export const MAX_TERMINAL_SPLITS = 3
+export const MAX_TERMINAL_SPLITS = 4
+const MIN_SPLIT_RATIO = 0.2
+const MAX_SPLIT_RATIO = 0.8
 
 export interface TerminalSplitPane {
   terminalId: string
 }
 
+export interface TerminalSplitLayout {
+  /** 2 pane / 4 pane 时左右分割比例 */
+  xRatio?: number
+  /** 3 pane / 4 pane 时上下分割比例 */
+  yRatio?: number
+  /** 3 pane 底部左右分割比例 */
+  bottomXRatio?: number
+}
+
 export interface TabTerminalSpawn {
   create: TerminalCreateOptions
   sshConnectionId?: string
+}
+
+function clampSplitRatio(value: number | undefined, fallback = 0.5): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.min(MAX_SPLIT_RATIO, Math.max(MIN_SPLIT_RATIO, value))
+}
+
+export function getDefaultTerminalSplitLayout(paneCount: number): TerminalSplitLayout | undefined {
+  if (paneCount <= 1) return undefined
+  if (paneCount === 2) return { xRatio: 0.5 }
+  if (paneCount === 3) return { yRatio: 0.5, bottomXRatio: 0.5 }
+  return { xRatio: 0.5, yRatio: 0.5 }
+}
+
+export function normalizeTerminalSplitLayout(
+  layout: TerminalSplitLayout | undefined,
+  paneCount: number,
+): TerminalSplitLayout | undefined {
+  if (paneCount <= 1) return undefined
+  const fallback = getDefaultTerminalSplitLayout(paneCount)
+  if (paneCount === 2) {
+    return { xRatio: clampSplitRatio(layout?.xRatio ?? fallback?.xRatio) }
+  }
+  if (paneCount === 3) {
+    return {
+      yRatio: clampSplitRatio(layout?.yRatio ?? fallback?.yRatio),
+      bottomXRatio: clampSplitRatio(layout?.bottomXRatio ?? layout?.xRatio ?? fallback?.bottomXRatio),
+    }
+  }
+  return {
+    xRatio: clampSplitRatio(layout?.xRatio ?? layout?.bottomXRatio ?? fallback?.xRatio),
+    yRatio: clampSplitRatio(layout?.yRatio ?? fallback?.yRatio),
+  }
+}
+
+export function deriveTerminalSplitLayoutForPaneCount(
+  prevLayout: TerminalSplitLayout | undefined,
+  paneCount: number,
+): TerminalSplitLayout | undefined {
+  if (paneCount <= 1) return undefined
+  if (paneCount === 2) {
+    return normalizeTerminalSplitLayout({ xRatio: prevLayout?.xRatio ?? prevLayout?.bottomXRatio }, 2)
+  }
+  if (paneCount === 3) {
+    return normalizeTerminalSplitLayout(
+      {
+        yRatio: prevLayout?.yRatio,
+        bottomXRatio: prevLayout?.bottomXRatio ?? prevLayout?.xRatio,
+      },
+      3,
+    )
+  }
+  return normalizeTerminalSplitLayout(
+    {
+      xRatio: prevLayout?.xRatio ?? prevLayout?.bottomXRatio,
+      yRatio: prevLayout?.yRatio,
+    },
+    4,
+  )
 }
 
 export function getSplitPanes(tab: AppTab): TerminalSplitPane[] {
@@ -112,13 +182,19 @@ export function normalizeTabAfterSplitChange(
   tab: AppTab,
   panes: TerminalSplitPane[],
   activeSplitIndex: number,
+  splitLayout?: TerminalSplitLayout,
 ): AppTab {
   const idx = Math.min(Math.max(0, activeSplitIndex), Math.max(0, panes.length - 1))
+  const nextSplitLayout = normalizeTerminalSplitLayout(
+    splitLayout ?? tab.splitLayout,
+    panes.length,
+  )
   const next: AppTab = {
     ...tab,
     terminalId: panes[0]?.terminalId,
     activeSplitIndex: panes.length > 1 ? idx : undefined,
     splitPanes: panes.length > 1 ? panes : undefined,
+    splitLayout: nextSplitLayout,
   }
   return next
 }

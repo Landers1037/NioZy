@@ -36,7 +36,10 @@ export function useResumeTermSessionSync(): void {
     .map((t) => {
       const ids = getAllTerminalIds(t)
       const cwds = ids.map((id) => terminalCwds[id] ?? '').join('|')
-      return `${t.id}:${t.title}:${t.customTitle ?? ''}:${t.activeSplitIndex ?? 0}:${t.sshDeferredConnect ? 'd' : ''}:${t.deferredSplitPaneCount ?? 0}:${ids.join(',')}:${cwds}`
+      const layoutKey = t.splitLayout
+        ? `${t.splitLayout.xRatio ?? ''},${t.splitLayout.yRatio ?? ''},${t.splitLayout.bottomXRatio ?? ''}`
+        : ''
+      return `${t.id}:${t.title}:${t.customTitle ?? ''}:${t.activeSplitIndex ?? 0}:${t.sshDeferredConnect ? 'd' : ''}:${t.deferredSplitPaneCount ?? 0}:${layoutKey}:${ids.join(',')}:${cwds}`
     })
     .join(';')
 

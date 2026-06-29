@@ -1768,7 +1768,7 @@
     "pomodoroCompleteDurationLabel": "Completed",
     "sshDisconnected": "SSH disconnected: {{title}}",
     "scpTransferDisabled": "Enable SCP transfer under Settings → SSH first",
-    "splitTerminalMax": "Each terminal tab can have at most 3 panes",
+    "splitTerminalMax": "Each terminal tab can have at most 4 panes",
     "splitTerminalUnknown": "Cannot split: missing spawn options to reuse",
     "cloneTerminalUnknown": "Cannot clone: missing spawn options to reuse",
     "restartAsAdminUnsupported": "Restart as administrator is only available for local PowerShell, CMD, or pwsh tabs",
