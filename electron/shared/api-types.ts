@@ -509,6 +509,10 @@ export interface ElectronAPI {
   agent: {
     ensureRuntime: () => Promise<import('./agent-types').AgentStateSnapshot>
     getState: () => Promise<import('./agent-types').AgentStateSnapshot>
+    getBinaryStatus: () => Promise<import('./agent-types').AgentBinaryStatus>
+    downloadBinary: (
+      overwrite: boolean,
+    ) => Promise<import('./agent-types').AgentBinaryDownloadResult>
     pickDirectory: () => Promise<string | null>
     searchFiles: (
       query: string,

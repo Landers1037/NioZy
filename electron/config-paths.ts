@@ -135,6 +135,17 @@ export function getAiSkillsDir(): string {
   return join(getAiDir(), 'skills')
 }
 
+/** NioZy Agent 二进制目录：%USERPROFILE%/.config/NioZy/niozy-agent-bin */
+export function getAgentBinaryDir(): string {
+  return join(getConfigDir(), 'niozy-agent-bin')
+}
+
+export function ensureAgentBinaryDir(): void {
+  ensureConfigDir()
+  const dir = getAgentBinaryDir()
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+}
+
 export function ensureAiDirs(): void {
   ensureConfigDir()
   for (const dir of [getAiDir(), getAiRulesDir(), getAiSkillsDir()]) {

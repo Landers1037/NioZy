@@ -17,9 +17,18 @@ import { useAppStore } from '@/stores/app-store'
 import { SettingField } from './SettingField'
 import { InputWithVaultPicker } from './InputWithVaultPicker'
 import { AiContextSettings } from './AiContextSettings'
-import { Bot, Brain, FileText, FolderOpen, Network, Paperclip } from 'lucide-react'
+import {
+  Bot,
+  Brain,
+  Download,
+  FileText,
+  FolderOpen,
+  Network,
+  Paperclip,
+} from 'lucide-react'
 import type { AiProvider } from '../../../electron/shared/ai-provider-settings'
 import type { AiSidebarWidthPreset } from '@/lib/ai-sidebar-width'
+import type { AgentBinaryStatus } from '../../../electron/shared/agent-types'
 import { AI_SIDEBAR_WIDTH_PRESETS, AI_SIDEBAR_WIDTH_PX } from '@/lib/ai-sidebar-width'
 import {
   AI_PROVIDERS,
@@ -58,6 +67,9 @@ export function AiSettings() {
   const [agentMaxTokensDraft, setAgentMaxTokensDraft] = useState(
     String(ai.niozyAgentMaxTokens),
   )
+  const [agentBinaryStatus, setAgentBinaryStatus] = useState<AgentBinaryStatus | null>(null)
+  const [checkingAgentBinary, setCheckingAgentBinary] = useState(false)
+  const [downloadingAgentBinary, setDownloadingAgentBinary] = useState(false)
   const presetModels = AI_PROVIDER_MODELS[ai.aiProvider]
   const modelSelectValue = isAiPresetModel(ai.aiProvider, ai.aiModel) ? ai.aiModel : ''
 
@@ -113,6 +125,60 @@ export function AiSettings() {
       aiBaseUrl: AI_PROVIDER_DEFAULT_BASE_URL[provider],
     })
   }
+
+  const refreshAgentBinaryStatus = useCallback(async () => {
+    setCheckingAgentBinary(true)
+    try {
+      const status = await getElectronAPI().agent.getBinaryStatus()
+      setAgentBinaryStatus(status)
+      return status
+    } catch {
+      toast.error(t('settings.ai.agentBinaryStatusFailed'))
+      return null
+    } finally {
+      setCheckingAgentBinary(false)
+    }
+  }, [t])
+
+  useEffect(() => {
+    void refreshAgentBinaryStatus()
+  }, [refreshAgentBinaryStatus])
+
+  const handleDownloadAgentBinary = useCallback(async () => {
+    if (downloadingAgentBinary) return
+    const status = (await refreshAgentBinaryStatus()) ?? agentBinaryStatus
+    if (!status) return
+    const shouldOverwrite =
+      status.downloadedBinaryExists &&
+      window.confirm(t('settings.ai.agentBinaryOverwriteConfirm', { path: status.downloadPath }))
+    if (status.downloadedBinaryExists && !shouldOverwrite) return
+
+    setDownloadingAgentBinary(true)
+    try {
+      const result = await getElectronAPI().agent.downloadBinary(shouldOverwrite)
+      if (!result.ok) {
+        toast.error(
+          t('settings.ai.agentBinaryDownloadFailed', {
+            error: result.error,
+          }),
+        )
+        return
+      }
+      await refreshAgentBinaryStatus()
+      toast.success(
+        t('settings.ai.agentBinaryDownloadSuccess', {
+          path: result.binaryPath,
+          tag: result.releaseTag,
+        }),
+      )
+    } finally {
+      setDownloadingAgentBinary(false)
+    }
+  }, [agentBinaryStatus, downloadingAgentBinary, refreshAgentBinaryStatus, t])
+
+  const agentBinarySourceLabel = agentBinaryStatus
+    ? t(`settings.ai.agentBinarySources.${agentBinaryStatus.activeSource}`)
+    : null
 
   return (
     <Card>
@@ -269,6 +335,47 @@ export function AiSettings() {
                   <FolderOpen className="size-4" />
                   {t('settings.ai.agentLogFileBrowse')}
                 </Button>
+              </div>
+            </SettingField>
+
+            <SettingField
+              icon={Download}
+              label={t('settings.ai.agentBinary')}
+              description={t('settings.ai.agentBinaryDesc')}
+            >
+              <div className="flex max-w-3xl flex-col gap-3">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={checkingAgentBinary || downloadingAgentBinary}
+                    onClick={() => void handleDownloadAgentBinary()}
+                  >
+                    <Download className="size-4" />
+                    {downloadingAgentBinary
+                      ? t('settings.ai.agentBinaryDownloading')
+                      : t('settings.ai.agentBinaryDetectDownload')}
+                  </Button>
+                </div>
+                {agentBinaryStatus ? (
+                  <div className="rounded-lg border border-border/70 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                    <div>
+                      {t('settings.ai.agentBinaryActiveSource', {
+                        source: agentBinarySourceLabel ?? agentBinaryStatus.activeSource,
+                      })}
+                    </div>
+                    <div className="break-all">
+                      {t('settings.ai.agentBinaryActivePath', {
+                        path: agentBinaryStatus.activePath,
+                      })}
+                    </div>
+                    <div className="break-all">
+                      {t('settings.ai.agentBinaryDownloadPath', {
+                        path: agentBinaryStatus.downloadPath,
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </SettingField>
           </div>

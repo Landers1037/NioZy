@@ -9,7 +9,12 @@ import type {
   SystemStatsData,
   VaultVariablePublic,
 } from '../../electron/shared/api-types'
-import type { AgentEvent, AgentFileSearchResult } from '../../electron/shared/agent-types'
+import type {
+  AgentBinaryDownloadResult,
+  AgentBinaryStatus,
+  AgentEvent,
+  AgentFileSearchResult,
+} from '../../electron/shared/agent-types'
 import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
@@ -329,6 +334,28 @@ const MOCK_AGENT_FILES: AgentFileSearchResult[] = [
   },
 ]
 
+const MOCK_AGENT_BINARY_STATUS: AgentBinaryStatus = {
+  activePath: 'C:\\Users\\User\\.config\\NioZy\\niozy-agent-bin\\niozy-agent.exe',
+  activeSource: 'config',
+  downloadDir: 'C:\\Users\\User\\.config\\NioZy\\niozy-agent-bin',
+  downloadPath: 'C:\\Users\\User\\.config\\NioZy\\niozy-agent-bin\\niozy-agent.exe',
+  downloadedBinaryExists: true,
+  candidatePaths: [
+    {
+      path: 'C:\\Users\\User\\Projects\\NioZy\\agent-runtime\\build\\agent\\niozy-agent.exe',
+      source: 'workspace',
+    },
+    {
+      path: 'C:\\Users\\User\\Projects\\NioZy\\out\\main\\agent\\niozy-agent.exe',
+      source: 'out',
+    },
+    {
+      path: 'C:\\Users\\User\\.config\\NioZy\\niozy-agent-bin\\niozy-agent.exe',
+      source: 'config',
+    },
+  ],
+}
+
 export type BrowserDevElectronAPI = ElectronAPI & { __browserDevMock: true }
 
 export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
@@ -432,6 +459,15 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         return structuredClone(mockAgentState)
       },
       getState: async () => structuredClone(mockAgentState),
+      getBinaryStatus: async () => structuredClone(MOCK_AGENT_BINARY_STATUS),
+      downloadBinary: async (overwrite) =>
+        ({
+          ok: true,
+          binaryPath: MOCK_AGENT_BINARY_STATUS.downloadPath,
+          releaseTag: 'v0.0.0-mock',
+          assetName: 'niozy-agent.exe',
+          overwritten: overwrite,
+        }) satisfies AgentBinaryDownloadResult,
       pickDirectory: async () => 'C:\\Users\\User\\Projects\\NioZy',
       searchFiles: async (query) => {
         const trimmed = query.trim().toLowerCase()

@@ -103,6 +103,10 @@ import { runConnectivityCheck } from '../connectivity-check-service'
 import { GitService } from '../git-service'
 import { WorkspaceService } from '../workspace-service'
 import { AgentService } from '../agent-service'
+import {
+  downloadLatestAgentBinary,
+  getAgentBinaryStatus,
+} from '../agent-runtime-download'
 import { listClaudeCodeSessions, listOpenCodeSessions } from '../session-service'
 import { getWindowBackgroundColor, shouldUseGlassWindowTransparency } from '../shared/ui-style'
 import { isElectronDev } from '../shared/is-dev'
@@ -1540,6 +1544,10 @@ ipcMain.handle('providers:activate', (_, id: string) => providerStore.activatePr
 ipcMain.handle('agent:getState', () => agentService.getState())
 ipcMain.handle('agent:ensureRuntime', () =>
   agentService.ensureRuntime(resolveAgentRuntimeConfigFromSettings()),
+)
+ipcMain.handle('agent:getBinaryStatus', () => getAgentBinaryStatus())
+ipcMain.handle('agent:downloadBinary', (_, overwrite: boolean) =>
+  downloadLatestAgentBinary(overwrite === true),
 )
 ipcMain.handle('agent:pickDirectory', () => workspaceService.pickDirectory(mainWindow))
 ipcMain.handle('agent:searchFiles', (_, query: string) => agentService.searchFiles(query))

@@ -66,3 +66,36 @@ export interface AgentFileSearchResult {
   relativePath: string
   name: string
 }
+
+export type AgentBinarySource = 'workspace' | 'out' | 'config' | 'packaged' | 'missing'
+
+export interface AgentBinaryStatus {
+  activePath: string
+  activeSource: AgentBinarySource
+  downloadDir: string
+  downloadPath: string
+  downloadedBinaryExists: boolean
+  candidatePaths: Array<{
+    path: string
+    source: Exclude<AgentBinarySource, 'missing'>
+  }>
+}
+
+export type AgentBinaryDownloadResult =
+  | {
+      ok: true
+      binaryPath: string
+      releaseTag: string
+      assetName: string
+      overwritten: boolean
+    }
+  | {
+      ok: false
+      error: string
+      code:
+        | 'ALREADY_EXISTS'
+        | 'NO_RELEASE_ASSET'
+        | 'AMBIGUOUS_RELEASE_ASSET'
+        | 'DOWNLOAD_FAILED'
+        | 'HTTP_ERROR'
+    }
