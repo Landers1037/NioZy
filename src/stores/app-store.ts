@@ -538,6 +538,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const removed = snapshot.tabs.filter((t) => idSet.has(t.id))
     const removedTerminalCount = removed.filter((t) => t.type === 'terminal').length
     const removedTabIds = removed.map((t) => t.id)
+    const removedTerminalIds = removed.flatMap((t) => getAllTerminalIds(t))
     const workspaceTerminalIds = removed
       .filter((t) => t.type === 'workspace' && t.terminalId)
       .map((t) => t.terminalId!)
@@ -571,7 +572,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { tabs, activeTabId, terminalCwds, sshDisconnectedTerminalIds }
     })
 
-    scheduleTabRemovalSideEffects(removedTabIds, removedTerminalCount, snapshot.settings)
+    scheduleTabRemovalSideEffects(
+      removedTabIds,
+      removedTerminalIds,
+      removedTerminalCount,
+      snapshot.settings,
+    )
   },
   setTerminalCwd: (terminalId, cwd) =>
     set((s) => ({

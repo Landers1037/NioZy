@@ -67,7 +67,7 @@ import {
 } from '@/lib/ssh-reconnect-actions'
 import { SshReconnectHint } from '@/components/terminal/SshReconnectHint'
 import { touchTabActivity } from '@/stores/inactive-tab-activity-store'
-import { getAttachPtySnapshotText, restoreTerminalBufferText } from '@/lib/terminal-buffer'
+import { getAttachPtySnapshotText } from '@/lib/terminal-buffer'
 import {
   restoreAttachPtyBufferAsync,
   restoreAttachPtyOffloadAsync,
@@ -105,6 +105,7 @@ import {
   useAttachPtySessionStore,
   type AttachPtyCommittedSession,
 } from '@/stores/attach-pty-session-store'
+import { useTerminalViewSnapshotStore } from '@/stores/terminal-view-snapshot-store'
 
 export type TerminalRuntimeRendererMode = 'dom' | 'webgl' | 'webgl-loading'
 
@@ -510,6 +511,22 @@ export function TerminalView({
     [detachAttachSession, safeFit, scheduleFit, attachPtyScrollbackOffload],
   )
 
+  const saveRegularTerminalSnapshot = useCallback(
+    (terminalId: string, term: Terminal) => {
+      const serializeAddon = serializeAddonRef.current
+      if (serializeAddon) {
+        useTerminalViewSnapshotStore
+          .getState()
+          .saveSnapshot(terminalId, serializeAttachPtyBuffer(term, serializeAddon), 'vt')
+        return
+      }
+      useTerminalViewSnapshotStore
+        .getState()
+        .saveSnapshot(terminalId, getAttachPtySnapshotText(term), 'plain')
+    },
+    [],
+  )
+
   useEffect(() => {
     if (isAttachHost) return
     if (!tab.terminalId || termRef.current || !containerRef.current) return
@@ -531,7 +548,10 @@ export function TerminalView({
     void (async () => {
       const s = useAppStore.getState().settings
       const emulator = getTerminalEmulator(s)
-      const { Terminal, FitAddon, ghostty } = await loadTerminalModules(emulator)
+      const { Terminal, FitAddon, ghostty, SerializeAddon } = await loadTerminalModules(
+        emulator,
+        { includeSerialize: emulator === 'xterm' },
+      )
 
       if (disposed || !containerRef.current) return
 
@@ -556,6 +576,11 @@ export function TerminalView({
 
       const fit = new FitAddon()
       term.loadAddon(fit)
+      if (SerializeAddon) {
+        const serializeAddon = new SerializeAddon()
+        term.loadAddon(serializeAddon)
+        serializeAddonRef.current = serializeAddon
+      }
       term.open(containerRef.current)
       unsubRenderFit = term.onRender(() => {
         if (safeFit(true)) {
@@ -574,9 +599,13 @@ export function TerminalView({
       registerTerminal(tab.terminalId!, term)
       boundTerminalIdRef.current = tab.terminalId!
 
-      const snap = useAttachPtySessionStore.getState().takeSnapshot(tab.id)
+      const snap = tab.terminalId
+        ? useTerminalViewSnapshotStore.getState().takeSnapshot(tab.terminalId)
+        : undefined
       if (snap?.bufferText) {
-        restoreTerminalBufferText(term, snap.bufferText)
+        await new Promise<void>((resolve) => {
+          restoreAttachPtyBufferAsync(term, snap.bufferText, snap.format, resolve)
+        })
       }
 
       applyTerminalShellAddons(
@@ -733,17 +762,24 @@ export function TerminalView({
       writeBatcherRef.current = null
       unsubLayoutFit?.()
       ro?.disconnect()
+      const snapshotTerminalId = tab.terminalId
+      const snapshotTerm = termRef.current
+      if (snapshotTerminalId && snapshotTerm) {
+        saveRegularTerminalSnapshot(snapshotTerminalId, snapshotTerm)
+      }
       if (tab.terminalId) {
         clearTerminalBracketedPasteState(tab.terminalId)
         unregisterTerminal(tab.terminalId)
       }
       shellAddonsRef.current = createTerminalShellAddonState()
       disposeTerminalLigaturesAddon(ligaturesAddonsRef.current)
+      serializeAddonRef.current?.dispose()
+      serializeAddonRef.current = null
       termRef.current?.dispose()
       termRef.current = null
       fitRef.current = null
     }
-  }, [tab.terminalId, scheduleFit, disposeWebgl, isAttachHost, safeFit])
+  }, [tab.terminalId, scheduleFit, disposeWebgl, isAttachHost, safeFit, saveRegularTerminalSnapshot])
 
   useEffect(() => {
     if (!isAttachHost || termRef.current || !containerRef.current) return

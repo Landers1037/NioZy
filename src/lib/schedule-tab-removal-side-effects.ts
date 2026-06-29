@@ -1,12 +1,14 @@
 import { recordTerminalTabClosed } from '@/lib/usage-statistics'
 import { useAttachPtySessionStore } from '@/stores/attach-pty-session-store'
 import { useInactiveTabActivityStore } from '@/stores/inactive-tab-activity-store'
+import { useTerminalViewSnapshotStore } from '@/stores/terminal-view-snapshot-store'
 import { useTabGroupStore } from '@/stores/tab-group-store'
 import type { AppSettings } from '../../electron/shared/api-types'
 
 /** Tab 列表已从 UI 移除后，在空闲时批量清理分组/活动记录等次要状态。 */
 export function scheduleTabRemovalSideEffects(
   removedTabIds: string[],
+  removedTerminalIds: string[],
   removedTerminalCount: number,
   settings: AppSettings | null | undefined,
 ): void {
@@ -16,6 +18,7 @@ export function scheduleTabRemovalSideEffects(
     if (removedTabIds.length > 0) {
       useInactiveTabActivityStore.getState().clearTabsActivity(removedTabIds)
       useTabGroupStore.getState().removeTabsFromAllGroups(removedTabIds)
+      useTerminalViewSnapshotStore.getState().clearSnapshots(removedTerminalIds)
 
       if (removedTabIds.some((id) => id.startsWith('workspace-'))) {
         void import('@/stores/workspace-store').then((m) => {
