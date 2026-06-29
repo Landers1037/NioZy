@@ -129,6 +129,7 @@ const api: ElectronAPI = {
     setModel: (model) => ipcRenderer.invoke('agent:setModel', model),
     setMode: (mode) => ipcRenderer.invoke('agent:setMode', mode),
     sendMessage: (input) => ipcRenderer.invoke('agent:sendMessage', input),
+    stopMessage: () => ipcRenderer.invoke('agent:stopMessage'),
     resetSession: () => ipcRenderer.invoke('agent:resetSession'),
     onEvent: (cb) => onAgentEvent(cb),
   },

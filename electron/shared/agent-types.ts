@@ -19,6 +19,7 @@ export interface AgentRuntimeConfig {
   model: string
   baseUrl: string
   apiKey: string
+  maxTokens: number
 }
 
 export interface AgentRuntimeStatus {
@@ -47,7 +48,7 @@ export type AgentEvent =
   | { type: 'message'; message: AgentMessage }
   | { type: 'messageDelta'; messageId: string; delta: string }
   | { type: 'messageDone'; messageId: string }
-  | { type: 'error'; message: string; fatal?: boolean }
+  | { type: 'error'; error: string; fatal?: boolean }
 
 export interface AgentSendMessageInput {
   text: string

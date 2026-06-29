@@ -1913,3 +1913,76 @@ html.window-dragging .niozy-terminal-host .wterm {
     opacity: 0.7;
   }
 }
+
+@keyframes agent-thinking-shine {
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+.agent-thinking-shiny {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--foreground) 54%, transparent);
+  background-image: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--foreground) 42%, transparent) 0%,
+    color-mix(in srgb, var(--foreground) 42%, transparent) 38%,
+    color-mix(in srgb, var(--foreground) 96%, transparent) 50%,
+    color-mix(in srgb, var(--foreground) 42%, transparent) 62%,
+    color-mix(in srgb, var(--foreground) 42%, transparent) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 200% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: agent-thinking-shine 2.1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-thinking-shiny {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
+.agent-markdown-surface {
+  --md-font-body: var(--font-sans);
+  --md-font-mono: 'NioZy0xProtoNerdMono', ui-monospace, monospace;
+  --md-font-size: 0.95rem;
+  --md-line-height: 1.65;
+  --md-text-color: var(--foreground);
+  --md-heading-color: var(--foreground);
+  --md-muted-color: var(--muted-foreground);
+  --md-link-color: var(--primary);
+  --md-accent: var(--primary);
+  --md-code-bg: color-mix(in srgb, var(--muted) 92%, transparent);
+  --md-code-color: var(--foreground);
+  --md-blockquote-border: color-mix(in srgb, var(--border) 90%, transparent);
+  --md-blockquote-bg: color-mix(in srgb, var(--muted) 48%, transparent);
+  --md-table-border: color-mix(in srgb, var(--border) 90%, transparent);
+  --md-hr-color: color-mix(in srgb, var(--border) 90%, transparent);
+  --md-max-width: 100%;
+  --md-padding-x: 0;
+  --md-padding-y: 0;
+}
+
+.agent-markdown-surface .markdown-prose {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.agent-markdown-surface .markdown-prose > :first-child {
+  margin-top: 0;
+}
+
+.agent-markdown-surface .markdown-prose > :last-child {
+  margin-bottom: 0;
+}

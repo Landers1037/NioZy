@@ -26,6 +26,7 @@ interface AgentStoreState {
   setModel: (model: string) => Promise<void>
   setMode: (mode: AgentMode) => Promise<void>
   sendMessage: (text: string) => Promise<void>
+  stopMessage: () => Promise<void>
   resetSession: () => Promise<void>
   applyEvent: (event: AgentEvent) => void
 }
@@ -122,6 +123,9 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     }
     await getElectronAPI().agent.sendMessage({ text: trimmed })
   },
+  stopMessage: async () => {
+    await getElectronAPI().agent.stopMessage()
+  },
   resetSession: async () => {
     const state = await getElectronAPI().agent.resetSession()
     set({
@@ -177,13 +181,13 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       return
     }
     if (event.type === 'error') {
-      if (event.message && event.message !== lastAgentErrorToast) {
-        lastAgentErrorToast = event.message
-        toast.error(event.message)
+      if (event.error && event.error !== lastAgentErrorToast) {
+        lastAgentErrorToast = event.error
+        toast.error(event.error)
       }
       set({
         connectionState: event.fatal ? 'error' : get().connectionState,
-        runtimeError: event.message,
+        runtimeError: event.error,
       })
     }
   },

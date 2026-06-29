@@ -516,6 +516,7 @@ export interface ElectronAPI {
     sendMessage: (
       input: import('./agent-types').AgentSendMessageInput,
     ) => Promise<import('./agent-types').AgentStateSnapshot>
+    stopMessage: () => Promise<import('./agent-types').AgentStateSnapshot>
     resetSession: () => Promise<import('./agent-types').AgentStateSnapshot>
     onEvent: (cb: (event: import('./agent-types').AgentEvent) => void) => () => void
   }

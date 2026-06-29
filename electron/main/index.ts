@@ -495,6 +495,7 @@ function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update
     'niozyAgentLogLevel',
     'niozyAgentLogToFile',
     'niozyAgentLogFile',
+    'niozyAgentMaxTokens',
     'openAiApiKey',
   ] as const
   return keys.some((key) => partial.experimental![key] !== undefined)
@@ -512,6 +513,7 @@ function resolveAgentRuntimeConfigFromSettings(): import('../shared/agent-types'
     model: resolved.model,
     baseUrl: resolved.baseUrl,
     apiKey: resolved.apiKey,
+    maxTokens: settingsStore.get().experimental.niozyAgentMaxTokens,
   }
 }
 
@@ -967,6 +969,7 @@ app.whenReady().then(async () => {
   await registerLocalFileProtocolHandler()
 
   settingsStore.load()
+  await agentService.updateConfig(resolveAgentRuntimeConfigFromSettings())
   syncGitPathFromSettings()
   vaultStore.load()
   const logging = settingsStore.get().logging
@@ -1550,6 +1553,7 @@ ipcMain.handle(
   (_, input: import('../shared/agent-types').AgentSendMessageInput) =>
     agentService.sendMessage(input.text, resolveAgentRuntimeConfigFromSettings()),
 )
+ipcMain.handle('agent:stopMessage', () => agentService.stopMessage())
 ipcMain.handle('agent:resetSession', () => agentService.resetSession())
 ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 

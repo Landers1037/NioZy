@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FolderOpen, GitBranch, Loader2, RefreshCcw, Send, Sparkles } from 'lucide-react'
+import { FolderOpen, GitBranch, Loader2, RefreshCcw, Send, Sparkles, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -13,13 +13,25 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { markdownToHtml } from '@/components/markdown-editor/render/markdown-pipeline'
 import { useAgentStore } from '@/stores/agent-store'
 import { useAppStore, type AppTab } from '@/stores/app-store'
+import '@/components/markdown-editor/theme/markdown-theme.css'
 
 const MODE_OPTIONS = ['plan', 'build'] as const
 
 interface AgentPanelProps {
   tab: AppTab
+}
+
+function AgentMarkdownContent({ content }: { content: string }) {
+  const html = useMemo(() => markdownToHtml(content), [content])
+
+  return (
+    <div className="agent-markdown-surface markdown-prose-root">
+      <div className="markdown-prose" dangerouslySetInnerHTML={{ __html: html }} />
+    </div>
+  )
 }
 
 function basenameFromPath(path: string): string {
@@ -44,10 +56,13 @@ export function AgentPanel({ tab }: AgentPanelProps) {
     setModel,
     setMode,
     sendMessage,
+    stopMessage,
     resetSession,
   } = useAgentStore()
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const [stopping, setStopping] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const safeMessages = messages.filter(
     (message): message is (typeof messages)[number] =>
       Boolean(message) &&
@@ -57,10 +72,21 @@ export function AgentPanel({ tab }: AgentPanelProps) {
       typeof message.createdAt === 'string',
   )
   const hasStreamingMessage = safeMessages.some((message) => message.streaming === true)
+  const inputLocked = sending || hasStreamingMessage
+  const lastMessage = safeMessages.at(-1)
 
   useEffect(() => {
     void bootstrap()
   }, [bootstrap, tab.id])
+
+  useEffect(() => {
+    const node = messagesEndRef.current
+    if (!node) return
+    const frame = window.requestAnimationFrame(() => {
+      node.scrollIntoView({ block: 'end' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [lastMessage?.id, lastMessage?.content, lastMessage?.streaming, hasStreamingMessage])
 
   const modelOptions = useMemo(() => {
     const provider = settings?.experimental.aiProvider ?? 'openai'
@@ -101,6 +127,16 @@ export function AgentPanel({ tab }: AgentPanelProps) {
       setDraft('')
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleStop = async () => {
+    if (!hasStreamingMessage) return
+    setStopping(true)
+    try {
+      await stopMessage()
+    } finally {
+      setStopping(false)
     }
   }
 
@@ -183,17 +219,21 @@ export function AgentPanel({ tab }: AgentPanelProps) {
                   <div className="mb-1 text-[11px] uppercase tracking-wide opacity-60">
                     {t(`agent.roles.${message.role}`)}
                   </div>
-                  <div className="whitespace-pre-wrap break-words">{message.content || (message.streaming ? '…' : '')}</div>
+                  {message.role === 'user' || message.role === 'error' ? (
+                    <div className="whitespace-pre-wrap break-words">
+                      {message.content || (message.streaming ? '…' : '')}
+                    </div>
+                  ) : (
+                    <AgentMarkdownContent content={message.content || (message.streaming ? '…' : '')} />
+                  )}
                 </div>
               ))}
               {hasStreamingMessage ? (
-                <div className="max-w-[85%] rounded-2xl border border-border/60 bg-background/80 px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                  <div className="mb-1 text-[11px] uppercase tracking-wide opacity-60">
-                    {t('agent.roles.status')}
-                  </div>
-                  <div>{t('agent.thinking')}</div>
+                <div className="max-w-[85%] px-1 py-2 text-sm">
+                  <span className="agent-thinking-shiny">Thinking</span>
                 </div>
               ) : null}
+              <div ref={messagesEndRef} aria-hidden="true" />
             </div>
           </ScrollArea>
 
@@ -203,7 +243,9 @@ export function AgentPanel({ tab }: AgentPanelProps) {
               onChange={(e) => setDraft(e.currentTarget.value)}
               placeholder={t('agent.inputPlaceholder')}
               className="min-h-28 bg-transparent"
+              disabled={inputLocked}
               onKeyDown={(e) => {
+                if (inputLocked) return
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault()
                   void handleSubmit()
@@ -218,10 +260,17 @@ export function AgentPanel({ tab }: AgentPanelProps) {
                   dir: selectedDir || t('agent.noDirectory'),
                 })}
               </div>
-              <Button onClick={() => void handleSubmit()} disabled={sending || !draft.trim()}>
-                {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                {t('agent.send')}
-              </Button>
+              {hasStreamingMessage ? (
+                <Button variant="secondary" onClick={() => void handleStop()} disabled={stopping}>
+                  {stopping ? <Loader2 className="size-4 animate-spin" /> : <Square className="size-4 fill-current" />}
+                  {t('agent.running')}
+                </Button>
+              ) : (
+                <Button onClick={() => void handleSubmit()} disabled={inputLocked || !draft.trim()}>
+                  {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                  {t('agent.send')}
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>

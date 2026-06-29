@@ -25,6 +25,7 @@ type RuntimeCommand =
   | { type: 'set-model'; model: string }
   | { type: 'set-mode'; mode: AgentMode }
   | { type: 'send-message'; text: string }
+  | { type: 'stop' }
   | { type: 'reset' }
 
 function createDefaultSession(model: string): AgentSessionState {
@@ -45,17 +46,40 @@ function cloneSession(session: AgentSessionState): AgentSessionState {
   }
 }
 
+function sameRuntimeConfig(
+  left: AgentRuntimeConfig | null,
+  right: AgentRuntimeConfig,
+): boolean {
+  if (!left) return false
+  return (
+    left.provider === right.provider &&
+    left.model === right.model &&
+    left.baseUrl === right.baseUrl &&
+    left.apiKey === right.apiKey &&
+    left.maxTokens === right.maxTokens
+  )
+}
+
 export class AgentService {
   private runtime: ChildProcessWithoutNullStreams | null = null
   private runtimeStatus: AgentRuntimeStatus = { state: 'idle' }
   private session: AgentSessionState = createDefaultSession('')
   private lastConfig: AgentRuntimeConfig | null = null
+  private pendingReady:
+    | {
+        promise: Promise<AgentStateSnapshot>
+        resolve: (state: AgentStateSnapshot) => void
+        settled: boolean
+      }
+    | null = null
 
   constructor(
     private readonly workspaceService: WorkspaceService,
     private readonly getMainWindow: () => BrowserWindow | null,
     private readonly getExperimentalSettings: () => ExperimentalSettings,
-  ) {}
+  ) {
+    this.session = createDefaultSession(this.getExperimentalSettings().aiModel)
+  }
 
   getState(): AgentStateSnapshot {
     return {
@@ -65,11 +89,17 @@ export class AgentService {
   }
 
   async ensureRuntime(config: AgentRuntimeConfig): Promise<AgentStateSnapshot> {
+    const configChanged = !sameRuntimeConfig(this.lastConfig, config)
     this.lastConfig = config
     this.session = { ...this.session, model: config.model }
     if (this.runtime) {
-      this.sendCommand({ type: 'update-config', config })
-      this.broadcastSession()
+      if (this.runtimeStatus.state === 'starting' && this.pendingReady) {
+        return this.pendingReady.promise
+      }
+      if (configChanged) {
+        this.sendCommand({ type: 'update-config', config })
+        this.broadcastSession()
+      }
       return this.getState()
     }
 
@@ -83,24 +113,31 @@ export class AgentService {
     this.runtime = child
 
     const readyState = new Promise<AgentStateSnapshot>((resolve) => {
-      child.once('spawn', () => {
-        mainLog.info('[Agent] runtime spawned', {
-          binaryPath,
-          args: runtimeArgs,
-          pid: child.pid,
-        })
-        this.setRuntimeStatus({ state: 'ready', pid: child.pid })
-        this.sendCommand({ type: 'init', config, session: this.session })
-        resolve(this.getState())
-      })
+      this.pendingReady = {
+        promise: Promise.resolve(this.getState()),
+        resolve,
+        settled: false,
+      }
+    })
+    if (this.pendingReady) {
+      this.pendingReady.promise = readyState
+    }
 
-      child.once('error', (error) => {
-        mainLog.error('[Agent] runtime process error', { message: error.message })
-        this.runtime = null
-        this.setRuntimeStatus({ state: 'error', lastError: error.message })
-        this.emitEvent({ type: 'error', message: error.message, fatal: true })
-        resolve(this.getState())
+    child.once('spawn', () => {
+      mainLog.info('[Agent] runtime spawned', {
+        binaryPath,
+        args: runtimeArgs,
+        pid: child.pid,
       })
+      this.sendCommand({ type: 'init', config, session: this.session })
+    })
+
+    child.once('error', (error) => {
+      mainLog.error('[Agent] runtime process error', { message: error.message })
+      this.runtime = null
+      this.setRuntimeStatus({ state: 'error', lastError: error.message })
+      this.emitEvent({ type: 'error', error: error.message, fatal: true })
+      this.resolvePendingReady()
     })
 
     child.once('exit', (_code, signal) => {
@@ -110,6 +147,7 @@ export class AgentService {
         state: 'error',
         lastError: `Agent runtime exited${signal ? ` (${signal})` : ''}`,
       })
+      this.resolvePendingReady()
     })
 
     createInterface({ input: child.stdout }).on('line', (line) => {
@@ -122,7 +160,7 @@ export class AgentService {
           message,
           line,
         })
-        this.emitEvent({ type: 'error', message: `Invalid runtime event: ${message}` })
+        this.emitEvent({ type: 'error', error: `Invalid runtime event: ${message}` })
       }
     })
 
@@ -169,6 +207,9 @@ export class AgentService {
   async sendMessage(text: string, config: AgentRuntimeConfig): Promise<AgentStateSnapshot> {
     if (!text.trim()) return this.getState()
     await this.ensureRuntime(config)
+    if (!this.runtime || this.runtimeStatus.state !== 'ready') {
+      return this.getState()
+    }
     const userMessage: AgentMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -197,6 +238,14 @@ export class AgentService {
     return this.getState()
   }
 
+  async stopMessage(): Promise<AgentStateSnapshot> {
+    if (!this.runtime || this.runtimeStatus.state !== 'ready') {
+      return this.getState()
+    }
+    this.sendCommand({ type: 'stop' })
+    return this.getState()
+  }
+
   private applyRuntimeEvent(event: AgentEvent): void {
     if (event.type === 'runtime') {
       this.runtimeStatus = { ...event.runtime }
@@ -204,8 +253,12 @@ export class AgentService {
       return
     }
     if (event.type === 'session') {
-      this.session = cloneSession(event.session)
-      this.emitEvent({ type: 'session', session: cloneSession(this.session) })
+      if (this.runtimeStatus.state === 'starting') {
+        this.session = cloneSession(event.session)
+        this.setRuntimeStatus({ state: 'ready', pid: this.runtime?.pid })
+        this.resolvePendingReady()
+        this.emitEvent({ type: 'session', session: cloneSession(this.session) })
+      }
       return
     }
     if (event.type === 'message') {
@@ -239,7 +292,8 @@ export class AgentService {
       return
     }
     if (event.type === 'error') {
-      this.runtimeStatus = { state: 'error', lastError: event.message }
+      this.runtimeStatus = { state: 'error', lastError: event.error }
+      this.resolvePendingReady()
       this.emitEvent({ type: 'runtime', runtime: { ...this.runtimeStatus } })
       this.emitEvent(event)
     }
@@ -263,9 +317,21 @@ export class AgentService {
     sendToRenderer(this.getMainWindow(), 'agent:event', event)
   }
 
+  private resolvePendingReady(): void {
+    if (!this.pendingReady || this.pendingReady.settled) return
+    this.pendingReady.settled = true
+    this.pendingReady.resolve(this.getState())
+    this.pendingReady = null
+  }
+
   private buildRuntimeArgs(): string[] {
     const experimental = this.getExperimentalSettings()
-    const args = ['-log-level', experimental.niozyAgentLogLevel]
+    const args = [
+      '-log-level',
+      experimental.niozyAgentLogLevel,
+      '-max-tokens',
+      String(experimental.niozyAgentMaxTokens),
+    ]
     if (experimental.niozyAgentLogToFile) {
       const target =
         experimental.niozyAgentLogFile.trim() || join(tmpdir(), 'niozy-agent.log')

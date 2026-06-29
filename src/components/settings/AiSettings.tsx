@@ -33,7 +33,10 @@ import {
   normalizeAiModel,
   normalizeAiRuntimePort,
 } from '@/lib/ai-provider-options'
-import { NIOZY_AGENT_LOG_LEVELS } from '../../../electron/shared/experimental-settings'
+import {
+  DEFAULT_NIOZY_AGENT_MAX_TOKENS,
+  NIOZY_AGENT_LOG_LEVELS,
+} from '../../../electron/shared/experimental-settings'
 
 export function AiSettings() {
   const { t } = useTranslation()
@@ -46,11 +49,15 @@ export function AiSettings() {
   const baseUrlFocusRef = useRef(ai.aiBaseUrl)
   const modelFocusRef = useRef(ai.aiModel)
   const runtimePortFocusRef = useRef(ai.aiRuntimePort)
+  const agentMaxTokensFocusRef = useRef(ai.niozyAgentMaxTokens)
   const [apiKeyDraft, setApiKeyDraft] = useState(ai.aiApiKey)
   const [baseUrlDraft, setBaseUrlDraft] = useState(ai.aiBaseUrl)
   const [modelDraft, setModelDraft] = useState(ai.aiModel)
   const [runtimePortDraft, setRuntimePortDraft] = useState(String(ai.aiRuntimePort))
   const [agentLogFileDraft, setAgentLogFileDraft] = useState(ai.niozyAgentLogFile)
+  const [agentMaxTokensDraft, setAgentMaxTokensDraft] = useState(
+    String(ai.niozyAgentMaxTokens),
+  )
   const presetModels = AI_PROVIDER_MODELS[ai.aiProvider]
   const modelSelectValue = isAiPresetModel(ai.aiProvider, ai.aiModel) ? ai.aiModel : ''
 
@@ -73,6 +80,10 @@ export function AiSettings() {
   useEffect(() => {
     setAgentLogFileDraft(ai.niozyAgentLogFile)
   }, [ai.niozyAgentLogFile])
+
+  useEffect(() => {
+    setAgentMaxTokensDraft(String(ai.niozyAgentMaxTokens))
+  }, [ai.niozyAgentMaxTokens])
 
   const patchAi = (partial: Partial<typeof ai>) =>
     patchSettings({
@@ -172,6 +183,36 @@ export function AiSettings() {
                   ))}
                 </SelectContent>
               </Select>
+            </SettingField>
+
+            <SettingField
+              icon={Bot}
+              label={t('settings.ai.agentMaxTokens')}
+              description={t('settings.ai.agentMaxTokensDesc')}
+            >
+              <Input
+                type="number"
+                min={1}
+                className="max-w-xs font-mono text-sm"
+                value={agentMaxTokensDraft}
+                placeholder={String(DEFAULT_NIOZY_AGENT_MAX_TOKENS)}
+                onFocus={() => {
+                  agentMaxTokensFocusRef.current = ai.niozyAgentMaxTokens
+                }}
+                onChange={(e) => setAgentMaxTokensDraft(e.currentTarget.value)}
+                onBlur={(e) => {
+                  const parsed = Number(e.currentTarget.value)
+                  const next =
+                    Number.isFinite(parsed) && parsed > 0
+                      ? Math.max(1, Math.round(parsed))
+                      : DEFAULT_NIOZY_AGENT_MAX_TOKENS
+                  setAgentMaxTokensDraft(String(next))
+                  if (next === agentMaxTokensFocusRef.current) return
+                  patchAi({ niozyAgentMaxTokens: next }).catch(() =>
+                    toast.error(t('settings.vault.saveFailed')),
+                  )
+                }}
+              />
             </SettingField>
 
             <SettingField

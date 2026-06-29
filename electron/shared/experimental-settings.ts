@@ -35,6 +35,7 @@ export const MAX_GHOSTTY_SCROLLBACK_LIMIT = 50_000
 export const DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 300
 export const MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 0
 export const MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 5_000
+export const DEFAULT_NIOZY_AGENT_MAX_TOKENS = 4096
 
 export interface ExperimentalSettings {
   /** 终端模拟器实现：xterm（默认）、ghostty（ghostty-web）或 wterm（实验） */
@@ -95,6 +96,8 @@ export interface ExperimentalSettings {
   niozyAgentLogToFile: boolean
   /** NioZy Agent 日志文件路径 */
   niozyAgentLogFile: string
+  /** NioZy Agent 单次请求最大输出 token 数 */
+  niozyAgentMaxTokens: number
   /** 已启用规则 id → true；未列入或 false 表示不注入对话上下文 */
   aiRuleStates: AiRuleStates
   /** @deprecated 迁移至 aiApiKey */
@@ -131,6 +134,7 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   niozyAgentLogLevel: 'INFO',
   niozyAgentLogToFile: false,
   niozyAgentLogFile: '',
+  niozyAgentMaxTokens: DEFAULT_NIOZY_AGENT_MAX_TOKENS,
   aiRuleStates: {},
   jsSandboxEnabled: false,
 }
@@ -149,6 +153,12 @@ export function normalizeNiozyAgentLogLevel(
 
 export function normalizeNiozyAgentLogFile(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+export function normalizeNiozyAgentMaxTokens(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return DEFAULT_NIOZY_AGENT_MAX_TOKENS
+  return Math.max(1, Math.round(n))
 }
 
 export function normalizeTerminalEmulator(value: unknown): TerminalEmulator {
@@ -207,6 +217,7 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     niozyAgentLogLevel: normalizeNiozyAgentLogLevel(o.niozyAgentLogLevel),
     niozyAgentLogToFile: o.niozyAgentLogToFile === true,
     niozyAgentLogFile: normalizeNiozyAgentLogFile(o.niozyAgentLogFile),
+    niozyAgentMaxTokens: normalizeNiozyAgentMaxTokens(o.niozyAgentMaxTokens),
     aiRuleStates: normalizeAiRuleStates(o.aiRuleStates),
     jsSandboxEnabled: o.jsSandboxEnabled === true,
   }

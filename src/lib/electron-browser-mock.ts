@@ -461,6 +461,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         emitAgentEvent({ type: 'messageDone', messageId: assistantId })
         return structuredClone(mockAgentState)
       },
+      stopMessage: async () => structuredClone(mockAgentState),
       resetSession: async () => {
         mockAgentState.session.messages = []
         emitAgentSession()
