@@ -22,6 +22,7 @@ import {
   Brain,
   Download,
   FileText,
+  Search,
   FolderOpen,
   Network,
   Paperclip,
@@ -68,6 +69,7 @@ export function AiSettings() {
     String(ai.niozyAgentMaxTokens),
   )
   const [agentBinaryStatus, setAgentBinaryStatus] = useState<AgentBinaryStatus | null>(null)
+  const [agentBinaryPathDraft, setAgentBinaryPathDraft] = useState('')
   const [checkingAgentBinary, setCheckingAgentBinary] = useState(false)
   const [downloadingAgentBinary, setDownloadingAgentBinary] = useState(false)
   const presetModels = AI_PROVIDER_MODELS[ai.aiProvider]
@@ -131,6 +133,7 @@ export function AiSettings() {
     try {
       const status = await getElectronAPI().agent.getBinaryStatus()
       setAgentBinaryStatus(status)
+      setAgentBinaryPathDraft(status.activeSource === 'missing' ? '' : status.activePath)
       return status
     } catch {
       toast.error(t('settings.ai.agentBinaryStatusFailed'))
@@ -344,17 +347,39 @@ export function AiSettings() {
               description={t('settings.ai.agentBinaryDesc')}
             >
               <div className="flex max-w-3xl flex-col gap-3">
+                <div className="flex max-w-xl flex-col gap-1.5">
+                  <span className="text-xs text-muted-foreground">
+                    {t('settings.ai.agentBinaryPath')}
+                  </span>
+                  <Input
+                    value={agentBinaryPathDraft}
+                    readOnly
+                    placeholder={t('settings.ai.agentBinaryPathPlaceholder')}
+                    className="font-mono text-sm"
+                  />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="outline"
                     disabled={checkingAgentBinary || downloadingAgentBinary}
+                    onClick={() => void refreshAgentBinaryStatus()}
+                  >
+                    <Search className="size-4" />
+                    {checkingAgentBinary
+                      ? t('settings.ai.agentBinaryDetecting')
+                      : t('settings.ai.agentBinaryDetect')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={downloadingAgentBinary || checkingAgentBinary}
                     onClick={() => void handleDownloadAgentBinary()}
                   >
                     <Download className="size-4" />
                     {downloadingAgentBinary
                       ? t('settings.ai.agentBinaryDownloading')
-                      : t('settings.ai.agentBinaryDetectDownload')}
+                      : t('settings.ai.agentBinaryDownload')}
                   </Button>
                 </div>
                 {agentBinaryStatus ? (
