@@ -825,6 +825,22 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
         URL.revokeObjectURL(url)
         return { ok: true, path: defaultFileName }
       },
+      resolveImagePath: async (markdownFilePath, imagePath) => {
+        if (!imagePath.trim()) return { ok: false as const, error: 'INVALID_PATH' }
+        const absolute =
+          /^[a-zA-Z]:[\\/]/.test(imagePath) || imagePath.startsWith('/')
+            ? imagePath
+            : (() => {
+                const normalizedBase = markdownFilePath.replace(/\\/g, '/')
+                const baseDir = normalizedBase.slice(0, normalizedBase.lastIndexOf('/'))
+                return `${baseDir}/${imagePath}`.replace(/\/+/g, '/')
+              })()
+        return {
+          ok: true as const,
+          path: absolute,
+          url: `niozy-local://preview?path=${encodeURIComponent(absolute)}`,
+        }
+      },
     },
     logging: {
       openLogDirectory: async () => undefined,

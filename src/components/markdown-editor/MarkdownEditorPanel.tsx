@@ -106,6 +106,7 @@ export function MarkdownEditorPanel({ tab }: MarkdownEditorPanelProps) {
           content={doc.content}
           onChange={doc.handleContentChange}
           theme={theme}
+          markdownFilePath={tab.markdownFilePath}
           className="flex-1"
         />
       )}

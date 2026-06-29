@@ -11,6 +11,7 @@ interface MarkdownEditorSurfaceProps {
   onChange: (value: string) => void
   theme: MarkdownThemeConfig
   className?: string
+  markdownFilePath?: string
 }
 
 export function MarkdownEditorSurface({
@@ -19,6 +20,7 @@ export function MarkdownEditorSurface({
   onChange,
   theme,
   className,
+  markdownFilePath,
 }: MarkdownEditorSurfaceProps) {
   const { isWysiwyg, mode } = useMarkdownModeSync(tabId)
   const wysiwygFlushRef = useRef<(() => void) | null>(null)
@@ -39,6 +41,7 @@ export function MarkdownEditorSurface({
           onChange={onChange}
           theme={theme}
           className="h-full"
+          markdownFilePath={markdownFilePath}
           registerFlush={(fn) => {
             wysiwygFlushRef.current = fn
           }}

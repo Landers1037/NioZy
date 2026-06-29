@@ -706,6 +706,10 @@ export interface ElectronAPI {
     saveFile: (
       input: import('./markdown-file-types').MarkdownSaveFileInput,
     ) => Promise<import('./markdown-file-types').MarkdownSaveFileResult>
+    resolveImagePath: (
+      markdownFilePath: string,
+      imagePath: string,
+    ) => Promise<import('./markdown-file-types').MarkdownResolveImagePathResult>
   }
   logging: {
     /** 在资源管理器中打开日志文件所在目录 */

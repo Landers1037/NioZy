@@ -400,7 +400,10 @@ async function restoreSingleMarkdownTab(
       editorStore.removeSession(tabId)
       return null
     }
-    editorStore.setContent(tabId, result.content, { dirty: false })
+    editorStore.setContent(tabId, result.content, {
+      dirty: false,
+      persistedContent: result.content,
+    })
     resumeTermLog.info('restore markdown tab ok', { index, tabId, path: saved.markdownFilePath })
   }
 

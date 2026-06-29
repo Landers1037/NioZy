@@ -13,6 +13,7 @@ import type { Root as MdastRoot } from 'mdast'
 import { toMarkdown } from 'mdast-util-to-markdown'
 import { gfmToMarkdown } from 'mdast-util-gfm'
 import { mathToMarkdown } from 'mdast-util-math'
+import { getElectronAPI } from '@/lib/electron-client'
 
 const sanitizeSchema = {
   ...defaultSchema,
@@ -138,6 +139,34 @@ export function parseMarkdownToMdast(markdown: string): MdastRoot {
 export function markdownToHtml(markdown: string): string {
   const file = htmlProcessor.processSync(markdown)
   return String(file)
+}
+
+export async function resolveMarkdownHtmlImageSources(
+  root: HTMLElement,
+  markdownFilePath?: string,
+): Promise<void> {
+  if (!markdownFilePath) return
+
+  const images = Array.from(root.querySelectorAll('img'))
+  if (images.length === 0) return
+
+  await Promise.all(
+    images.map(async (img) => {
+      const src = img.getAttribute('src')?.trim()
+      if (!src) return
+      if (/^(https?:|data:|blob:|file:|niozy-local:)/i.test(src)) return
+
+      try {
+        const result = await getElectronAPI().markdown.resolveImagePath(markdownFilePath, src)
+        if (!result.ok) return
+        img.setAttribute('data-md-original-src', src)
+        img.setAttribute('src', result.url)
+        img.setAttribute('data-md-resolved-path', result.path)
+      } catch {
+        // Ignore resolution failures and leave the original src untouched.
+      }
+    }),
+  )
 }
 
 export function mdastToMarkdown(tree: MdastRoot): string {
@@ -278,7 +307,7 @@ function inlineMarkdown(el: HTMLElement): string {
     } else if (tag === 'br') out += '\n'
     else if (tag === 'img') {
       const alt = child.getAttribute('alt') ?? ''
-      const src = child.getAttribute('src') ?? ''
+      const src = child.getAttribute('data-md-original-src') ?? child.getAttribute('src') ?? ''
       out += `![${alt}](${src})`
     } else out += inner
   }

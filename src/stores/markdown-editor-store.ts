@@ -6,6 +6,7 @@ export type MarkdownEditorMode = 'wysiwyg' | 'source'
 
 export interface MarkdownTabSession {
   content: string
+  persistedContent: string
   dirty: boolean
   mode: MarkdownEditorMode
   themeId: string
@@ -15,6 +16,7 @@ export interface MarkdownTabSession {
 
 const DEFAULT_SESSION: MarkdownTabSession = {
   content: '',
+  persistedContent: '',
   dirty: false,
   mode: 'wysiwyg',
   themeId: getDefaultMarkdownThemeId(),
@@ -26,7 +28,11 @@ interface MarkdownEditorState {
   sessions: Record<string, MarkdownTabSession>
   ensureSession: (tabId: string) => void
   removeSession: (tabId: string) => void
-  setContent: (tabId: string, content: string, options?: { dirty?: boolean }) => void
+  setContent: (
+    tabId: string,
+    content: string,
+    options?: { dirty?: boolean; persistedContent?: string },
+  ) => void
   setDirty: (tabId: string, dirty: boolean) => void
   setMode: (tabId: string, mode: MarkdownEditorMode) => void
   setThemeId: (tabId: string, themeId: string) => void
@@ -54,13 +60,15 @@ export const useMarkdownEditorStore = create<MarkdownEditorState>((set, get) => 
   setContent: (tabId, content, options) =>
     set((s) => {
       const prev = s.sessions[tabId] ?? DEFAULT_SESSION
+      const persistedContent = options?.persistedContent ?? prev.persistedContent
       return {
         sessions: {
           ...s.sessions,
           [tabId]: {
             ...prev,
             content,
-            dirty: options?.dirty ?? prev.dirty,
+            persistedContent,
+            dirty: options?.dirty ?? content !== persistedContent,
           },
         },
       }

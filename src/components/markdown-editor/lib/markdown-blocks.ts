@@ -61,7 +61,7 @@ function splitMarkdownBlocks(markdown: string): BlockSegment[] {
 
     if (nextAt < 0) {
       const tail = markdown.slice(cursor)
-      if (tail.trim() || segments.length === 0) {
+      if (tail.length > 0 || segments.length === 0) {
         segments.push({ kind: 'html', content: tail })
       }
       break
@@ -69,7 +69,7 @@ function splitMarkdownBlocks(markdown: string): BlockSegment[] {
 
     if (nextAt > 0) {
       const before = markdown.slice(cursor, cursor + nextAt)
-      if (before.trim()) segments.push({ kind: 'html', content: before })
+      segments.push({ kind: 'html', content: before })
       cursor += nextAt
     }
 

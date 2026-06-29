@@ -23,14 +23,18 @@ export function findMarkdownTabByPath(filePath: string): string | null {
 export function openMarkdownTabWithContent(filePath: string, content: string, title?: string) {
   const existingId = findMarkdownTabByPath(filePath)
   if (existingId) {
-    useMarkdownEditorStore.getState().setContent(existingId, content, { dirty: false })
+    useMarkdownEditorStore
+      .getState()
+      .setContent(existingId, content, { dirty: false, persistedContent: content })
     useAppStore.getState().setActiveTab(existingId)
     return existingId
   }
 
   const tabId = `markdown-${randomUUID()}`
   useMarkdownEditorStore.getState().ensureSession(tabId)
-  useMarkdownEditorStore.getState().setContent(tabId, content, { dirty: false })
+  useMarkdownEditorStore
+    .getState()
+    .setContent(tabId, content, { dirty: false, persistedContent: content })
 
   const tab = {
     id: tabId,

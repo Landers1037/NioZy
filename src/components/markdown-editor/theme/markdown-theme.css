@@ -33,7 +33,47 @@
 .markdown-prose :where(h4) { font-size: 1.1em; }
 
 .markdown-prose :where(p) {
-  margin-block: 0.75em;
+  margin-block: 0.5em;
+}
+
+.markdown-prose .markdown-html-segment > :first-child {
+  margin-top: 0;
+}
+
+.markdown-prose .markdown-html-segment > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-html-segment {
+  border-radius: 8px;
+}
+
+.markdown-html-segment:hover {
+  background: color-mix(in oklch, var(--md-code-bg) 45%, transparent);
+}
+
+.markdown-html-segment-editing {
+  margin-block: 0.5em;
+}
+
+.markdown-html-segment-textarea {
+  width: 100%;
+  min-height: 6rem;
+  resize: vertical;
+  border: 1px solid var(--md-table-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--md-text-color);
+  padding: 0.75rem 0.875rem;
+  font: inherit;
+  line-height: inherit;
+  outline: none;
+  white-space: pre-wrap;
+}
+
+.markdown-html-segment-textarea:focus {
+  border-color: var(--md-link-color);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--md-link-color) 60%, transparent);
 }
 
 .markdown-prose :where(a) {
@@ -105,6 +145,7 @@
   max-width: 100%;
   height: auto;
   border-radius: 6px;
+  cursor: zoom-in;
 }
 
 .markdown-prose :where(.task-list-item) {

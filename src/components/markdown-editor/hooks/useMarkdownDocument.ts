@@ -13,7 +13,6 @@ export function useMarkdownDocument(tabId: string, filePath: string | undefined)
   const session = useMarkdownEditorStore((s) => s.sessions[tabId])
   const ensureSession = useMarkdownEditorStore((s) => s.ensureSession)
   const setContent = useMarkdownEditorStore((s) => s.setContent)
-  const setDirty = useMarkdownEditorStore((s) => s.setDirty)
   const setLoading = useMarkdownEditorStore((s) => s.setLoading)
   const setLoadError = useMarkdownEditorStore((s) => s.setLoadError)
 
@@ -43,7 +42,7 @@ export function useMarkdownDocument(tabId: string, filePath: string | undefined)
           }
           return
         }
-        setContent(tabId, result.content, { dirty: false })
+        setContent(tabId, result.content, { dirty: false, persistedContent: result.content })
       })
       .finally(() => {
         if (!cancelled) setLoading(tabId, false)
@@ -55,14 +54,15 @@ export function useMarkdownDocument(tabId: string, filePath: string | undefined)
 
   const handleContentChange = useCallback(
     (next: string) => {
-      setContent(tabId, next, { dirty: true })
+      setContent(tabId, next)
     },
     [setContent, tabId],
   )
 
   const save = useCallback(
     async (saveAs = false) => {
-      const content = useMarkdownEditorStore.getState().sessions[tabId]?.content ?? ''
+      const current = useMarkdownEditorStore.getState().sessions[tabId]
+      const content = current?.content ?? ''
       const result = await getElectronAPI().markdown.saveFile({
         content,
         defaultFileName: defaultFileNameFromPath(filePath),
@@ -73,11 +73,11 @@ export function useMarkdownDocument(tabId: string, filePath: string | undefined)
         toast.error(t('markdownEditor.saveFailed'))
         return null
       }
-      setDirty(tabId, false)
+      setContent(tabId, content, { dirty: false, persistedContent: content })
       toast.success(t('markdownEditor.saveSuccess'))
       return result.path
     },
-    [filePath, setDirty, t, tabId],
+    [filePath, setContent, t, tabId],
   )
 
   const openFromDialog = useCallback(async () => {

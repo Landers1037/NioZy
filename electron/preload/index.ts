@@ -295,6 +295,8 @@ const api: ElectronAPI = {
     readFile: (filePath) => ipcRenderer.invoke('markdown:readFile', filePath),
     openFile: () => ipcRenderer.invoke('markdown:openFile'),
     saveFile: (input) => ipcRenderer.invoke('markdown:saveFile', input),
+    resolveImagePath: (markdownFilePath, imagePath) =>
+      ipcRenderer.invoke('markdown:resolveImagePath', markdownFilePath, imagePath),
   },
   logging: {
     openLogDirectory: () => ipcRenderer.invoke('logging:openLogDirectory') as Promise<void>,

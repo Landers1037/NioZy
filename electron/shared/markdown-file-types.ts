@@ -17,3 +17,7 @@ export type MarkdownSaveFileResult =
   | { ok: true; path: string }
   | { ok: false; canceled: true }
   | { ok: false; error: 'WRITE_FAILED' }
+
+export type MarkdownResolveImagePathResult =
+  | { ok: true; path: string; url: string }
+  | { ok: false; error: 'NOT_FOUND' | 'INVALID_PATH' | 'READ_FAILED' }

@@ -8,7 +8,7 @@ import {
   dialog,
   screen,
 } from 'electron'
-import { dirname, join } from 'path'
+import { dirname, isAbsolute, join, normalize, resolve } from 'path'
 import { existsSync } from 'fs'
 import { readFile, stat, writeFile } from 'fs/promises'
 import { fileURLToPath } from 'node:url'
@@ -119,6 +119,7 @@ import {
   registerLocalFileScheme,
   registerLocalFileProtocolHandler,
 } from '../local-file-protocol'
+import { buildLocalPreviewUrl } from '../shared/local-file-url'
 import { LinkPreviewManager } from '../link-preview-manager'
 import { applySessionProxy } from '../session-proxy'
 import {
@@ -1489,6 +1490,39 @@ ipcMain.handle(
       return { ok: true, path: targetPath }
     } catch {
       return { ok: false, error: 'WRITE_FAILED' as const }
+    }
+  },
+)
+
+ipcMain.handle(
+  'markdown:resolveImagePath',
+  async (_, markdownFilePath: string, imagePath: string) => {
+    const base = markdownFilePath?.trim()
+    const raw = imagePath?.trim()
+    if (!base || !raw) return { ok: false as const, error: 'INVALID_PATH' as const }
+    if (/^(https?:|data:|blob:|file:|niozy-local:)/i.test(raw)) {
+      return { ok: false as const, error: 'INVALID_PATH' as const }
+    }
+
+    const resolvedPath = normalize(
+      isAbsolute(raw) ? raw : resolve(dirname(base), raw),
+    )
+
+    try {
+      const info = await stat(resolvedPath)
+      if (!info.isFile()) {
+        return { ok: false as const, error: 'NOT_FOUND' as const }
+      }
+      return {
+        ok: true as const,
+        path: resolvedPath,
+        url: buildLocalPreviewUrl(resolvedPath),
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
+        return { ok: false as const, error: 'NOT_FOUND' as const }
+      }
+      return { ok: false as const, error: 'READ_FAILED' as const }
     }
   },
 )
