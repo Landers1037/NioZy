@@ -6,12 +6,18 @@ export type AgentConnectionState = 'idle' | 'starting' | 'ready' | 'error'
 
 export type AgentMessageRole = 'user' | 'assistant' | 'system' | 'status' | 'error'
 
+export interface AgentReferencedFile {
+  path: string
+  relativePath: string
+}
+
 export interface AgentMessage {
   id: string
   role: AgentMessageRole
   content: string
   createdAt: string
   streaming?: boolean
+  referencedFiles?: AgentReferencedFile[]
 }
 
 export interface AgentRuntimeConfig {
@@ -52,4 +58,11 @@ export type AgentEvent =
 
 export interface AgentSendMessageInput {
   text: string
+  referencedFiles?: AgentReferencedFile[]
+}
+
+export interface AgentFileSearchResult {
+  path: string
+  relativePath: string
+  name: string
 }

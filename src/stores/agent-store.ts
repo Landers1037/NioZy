@@ -5,8 +5,10 @@ import { toast } from 'sonner'
 import type {
   AgentConnectionState,
   AgentEvent,
+  AgentFileSearchResult,
   AgentMessage,
   AgentMode,
+  AgentReferencedFile,
 } from '../../electron/shared/agent-types'
 
 interface AgentStoreState {
@@ -25,7 +27,8 @@ interface AgentStoreState {
   setSelectedDir: (dir: string) => Promise<void>
   setModel: (model: string) => Promise<void>
   setMode: (mode: AgentMode) => Promise<void>
-  sendMessage: (text: string) => Promise<void>
+  searchFiles: (query: string) => Promise<AgentFileSearchResult[]>
+  sendMessage: (text: string, referencedFiles?: AgentReferencedFile[]) => Promise<void>
   stopMessage: () => Promise<void>
   resetSession: () => Promise<void>
   applyEvent: (event: AgentEvent) => void
@@ -109,7 +112,11 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     const state = await getElectronAPI().agent.setMode(mode)
     set({ mode: state.session.mode })
   },
-  sendMessage: async (text) => {
+  searchFiles: async (query) => {
+    if (!get().selectedDir.trim()) return []
+    return getElectronAPI().agent.searchFiles(query)
+  },
+  sendMessage: async (text, referencedFiles = []) => {
     const trimmed = text.trim()
     if (!trimmed) return
     if (!get().selectedDir.trim()) {
@@ -121,7 +128,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       })
       return
     }
-    await getElectronAPI().agent.sendMessage({ text: trimmed })
+    await getElectronAPI().agent.sendMessage({ text: trimmed, referencedFiles })
   },
   stopMessage: async () => {
     await getElectronAPI().agent.stopMessage()

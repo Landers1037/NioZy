@@ -1542,6 +1542,7 @@ ipcMain.handle('agent:ensureRuntime', () =>
   agentService.ensureRuntime(resolveAgentRuntimeConfigFromSettings()),
 )
 ipcMain.handle('agent:pickDirectory', () => workspaceService.pickDirectory(mainWindow))
+ipcMain.handle('agent:searchFiles', (_, query: string) => agentService.searchFiles(query))
 ipcMain.handle('agent:setWorkspaceDir', (_, dir: string) => agentService.setWorkspaceDir(dir))
 ipcMain.handle('agent:setModel', (_, model: string) => agentService.setModel(model))
 ipcMain.handle(
@@ -1551,7 +1552,11 @@ ipcMain.handle(
 ipcMain.handle(
   'agent:sendMessage',
   (_, input: import('../shared/agent-types').AgentSendMessageInput) =>
-    agentService.sendMessage(input.text, resolveAgentRuntimeConfigFromSettings()),
+    agentService.sendMessage(
+      input.text,
+      input.referencedFiles ?? [],
+      resolveAgentRuntimeConfigFromSettings(),
+    ),
 )
 ipcMain.handle('agent:stopMessage', () => agentService.stopMessage())
 ipcMain.handle('agent:resetSession', () => agentService.resetSession())

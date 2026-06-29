@@ -98,11 +98,13 @@ export type {
 export type {
   AgentMode,
   AgentMessage,
+  AgentReferencedFile,
   AgentRuntimeStatus,
   AgentSessionState,
   AgentStateSnapshot,
   AgentEvent,
   AgentSendMessageInput,
+  AgentFileSearchResult,
 } from './agent-types'
 export type { NoteItem } from './note-types'
 export type {
@@ -508,6 +510,9 @@ export interface ElectronAPI {
     ensureRuntime: () => Promise<import('./agent-types').AgentStateSnapshot>
     getState: () => Promise<import('./agent-types').AgentStateSnapshot>
     pickDirectory: () => Promise<string | null>
+    searchFiles: (
+      query: string,
+    ) => Promise<import('./agent-types').AgentFileSearchResult[]>
     setWorkspaceDir: (dir: string) => Promise<import('./agent-types').AgentStateSnapshot>
     setModel: (model: string) => Promise<import('./agent-types').AgentStateSnapshot>
     setMode: (

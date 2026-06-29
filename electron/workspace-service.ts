@@ -2,7 +2,7 @@ import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { tmpdir } from 'os'
-import { join, normalize, relative, resolve, sep } from 'path'
+import { basename, join, normalize, relative, resolve, sep } from 'path'
 import type { BrowserWindow } from 'electron'
 import { dialog } from 'electron'
 import type { GitService } from './git-service'
@@ -18,6 +18,7 @@ import type {
   WorkspaceGitStatusResponse,
   WorkspaceListDirResponse,
 } from './shared/workspace-types'
+import type { AgentFileSearchResult } from './shared/agent-types'
 
 /** Git 在 core.quotepath=true 时会把非 ASCII 路径转成八进制转义，需解码 */
 function unquoteGitPath(raw: string): string {
@@ -148,8 +149,72 @@ async function runGit(
   })
 }
 
+function basenameWithoutExt(fileName: string): string {
+  const dotIndex = fileName.lastIndexOf('.')
+  return dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName
+}
+
 export class WorkspaceService {
   constructor(private readonly gitService: GitService) {}
+
+  async searchFiles(workDir: string, query: string, limit = 8): Promise<AgentFileSearchResult[]> {
+    const normalizedRoot = resolve(workDir)
+    if (!existsSync(normalizedRoot)) return []
+    let rootStat
+    try {
+      rootStat = await stat(normalizedRoot)
+    } catch {
+      return []
+    }
+    if (!rootStat.isDirectory()) return []
+
+    const trimmed = query.trim().toLowerCase()
+    const tokens = trimmed.split(/[/\\\s._-]+/).filter(Boolean)
+    const results: Array<AgentFileSearchResult & { score: number }> = []
+    const maxResults = Math.max(1, limit)
+    const maxVisited = 5000
+    let visited = 0
+
+    const walk = async (dirPath: string): Promise<void> => {
+      if (visited >= maxVisited || results.length >= maxResults * 4) return
+      let entries
+      try {
+        entries = await readdir(dirPath, { withFileTypes: true })
+      } catch {
+        return
+      }
+      for (const entry of entries) {
+        if (visited >= maxVisited || results.length >= maxResults * 4) break
+        if (entry.name === '.git' || entry.name === 'node_modules') continue
+        const fullPath = join(dirPath, entry.name)
+        visited += 1
+        if (entry.isDirectory()) {
+          await walk(fullPath)
+          continue
+        }
+        if (!entry.isFile()) continue
+        const relativePath = relative(normalizedRoot, fullPath).split(sep).join('/')
+        const score = scoreFileMatch(relativePath, entry.name, trimmed, tokens)
+        if (score <= 0) continue
+        results.push({
+          path: fullPath,
+          relativePath,
+          name: entry.name,
+          score,
+        })
+      }
+    }
+
+    await walk(normalizedRoot)
+
+    return results
+      .sort((left, right) => {
+        if (right.score !== left.score) return right.score - left.score
+        return left.relativePath.localeCompare(right.relativePath)
+      })
+      .slice(0, maxResults)
+      .map(({ path, relativePath, name }) => ({ path, relativePath, name }))
+  }
 
   async listDir(dirPath: string): Promise<WorkspaceListDirResponse> {
     try {
@@ -440,4 +505,32 @@ export class WorkspaceService {
       output: pushResult.stdout.trim() || pushResult.stderr.trim() || 'Pushed',
     }
   }
+}
+
+function scoreFileMatch(
+  relativePath: string,
+  fileName: string,
+  query: string,
+  tokens: string[],
+): number {
+  if (!query) return 1
+  const relativeLower = relativePath.toLowerCase()
+  const fileLower = fileName.toLowerCase()
+  const baseLower = basenameWithoutExt(fileName).toLowerCase()
+
+  let score = 0
+  if (fileLower === query) score += 200
+  if (baseLower === query) score += 180
+  if (relativeLower === query) score += 170
+  if (fileLower.startsWith(query)) score += 140
+  if (baseLower.startsWith(query)) score += 130
+  if (relativeLower.startsWith(query)) score += 120
+  if (fileLower.includes(query)) score += 90
+  if (relativeLower.includes(query)) score += 70
+
+  for (const token of tokens) {
+    if (fileLower.includes(token)) score += 25
+    if (relativeLower.includes(token)) score += 12
+  }
+  return score
 }

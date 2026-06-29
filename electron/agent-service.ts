@@ -2,15 +2,18 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'child_process'
 import { createInterface } from 'readline'
 import type { BrowserWindow } from 'electron'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { join, relative } from 'path'
+import { readFile } from 'fs/promises'
 import type { WorkspaceService } from './workspace-service'
 import { resolveAgentBinaryPath } from './agent-binary-path'
 import { sendToRenderer } from './main/window-ipc'
 import { mainLog } from './app-log'
 import type {
   AgentEvent,
+  AgentFileSearchResult,
   AgentMessage,
   AgentMode,
+  AgentReferencedFile,
   AgentRuntimeConfig,
   AgentRuntimeStatus,
   AgentSessionState,
@@ -190,6 +193,12 @@ export class AgentService {
     return this.getState()
   }
 
+  async searchFiles(query: string): Promise<AgentFileSearchResult[]> {
+    const workspaceDir = this.session.workspaceDir.trim()
+    if (!workspaceDir) return []
+    return this.workspaceService.searchFiles(workspaceDir, query)
+  }
+
   async setModel(model: string): Promise<AgentStateSnapshot> {
     this.session = { ...this.session, model }
     if (this.runtime) this.sendCommand({ type: 'set-model', model })
@@ -204,24 +213,31 @@ export class AgentService {
     return this.getState()
   }
 
-  async sendMessage(text: string, config: AgentRuntimeConfig): Promise<AgentStateSnapshot> {
+  async sendMessage(
+    text: string,
+    referencedFiles: AgentReferencedFile[],
+    config: AgentRuntimeConfig,
+  ): Promise<AgentStateSnapshot> {
     if (!text.trim()) return this.getState()
     await this.ensureRuntime(config)
     if (!this.runtime || this.runtimeStatus.state !== 'ready') {
       return this.getState()
     }
+    const normalizedReferences = dedupeReferencedFiles(referencedFiles)
+    const prompt = await this.buildPromptWithReferences(text, normalizedReferences)
     const userMessage: AgentMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: text,
       createdAt: new Date().toISOString(),
+      referencedFiles: normalizedReferences,
     }
     this.session = {
       ...this.session,
       messages: [...this.session.messages, userMessage],
     }
     this.broadcastSession()
-    this.sendCommand({ type: 'send-message', text })
+    this.sendCommand({ type: 'send-message', text: prompt })
     return this.getState()
   }
 
@@ -339,4 +355,59 @@ export class AgentService {
     }
     return args
   }
+
+  private async buildPromptWithReferences(
+    text: string,
+    referencedFiles: AgentReferencedFile[],
+  ): Promise<string> {
+    if (referencedFiles.length === 0) return text
+    const workspaceDir = this.session.workspaceDir.trim()
+    if (!workspaceDir) return text
+
+    const sections: string[] = []
+    for (const file of referencedFiles) {
+      try {
+        const content = await readFile(file.path, 'utf8')
+        sections.push(
+          [
+            `File: ${file.relativePath}`,
+            '```',
+            content,
+            '```',
+          ].join('\n'),
+        )
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        sections.push(
+          [
+            `File: ${file.relativePath}`,
+            `[Failed to read file: ${message}]`,
+          ].join('\n'),
+        )
+      }
+    }
+
+    return [
+      'Referenced project files:',
+      ...sections,
+      '',
+      'User request:',
+      text,
+    ].join('\n')
+  }
+}
+
+function dedupeReferencedFiles(files: AgentReferencedFile[]): AgentReferencedFile[] {
+  const seen = new Set<string>()
+  const normalized: AgentReferencedFile[] = []
+  for (const file of files) {
+    if (!file.path || !file.relativePath) continue
+    if (seen.has(file.path)) continue
+    seen.add(file.path)
+    normalized.push({
+      path: file.path,
+      relativePath: file.relativePath.split('\\').join('/'),
+    })
+  }
+  return normalized
 }

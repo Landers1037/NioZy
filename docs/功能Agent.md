@@ -1,10 +1,11 @@
 # 功能：Agent
 
-`NioZy Agent` 是内置在主界面中的对话式工程 Agent 工作台，采用 **Electron Main ↔ Go agent-runtime ↔ 上游 LLM** 的 IPC 架构，支持项目目录上下文、模型/模式切换、流式回复、停止生成、Markdown 渲染与基础会话管理。
+`NioZy Agent` 是内置在主界面中的对话式工程 Agent 工作台，采用 **Electron Main ↔ Go agent-runtime ↔ 上游 LLM** 的 IPC 架构，支持项目目录上下文、模型/模式切换、流式回复、停止生成、Markdown 渲染、`@文件` 搜索引用与基础会话管理。
 
 ## 功能列表
 
 - Agent 独立 Tab（`agent` 类型）
+- 打开 Agent Tab 自动启动并连接 runtime
 - 项目目录选择与 Git 分支展示
 - 模型选择与模式切换（`plan` / `build`）
 - 读取 AI 特性中的提供商 / 模型 / Base URL / API Key 配置
@@ -14,6 +15,10 @@
 - 回复 Markdown 渲染
 - Thinking 状态文本效果
 - 新消息 / 流式增量自动滚动到底部
+- 输入框 `@` 搜索当前项目目录文件
+- 鼠标 / 键盘确认文件引用，支持一次附加多个文件
+- 引用文件以标签展示，不把 `@路径` 文本保留在输入框中
+- 文件候选列表支持高亮、自动滚动、显式竖向滚动条与鼠标滚轮
 - NioZy Agent 专属日志级别、日志文件、`max-tokens` 配置
 
 ## 进程归属
@@ -95,6 +100,12 @@ Agent 会话保存在 `AgentSessionState`：
 - `content`
 - `createdAt`
 - `streaming`
+- `referencedFiles`
+
+其中 `referencedFiles` 为 UI 侧维护的引用文件元数据：
+
+- `path`
+- `relativePath`
 
 Go runtime 内部也维护同构 `ipc.Session` / `ipc.Message`，保证主进程与子进程之间的会话状态一致。
 
@@ -107,6 +118,7 @@ Go runtime 内部也维护同构 `ipc.Session` / `ipc.Message`，保证主进程
 | `agent:getState` | 读取当前快照 |
 | `agent:ensureRuntime` | 启动并初始化 runtime |
 | `agent:pickDirectory` | 选择项目目录 |
+| `agent:searchFiles` | 搜索当前项目目录文件 |
 | `agent:setWorkspaceDir` | 更新工作目录与分支 |
 | `agent:setModel` | 切换模型 |
 | `agent:setMode` | 切换模式 |
@@ -180,7 +192,7 @@ Agent 运行配置来自 **设置 → AI 特性**：
 - 发送消息前
 - AI 特性设置保存后
 
-另外，`AgentService` 增加了配置变更比较，避免 runtime 已运行时每次发送都重复下发 `update-config`，从而减少旧 `session` 覆盖新消息的竞态。
+另外，`AgentService` 增加了配置变更比较，避免 runtime 已运行时每次发送都重复下发 `update-config`，从而减少旧 `session` 覆盖新消息的竞态。渲染层在 Agent Tab 完成 `bootstrap()` 后，会在 runtime 仍为 `idle/error` 时自动调用 `ensureRuntime()`，因此通常不需要再手动点击“连接”按钮。
 
 ## Max Tokens
 
@@ -230,6 +242,53 @@ assistant / system 消息复用了 Markdown 编辑器的统一管线：
 - streaming 状态变化
 
 这样可以在流式输出过程中持续跟随最新回复。
+
+### `@` 文件引用
+
+Agent 输入框支持类似 Codex 的 `@文件` 搜索与引用：
+
+1. 输入框检测当前光标前是否存在活动中的 `@query`
+2. 命中后调用 `agent:searchFiles`
+3. Main 进程转给 `WorkspaceService.searchFiles()` 在当前 `workspaceDir` 下遍历文件并评分
+4. 渲染层展示候选列表，支持：
+   - `ArrowUp` / `ArrowDown` 上下切换
+   - `Enter` 确认当前高亮项
+   - 鼠标 `hover` 切换高亮
+   - 鼠标点击确认
+5. 确认后不把 `@路径` 文本保留在输入框中，而是转成上方的引用标签
+6. 单条消息可附加多个文件，发送后用户消息气泡中也会显示这些引用标签
+
+对应核心文件：
+
+- `src/components/agent/AgentPanel.tsx`
+- `src/stores/agent-store.ts`
+- `electron/agent-service.ts`
+- `electron/workspace-service.ts`
+- `electron/shared/agent-types.ts`
+
+### 引用文件如何传给模型
+
+Go runtime IPC 协议本身没有新增“文件附件”字段；当前实现是在 Electron 主进程里把所选文件内容展开为上下文块，再拼到真正发往 runtime 的 prompt：
+
+- UI 消息 `content` 仍保留用户原始输入文本
+- `referencedFiles` 仅用于展示和状态同步
+- `AgentService.buildPromptWithReferences()` 会读取每个文件内容
+- 最终发送给 runtime 的文本结构为：
+  - `Referenced project files:`
+  - 每个文件一个 `File: relativePath` + fenced code block
+  - `User request:`
+  - 用户原始问题
+
+这样既保留了现有 runtime 协议，又让模型能拿到严格的文件上下文。
+
+### 文件候选列表滚动与滚动条
+
+当候选列表高度超出时：
+
+- 当前高亮项变化会触发 `scrollIntoView({ block: 'nearest' })`
+- 列表显式展示竖向滚动条
+- 支持鼠标滚轮滚动
+- 列表左右保留内边距，避免高亮边框被外层边框遮挡
 
 ## 设置项
 

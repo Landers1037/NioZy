@@ -9,7 +9,7 @@ import type {
   SystemStatsData,
   VaultVariablePublic,
 } from '../../electron/shared/api-types'
-import type { AgentEvent } from '../../electron/shared/agent-types'
+import type { AgentEvent, AgentFileSearchResult } from '../../electron/shared/agent-types'
 import { DEFAULT_SHORTCUTS } from '../../electron/shared/shortcuts'
 import { DEFAULT_BUILTIN_CONNECTIONS } from '../../electron/shared/builtin-shells'
 import { DEFAULT_SSH_SETTINGS } from '../../electron/shared/ssh-settings'
@@ -311,6 +311,24 @@ function emitAgentSession(): void {
   emitAgentEvent({ type: 'session', session: structuredClone(mockAgentState.session) })
 }
 
+const MOCK_AGENT_FILES: AgentFileSearchResult[] = [
+  {
+    path: 'C:\\Users\\User\\Projects\\NioZy\\docs\\功能Agent.md',
+    relativePath: 'docs/功能Agent.md',
+    name: '功能Agent.md',
+  },
+  {
+    path: 'C:\\Users\\User\\Projects\\NioZy\\docs\\功能AI助手边栏.md',
+    relativePath: 'docs/功能AI助手边栏.md',
+    name: '功能AI助手边栏.md',
+  },
+  {
+    path: 'C:\\Users\\User\\Projects\\NioZy\\src\\components\\agent\\AgentPanel.tsx',
+    relativePath: 'src/components/agent/AgentPanel.tsx',
+    name: 'AgentPanel.tsx',
+  },
+]
+
 export type BrowserDevElectronAPI = ElectronAPI & { __browserDevMock: true }
 
 export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
@@ -415,6 +433,15 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       },
       getState: async () => structuredClone(mockAgentState),
       pickDirectory: async () => 'C:\\Users\\User\\Projects\\NioZy',
+      searchFiles: async (query) => {
+        const trimmed = query.trim().toLowerCase()
+        if (!trimmed) return MOCK_AGENT_FILES.slice(0, 8)
+        return MOCK_AGENT_FILES.filter(
+          (item) =>
+            item.name.toLowerCase().includes(trimmed) ||
+            item.relativePath.toLowerCase().includes(trimmed),
+        ).slice(0, 8)
+      },
       setWorkspaceDir: async (dir) => {
         mockAgentState.session.workspaceDir = dir
         mockAgentState.session.gitBranch = dir ? 'main' : null
@@ -439,6 +466,7 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
           role: 'user',
           content: input.text,
           createdAt: new Date().toISOString(),
+          referencedFiles: input.referencedFiles,
         })
         mockAgentState.session.messages.push({
           id: assistantId,

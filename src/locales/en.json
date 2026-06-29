@@ -233,11 +233,13 @@
     "modelPlaceholder": "Select model",
     "emptyTitle": "What should we build in NioZy?",
     "emptyDescription": "Choose a project directory, confirm the model and mode, then start chatting.",
-      "inputPlaceholder": "Describe your task. Enter to send, Shift+Enter for a newline",
-      "send": "Send",
-      "running": "Running",
-      "thinking": "Thinking…",
-      "reset": "Reset session",
+    "inputPlaceholder": "Describe your task. Use @ to search files, Enter to send, Shift+Enter for a newline",
+    "send": "Send",
+    "running": "Running",
+    "thinking": "Thinking…",
+    "reset": "Reset session",
+    "noMatchingFiles": "No matching files",
+    "removeReferencedFile": "Remove referenced file",
     "noDirectory": "No directory selected",
     "contextSummary": "Mode: {{mode}} · Model: {{model}} · Directory: {{dir}}",
     "modes": {
@@ -251,16 +253,16 @@
       "status": "Status",
       "error": "Error"
     },
-      "connection": {
-        "idle": "Not started",
-        "starting": "Connecting",
-        "ready": "Connected",
-        "error": "Error"
-      },
-      "errors": {
-        "workspaceRequired": "Choose a project directory before sending a message"
-      }
+    "connection": {
+      "idle": "Not started",
+      "starting": "Connecting",
+      "ready": "Connected",
+      "error": "Error"
     },
+    "errors": {
+      "workspaceRequired": "Choose a project directory before sending a message"
+    }
+  },
   "locale": {
     "zh": "中文",
     "en": "English",

@@ -233,11 +233,13 @@
     "modelPlaceholder": "选择模型",
     "emptyTitle": "我们应该在 NioZy 中构建什么？",
     "emptyDescription": "选择项目目录、确认模型与模式，然后开始对话。",
-      "inputPlaceholder": "输入你的任务，Enter 发送，Shift+Enter 换行",
-      "send": "发送",
-      "running": "运行中",
-      "thinking": "思考中…",
-      "reset": "重置会话",
+    "inputPlaceholder": "输入你的任务，使用 @ 搜索文件，Enter 发送，Shift+Enter 换行",
+    "send": "发送",
+    "running": "运行中",
+    "thinking": "思考中…",
+    "reset": "重置会话",
+    "noMatchingFiles": "没有匹配的文件",
+    "removeReferencedFile": "移除引用文件",
     "noDirectory": "未选择目录",
     "contextSummary": "模式：{{mode}} · 模型：{{model}} · 目录：{{dir}}",
     "modes": {
@@ -251,16 +253,16 @@
       "status": "状态",
       "error": "错误"
     },
-      "connection": {
-        "idle": "未启动",
-        "starting": "连接中",
-        "ready": "已连接",
-        "error": "错误"
-      },
-      "errors": {
-        "workspaceRequired": "请先选择项目目录，再发送消息"
-      }
+    "connection": {
+      "idle": "未启动",
+      "starting": "连接中",
+      "ready": "已连接",
+      "error": "错误"
     },
+    "errors": {
+      "workspaceRequired": "请先选择项目目录，再发送消息"
+    }
+  },
   "locale": {
     "zh": "中文",
     "en": "English",

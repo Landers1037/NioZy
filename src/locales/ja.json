@@ -74,11 +74,13 @@
     "modelPlaceholder": "モデルを選択",
     "emptyTitle": "NioZy で何を作りましょうか？",
     "emptyDescription": "プロジェクトディレクトリ、モデル、モードを確認してから会話を始めます。",
-      "inputPlaceholder": "タスクを入力。Enter 送信、Shift+Enter 改行",
-      "send": "送信",
-      "running": "実行中",
-      "thinking": "思考中…",
-      "reset": "セッションをリセット",
+    "inputPlaceholder": "タスクを入力。@ でファイル検索、Enter 送信、Shift+Enter 改行",
+    "send": "送信",
+    "running": "実行中",
+    "thinking": "思考中…",
+    "reset": "セッションをリセット",
+    "noMatchingFiles": "一致するファイルがありません",
+    "removeReferencedFile": "参照ファイルを外す",
     "noDirectory": "ディレクトリ未選択",
     "contextSummary": "モード: {{mode}} · モデル: {{model}} · ディレクトリ: {{dir}}",
     "modes": {
@@ -92,16 +94,16 @@
       "status": "状態",
       "error": "エラー"
     },
-      "connection": {
-        "idle": "未開始",
-        "starting": "接続中",
-        "ready": "接続済み",
-        "error": "エラー"
-      },
-      "errors": {
-        "workspaceRequired": "メッセージ送信前にプロジェクトディレクトリを選択してください"
-      }
+    "connection": {
+      "idle": "未開始",
+      "starting": "接続中",
+      "ready": "接続済み",
+      "error": "エラー"
     },
+    "errors": {
+      "workspaceRequired": "メッセージ送信前にプロジェクトディレクトリを選択してください"
+    }
+  },
   "titleBar": {
     "renderEngine": "レンダリングエンジン",
     "renderMode": "レンダリングモード",

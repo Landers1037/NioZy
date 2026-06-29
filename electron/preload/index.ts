@@ -125,6 +125,7 @@ const api: ElectronAPI = {
     ensureRuntime: () => ipcRenderer.invoke('agent:ensureRuntime'),
     getState: () => ipcRenderer.invoke('agent:getState'),
     pickDirectory: () => ipcRenderer.invoke('agent:pickDirectory') as Promise<string | null>,
+    searchFiles: (query) => ipcRenderer.invoke('agent:searchFiles', query),
     setWorkspaceDir: (dir) => ipcRenderer.invoke('agent:setWorkspaceDir', dir),
     setModel: (model) => ipcRenderer.invoke('agent:setModel', model),
     setMode: (mode) => ipcRenderer.invoke('agent:setMode', mode),
