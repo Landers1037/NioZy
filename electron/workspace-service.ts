@@ -1,17 +1,20 @@
-import { readdir, readFile, stat } from 'fs/promises'
+import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
+import { tmpdir } from 'os'
 import { join, normalize, relative, resolve, sep } from 'path'
 import type { BrowserWindow } from 'electron'
 import { dialog } from 'electron'
 import type { GitService } from './git-service'
 import type {
   WorkspaceGitBranchResponse,
+  WorkspaceGitCommitResponse,
   WorkspaceDetectGitResponse,
   WorkspaceDirEntry,
   WorkspaceGitDiffResponse,
   WorkspaceGitFile,
   WorkspaceGitFileStatus,
+  WorkspaceGitPushResponse,
   WorkspaceGitStatusResponse,
   WorkspaceListDirResponse,
 } from './shared/workspace-types'
@@ -114,13 +117,14 @@ async function runGit(
   gitPath: string,
   args: string[],
   cwd: string,
-): Promise<{ ok: true; stdout: string } | { ok: false; error: string }> {
+  envPatch?: Record<string, string>,
+): Promise<{ ok: true; stdout: string; stderr: string } | { ok: false; error: string }> {
   const { spawn } = await import('child_process')
   return new Promise((resolvePromise) => {
     const child = spawn(gitPath, ['-c', 'core.quotepath=false', ...args], {
       cwd,
       windowsHide: true,
-      env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+      env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...(envPatch ?? {}) },
     })
     let stdout = ''
     let stderr = ''
@@ -135,7 +139,7 @@ async function runGit(
     })
     child.on('close', (code) => {
       if (code === 0) {
-        resolvePromise({ ok: true, stdout })
+        resolvePromise({ ok: true, stdout, stderr })
       } else {
         const msg = stderr.trim() || stdout.trim() || `git exited with code ${code}`
         resolvePromise({ ok: false, error: msg })
@@ -351,5 +355,89 @@ export class WorkspaceService {
 
     if (!result.ok) return { ok: false, error: result.error }
     return { ok: true, diff: result.stdout.trimEnd() }
+  }
+
+  async gitCommit(
+    workDir: string,
+    message: string,
+    filePaths: string[],
+  ): Promise<WorkspaceGitCommitResponse> {
+    const gitPath = this.gitService.resolveGitPath()
+    if (!gitPath) return { ok: false, error: 'GIT_NOT_FOUND' }
+    const normalized = resolve(workDir)
+    if (!existsSync(join(normalized, '.git'))) {
+      return { ok: false, error: 'NOT_GIT_REPO' }
+    }
+
+    const commitMessage = message.trim()
+    if (!commitMessage) return { ok: false, error: 'EMPTY_MESSAGE' }
+    const selectedFiles = Array.from(
+      new Set(filePaths.map((filePath) => unquoteGitPath(filePath).trim()).filter(Boolean)),
+    )
+    if (selectedFiles.length === 0) return { ok: false, error: 'NO_SELECTED_FILES' }
+
+    const tempDir = await mkdtemp(join(tmpdir(), 'niozy-workspace-commit-'))
+    const tempIndexPath = join(tempDir, 'index')
+    const tempEnv = { GIT_INDEX_FILE: tempIndexPath }
+
+    try {
+      await writeFile(tempIndexPath, '')
+      const headResult = await runGit(gitPath, ['rev-parse', 'HEAD'], normalized)
+      const hasHead = headResult.ok && Boolean(headResult.stdout.trim())
+
+      const seedResult = hasHead
+        ? await runGit(gitPath, ['read-tree', headResult.stdout.trim()], normalized, tempEnv)
+        : await runGit(gitPath, ['read-tree', '--empty'], normalized, tempEnv)
+      if (!seedResult.ok) return { ok: false, error: seedResult.error }
+
+      const addResult = await runGit(gitPath, ['add', '--', ...selectedFiles], normalized, tempEnv)
+      if (!addResult.ok) return { ok: false, error: addResult.error }
+
+      const writeTreeResult = await runGit(gitPath, ['write-tree'], normalized, tempEnv)
+      if (!writeTreeResult.ok) return { ok: false, error: writeTreeResult.error }
+      const treeSha = writeTreeResult.stdout.trim()
+      if (!treeSha) return { ok: false, error: 'Failed to write commit tree' }
+
+      const commitArgs = hasHead
+        ? ['commit-tree', treeSha, '-p', headResult.stdout.trim(), '-m', commitMessage]
+        : ['commit-tree', treeSha, '-m', commitMessage]
+      const commitTreeResult = await runGit(gitPath, commitArgs, normalized)
+      if (!commitTreeResult.ok) return { ok: false, error: commitTreeResult.error }
+      const commitSha = commitTreeResult.stdout.trim()
+      if (!commitSha) return { ok: false, error: 'Failed to create commit object' }
+
+      const updateArgs = hasHead
+        ? ['update-ref', 'HEAD', commitSha, headResult.stdout.trim()]
+        : ['update-ref', 'HEAD', commitSha]
+      const updateRefResult = await runGit(gitPath, updateArgs, normalized)
+      if (!updateRefResult.ok) return { ok: false, error: updateRefResult.error }
+
+      const syncIndexResult = await runGit(gitPath, ['add', '--', ...selectedFiles], normalized)
+      if (!syncIndexResult.ok) return { ok: false, error: syncIndexResult.error }
+
+      return {
+        ok: true,
+        output: `Committed ${commitSha.slice(0, 8)}`,
+      }
+    } finally {
+      await rm(tempDir, { recursive: true, force: true }).catch(() => undefined)
+    }
+  }
+
+  async gitPush(workDir: string): Promise<WorkspaceGitPushResponse> {
+    const gitPath = this.gitService.resolveGitPath()
+    if (!gitPath) return { ok: false, error: 'GIT_NOT_FOUND' }
+    const normalized = resolve(workDir)
+    if (!existsSync(join(normalized, '.git'))) {
+      return { ok: false, error: 'NOT_GIT_REPO' }
+    }
+
+    const pushResult = await runGit(gitPath, ['push'], normalized)
+    if (!pushResult.ok) return { ok: false, error: pushResult.error }
+
+    return {
+      ok: true,
+      output: pushResult.stdout.trim() || pushResult.stderr.trim() || 'Pushed',
+    }
   }
 }

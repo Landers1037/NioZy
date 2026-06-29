@@ -28,6 +28,7 @@ export interface WorkspaceSession {
   gitLoading: boolean
   gitError: string | null
   gitSupported: boolean | null
+  gitBranch: string | null
 }
 
 interface WorkspaceStoreState {
@@ -58,6 +59,7 @@ interface WorkspaceStoreState {
   ) => Promise<{ ok: true; terminalId: string } | { ok: false; error: string }>
   recordWorkspaceHistory: (tabId: string) => Promise<void>
   refreshGitStatus: (tabId: string) => Promise<void>
+  refreshGitBranch: (tabId: string) => Promise<void>
   detectGitSupport: (tabId: string) => Promise<void>
 }
 
@@ -75,6 +77,7 @@ function createDefaultSession(workingDir = ''): WorkspaceSession {
     gitLoading: false,
     gitError: null,
     gitSupported: null,
+    gitBranch: null,
   }
 }
 
@@ -247,6 +250,7 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
       requestTerminalFocus(result.id)
 
       void get().detectGitSupport(tabId)
+      void get().refreshGitBranch(tabId)
       void get().refreshGitStatus(tabId)
 
       return { ok: true, terminalId: result.id }
@@ -277,6 +281,7 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
         gitFiles: [],
         gitError: null,
         gitSupported: null,
+        gitBranch: null,
         rightPanel: 'files',
       }),
     }))
@@ -352,20 +357,50 @@ export const useWorkspaceStore = create<WorkspaceStoreState>((set, get) => ({
     }
   },
 
+  refreshGitBranch: async (tabId) => {
+    const session = get().sessions[tabId]
+    if (!session?.isStarted || !session.workingDir) return
+    try {
+      const result = await getElectronAPI().workspace.gitBranch(session.workingDir)
+      set((s) => ({
+        sessions: patchSession(s.sessions, tabId, {
+          gitBranch: result.ok ? result.branch : null,
+        }),
+      }))
+    } catch {
+      set((s) => ({
+        sessions: patchSession(s.sessions, tabId, { gitBranch: null }),
+      }))
+    }
+  },
+
   detectGitSupport: async (tabId) => {
     const session = get().sessions[tabId]
     if (!session?.workingDir) return
     try {
       const result = await getElectronAPI().workspace.detectGit(session.workingDir)
       if (!result.ok) {
-        set((s) => ({ sessions: patchSession(s.sessions, tabId, { gitSupported: false }) }))
+        set((s) => ({
+          sessions: patchSession(s.sessions, tabId, {
+            gitSupported: false,
+            gitBranch: null,
+          }),
+        }))
         return
       }
       set((s) => ({
-        sessions: patchSession(s.sessions, tabId, { gitSupported: result.isRepo }),
+        sessions: patchSession(s.sessions, tabId, {
+          gitSupported: result.isRepo,
+          gitBranch: result.isRepo ? s.sessions[tabId]?.gitBranch ?? null : null,
+        }),
       }))
     } catch {
-      set((s) => ({ sessions: patchSession(s.sessions, tabId, { gitSupported: false }) }))
+      set((s) => ({
+        sessions: patchSession(s.sessions, tabId, {
+          gitSupported: false,
+          gitBranch: null,
+        }),
+      }))
     }
   },
 }))

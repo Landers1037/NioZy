@@ -2175,6 +2175,14 @@ ipcMain.handle('workspace:gitDiff', (_, workDir: string, filePath: string) => {
   gitService.setGitPath(settingsStore.get().filesystem.gitPath)
   return workspaceService.gitDiff(workDir, filePath)
 })
+ipcMain.handle('workspace:gitCommit', (_, workDir: string, message: string, filePaths: string[]) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return workspaceService.gitCommit(workDir, message, filePaths)
+})
+ipcMain.handle('workspace:gitPush', (_, workDir: string) => {
+  gitService.setGitPath(settingsStore.get().filesystem.gitPath)
+  return workspaceService.gitPush(workDir)
+})
 ipcMain.handle('workspace:listHistory', () => workspaceHistoryStore.get())
 ipcMain.handle(
   'workspace:recordHistory',

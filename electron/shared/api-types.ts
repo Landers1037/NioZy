@@ -919,6 +919,12 @@ export interface ElectronAPI {
       workDir: string,
       filePath: string,
     ) => Promise<import('./workspace-types').WorkspaceGitDiffResponse>
+    gitCommit: (
+      workDir: string,
+      message: string,
+      filePaths: string[],
+    ) => Promise<import('./workspace-types').WorkspaceGitCommitResponse>
+    gitPush: (workDir: string) => Promise<import('./workspace-types').WorkspaceGitPushResponse>
     listHistory: () => Promise<import('./workspace-history-types').WorkspaceHistoryEntry[]>
     recordHistory: (
       input: import('./workspace-history-types').WorkspaceHistoryRecordInput,

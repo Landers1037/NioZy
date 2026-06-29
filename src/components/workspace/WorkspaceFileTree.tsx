@@ -10,8 +10,10 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getElectronAPI } from '@/lib/electron-client'
+import { openMarkdownFile } from '@/lib/markdown-tab-actions'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import type { WorkspaceDirEntry } from '../../../electron/shared/workspace-types'
+import { isMarkdownFilePath } from '../../../electron/shared/markdown-file-limits'
 import { cn } from '@/lib/utils'
 
 interface TreeNodeState {
@@ -49,10 +51,12 @@ function TreeRow({
   node,
   depth,
   onToggle,
+  onOpenFile,
 }: {
   node: TreeNodeState
   depth: number
   onToggle: (path: string) => void
+  onOpenFile: (entry: WorkspaceDirEntry) => void
 }) {
   const { entry, children, expanded, loading } = node
   const isDir = entry.isDirectory
@@ -60,10 +64,14 @@ function TreeRow({
   return (
     <>
       <div
-        className="flex min-w-0 cursor-default items-center gap-1 rounded-md py-1 pr-2 text-sm hover:bg-muted/80"
+        className={cn(
+          'flex min-w-0 items-center gap-1 rounded-md py-1 pr-2 text-sm hover:bg-muted/80',
+          isDir || isMarkdownFilePath(entry.path) ? 'cursor-pointer' : 'cursor-default',
+        )}
         style={{ paddingLeft: `${depth * 14 + 6}px` }}
         onClick={() => {
           if (isDir) onToggle(entry.path)
+          else onOpenFile(entry)
         }}
       >
         {isDir ? (
@@ -97,7 +105,13 @@ function TreeRow({
       </div>
       {isDir && expanded
         ? children.map((child) => (
-            <TreeRow key={entryKey(child.entry)} node={child} depth={depth + 1} onToggle={onToggle} />
+            <TreeRow
+              key={entryKey(child.entry)}
+              node={child}
+              depth={depth + 1}
+              onToggle={onToggle}
+              onOpenFile={onOpenFile}
+            />
           ))
         : null}
     </>
@@ -188,6 +202,12 @@ export function WorkspaceFileTree({ tabId, rootPath }: WorkspaceFileTreeProps) {
     void refreshRoot()
   }
 
+  const handleOpenFile = useCallback((entry: WorkspaceDirEntry) => {
+    if (!entry.isDirectory && isMarkdownFilePath(entry.path)) {
+      void openMarkdownFile(entry.path)
+    }
+  }, [])
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
@@ -208,7 +228,13 @@ export function WorkspaceFileTree({ tabId, rootPath }: WorkspaceFileTreeProps) {
           <p className="py-8 text-center text-sm text-muted-foreground">{t('workspace.emptyDir')}</p>
         ) : (
           roots.map((node) => (
-            <TreeRow key={entryKey(node.entry)} node={node} depth={0} onToggle={handleToggle} />
+            <TreeRow
+              key={entryKey(node.entry)}
+              node={node}
+              depth={0}
+              onToggle={handleToggle}
+              onOpenFile={handleOpenFile}
+            />
           ))
         )}
       </div>

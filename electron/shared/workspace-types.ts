@@ -75,6 +75,30 @@ export interface WorkspaceGitBranchError {
 
 export type WorkspaceGitBranchResponse = WorkspaceGitBranchResult | WorkspaceGitBranchError
 
+export interface WorkspaceGitCommitResult {
+  ok: true
+  output: string
+}
+
+export interface WorkspaceGitCommitError {
+  ok: false
+  error: 'GIT_NOT_FOUND' | 'NOT_GIT_REPO' | 'EMPTY_MESSAGE' | 'NO_SELECTED_FILES' | string
+}
+
+export type WorkspaceGitCommitResponse = WorkspaceGitCommitResult | WorkspaceGitCommitError
+
+export interface WorkspaceGitPushResult {
+  ok: true
+  output: string
+}
+
+export interface WorkspaceGitPushError {
+  ok: false
+  error: 'GIT_NOT_FOUND' | 'NOT_GIT_REPO' | string
+}
+
+export type WorkspaceGitPushResponse = WorkspaceGitPushResult | WorkspaceGitPushError
+
 export const WORKSPACE_TOOL_IDS = ['claude', 'opencode', 'pi', 'agent'] as const
 export type WorkspaceToolId = (typeof WORKSPACE_TOOL_IDS)[number]
 

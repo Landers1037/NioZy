@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Computer, FolderOpen, Sparkle, X } from 'lucide-react'
+import { Computer, FolderOpen, Pencil, Sparkle, X } from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -17,6 +17,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useAppStore, type AppTab } from '@/stores/app-store'
 import { useWorkspaceSession } from '@/stores/workspace-store'
 import { closeWorkspaceTab } from '@/lib/workspace-actions'
@@ -40,8 +50,11 @@ export function WorkspaceTabItem({
 }: WorkspaceTabItemProps) {
   const { t } = useTranslation()
   const setActiveTab = useAppStore((s) => s.setActiveTab)
+  const setTabCustomTitle = useAppStore((s) => s.setTabCustomTitle)
   const session = useWorkspaceSession(tab.id)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editValue, setEditValue] = useState('')
   const uiStyle = useUiStyle()
 
   const compact = collapsed || iconOnly
@@ -54,6 +67,23 @@ export function WorkspaceTabItem({
       return
     }
     void closeWorkspaceTab(tab.id)
+  }
+
+  const openEditDialog = () => {
+    scheduleOverlayOpen(() => {
+      setEditValue(tab.customTitle ?? tab.title)
+      setEditOpen(true)
+    })
+  }
+
+  const saveEditTitle = () => {
+    const trimmed = editValue.trim()
+    if (!trimmed || trimmed === tab.title) {
+      setTabCustomTitle(tab.id, undefined)
+    } else {
+      setTabCustomTitle(tab.id, trimmed)
+    }
+    setEditOpen(false)
   }
 
   const TabIcon = showActiveIcon ? Sparkle : Computer
@@ -114,6 +144,10 @@ export function WorkspaceTabItem({
             <X className="size-4 text-muted-foreground" />
             {t('common.close')}
           </ContextMenuItem>
+          <ContextMenuItem onSelect={openEditDialog}>
+            <Pencil className="size-4 text-muted-foreground" />
+            {t('tab.editTitle')}
+          </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
@@ -137,6 +171,34 @@ export function WorkspaceTabItem({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      ) : null}
+
+      {editOpen ? (
+        <Dialog open onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('tab.editTitle')}</DialogTitle>
+              <DialogDescription>
+                {t('tab.editTitleDesc', { defaultTitle: tab.title })}
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.currentTarget.value)}
+              placeholder={tab.title}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveEditTitle()
+              }}
+              autoFocus
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button onClick={saveEditTitle}>{t('common.save')}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </>
   )

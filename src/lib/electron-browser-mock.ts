@@ -934,6 +934,8 @@ export function createBrowserDevElectronAPI(): BrowserDevElectronAPI {
       gitBranch: async () => ({ ok: true as const, branch: null }),
       gitStatus: async () => ({ ok: false as const, error: 'GIT_NOT_FOUND' }),
       gitDiff: async () => ({ ok: false as const, error: 'Browser preview' }),
+      gitCommit: async () => ({ ok: false as const, error: 'Browser preview' }),
+      gitPush: async () => ({ ok: false as const, error: 'Browser preview' }),
       listHistory: async () => [],
       recordHistory: async () => [],
     },

@@ -476,6 +476,9 @@ const api: ElectronAPI = {
     gitBranch: (workDir) => ipcRenderer.invoke('workspace:gitBranch', workDir),
     gitStatus: (workDir) => ipcRenderer.invoke('workspace:gitStatus', workDir),
     gitDiff: (workDir, filePath) => ipcRenderer.invoke('workspace:gitDiff', workDir, filePath),
+    gitCommit: (workDir, message, filePaths) =>
+      ipcRenderer.invoke('workspace:gitCommit', workDir, message, filePaths),
+    gitPush: (workDir) => ipcRenderer.invoke('workspace:gitPush', workDir),
     listHistory: () => ipcRenderer.invoke('workspace:listHistory'),
     recordHistory: (input) => ipcRenderer.invoke('workspace:recordHistory', input),
   },
