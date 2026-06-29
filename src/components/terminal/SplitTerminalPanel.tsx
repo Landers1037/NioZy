@@ -56,6 +56,7 @@ interface PanelSize {
 const DIVIDER_HIT_SIZE = 12
 const DIVIDER_LINE_SIZE = 3
 const MIN_PANE_SIZE = 120
+const PANE_HANDLE_TRIGGER_HEIGHT = 16
 
 function clampRatioByPixels(
   ratio: number,
@@ -214,6 +215,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
   const [hoveredDividerKey, setHoveredDividerKey] = useState<string | null>(null)
   const [draggedPaneIndex, setDraggedPaneIndex] = useState<number | null>(null)
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
+  const [topHoverPaneIndex, setTopHoverPaneIndex] = useState<number | null>(null)
 
   const splitLayout = useMemo(
     () => normalizeTerminalSplitLayout(tab.splitLayout, panes.length),
@@ -402,6 +404,7 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
         const showDisconnectedPane = isSshTerminalTab(tab) && paneDisconnected
         const isSwapSource = draggedPaneIndex === index
         const isSwapTarget = dropTargetIndex === index && draggedPaneIndex !== null
+        const showHandle = topHoverPaneIndex === index || draggedPaneIndex === index
 
         return (
           <div
@@ -422,11 +425,31 @@ export function SplitTerminalPanel({ tab, isTabActive }: SplitTerminalPanelProps
               touchTabActivity(tab.id)
               if (!isPaneActive) setActiveSplitPane(tab.id, index)
             }}
+            onPointerMove={(event) => {
+              const bounds = event.currentTarget.getBoundingClientRect()
+              const offsetY = event.clientY - bounds.top
+              setTopHoverPaneIndex(offsetY <= PANE_HANDLE_TRIGGER_HEIGHT ? index : null)
+            }}
+            onPointerLeave={() => {
+              setTopHoverPaneIndex((prev) => (prev === index ? null : prev))
+            }}
           >
+            {isSwapTarget ? (
+              <div
+                className="pointer-events-none absolute inset-0 z-10"
+                style={{
+                  backgroundColor: accentColor,
+                  opacity: 0.18,
+                }}
+              />
+            ) : null}
             <div className="absolute inset-x-0 top-0 z-10 flex justify-center pt-2">
               <button
                 type="button"
-                className="flex h-3.5 w-14 cursor-grab items-center justify-center rounded-full border border-border/70 bg-background/85 text-muted-foreground opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover/pane:opacity-100 active:cursor-grabbing"
+                className={cn(
+                  'flex h-3.5 w-14 cursor-grab items-center justify-center rounded-full border border-border/70 bg-background/85 text-muted-foreground shadow-sm backdrop-blur-sm transition-opacity active:cursor-grabbing',
+                  showHandle ? 'opacity-100' : 'pointer-events-none opacity-0',
+                )}
                 aria-label={`Move split pane ${index + 1}`}
                 onPointerDown={(e) => startPaneSwapDrag(e, index)}
               >
