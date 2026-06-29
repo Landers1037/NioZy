@@ -131,7 +131,7 @@ export default defineConfig(({ command }) => {
     server: {
       strictPort: false,
       watch: {
-        ignored: ['**/docs/**'],
+        ignored: ['**/docs/**', "**/*.md"],
       },
     },
     // Electron 42+ / Chromium 现代内核；启用 top-level await（noVNC 需要）
