@@ -43,7 +43,7 @@ export function RotatingText({
   const shouldUseChip = (text: string) => text !== firstText
   const getContainerClassName = (text: string) =>
     shouldUseChip(text)
-      ? 'rounded-full bg-primary px-2.5 py-0.5 text-primary-foreground shadow-sm'
+      ? 'rounded-2xl bg-primary px-2.5 py-1 text-primary-foreground shadow-sm leading-none'
       : ''
 
   useLayoutEffect(() => {
@@ -71,7 +71,7 @@ export function RotatingText({
           key={`${index}-${currentText}`}
           ref={contentRef}
           className={cn(
-            'inline-flex items-center whitespace-pre',
+            'inline-flex items-center whitespace-pre leading-none',
             getContainerClassName(currentText),
           )}
           initial={shouldAnimate ? { opacity: 1 } : false}
@@ -85,7 +85,7 @@ export function RotatingText({
             return (
               <span
                 key={`${currentText}-${charIndex}-${char}`}
-                className="inline-flex overflow-hidden pb-0.5"
+                className="inline-flex items-center overflow-hidden"
               >
                 <motion.span
                   className="inline-block"
