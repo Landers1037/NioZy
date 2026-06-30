@@ -37,7 +37,7 @@ export function MinimalTabBar() {
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const agentSessionEnabled = settings?.session.agentSessionEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
-  const niozyAgentEnabled = settings?.experimental.niozyAgentEnabled === true
+  const niozyAgentEnabled = settings?.agent.niozyAgentEnabled === true
   const ui = useUiClasses()
 
   const { sidebarItems, inGroupView } = useSidebarTabItems()

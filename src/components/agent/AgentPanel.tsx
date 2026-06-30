@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FileText, FolderOpen, GitBranch, Loader2, RefreshCcw, Send, Sparkles, Square, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
@@ -130,7 +130,7 @@ export function AgentPanel({ tab }: AgentPanelProps) {
   }, [activeResultIndex, mentionOpen])
 
   const modelOptions = useMemo(() => {
-    const provider = settings?.experimental.aiProvider ?? 'openai'
+    const provider = settings?.ai.aiProvider ?? 'openai'
     const models = settings
       ? (
           provider === 'openai'
@@ -243,7 +243,6 @@ export function AgentPanel({ tab }: AgentPanelProps) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>{t('agent.title')}</CardTitle>
-          <CardDescription>{t('agent.description')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-2">
           <Button variant="outline" onClick={() => void pickDirectory()}>
@@ -269,7 +268,7 @@ export function AgentPanel({ tab }: AgentPanelProps) {
             </SelectContent>
           </Select>
           <Select value={mode} onValueChange={(value) => void setMode(value as 'plan' | 'build')}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[100px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -371,7 +370,7 @@ export function AgentPanel({ tab }: AgentPanelProps) {
               value={draft}
               onChange={(e) => handleDraftChange(e.currentTarget.value, e.currentTarget.selectionStart ?? e.currentTarget.value.length)}
               placeholder={t('agent.inputPlaceholder')}
-              className="min-h-28 bg-transparent"
+              className="min-h-20 bg-transparent"
               disabled={inputLocked}
               onKeyDown={(e) => {
                 if (inputLocked) return

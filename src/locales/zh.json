@@ -501,6 +501,7 @@
       "system": "系统设置",
       "p2p": "加密通信",
       "ai": "AI 特性",
+      "agent": "Agent",
       "session": "管理会话",
       "workspace": "工作区",
       "provider": "供应商配置",
@@ -541,6 +542,8 @@
       "fontWeightBold": "加粗字重",
       "showAppTitle": "显示程序标题",
       "showAppTitleDesc": "关闭后顶栏仅显示图标，不显示 NioZy 名称",
+      "enableDynamicTitle": "开启动态标题",
+      "enableDynamicTitleDesc": "开启后在顶栏程序标题中轮播切换 NioZy、Terminal、Workspace、AI Agent",
       "enableDialogAnimations": "动画效果",
       "enableDialogAnimationsDesc": "开启后弹框（含图片预览）打开与关闭时自底部向上淡入、向下淡出",
       "enableGlassTransparency": "透明效果",
@@ -622,7 +625,8 @@
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
         "logo": "Logo",
-        "niozy": "NioZy"
+        "niozy": "NioZy",
+        "ascii": "ASCII Text"
       },
       "welcomePage": "欢迎页面",
       "welcomePageDesc": "开启后，启动时若无需恢复终端会话，将展示欢迎动画而非自动新建终端；关闭全部标签后也会显示欢迎页。",
@@ -630,7 +634,8 @@
       "welcomePageAnimationAria": "欢迎页面动画类型",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D 动画",
-        "particles": "Logo 粒子动画"
+        "particles": "Logo 粒子动画",
+        "ascii": "ASCII Text 动画"
       }
     },
     "ssh": {
@@ -926,8 +931,10 @@
         "agentBinaryDetecting": "检测中…",
         "agentBinaryDownload": "下载",
         "agentBinaryDownloading": "下载中…",
+        "agentBinaryOverwriteTitle": "确认覆盖更新",
+        "agentBinaryOverwriteAction": "覆盖更新",
         "agentBinaryStatusFailed": "检测 Agent 二进制状态失败",
-        "agentBinaryOverwriteConfirm": "已检测到现有 Agent 二进制：{{path}}\n继续下载将覆盖该文件，是否继续？",
+        "agentBinaryOverwriteConfirm": "已检测到本地 Agent 二进制：{{path}}\n继续下载会将最新版本写入：{{targetPath}}\n是否继续更新？",
         "agentBinaryDownloadSuccess": "Agent 二进制已下载到 {{path}}（{{tag}}）",
         "agentBinaryDownloadFailed": "下载 Agent 二进制失败：{{error}}",
         "agentBinaryActiveSource": "当前生效来源：{{source}}",
@@ -1513,8 +1520,21 @@
     "allCommandsHint": "全部命令",
     "unavailable": "当前条件下无法执行此命令",
     "unavailableShort": "不可用",
+    "states": {
+      "on": "开启",
+      "off": "关闭"
+    },
+    "groups": {
+      "terminalSession": "终端与会话",
+      "terminalAppearance": "终端外观",
+      "terminalBehavior": "终端行为",
+      "appAppearance": "界面外观",
+      "appTools": "辅助工具",
+      "ai": "AI"
+    },
     "commands": {
       "newTerminal": "新建终端",
+      "switchWorkingDirectory": "切换工作目录",
       "editTabTitle": "修改终端 Tab 标题",
       "closeTerminalTab": "关闭终端 Tab",
       "addTabToGroup": "添加终端 Tab 到一个分组",
@@ -1528,6 +1548,17 @@
       "selectColorScheme": "切换终端配色方案",
       "selectUiStyle": "切换界面风格",
       "selectThemeMode": "切换明亮/暗黑主题",
+      "toggleTerminalSearch": "切换终端搜索入口",
+      "toggleCommandReplay": "切换命令重放入口",
+      "togglePomodoro": "切换番茄钟入口",
+      "toggleCursorBlink": "切换光标闪烁",
+      "toggleHideCursor": "切换隐藏宿主光标",
+      "toggleLigatures": "切换终端连字",
+      "toggleRightClickCopyPaste": "切换右键复制/粘贴",
+      "toggleAdvancedRightClickMenu": "切换高级右键菜单",
+      "toggleSynchronizedOutput": "切换同步输出",
+      "toggleIdleAnimation": "切换终端闲置动画",
+      "toggleWelcomePage": "切换欢迎页面",
       "toggleAiSidebar": "打开/关闭 AI 对话",
       "newAiChat": "新建 AI 对话"
     },

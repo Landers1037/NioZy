@@ -7,6 +7,7 @@ import { devError } from '../../../electron/shared/dev-log'
 import { LogoIdleAnimation } from '@/components/terminal/idle-animation/LogoIdleAnimation'
 import { PacmanIdleAnimation } from '@/components/terminal/idle-animation/PacmanIdleAnimation'
 import { NioZyIdleAnimation } from '@/components/terminal/idle-animation/NioZyIdleAnimation'
+import { ASCIIText } from '@/components/effects/ASCIIText'
 import '@/components/terminal/idle-animation/terminal-idle-animation.css'
 
 interface TerminalIdleAnimationOverlayProps {
@@ -165,6 +166,21 @@ export function TerminalIdleAnimationOverlay({
     return (
       <IdleAnimationLayer box={screenBox}>
         <NioZyIdleAnimation width={screenBox.width} height={screenBox.height} />
+      </IdleAnimationLayer>
+    )
+  }
+
+  if (mode === 'ascii') {
+    return (
+      <IdleAnimationLayer box={screenBox}>
+        <div className="terminal-idle-frost absolute inset-0" />
+        <ASCIIText
+          text=">_ NioZy"
+          asciiFontSize={9}
+          textFontSize={200}
+          planeBaseHeight={7}
+          className="terminal-idle-ascii"
+        />
       </IdleAnimationLayer>
     )
   }

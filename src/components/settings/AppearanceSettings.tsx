@@ -178,6 +178,20 @@ export function AppearanceSettings() {
 
         <SettingField
           icon={Wand2}
+          label={t('settings.appearance.enableDynamicTitle')}
+          description={t('settings.appearance.enableDynamicTitleDesc')}
+          row
+          className="max-w-md pl-6"
+        >
+          <Switch
+            checked={settings.enableDynamicTitle}
+            disabled={!settings.showAppTitle}
+            onCheckedChange={(enableDynamicTitle) => patchSettings({ enableDynamicTitle })}
+          />
+        </SettingField>
+
+        <SettingField
+          icon={Wand2}
           label={t('settings.appearance.enableDialogAnimations')}
           description={t('settings.appearance.enableDialogAnimationsDesc')}
           row

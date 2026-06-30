@@ -249,6 +249,8 @@ export interface AppSettings {
   fontWeightBold?: number
   /** 顶栏是否显示程序名 NioZy（关闭后仅显示图标） */
   showAppTitle: boolean
+  /** 顶栏程序名使用轮播切换动画（NioZy / Terminal / Workspace / AI Agent） */
+  enableDynamicTitle: boolean
   /** 弹框打开/关闭过渡动画 */
   enableDialogAnimations: boolean
   /** 玻璃界面风格下启用 macOS 风格增强毛玻璃透明效果 */
@@ -341,6 +343,8 @@ export interface AppSettings {
   filesystem: import('./filesystem-settings').FilesystemSettings
   drawing: import('./drawing-settings').DrawingSettings
   preview: import('./preview-settings').PreviewSettings
+  ai: import('./ai-settings').AiSettings
+  agent: import('./agent-settings').AgentSettings
   experimental: import('./experimental-settings').ExperimentalSettings
   statistics: import('./usage-statistics-settings').UsageStatisticsSettings
   p2p: import('./p2p-settings').P2pSettings

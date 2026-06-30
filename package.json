@@ -15,7 +15,7 @@
   "type": "module",
   "workspaces": [],
   "scripts": {
-    "prestart": "npm run generate:icon && npm run vendor:drawing && npm run vendor:oh-my-posh && npm run build:agent && npm run copy:agent",
+    "prestart": "npm run generate:icon && npm run vendor:drawing && npm run vendor:oh-my-posh",
     "start": "electron-vite dev",
     "dev": "electron-vite dev",
     "generate:icon": "node scripts/generate-icon.mjs",

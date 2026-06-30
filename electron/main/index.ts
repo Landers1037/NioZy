@@ -42,7 +42,7 @@ import {
   buildAiRuntimeConfig,
   resolveAiRuntimeConfig,
   sanitizeResolvedAiRuntimeConfig,
-} from '../shared/experimental-settings'
+} from '../shared/ai-settings'
 import { containsVaultReference } from '../shared/vault-reference'
 import {
   applyChromiumPerformanceFlags,
@@ -429,7 +429,8 @@ const workspaceService = new WorkspaceService(gitService)
 const agentService = new AgentService(
   workspaceService,
   () => mainWindow,
-  () => settingsStore.get().experimental,
+  () => settingsStore.get().agent,
+  () => settingsStore.get().ai,
 )
 const systemStats = new SystemStats()
 const noteStore = new NoteStore()
@@ -452,10 +453,10 @@ function syncReminderScheduler(): void {
   }
 }
 async function syncCopilotRuntimeFromSettings(
-  experimental = settingsStore.get().experimental,
+  ai = settingsStore.get().ai,
 ): Promise<void> {
   vaultStore.load()
-  const built = buildAiRuntimeConfig(experimental)
+  const built = buildAiRuntimeConfig(ai)
   const resolved = sanitizeResolvedAiRuntimeConfig(
     built.apiKey,
     resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text)),
@@ -464,15 +465,15 @@ async function syncCopilotRuntimeFromSettings(
 }
 
 function syncCopilotRuntimeFromSettingsSafe(
-  experimental = settingsStore.get().experimental,
+  ai = settingsStore.get().ai,
 ): void {
-  void syncCopilotRuntimeFromSettings(experimental).catch((err) =>
+  void syncCopilotRuntimeFromSettings(ai).catch((err) =>
     copilotLog.error('Failed to sync runtime', logErrorPayload(err)),
   )
 }
 
 async function syncCopilotRuntimeIfAiApiKeyUsesVault(): Promise<void> {
-  const key = settingsStore.get().experimental.aiApiKey
+  const key = settingsStore.get().ai.aiApiKey
   if (!containsVaultReference(key)) return
   await syncCopilotRuntimeFromSettings()
 }
@@ -485,29 +486,13 @@ async function syncP2PFromSettings(): Promise<void> {
   }
 }
 
-function experimentalAiSettingsChanged(partial: Parameters<SettingsStore['update']>[0]): boolean {
-  if (!partial.experimental) return false
-  const keys = [
-    'aiSidebarEnabled',
-    'aiSidebarWidth',
-    'aiRuntimePort',
-    'aiProvider',
-    'aiModel',
-    'aiBaseUrl',
-    'aiApiKey',
-    'niozyAgentEnabled',
-    'niozyAgentLogLevel',
-    'niozyAgentLogToFile',
-    'niozyAgentLogFile',
-    'niozyAgentMaxTokens',
-    'openAiApiKey',
-  ] as const
-  return keys.some((key) => partial.experimental![key] !== undefined)
+function aiOrAgentSettingsChanged(partial: Parameters<SettingsStore['update']>[0]): boolean {
+  return partial.ai !== undefined || partial.agent !== undefined
 }
 
 function resolveAgentRuntimeConfigFromSettings(): import('../shared/agent-types').AgentRuntimeConfig {
   vaultStore.load()
-  const built = buildAiRuntimeConfig(settingsStore.get().experimental)
+  const built = buildAiRuntimeConfig(settingsStore.get().ai)
   const resolved = sanitizeResolvedAiRuntimeConfig(
     built.apiKey,
     resolveAiRuntimeConfig(built, (text) => vaultStore.resolveText(text)),
@@ -517,7 +502,7 @@ function resolveAgentRuntimeConfigFromSettings(): import('../shared/agent-types'
     model: resolved.model,
     baseUrl: resolved.baseUrl,
     apiKey: resolved.apiKey,
-    maxTokens: settingsStore.get().experimental.niozyAgentMaxTokens,
+    maxTokens: settingsStore.get().agent.niozyAgentMaxTokens,
   }
 }
 
@@ -1572,7 +1557,7 @@ ipcMain.handle('copilot:getRuntimeUrl', () => getCopilotRuntimeUrl())
 
 ipcMain.handle('aiContext:listRules', async () => {
   const { listAiRules } = await import('../ai-context-store')
-  return listAiRules(settingsStore.get().experimental.aiRuleStates)
+  return listAiRules(settingsStore.get().ai.aiRuleStates)
 })
 ipcMain.handle('aiContext:readRule', async (_, id: string) => {
   const { readAiRule } = await import('../ai-context-store')
@@ -1592,7 +1577,7 @@ ipcMain.handle('aiContext:listSkills', async () => {
 })
 ipcMain.handle('aiContext:getChatContext', async () => {
   const { buildAiChatContext } = await import('../ai-context-store')
-  return buildAiChatContext(settingsStore.get().experimental.aiRuleStates)
+  return buildAiChatContext(settingsStore.get().ai.aiRuleStates)
 })
 ipcMain.handle('aiContext:openSkillsDirectory', async (): Promise<void> => {
   const { ensureAiSkillsDir } = await import('../ai-context-store')
@@ -1722,9 +1707,9 @@ ipcMain.handle('settings:save', async (_, partial: Parameters<SettingsStore['upd
       throw err
     }
   }
-  if (experimentalAiSettingsChanged(partial)) {
+  if (aiOrAgentSettingsChanged(partial)) {
     try {
-      await syncCopilotRuntimeFromSettings(updated.experimental)
+      await syncCopilotRuntimeFromSettings(updated.ai)
       await agentService.updateConfig(resolveAgentRuntimeConfigFromSettings())
     } catch (err) {
       copilotLog.error('Failed to sync runtime after settings save', logErrorPayload(err))

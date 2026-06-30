@@ -38,9 +38,11 @@ import {
   resolveTerminalTabForCommand,
   confirmCloseActiveTerminalTab,
   executeCommandPaletteCommand,
+  getCommandPaletteGroupLabel,
   isShowAllCommandsQuery,
   listCommandPaletteItems,
   type CommandPaletteCommandId,
+  type CommandPaletteListItem,
 } from '@/lib/command-palette-commands'
 import {
   applyPickerSelection,
@@ -98,6 +100,23 @@ export function CommandPalette() {
     [subPanel, query, terminalRenderer, terminalColorScheme, settingsUiStyle, settingsTheme],
   )
   const showAllCommands = !subPanel && isShowAllCommandsQuery(query)
+  const groupedCommandItems = useMemo(() => {
+    if (!showAllCommands) return []
+    const groupOrder: string[] = []
+    const groupMap = new Map<string, { key: string; label: string; items: CommandPaletteListItem[] }>()
+    for (const item of commandItems) {
+      const key = item.command.group
+      const label = getCommandPaletteGroupLabel(item.command.group)
+      const existing = groupMap.get(key)
+      if (existing) {
+        existing.items.push(item)
+      } else {
+        groupOrder.push(key)
+        groupMap.set(key, { key, label, items: [item] })
+      }
+    }
+    return groupOrder.map((key) => groupMap.get(key)!).filter(Boolean)
+  }, [commandItems, showAllCommands])
   const inSubPanel = subPanel != null
   const listCount = inSubPanel ? pickerItems.length : commandItems.length
 
@@ -166,6 +185,11 @@ export function CommandPalette() {
         setSubPanel(result.panel)
         setSubPanelParentId(id)
         setQuery('')
+        return
+      }
+
+      if (result.type === 'dismissed') {
+        closePalette()
         return
       }
 
@@ -274,8 +298,10 @@ export function CommandPalette() {
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [open, handlePaletteNavigationKey])
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    handlePaletteNavigationKey(e.nativeEvent)
+  const handleKeyDown = (
+    e: Pick<KeyboardEvent, 'key' | 'preventDefault' | 'stopPropagation' | 'stopImmediatePropagation'>,
+  ) => {
+    handlePaletteNavigationKey(e)
   }
 
   if (!open && !editOpen && !closeOpen && !addToGroupOpen && !screenshotOpen) {
@@ -327,7 +353,7 @@ export function CommandPalette() {
               <Input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => setQuery(e.currentTarget.value)}
                 placeholder={inputPlaceholder}
                 className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                 onKeyDown={handleKeyDown}
@@ -366,10 +392,82 @@ export function CommandPalette() {
                     </button>
                   )
                 })
+              ) : showAllCommands ? (
+                groupedCommandItems.map((group) => (
+                  <div key={group.key} className="pb-1">
+                    <div className="px-3 py-2 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+                      {group.label}
+                    </div>
+                    {group.items.map((item) => {
+                      const index = commandItems.findIndex((entry) => entry.command.id === item.command.id)
+                      const Icon = item.command.icon
+                      const selected = index === selectedIndex
+                      const badge = item.command.leadingBadge?.()
+                      const trailingHint = item.command.trailingHint?.()
+                      return (
+                        <button
+                          key={item.command.id}
+                          type="button"
+                          data-cmd-index={index}
+                          disabled={!item.enabled}
+                          className={cn(
+                            'flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors',
+                            getTabCornerRadius(uiStyle),
+                            !item.enabled && 'cursor-not-allowed opacity-45',
+                            item.enabled && 'cursor-pointer',
+                            selected && item.enabled
+                              ? 'bg-accent text-accent-foreground'
+                              : item.enabled
+                                ? 'text-foreground hover:bg-muted/60'
+                                : 'text-muted-foreground',
+                          )}
+                          onMouseEnter={() => setSelectedIndex(index)}
+                          onClick={() => void runCommand(item.command.id, item.enabled)}
+                        >
+                          <Icon className="size-4 shrink-0 text-muted-foreground" />
+                          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                            {badge ? (
+                              <span
+                                className={cn(
+                                  'max-w-[40%] shrink truncate rounded-md border border-border/60 bg-muted/70 px-2 py-0.5 text-[11px] text-muted-foreground',
+                                  selected &&
+                                    item.enabled &&
+                                    'border-accent-foreground/20 bg-accent-foreground/10 text-accent-foreground/80',
+                                )}
+                                title={badge}
+                              >
+                                {badge}
+                              </span>
+                            ) : null}
+                            <span className="min-w-0 flex-1 truncate">{item.command.label()}</span>
+                          </div>
+                          {!item.enabled ? (
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                              {t('commandPalette.unavailableShort')}
+                            </span>
+                          ) : trailingHint ? (
+                            <span
+                              className={cn(
+                                'shrink-0 text-xs text-muted-foreground',
+                                selected && item.enabled && 'text-accent-foreground/75',
+                              )}
+                            >
+                              {trailingHint}
+                            </span>
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ))
               ) : (
                 commandItems.map((item, index) => {
                   const Icon = item.command.icon
                   const selected = index === selectedIndex
+                  const groupLabel = getCommandPaletteGroupLabel(item.command.group)
+                  const badge = item.command.leadingBadge?.()
+                  const trailingHint = item.command.trailingHint?.()
+                  const showGroupInline = !showAllCommands
                   return (
                     <button
                       key={item.command.id}
@@ -391,10 +489,42 @@ export function CommandPalette() {
                       onClick={() => void runCommand(item.command.id, item.enabled)}
                     >
                       <Icon className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 flex-1 truncate">{item.command.label()}</span>
+                      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                        {badge ? (
+                          <span
+                            className={cn(
+                              'max-w-[40%] shrink truncate rounded-md border border-border/60 bg-muted/70 px-2 py-0.5 text-[11px] text-muted-foreground',
+                              selected && item.enabled && 'border-accent-foreground/20 bg-accent-foreground/10 text-accent-foreground/80',
+                            )}
+                            title={badge}
+                          >
+                            {badge}
+                          </span>
+                        ) : null}
+                        <span className="min-w-0 flex-1 truncate">{item.command.label()}</span>
+                        {showGroupInline ? (
+                          <span
+                            className={cn(
+                              'shrink-0 text-[11px] uppercase tracking-[0.08em] text-muted-foreground',
+                              selected && item.enabled && 'text-accent-foreground/75',
+                            )}
+                          >
+                            {groupLabel}
+                          </span>
+                        ) : null}
+                      </div>
                       {!item.enabled ? (
                         <span className="shrink-0 text-xs text-muted-foreground">
                           {t('commandPalette.unavailableShort')}
+                        </span>
+                      ) : trailingHint ? (
+                        <span
+                          className={cn(
+                            'shrink-0 text-xs text-muted-foreground',
+                            selected && item.enabled && 'text-accent-foreground/75',
+                          )}
+                        >
+                          {trailingHint}
                         </span>
                       ) : null}
                     </button>
@@ -466,7 +596,7 @@ export function CommandPalette() {
                 </DialogHeader>
                 <Input
                   value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
+                  onChange={(e) => setEditValue(e.currentTarget.value)}
                   placeholder={activeTab.title}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') saveEditTitle()

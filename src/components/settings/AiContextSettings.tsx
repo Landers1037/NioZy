@@ -45,7 +45,7 @@ export function AiContextSettings() {
   const [deleteRuleId, setDeleteRuleId] = useState<string | null>(null)
   const [savingRule, setSavingRule] = useState(false)
 
-  const aiRuleStates = settings?.experimental.aiRuleStates ?? {}
+  const aiRuleStates = settings?.ai.aiRuleStates ?? {}
 
   const reloadRules = useCallback(async () => {
     const list = await getElectronAPI().aiContext.listRules()
@@ -67,8 +67,8 @@ export function AiContextSettings() {
     (nextStates: Record<string, boolean>) => {
       if (!settings) return
       void patchSettings({
-        experimental: {
-          ...settings.experimental,
+        ai: {
+          ...settings.ai,
           aiRuleStates: nextStates,
         },
       }).catch(() => toast.error(t('settings.vault.saveFailed')))
@@ -313,7 +313,7 @@ export function AiContextSettings() {
                   className="font-mono text-sm"
                   value={ruleDraftId}
                   placeholder={t('settings.ai.context.ruleIdPlaceholder')}
-                  onChange={(e) => setRuleDraftId(e.target.value)}
+                  onChange={(e) => setRuleDraftId(e.currentTarget.value)}
                 />
                 {ruleIdError ? (
                   <p className="text-xs text-destructive">{ruleIdError}</p>
@@ -335,7 +335,7 @@ export function AiContextSettings() {
                 className="min-h-[240px] font-mono text-sm"
                 value={ruleDraftContent}
                 placeholder={t('settings.ai.context.ruleContentPlaceholder')}
-                onChange={(e) => setRuleDraftContent(e.target.value)}
+                onChange={(e) => setRuleDraftContent(e.currentTarget.value)}
               />
             </div>
           </div>

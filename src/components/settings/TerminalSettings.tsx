@@ -61,6 +61,7 @@ export function TerminalSettings() {
     'pacman',
     'logo',
     'niozy',
+    'ascii',
   ]
 
   return (

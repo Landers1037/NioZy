@@ -8,11 +8,9 @@ export interface AttachPtyOffloadedBuffer {
 }
 
 /** 最多缓存的 Tab 快照条目数 */
-const OFFLOAD_CACHE_MAX_ENTRIES = 50
+const OFFLOAD_CACHE_MAX_ENTRIES = 256
 /** 快照总字节上限（UTF-16 估算） */
 const OFFLOAD_CACHE_MAX_BYTES = 64 * 1024 * 1024
-/** 未再 attach 的快照保留时长 */
-const OFFLOAD_CACHE_TTL_MS = 30 * 60 * 1000
 
 function estimateBufferSize(buf: AttachPtyOffloadedBuffer): number {
   const bytes = (buf.scrollbackText.length + buf.screenText.length) * 2
@@ -28,7 +26,6 @@ const offloadedBuffers = new LRUCache<string, AttachPtyOffloadedBuffer>({
   max: OFFLOAD_CACHE_MAX_ENTRIES,
   maxSize: OFFLOAD_CACHE_MAX_BYTES,
   sizeCalculation: estimateBufferSize,
-  ttl: OFFLOAD_CACHE_TTL_MS,
 })
 
 export function offloadAttachPtyBuffer(tabId: string, buffer: AttachPtyOffloadedBuffer): void {

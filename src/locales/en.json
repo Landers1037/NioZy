@@ -501,6 +501,7 @@
       "system": "System",
       "p2p": "Encrypted communication",
       "ai": "AI features",
+      "agent": "Agent",
       "session": "Manage sessions",
       "workspace": "Workspace",
       "provider": "Provider",
@@ -541,6 +542,8 @@
       "fontWeightBold": "Bold weight",
       "showAppTitle": "Show app title",
       "showAppTitleDesc": "When off, the title bar shows only the icon, not the NioZy name",
+      "enableDynamicTitle": "Dynamic title",
+      "enableDynamicTitleDesc": "Rotates the title bar label between NioZy, Terminal, Workspace, and AI Agent",
       "enableDialogAnimations": "Animations",
       "enableDialogAnimationsDesc": "When on, dialogs (including image preview) fade in from below and fade out downward",
       "enableGlassTransparency": "Transparency",
@@ -622,7 +625,8 @@
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
         "logo": "Logo",
-        "niozy": "NioZy"
+        "niozy": "NioZy",
+        "ascii": "ASCII Text"
       },
       "welcomePage": "Welcome page",
       "welcomePageDesc": "When enabled, shows a welcome animation on startup if no terminal session needs restoring, instead of opening a default terminal. Also shown when all tabs are closed.",
@@ -630,7 +634,8 @@
       "welcomePageAnimationAria": "Welcome page animation",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D animation",
-        "particles": "Logo particle animation"
+        "particles": "Logo particle animation",
+        "ascii": "ASCII Text animation"
       }
     },
     "ssh": {
@@ -926,8 +931,10 @@
         "agentBinaryDetecting": "Detecting…",
         "agentBinaryDownload": "Download",
         "agentBinaryDownloading": "Downloading…",
+        "agentBinaryOverwriteTitle": "Confirm overwrite update",
+        "agentBinaryOverwriteAction": "Overwrite and update",
         "agentBinaryStatusFailed": "Failed to detect the Agent binary status",
-        "agentBinaryOverwriteConfirm": "An Agent binary already exists at {{path}}.\nDownloading again will overwrite it. Continue?",
+        "agentBinaryOverwriteConfirm": "A local Agent binary was detected at {{path}}.\nContinuing will write the latest version to {{targetPath}}.\nContinue with the update?",
         "agentBinaryDownloadSuccess": "Agent binary downloaded to {{path}} ({{tag}})",
         "agentBinaryDownloadFailed": "Failed to download the Agent binary: {{error}}",
         "agentBinaryActiveSource": "Active source: {{source}}",
@@ -1513,8 +1520,21 @@
     "allCommandsHint": "All commands",
     "unavailable": "This command cannot run in the current context",
     "unavailableShort": "Unavailable",
+    "states": {
+      "on": "On",
+      "off": "Off"
+    },
+    "groups": {
+      "terminalSession": "Terminal & Sessions",
+      "terminalAppearance": "Terminal Appearance",
+      "terminalBehavior": "Terminal Behavior",
+      "appAppearance": "App Appearance",
+      "appTools": "Assistive Tools",
+      "ai": "AI"
+    },
     "commands": {
       "newTerminal": "New terminal",
+      "switchWorkingDirectory": "Switch working directory",
       "editTabTitle": "Rename terminal tab",
       "closeTerminalTab": "Close terminal tab",
       "addTabToGroup": "Add terminal tab to group",
@@ -1528,6 +1548,17 @@
       "selectColorScheme": "Switch terminal color scheme",
       "selectUiStyle": "Switch interface style",
       "selectThemeMode": "Switch light/dark theme",
+      "toggleTerminalSearch": "Toggle terminal search entry",
+      "toggleCommandReplay": "Toggle command replay entry",
+      "togglePomodoro": "Toggle Pomodoro entry",
+      "toggleCursorBlink": "Toggle cursor blink",
+      "toggleHideCursor": "Toggle hide host cursor",
+      "toggleLigatures": "Toggle terminal ligatures",
+      "toggleRightClickCopyPaste": "Toggle right-click copy/paste",
+      "toggleAdvancedRightClickMenu": "Toggle advanced context menu",
+      "toggleSynchronizedOutput": "Toggle synchronized output",
+      "toggleIdleAnimation": "Toggle terminal idle animation",
+      "toggleWelcomePage": "Toggle welcome page",
       "toggleAiSidebar": "Toggle AI chat",
       "newAiChat": "New AI chat"
     },

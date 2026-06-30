@@ -148,7 +148,7 @@ export function sanitizeResolvedAiRuntimeConfig(
   return { ...config, apiKey: '' }
 }
 
-export function buildAiRuntimeConfig(experimental: {
+export function buildAiRuntimeConfig(ai: {
   aiSidebarEnabled?: boolean
   aiRuntimePort?: unknown
   aiProvider?: unknown
@@ -157,15 +157,15 @@ export function buildAiRuntimeConfig(experimental: {
   aiApiKey?: unknown
   openAiApiKey?: unknown
 }): AiRuntimeConfig {
-  const provider = normalizeAiProvider(experimental.aiProvider)
-  const legacyKey = normalizeAiApiKey(experimental.openAiApiKey)
-  const apiKey = normalizeAiApiKey(experimental.aiApiKey) || legacyKey
+  const provider = normalizeAiProvider(ai.aiProvider)
+  const legacyKey = normalizeAiApiKey(ai.openAiApiKey)
+  const apiKey = normalizeAiApiKey(ai.aiApiKey) || legacyKey
   return {
-    enabled: experimental.aiSidebarEnabled === true,
-    port: normalizeAiRuntimePort(experimental.aiRuntimePort),
+    enabled: ai.aiSidebarEnabled === true,
+    port: normalizeAiRuntimePort(ai.aiRuntimePort),
     provider,
-    model: normalizeAiModel(provider, experimental.aiModel),
-    baseUrl: normalizeAiBaseUrl(provider, experimental.aiBaseUrl),
+    model: normalizeAiModel(provider, ai.aiModel),
+    baseUrl: normalizeAiBaseUrl(provider, ai.aiBaseUrl),
     apiKey,
   }
 }

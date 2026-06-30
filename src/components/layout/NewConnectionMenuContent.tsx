@@ -34,7 +34,7 @@ export function NewConnectionMenuContent() {
           </DropdownMenuItem>
         </>
       )}
-      {settings?.experimental.niozyAgentEnabled === true && (
+      {settings?.agent.niozyAgentEnabled === true && (
         <>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => addAgentTab()}>

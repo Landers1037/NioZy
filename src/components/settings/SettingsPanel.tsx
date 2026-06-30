@@ -23,6 +23,7 @@ import {
   MessageSquare,
   Bell,
   Brain,
+  Bot,
   MessageSquareCode,
   SquareTerminal,
 } from 'lucide-react'
@@ -44,6 +45,7 @@ import { VaultSettings } from './VaultSettings'
 import { ShortcutSettings } from './ShortcutSettings'
 import { ExperimentalSettings } from './ExperimentalSettings'
 import { AiSettings } from './AiSettings'
+import { AgentSettings } from './AgentSettings'
 import { SessionSettings } from './SessionSettings'
 import { WorkspaceSettings } from './WorkspaceSettings'
 import { ProviderSettings } from './ProviderSettings'
@@ -70,6 +72,7 @@ const SECTION_DEFS = [
   { id: 'system', icon: Settings2 },
   { id: 'p2p', icon: MessageSquare },
   { id: 'ai', icon: Brain },
+  { id: 'agent', icon: Bot },
   { id: 'session', icon: MessageSquareCode },
   { id: 'workspace', icon: SquareTerminal },
   { id: 'provider', icon: Plug },
@@ -116,6 +119,8 @@ function SettingsSectionContent({ section }: { section: SectionId }) {
       return <P2pSettings />
     case 'ai':
       return <AiSettings />
+    case 'agent':
+      return <AgentSettings />
     case 'session':
       return <SessionSettings />
     case 'workspace':

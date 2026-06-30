@@ -19,7 +19,8 @@ import type {
   AgentSessionState,
   AgentStateSnapshot,
 } from './shared/agent-types'
-import type { ExperimentalSettings } from './shared/experimental-settings'
+import type { AgentSettings } from './shared/agent-settings'
+import type { AiSettings } from './shared/ai-settings'
 
 type RuntimeCommand =
   | { type: 'init'; config: AgentRuntimeConfig; session: AgentSessionState }
@@ -79,9 +80,10 @@ export class AgentService {
   constructor(
     private readonly workspaceService: WorkspaceService,
     private readonly getMainWindow: () => BrowserWindow | null,
-    private readonly getExperimentalSettings: () => ExperimentalSettings,
+    private readonly getAgentSettings: () => AgentSettings,
+    private readonly getAiSettings: () => AiSettings,
   ) {
-    this.session = createDefaultSession(this.getExperimentalSettings().aiModel)
+    this.session = createDefaultSession(this.getAiSettings().aiModel)
   }
 
   getState(): AgentStateSnapshot {
@@ -341,16 +343,15 @@ export class AgentService {
   }
 
   private buildRuntimeArgs(): string[] {
-    const experimental = this.getExperimentalSettings()
+    const agent = this.getAgentSettings()
     const args = [
       '-log-level',
-      experimental.niozyAgentLogLevel,
+      agent.niozyAgentLogLevel,
       '-max-tokens',
-      String(experimental.niozyAgentMaxTokens),
+      String(agent.niozyAgentMaxTokens),
     ]
-    if (experimental.niozyAgentLogToFile) {
-      const target =
-        experimental.niozyAgentLogFile.trim() || join(tmpdir(), 'niozy-agent.log')
+    if (agent.niozyAgentLogToFile) {
+      const target = agent.niozyAgentLogFile.trim() || join(tmpdir(), 'niozy-agent.log')
       args.push('-log-file', target)
     }
     return args

@@ -6,13 +6,17 @@ import { useUiClasses } from '@/lib/ui-style'
 import { cn } from '@/lib/utils'
 import { TitleBarTerminalControls } from '@/components/layout/TitleBarTerminalControls'
 import { useWindowTitleDragPause } from '@/hooks/useWindowTitleDragPause'
+import { RotatingText } from '@/components/effects/RotatingText'
 import logoUrl from '@/logo.png'
 
 export function TitleBar() {
   const maximized = useAppStore((s) => s.windowMaximized)
   const showAppTitle = useAppStore((s) => s.settings?.showAppTitle ?? true)
+  const enableDynamicTitle = useAppStore((s) => s.settings?.enableDynamicTitle ?? true)
+  const enableDialogAnimations = useAppStore((s) => s.settings?.enableDialogAnimations ?? true)
   const ui = useUiClasses()
   const { onTitleBarPointerDownCapture } = useWindowTitleDragPause()
+  const dynamicTitleTexts = ['NioZy', 'Terminal', 'Workspace', 'AI Agent'] as const
 
   return (
     <header
@@ -25,7 +29,18 @@ export function TitleBar() {
       <div className="flex items-center gap-2 px-2">
         <img src={logoUrl} alt="NioZy" className="size-8 object-contain" draggable={false} />
         {showAppTitle && (
-          <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
+          enableDynamicTitle ? (
+            <RotatingText
+              texts={dynamicTitleTexts}
+              className={cn(ui.titleWeight, 'min-w-[8.75rem] tracking-tight')}
+              rotationInterval={2000}
+              auto
+              loop
+              animateEnabled={enableDialogAnimations}
+            />
+          ) : (
+            <span className={cn(ui.titleWeight, 'tracking-tight')}>NioZy</span>
+          )
         )}
       </div>
       <div className="min-h-0 min-w-0 flex-1" />
