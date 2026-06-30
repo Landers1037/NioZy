@@ -1,4 +1,10 @@
-export type TerminalIdleAnimationMode = 'blackHole' | 'blackHole2' | 'pacman' | 'logo' | 'niozy'
+export type TerminalIdleAnimationMode =
+  | 'blackHole'
+  | 'blackHole2'
+  | 'pacman'
+  | 'logo'
+  | 'niozy'
+  | 'ascii'
 
 export interface TerminalIdleAnimationSettings {
   enabled: boolean
@@ -23,6 +29,7 @@ const IDLE_ANIMATION_MODES: TerminalIdleAnimationMode[] = [
   'pacman',
   'logo',
   'niozy',
+  'ascii',
 ]
 
 export function normalizeTerminalIdleAnimationMode(value: unknown): TerminalIdleAnimationMode {

@@ -450,7 +450,8 @@
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
         "logo": "Logo",
-        "niozy": "NioZy"
+        "niozy": "NioZy",
+        "ascii": "ASCII Text"
       },
       "welcomePage": "ウェルカムページ",
       "welcomePageDesc": "有効にすると、起動時にターミナルセッションの復元が不要な場合、既定のターミナルを自動作成せずウェルカムアニメーションを表示します。すべてのタブを閉じた後も表示されます。",
@@ -458,7 +459,8 @@
       "welcomePageAnimationAria": "ウェルカムページのアニメーション",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D アニメーション",
-        "particles": "Logo パーティクル"
+        "particles": "Logo パーティクル",
+        "ascii": "ASCII Text アニメーション"
       }
     },
     "ssh": {

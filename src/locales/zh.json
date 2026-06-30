@@ -623,7 +623,8 @@
         "blackHole2": "BlackHole (GPU)",
         "pacman": "Pacman",
         "logo": "Logo",
-        "niozy": "NioZy"
+        "niozy": "NioZy",
+        "ascii": "ASCII Text"
       },
       "welcomePage": "欢迎页面",
       "welcomePageDesc": "开启后，启动时若无需恢复终端会话，将展示欢迎动画而非自动新建终端；关闭全部标签后也会显示欢迎页。",
@@ -631,7 +632,8 @@
       "welcomePageAnimationAria": "欢迎页面动画类型",
       "welcomePageAnimation": {
         "niozy3d": "NioZy 3D 动画",
-        "particles": "Logo 粒子动画"
+        "particles": "Logo 粒子动画",
+        "ascii": "ASCII Text 动画"
       }
     },
     "ssh": {

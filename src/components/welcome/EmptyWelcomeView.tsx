@@ -2,7 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppStore } from '@/stores/app-store'
 import { isWebGpuEnabledInSettings, probeWebGpuRuntime } from '@/lib/webgpu-capability'
-import type { WelcomePageAnimationMode } from '../../electron/shared/welcome-page-settings'
+import { ASCIIText } from '@/components/effects/ASCIIText'
+import type { WelcomePageAnimationMode } from '../../../electron/shared/welcome-page-settings'
 
 const WelcomeTerminalCanvas = lazy(() =>
   import('@/components/welcome/WelcomeTerminalCanvas').then((m) => ({
@@ -106,6 +107,23 @@ function WelcomePageParticleView() {
   )
 }
 
+function WelcomePageAsciiView() {
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-[#050b12]">
+      <div className="absolute inset-0 z-0">
+        <ASCIIText
+          text=">_ NioZy"
+          asciiFontSize={10}
+          textFontSize={240}
+          planeBaseHeight={8.4}
+          className="welcome-page-ascii"
+        />
+      </div>
+      <WelcomePageCaption />
+    </div>
+  )
+}
+
 function WelcomePageCaption() {
   const { t } = useTranslation()
   return (
@@ -121,6 +139,10 @@ function WelcomePageCaption() {
 export function EmptyWelcomeView() {
   const animation: WelcomePageAnimationMode =
     useAppStore((s) => s.settings?.terminal.welcomePage.animation) ?? 'niozy3d'
+
+  if (animation === 'ascii') {
+    return <WelcomePageAsciiView />
+  }
 
   if (animation === 'particles') {
     return <WelcomePageParticleView />
