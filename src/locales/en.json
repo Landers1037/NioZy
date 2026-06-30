@@ -542,6 +542,8 @@
       "fontWeightBold": "Bold weight",
       "showAppTitle": "Show app title",
       "showAppTitleDesc": "When off, the title bar shows only the icon, not the NioZy name",
+      "enableDynamicTitle": "Dynamic title",
+      "enableDynamicTitleDesc": "Rotates the title bar label between NioZy, Terminal, Workspace, and AI Agent",
       "enableDialogAnimations": "Animations",
       "enableDialogAnimationsDesc": "When on, dialogs (including image preview) fade in from below and fade out downward",
       "enableGlassTransparency": "Transparency",

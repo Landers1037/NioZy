@@ -140,6 +140,7 @@ export interface AppSettings {
   fontWeight?: number
   fontWeightBold?: number
   showAppTitle: boolean
+  enableDynamicTitle: boolean
   enableDialogAnimations: boolean
   enableGlassTransparency: boolean
   enableWindowsNativeEffect: boolean
@@ -264,6 +265,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accentColor: '#5C6B7A',
   fontSize: 13,
   showAppTitle: true,
+  enableDynamicTitle: true,
   enableDialogAnimations: true,
   enableGlassTransparency: false,
   enableWindowsNativeEffect: false,
@@ -348,6 +350,10 @@ function buildAppSettingsFromStored(
       typeof stored.showAppTitle === 'boolean'
         ? stored.showAppTitle
         : DEFAULT_SETTINGS.showAppTitle,
+    enableDynamicTitle:
+      typeof stored.enableDynamicTitle === 'boolean'
+        ? stored.enableDynamicTitle
+        : DEFAULT_SETTINGS.enableDynamicTitle,
     enableDialogAnimations:
       typeof stored.enableDialogAnimations === 'boolean'
         ? stored.enableDialogAnimations

@@ -371,6 +371,8 @@
       "globalFontSize": "全体フォントサイズ",
       "showAppTitle": "アプリ名を表示",
       "showAppTitleDesc": "オフの場合、タイトルバーにはアイコンのみ表示（NioZy 名は非表示）",
+      "enableDynamicTitle": "動的タイトル",
+      "enableDynamicTitleDesc": "タイトルバーの表示を NioZy、Terminal、Workspace、AI Agent の間で切り替えます",
       "enableDialogAnimations": "アニメーション",
       "enableDialogAnimationsDesc": "オン時、ダイアログ（画像プレビュー含む）は下からフェードインし、下へフェードアウト",
       "enableGlassTransparency": "透明効果",

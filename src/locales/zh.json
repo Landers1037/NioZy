@@ -542,6 +542,8 @@
       "fontWeightBold": "加粗字重",
       "showAppTitle": "显示程序标题",
       "showAppTitleDesc": "关闭后顶栏仅显示图标，不显示 NioZy 名称",
+      "enableDynamicTitle": "开启动态标题",
+      "enableDynamicTitleDesc": "开启后在顶栏程序标题中轮播切换 NioZy、Terminal、Workspace、AI Agent",
       "enableDialogAnimations": "动画效果",
       "enableDialogAnimationsDesc": "开启后弹框（含图片预览）打开与关闭时自底部向上淡入、向下淡出",
       "enableGlassTransparency": "透明效果",

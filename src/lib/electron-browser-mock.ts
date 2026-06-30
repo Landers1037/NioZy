@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   accentColor: '#5C6B7A',
   fontSize: 13,
   showAppTitle: true,
+  enableDynamicTitle: true,
   enableDialogAnimations: true,
   enableGlassTransparency: false,
   enableWindowsNativeEffect: false,
