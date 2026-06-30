@@ -1510,8 +1510,21 @@
     "allCommandsHint": "All commands",
     "unavailable": "This command cannot run in the current context",
     "unavailableShort": "Unavailable",
+    "states": {
+      "on": "On",
+      "off": "Off"
+    },
+    "groups": {
+      "terminalSession": "Terminal & Sessions",
+      "terminalAppearance": "Terminal Appearance",
+      "terminalBehavior": "Terminal Behavior",
+      "appAppearance": "App Appearance",
+      "appTools": "Assistive Tools",
+      "ai": "AI"
+    },
     "commands": {
       "newTerminal": "New terminal",
+      "switchWorkingDirectory": "Switch working directory",
       "editTabTitle": "Rename terminal tab",
       "closeTerminalTab": "Close terminal tab",
       "addTabToGroup": "Add terminal tab to group",
@@ -1525,6 +1538,17 @@
       "selectColorScheme": "Switch terminal color scheme",
       "selectUiStyle": "Switch interface style",
       "selectThemeMode": "Switch light/dark theme",
+      "toggleTerminalSearch": "Toggle terminal search entry",
+      "toggleCommandReplay": "Toggle command replay entry",
+      "togglePomodoro": "Toggle Pomodoro entry",
+      "toggleCursorBlink": "Toggle cursor blink",
+      "toggleHideCursor": "Toggle hide host cursor",
+      "toggleLigatures": "Toggle terminal ligatures",
+      "toggleRightClickCopyPaste": "Toggle right-click copy/paste",
+      "toggleAdvancedRightClickMenu": "Toggle advanced context menu",
+      "toggleSynchronizedOutput": "Toggle synchronized output",
+      "toggleIdleAnimation": "Toggle terminal idle animation",
+      "toggleWelcomePage": "Toggle welcome page",
       "toggleAiSidebar": "Toggle AI chat",
       "newAiChat": "New AI chat"
     },

@@ -1510,8 +1510,21 @@
     "allCommandsHint": "全部命令",
     "unavailable": "当前条件下无法执行此命令",
     "unavailableShort": "不可用",
+    "states": {
+      "on": "开启",
+      "off": "关闭"
+    },
+    "groups": {
+      "terminalSession": "终端与会话",
+      "terminalAppearance": "终端外观",
+      "terminalBehavior": "终端行为",
+      "appAppearance": "界面外观",
+      "appTools": "辅助工具",
+      "ai": "AI"
+    },
     "commands": {
       "newTerminal": "新建终端",
+      "switchWorkingDirectory": "切换工作目录",
       "editTabTitle": "修改终端 Tab 标题",
       "closeTerminalTab": "关闭终端 Tab",
       "addTabToGroup": "添加终端 Tab 到一个分组",
@@ -1525,6 +1538,17 @@
       "selectColorScheme": "切换终端配色方案",
       "selectUiStyle": "切换界面风格",
       "selectThemeMode": "切换明亮/暗黑主题",
+      "toggleTerminalSearch": "切换终端搜索入口",
+      "toggleCommandReplay": "切换命令重放入口",
+      "togglePomodoro": "切换番茄钟入口",
+      "toggleCursorBlink": "切换光标闪烁",
+      "toggleHideCursor": "切换隐藏宿主光标",
+      "toggleLigatures": "切换终端连字",
+      "toggleRightClickCopyPaste": "切换右键复制/粘贴",
+      "toggleAdvancedRightClickMenu": "切换高级右键菜单",
+      "toggleSynchronizedOutput": "切换同步输出",
+      "toggleIdleAnimation": "切换终端闲置动画",
+      "toggleWelcomePage": "切换欢迎页面",
       "toggleAiSidebar": "打开/关闭 AI 对话",
       "newAiChat": "新建 AI 对话"
     },
