@@ -102,17 +102,20 @@ export function CommandPalette() {
   const showAllCommands = !subPanel && isShowAllCommandsQuery(query)
   const groupedCommandItems = useMemo(() => {
     if (!showAllCommands) return []
-    const groups: Array<{ label: string; items: CommandPaletteListItem[] }> = []
+    const groupOrder: string[] = []
+    const groupMap = new Map<string, { key: string; label: string; items: CommandPaletteListItem[] }>()
     for (const item of commandItems) {
+      const key = item.command.group
       const label = getCommandPaletteGroupLabel(item.command.group)
-      const last = groups[groups.length - 1]
-      if (last?.label === label) {
-        last.items.push(item)
+      const existing = groupMap.get(key)
+      if (existing) {
+        existing.items.push(item)
       } else {
-        groups.push({ label, items: [item] })
+        groupOrder.push(key)
+        groupMap.set(key, { key, label, items: [item] })
       }
     }
-    return groups
+    return groupOrder.map((key) => groupMap.get(key)!).filter(Boolean)
   }, [commandItems, showAllCommands])
   const inSubPanel = subPanel != null
   const listCount = inSubPanel ? pickerItems.length : commandItems.length
@@ -391,7 +394,7 @@ export function CommandPalette() {
                 })
               ) : showAllCommands ? (
                 groupedCommandItems.map((group) => (
-                  <div key={group.label} className="pb-1">
+                  <div key={group.key} className="pb-1">
                     <div className="px-3 py-2 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                       {group.label}
                     </div>
