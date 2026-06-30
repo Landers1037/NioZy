@@ -39,7 +39,7 @@ export function TerminalContextMenuHost() {
   const fontSize = settings?.terminal.fontSize ?? 13
   const canZoomIn = fontSize < TERMINAL_FONT_SIZE_MAX
   const canZoomOut = fontSize > TERMINAL_FONT_SIZE_MIN
-  const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
+  const aiSidebarEnabled = settings?.ai.aiSidebarEnabled === true
   const contextTerminalIdRef = useRef<string | null>(null)
   const skipCloseRefocusRef = useRef(false)
 

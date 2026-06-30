@@ -40,7 +40,7 @@ export function Sidebar() {
   const repoManagementEnabled = settings?.filesystem.repoManagementEnabled === true
   const agentSessionEnabled = settings?.session.agentSessionEnabled === true
   const p2pChatEnabled = settings?.p2p.enabled === true
-  const niozyAgentEnabled = settings?.experimental.niozyAgentEnabled === true
+  const niozyAgentEnabled = settings?.agent.niozyAgentEnabled === true
   const patchSettings = useAppStore((s) => s.patchSettings)
 
   const storedWidth = settings?.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH

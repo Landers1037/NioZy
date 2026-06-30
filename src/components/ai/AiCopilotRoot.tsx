@@ -15,7 +15,7 @@ import './ai-copilot-theme.css'
 import { useAppStore } from '@/stores/app-store'
 import { resolveAiSidebarWidthPx } from '@/lib/ai-sidebar-width'
 import { useAiSidebarStore } from '@/stores/ai-sidebar-store'
-import { buildAiRuntimeConfig } from '../../../electron/shared/experimental-settings'
+import { buildAiRuntimeConfig } from '../../../electron/shared/ai-settings'
 import { aiProviderNeedsApiKey, isAiApiKeyConfigured } from '@/lib/ai-provider-options'
 import { getElectronAPI } from '@/lib/electron-client'
 import { clickCopilotFileInput } from '@/lib/click-copilot-file-input'
@@ -123,12 +123,12 @@ const HiddenAiSidebarToggle = forwardRef<HTMLButtonElement>(function HiddenAiSid
 export function AiCopilotRoot() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
-  const aiSidebarEnabled = settings?.experimental.aiSidebarEnabled === true
-  const aiAttachmentsEnabled = settings?.experimental.aiAttachmentsEnabled === true
+  const aiSidebarEnabled = settings?.ai.aiSidebarEnabled === true
+  const aiAttachmentsEnabled = settings?.ai.aiAttachmentsEnabled === true
   const aiSidebarWidthPx = resolveAiSidebarWidthPx(
-    settings?.experimental.aiSidebarWidth ?? 'default',
+    settings?.ai.aiSidebarWidth ?? 'default',
   )
-  const aiRuntime = settings ? buildAiRuntimeConfig(settings.experimental) : null
+  const aiRuntime = settings ? buildAiRuntimeConfig(settings.ai) : null
   const runtimeConfigKey = aiRuntime
     ? `${aiRuntime.port}:${aiRuntime.provider}:${aiRuntime.model}:${aiRuntime.baseUrl}:${aiRuntime.apiKey}`
     : ''

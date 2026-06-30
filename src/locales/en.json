@@ -501,6 +501,7 @@
       "system": "System",
       "p2p": "Encrypted communication",
       "ai": "AI features",
+      "agent": "Agent",
       "session": "Manage sessions",
       "workspace": "Workspace",
       "provider": "Provider",

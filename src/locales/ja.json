@@ -332,6 +332,7 @@
       "system": "システム",
       "p2p": "暗号化通信",
       "ai": "AI 機能",
+      "agent": "Agent",
       "session": "セッション管理",
       "workspace": "ワークスペース",
       "provider": "Provider",

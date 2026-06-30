@@ -6,23 +6,6 @@ import {
   normalizeVncEncoding,
   type VncEncoding,
 } from './vnc-settings'
-import {
-  DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
-  normalizeAiSidebarWidthPreset,
-  type AiSidebarWidthPreset,
-} from './ai-sidebar-width'
-import {
-  DEFAULT_AI_MODEL,
-  DEFAULT_AI_PROVIDER,
-  DEFAULT_AI_RUNTIME_PORT,
-  normalizeAiApiKey,
-  normalizeAiBaseUrl,
-  normalizeAiModel,
-  normalizeAiProvider,
-  normalizeAiRuntimePort,
-  type AiProvider,
-} from './ai-provider-settings'
-import { normalizeAiRuleStates, type AiRuleStates } from './ai-context-types'
 import { normalizeMuxPaneCount } from './mux-terminal-types'
 
 /** Wterm 仅支持 DOM 渲染，对应 terminal.renderer = dom */
@@ -35,7 +18,6 @@ export const MAX_GHOSTTY_SCROLLBACK_LIMIT = 50_000
 export const DEFAULT_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 300
 export const MIN_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 0
 export const MAX_ATTACH_PTY_TAB_SWITCH_DWELL_MS = 5_000
-export const DEFAULT_NIOZY_AGENT_MAX_TOKENS = 4096
 
 export interface ExperimentalSettings {
   /** 终端模拟器实现：xterm（默认）、ghostty（ghostty-web）或 wterm（实验） */
@@ -72,36 +54,6 @@ export interface ExperimentalSettings {
   muxCoreEnabled: boolean
   /** Mux 合成屏默认 pane 数：1、2 或 4 */
   muxPaneCount: 1 | 2 | 4
-  /** 开启 AI 对话边栏 */
-  aiSidebarEnabled: boolean
-  /** AI 边栏支持附加本地图片/文件 */
-  aiAttachmentsEnabled: boolean
-  /** AI 边栏宽度预设 */
-  aiSidebarWidth: AiSidebarWidthPreset
-  /** 本机 Copilot Runtime 监听端口 */
-  aiRuntimePort: number
-  /** AI 提供商 */
-  aiProvider: AiProvider
-  /** AI 模型 */
-  aiModel: string
-  /** AI API Base URL */
-  aiBaseUrl: string
-  /** AI API Key；可为明文或存储库引用如 ${OPENAI_API_KEY} */
-  aiApiKey: string
-  /** 开启后在新建连接中显示 NioZy Agent */
-  niozyAgentEnabled: boolean
-  /** NioZy Agent 日志级别 */
-  niozyAgentLogLevel: 'INFO' | 'ERROR' | 'DEBUG'
-  /** 开启后写入日志文件 */
-  niozyAgentLogToFile: boolean
-  /** NioZy Agent 日志文件路径 */
-  niozyAgentLogFile: string
-  /** NioZy Agent 单次请求最大输出 token 数 */
-  niozyAgentMaxTokens: number
-  /** 已启用规则 id → true；未列入或 false 表示不注入对话上下文 */
-  aiRuleStates: AiRuleStates
-  /** @deprecated 迁移至 aiApiKey */
-  openAiApiKey?: string
   /** 启用 JS 沙箱（QuickJS WASM） */
   jsSandboxEnabled: boolean
 }
@@ -122,43 +74,7 @@ export const DEFAULT_EXPERIMENTAL_SETTINGS: ExperimentalSettings = {
   muxCoreEnabled: false,
   muxPaneCount:
     typeof process !== 'undefined' && process.platform === 'win32' ? 1 : 4,
-  aiSidebarEnabled: false,
-  aiAttachmentsEnabled: false,
-  aiSidebarWidth: DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
-  aiRuntimePort: DEFAULT_AI_RUNTIME_PORT,
-  aiProvider: DEFAULT_AI_PROVIDER,
-  aiModel: DEFAULT_AI_MODEL,
-  aiBaseUrl: normalizeAiBaseUrl(DEFAULT_AI_PROVIDER, undefined),
-  aiApiKey: '',
-  niozyAgentEnabled: false,
-  niozyAgentLogLevel: 'INFO',
-  niozyAgentLogToFile: false,
-  niozyAgentLogFile: '',
-  niozyAgentMaxTokens: DEFAULT_NIOZY_AGENT_MAX_TOKENS,
-  aiRuleStates: {},
   jsSandboxEnabled: false,
-}
-
-export const NIOZY_AGENT_LOG_LEVELS = ['INFO', 'ERROR', 'DEBUG'] as const
-
-export function normalizeNiozyAgentLogLevel(
-  value: unknown,
-): ExperimentalSettings['niozyAgentLogLevel'] {
-  return NIOZY_AGENT_LOG_LEVELS.includes(
-    value as ExperimentalSettings['niozyAgentLogLevel'],
-  )
-    ? (value as ExperimentalSettings['niozyAgentLogLevel'])
-    : 'INFO'
-}
-
-export function normalizeNiozyAgentLogFile(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-export function normalizeNiozyAgentMaxTokens(value: unknown): number {
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return DEFAULT_NIOZY_AGENT_MAX_TOKENS
-  return Math.max(1, Math.round(n))
 }
 
 export function normalizeTerminalEmulator(value: unknown): TerminalEmulator {
@@ -187,9 +103,6 @@ export function normalizeGhosttyScrollbackLimit(value: unknown): number {
 
 export function normalizeExperimentalSettings(raw: unknown): ExperimentalSettings {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
-  const provider = normalizeAiProvider(o.aiProvider)
-  const legacyApiKey = normalizeAiApiKey(o.openAiApiKey)
-  const aiApiKey = normalizeAiApiKey(o.aiApiKey) || legacyApiKey
   return {
     terminalEmulator: normalizeTerminalEmulator(o.terminalEmulator),
     ghosttyCoreEnabled: o.ghosttyCoreEnabled === true,
@@ -205,43 +118,9 @@ export function normalizeExperimentalSettings(raw: unknown): ExperimentalSetting
     attachPtyScrollbackOffload: o.attachPtyScrollbackOffload === true,
     muxCoreEnabled: o.muxCoreEnabled === true,
     muxPaneCount: normalizeMuxPaneCount(o.muxPaneCount),
-    aiSidebarEnabled: o.aiSidebarEnabled === true,
-    aiAttachmentsEnabled: o.aiAttachmentsEnabled === true,
-    aiSidebarWidth: normalizeAiSidebarWidthPreset(o.aiSidebarWidth),
-    aiRuntimePort: normalizeAiRuntimePort(o.aiRuntimePort),
-    aiProvider: provider,
-    aiModel: normalizeAiModel(provider, o.aiModel),
-    aiBaseUrl: normalizeAiBaseUrl(provider, o.aiBaseUrl),
-    aiApiKey,
-    niozyAgentEnabled: o.niozyAgentEnabled === true,
-    niozyAgentLogLevel: normalizeNiozyAgentLogLevel(o.niozyAgentLogLevel),
-    niozyAgentLogToFile: o.niozyAgentLogToFile === true,
-    niozyAgentLogFile: normalizeNiozyAgentLogFile(o.niozyAgentLogFile),
-    niozyAgentMaxTokens: normalizeNiozyAgentMaxTokens(o.niozyAgentMaxTokens),
-    aiRuleStates: normalizeAiRuleStates(o.aiRuleStates),
     jsSandboxEnabled: o.jsSandboxEnabled === true,
   }
 }
-
-export {
-  buildAiRuntimeConfig,
-  resolveAiRuntimeConfig,
-  sanitizeResolvedAiRuntimeConfig,
-  warnIfAiApiKeyUnresolved,
-  type AiProvider,
-} from './ai-provider-settings'
-
-export { normalizeAiRuleStates, type AiRuleStates } from './ai-context-types'
-export type { AiRuleSummary, AiSkillSummary, AiChatContextPayload } from './ai-context-types'
-
-export {
-  AI_SIDEBAR_WIDTH_PRESETS,
-  AI_SIDEBAR_WIDTH_PX,
-  DEFAULT_AI_SIDEBAR_WIDTH_PRESET,
-  normalizeAiSidebarWidthPreset,
-  resolveAiSidebarWidthPx,
-  type AiSidebarWidthPreset,
-} from './ai-sidebar-width'
 
 /** Wterm / ghostty-web 仅支持 DOM 渲染（不支持 xterm WebGL） */
 export function normalizeRendererForWterm(

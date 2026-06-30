@@ -82,6 +82,18 @@ import {
   normalizeRendererForWterm,
 } from './shared/experimental-settings'
 import {
+  DEFAULT_AI_SETTINGS,
+  extractLegacyAiSettings,
+  isAiSettingsEmpty,
+  normalizeAiSettings,
+} from './shared/ai-settings'
+import {
+  DEFAULT_AGENT_SETTINGS,
+  extractLegacyAgentSettings,
+  isAgentSettingsEmpty,
+  normalizeAgentSettings,
+} from './shared/agent-settings'
+import {
   DEFAULT_PREVIEW_SETTINGS,
   normalizePreviewSettings,
 } from './shared/preview-settings'
@@ -195,6 +207,8 @@ export interface AppSettings {
   performance: import('./shared/performance-settings').PerformanceSettings
   filesystem: import('./shared/filesystem-settings').FilesystemSettings
   preview: import('./shared/preview-settings').PreviewSettings
+  ai: import('./shared/ai-settings').AiSettings
+  agent: import('./shared/agent-settings').AgentSettings
   experimental: import('./shared/experimental-settings').ExperimentalSettings
   statistics: import('./shared/usage-statistics-settings').UsageStatisticsSettings
   p2p: import('./shared/p2p-settings').P2pSettings
@@ -306,6 +320,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
   drawing: { ...DEFAULT_DRAWING_SETTINGS },
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
+  ai: { ...DEFAULT_AI_SETTINGS },
+  agent: { ...DEFAULT_AGENT_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
   p2p: { ...DEFAULT_P2P_SETTINGS },
@@ -468,6 +484,8 @@ function buildAppSettingsFromStored(
     filesystem: normalizeFilesystemSettings(stored.filesystem),
     drawing: normalizeDrawingSettings(stored.drawing),
     preview: normalizePreviewSettings(stored.preview),
+    ai: normalizeAiSettings((stored as Partial<AppSettings>).ai),
+    agent: normalizeAgentSettings((stored as Partial<AppSettings>).agent),
     builtinConnections: normalizeBuiltinConnections(
       (stored as Partial<AppSettings>).builtinConnections,
     ),
@@ -553,8 +571,12 @@ export class SettingsStore {
     if (!existsSync(this.settingsPath)) return {}
     try {
       const raw = JSON.parse(readFileSync(this.settingsPath, 'utf-8')) as Record<string, unknown>
+      const migrated = migrateLegacyAiAndAgentSettings(raw)
       const { connections: _drop, ...stored } = raw
-      return stored as Partial<StoredAppSettings>
+      if (migrated.changed) {
+        writeFileSync(this.settingsPath, JSON.stringify(migrated.settings, null, 2), 'utf-8')
+      }
+      return (migrated.changed ? migrated.settings : stored) as Partial<StoredAppSettings>
     } catch {
       return {}
     }
@@ -615,6 +637,32 @@ function normalizeFontWeight(value: unknown): number | undefined {
   const rounded = Math.round(n)
   if (rounded < 100 || rounded > 900) return undefined
   return rounded
+}
+
+function migrateLegacyAiAndAgentSettings(
+  raw: Record<string, unknown>,
+): { settings: Record<string, unknown>; changed: boolean } {
+  let changed = false
+  const next = { ...raw }
+  const experimental = raw.experimental
+
+  if (isAiSettingsEmpty(raw.ai)) {
+    const legacyAi = extractLegacyAiSettings(experimental)
+    if (legacyAi) {
+      next.ai = legacyAi
+      changed = true
+    }
+  }
+
+  if (isAgentSettingsEmpty(raw.agent)) {
+    const legacyAgent = extractLegacyAgentSettings(experimental)
+    if (legacyAgent) {
+      next.agent = legacyAgent
+      changed = true
+    }
+  }
+
+  return { settings: next, changed }
 }
 
 function deepMerge<T extends object>(target: T, source: Partial<T>): T {

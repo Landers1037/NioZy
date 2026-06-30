@@ -21,7 +21,7 @@ function formatSkillsContext(skills: AiChatContextPayload['skills']): string {
 
 /** 将启用的规则与已导入技能注入 CopilotKit 对话上下文。 */
 export function AiCopilotContextBridge() {
-  const aiRuleStates = useAppStore((s) => s.settings?.experimental.aiRuleStates)
+  const aiRuleStates = useAppStore((s) => s.settings?.ai.aiRuleStates)
   const contextRevision = useAiContextStore((s) => s.revision)
   const ruleStatesKey = useMemo(() => JSON.stringify(aiRuleStates ?? {}), [aiRuleStates])
   const [context, setContext] = useState<AiChatContextPayload>({ rules: [], skills: [] })

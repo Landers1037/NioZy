@@ -107,7 +107,7 @@ export function TitleBarTerminalControls() {
   const emulator = settings.experimental.terminalEmulator
   const domOnlyEmulator = isDomOnlyTerminalEmulator(settings)
   const renderer = settings.terminal.renderer
-  const aiSidebarEnabled = settings.experimental.aiSidebarEnabled === true
+  const aiSidebarEnabled = settings.ai.aiSidebarEnabled === true
   const showUsageStatistics =
     settings.statistics.enabled && settings.statistics.showStatusBar
   const showReminders = settings.reminder.enabled === true

@@ -112,10 +112,10 @@ export const StatusPanelCards = memo(function StatusPanelCards({
   metrics,
 }: StatusPanelCardsProps) {
   const { t } = useTranslation()
-  const exp = settings.experimental
-  const providerKey = `settings.experimental.providers.${exp.aiProvider}`
+  const ai = settings.ai
+  const providerKey = `settings.experimental.providers.${ai.aiProvider}`
   const providerLabel = t(providerKey)
-  const providerDisplay = providerLabel === providerKey ? exp.aiProvider : providerLabel
+  const providerDisplay = providerLabel === providerKey ? ai.aiProvider : providerLabel
 
   return (
     <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
@@ -220,7 +220,7 @@ export const StatusPanelCards = memo(function StatusPanelCards({
       <StatusCard
         dot="blue"
         label={t('statusPanel.ai.title')}
-        status={settings.experimental.aiSidebarEnabled ? t('statusPanel.ai.enabled') : t('statusPanel.ai.disabled')}
+        status={settings.ai.aiSidebarEnabled ? t('statusPanel.ai.enabled') : t('statusPanel.ai.disabled')}
         className={repos.length > 0 ? undefined : 'sm:col-span-2'}
       >
         <dl className="grid gap-2">
@@ -233,12 +233,12 @@ export const StatusPanelCards = memo(function StatusPanelCards({
           </div>
           <div className="flex items-start justify-between gap-3">
             <dt className="text-muted-foreground">{t('statusPanel.ai.modelLabel')}</dt>
-            <dd className="max-w-[180px] truncate text-right font-mono text-xs">{exp.aiModel}</dd>
+            <dd className="max-w-[180px] truncate text-right font-mono text-xs">{ai.aiModel}</dd>
           </div>
           <div className="flex flex-col gap-1">
             <dt className="text-muted-foreground">{t('statusPanel.ai.baseUrlLabel')}</dt>
             <dd className="truncate rounded-md bg-muted/40 px-2 py-1 font-mono text-[11px]">
-              {exp.aiBaseUrl || '—'}
+              {ai.aiBaseUrl || '—'}
             </dd>
           </div>
         </dl>

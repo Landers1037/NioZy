@@ -400,7 +400,7 @@ export default function App() {
       hasWorkspaceTab: workspaceTabs.length > 0,
       hasAgentTab: agentTabs.length > 0,
       workspaceEnabled: settings?.workspace.workspaceEnabled === true,
-      niozyAgentEnabled: settings?.experimental.niozyAgentEnabled === true,
+      niozyAgentEnabled: settings?.agent.niozyAgentEnabled === true,
       agentSessionEnabled: settings?.session.agentSessionEnabled === true,
       hasExcalidrawTab: tabs.some((t) => t.type === 'excalidraw'),
       excalidrawTabActive: activeType === 'excalidraw',
@@ -420,9 +420,9 @@ export default function App() {
         attachPtyMode &&
         activeType === 'terminal' &&
         !!attachCommitted,
-      aiSidebarEnabled: settings?.experimental.aiSidebarEnabled === true,
+      aiSidebarEnabled: settings?.ai.aiSidebarEnabled === true,
       aiSidebarWidthPx: resolveAiSidebarWidthPx(
-        settings?.experimental.aiSidebarWidth ?? 'default',
+        settings?.ai.aiSidebarWidth ?? 'default',
       ),
     }
   }, [

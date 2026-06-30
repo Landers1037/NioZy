@@ -88,7 +88,7 @@ const COMMAND_ORDER: CommandPaletteCommandId[] = [
 ]
 
 function isAiSidebarEnabled(): boolean {
-  return useAppStore.getState().settings?.experimental.aiSidebarEnabled === true
+  return useAppStore.getState().settings?.ai.aiSidebarEnabled === true
 }
 
 function getActiveTerminalTab(): AppTab | undefined {

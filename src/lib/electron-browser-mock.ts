@@ -23,6 +23,8 @@ import { DEFAULT_PERFORMANCE_SETTINGS } from '../../electron/shared/performance-
 import { DEFAULT_FILESYSTEM_SETTINGS } from '../../electron/shared/filesystem-settings'
 import { DEFAULT_DRAWING_SETTINGS } from '../../electron/shared/drawing-settings'
 import { DEFAULT_EXPERIMENTAL_SETTINGS } from '../../electron/shared/experimental-settings'
+import { DEFAULT_AI_SETTINGS } from '../../electron/shared/ai-settings'
+import { DEFAULT_AGENT_SETTINGS } from '../../electron/shared/agent-settings'
 import { DEFAULT_PREVIEW_SETTINGS } from '../../electron/shared/preview-settings'
 import { DEFAULT_USAGE_STATISTICS_SETTINGS } from '../../electron/shared/usage-statistics-settings'
 import { DEFAULT_P2P_SETTINGS } from '../../electron/shared/p2p-settings'
@@ -107,6 +109,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   filesystem: { ...DEFAULT_FILESYSTEM_SETTINGS },
   drawing: { ...DEFAULT_DRAWING_SETTINGS },
   preview: { ...DEFAULT_PREVIEW_SETTINGS },
+  ai: { ...DEFAULT_AI_SETTINGS },
+  agent: { ...DEFAULT_AGENT_SETTINGS },
   experimental: { ...DEFAULT_EXPERIMENTAL_SETTINGS },
   statistics: { ...DEFAULT_USAGE_STATISTICS_SETTINGS },
   p2p: { ...DEFAULT_P2P_SETTINGS },
@@ -146,7 +150,7 @@ let mockAgentState: AgentStateSnapshot = {
     sessionId: 'niozy-agent',
     workspaceDir: '',
     gitBranch: null,
-    model: DEFAULT_EXPERIMENTAL_SETTINGS.aiModel,
+    model: DEFAULT_AI_SETTINGS.aiModel,
     mode: 'plan',
     messages: [],
   },
@@ -230,6 +234,8 @@ function mergeSettings(partial: Partial<AppSettings>): AppSettings {
     preview: partial.preview
       ? { ...mockSettings.preview, ...partial.preview }
       : mockSettings.preview,
+    ai: partial.ai ? { ...mockSettings.ai, ...partial.ai } : mockSettings.ai,
+    agent: partial.agent ? { ...mockSettings.agent, ...partial.agent } : mockSettings.agent,
     drawing: partial.drawing
       ? { ...mockSettings.drawing, ...partial.drawing }
       : mockSettings.drawing,

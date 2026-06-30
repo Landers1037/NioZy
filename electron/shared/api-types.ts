@@ -341,6 +341,8 @@ export interface AppSettings {
   filesystem: import('./filesystem-settings').FilesystemSettings
   drawing: import('./drawing-settings').DrawingSettings
   preview: import('./preview-settings').PreviewSettings
+  ai: import('./ai-settings').AiSettings
+  agent: import('./agent-settings').AgentSettings
   experimental: import('./experimental-settings').ExperimentalSettings
   statistics: import('./usage-statistics-settings').UsageStatisticsSettings
   p2p: import('./p2p-settings').P2pSettings
